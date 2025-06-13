@@ -1,12 +1,12 @@
 <template>
-    <div class="sidebar-container" :class="{ 'collapsed': isCollapsed }">
+    <div class="sidebar-container" :class="{ 'collapsed': isCollapsed }" @wheel.stop>
         <!-- 收起/展开按钮 -->
-        <div class="sidebar-toggle" @click="toggleSidebar">
+        <button class="sidebar-toggle" @click="toggleSidebar">
             <svg width="16" height="16" viewBox="0 0 24 24" fill="none" :class="{ 'rotated': isCollapsed }">
                 <path d="M15 18l-6-6 6-6" stroke="currentColor" stroke-width="2" stroke-linecap="round"
                     stroke-linejoin="round" />
             </svg>
-        </div>
+        </button>
 
         <div class="sidebar-content" v-show="!isCollapsed">
             <!-- Tab导航 -->
@@ -42,6 +42,14 @@
                     </svg>
                     智能荐股
                 </div>
+                <div class="tab-item" :class="{ 'active': activeTab === 'quant' }" @click="activeTab = 'quant'">
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none">
+                        <path
+                            d="M9 19c-5 1.5-5-2.5-7-3m14 6v-3.87a3.37 3.37 0 0 0-.94-2.61c3.14-.35 6.44-1.54 6.44-7A5.44 5.44 0 0 0 20 4.77 5.07 5.07 0 0 0 19.91 1S18.73.65 16 2.48a13.38 13.38 0 0 0-7 0C6.27.65 5.09 1 5.09 1A5.07 5.07 0 0 0 5 4.77a5.44 5.44 0 0 0-1.5 3.78c0 5.42 3.3 6.61 6.44 7A3.37 3.37 0 0 0 9 18.13V22"
+                            stroke="currentColor" stroke-width="2" />
+                    </svg>
+                    量化分析
+                </div>
                 <div class="tab-item" :class="{ 'active': activeTab === 'messages' }" @click="activeTab = 'messages'">
                     <svg width="16" height="16" viewBox="0 0 24 24" fill="none">
                         <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z" stroke="currentColor"
@@ -53,29 +61,23 @@
             </div>
 
             <!-- Tab内容区域 -->
-            <div class="tab-content">
-                <!-- 大盘指数 -->
-                <div v-if="activeTab === 'market'" class="tab-panel">
+            <div class="tab-content" @wheel="handleWheel">
+                <div v-show="activeTab === 'market'" class="tab-panel">
                     <MarketIndex @send-to-chat="handleSendToChat" />
                 </div>
-
-                <!-- 持仓 -->
-                <div v-if="activeTab === 'portfolio'" class="tab-panel">
+                <div v-show="activeTab === 'portfolio'" class="tab-panel">
                     <PortfolioView @send-to-chat="handleSendToChat" />
                 </div>
-
-                <!-- 自选股 -->
-                <div v-if="activeTab === 'watchlist'" class="tab-panel">
+                <div v-show="activeTab === 'watchlist'" class="tab-panel">
                     <WatchlistView @send-to-chat="handleSendToChat" />
                 </div>
-
-                <!-- 荐股列表 -->
-                <div v-if="activeTab === 'stocks'" class="tab-panel">
+                <div v-show="activeTab === 'stocks'" class="tab-panel">
                     <StockRecommendations @send-to-chat="handleSendToChat" />
                 </div>
-
-                <!-- 消息推送 -->
-                <div v-if="activeTab === 'messages'" class="tab-panel">
+                <div v-show="activeTab === 'quant'" class="tab-panel">
+                    <QuantAnalysis @send-to-chat="handleSendToChat" />
+                </div>
+                <div v-show="activeTab === 'messages'" class="tab-panel">
                     <MessageNotifications @send-to-chat="handleSendToChat" />
                 </div>
             </div>
@@ -91,6 +93,7 @@ import StockRecommendations from './StockRecommendations.vue';
 import MessageNotifications from './MessageNotifications.vue';
 import WatchlistView from './WatchlistView.vue';
 import PortfolioView from './PortfolioView.vue';
+import QuantAnalysis from './QuantAnalysis.vue';
 
 // 定义emit
 const emit = defineEmits(['send-to-chat']);
@@ -115,6 +118,12 @@ const toggleSidebar = () => {
 const handleSendToChat = (data) => {
     emit('send-to-chat', data);
 };
+
+// 防止滚动事件冒泡到外部页面
+const handleWheel = (event) => {
+    // 直接阻止事件冒泡，让Sidebar内部处理滚动
+    event.stopPropagation();
+};
 </script>
 
 <style scoped>
@@ -136,7 +145,7 @@ const handleSendToChat = (data) => {
 .sidebar-content {
     height: 100%;
     overflow: hidden;
-    padding: 60px 0 0 0;
+    padding: 50px 0 0 0;
     display: flex;
     flex-direction: column;
 }
@@ -151,18 +160,20 @@ const handleSendToChat = (data) => {
 
 .tab-item {
     flex: 1;
-    padding: 12px 8px;
+    padding: 10px 4px;
     display: flex;
     align-items: center;
     justify-content: center;
-    gap: 6px;
-    font-size: 0.875rem;
+    gap: 4px;
+    font-size: 0.75rem;
     font-weight: 500;
     color: #6b7280;
     cursor: pointer;
     transition: all 0.2s ease;
     border-bottom: 2px solid transparent;
     position: relative;
+    min-width: 0;
+    text-align: center;
 }
 
 .tab-item:hover {
@@ -221,11 +232,22 @@ const handleSendToChat = (data) => {
     flex: 1;
     overflow-y: auto;
     overflow-x: hidden;
-    padding: 16px;
+    padding: 0;
+    display: flex;
+    flex-direction: column;
+    min-height: 0;
+    max-height: calc(100vh - 110px);
 }
 
 .tab-panel {
-    height: 100%;
+    flex: 1;
+    overflow: visible;
+    display: flex;
+    flex-direction: column;
+    padding: 4px;
+    margin: 0;
+    min-height: 0;
+    padding-bottom: 20px;
 }
 
 /* Tab内容区域滚动条样式 */
@@ -256,7 +278,7 @@ const handleSendToChat = (data) => {
 
 .sidebar-toggle {
     position: absolute;
-    top: 20px;
+    top: 10px;
     left: 8px;
     width: 32px;
     height: 32px;

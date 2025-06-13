@@ -1,16 +1,9 @@
 <template>
-    <div class="message-notifications-card">
+    <div class="notifications-container">
         <div class="card-header">
             <h3 class="card-title">消息推送</h3>
-            <div class="header-actions">
-                <el-badge :value="unreadCount" :hidden="unreadCount === 0" class="notification-badge">
-                    <el-button size="small" text @click="markAllAsRead">
-                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none">
-                            <path d="M20 6L9 17l-5-5" stroke="currentColor" stroke-width="2" stroke-linecap="round"
-                                stroke-linejoin="round" />
-                        </svg>
-                    </el-button>
-                </el-badge>
+            <div class="message-stats">
+                <span class="unread-count">{{ unreadCount }}条未读</span>
             </div>
         </div>
 
@@ -206,14 +199,15 @@ const viewAllNotifications = () => {
 </script>
 
 <style scoped>
-.message-notifications-card {
+.notifications-container {
     background: #fff;
-    height: 100%;
-    display: flex;
-    flex-direction: column;
     border-radius: 12px;
     border: 1px solid #f0f0f0;
     overflow: hidden;
+    min-height: calc(100vh - 200px);
+    display: flex;
+    flex-direction: column;
+    margin: 4px;
 }
 
 .card-header {
@@ -232,17 +226,15 @@ const viewAllNotifications = () => {
     margin: 0;
 }
 
-.header-actions {
+.message-stats {
     display: flex;
     align-items: center;
 }
 
-.notification-badge :deep(.el-badge__content) {
-    font-size: 0.7rem;
-    height: 16px;
-    line-height: 16px;
-    padding: 0 5px;
-    min-width: 16px;
+.unread-count {
+    font-size: 0.75rem;
+    color: #9ca3af;
+    margin-left: 8px;
 }
 
 .notifications-list {

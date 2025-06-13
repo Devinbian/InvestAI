@@ -312,6 +312,7 @@ const confirmSell = async () => {
     display: flex;
     flex-direction: column;
     overflow: hidden;
+    margin: 4px;
 }
 
 .account-summary {
@@ -876,5 +877,17 @@ const confirmSell = async () => {
 :deep(.sell-dialog .el-input-number.is-focus .el-input__wrapper) {
     border-color: #dc2626;
     box-shadow: 0 0 0 3px rgba(220, 38, 38, 0.1);
+}
+
+/* 主容器样式 */
+.portfolio-container {
+    background: #fff;
+    border-radius: 12px;
+    border: 1px solid #f0f0f0;
+    overflow: hidden;
+    min-height: calc(100vh - 200px);
+    display: flex;
+    flex-direction: column;
+    margin: 4px;
 }
 </style>

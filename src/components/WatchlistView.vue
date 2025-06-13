@@ -1,5 +1,5 @@
 <template>
-    <div class="watchlist-card">
+    <div class="watchlist-container">
         <div class="card-header">
             <h3 class="card-title">我的自选股</h3>
             <div class="header-actions">
@@ -199,14 +199,15 @@ const refreshWatchlist = () => {
 </script>
 
 <style scoped>
-.watchlist-card {
+.watchlist-container {
     background: #fff;
     border-radius: 12px;
     border: 1px solid #f0f0f0;
     overflow: hidden;
-    height: 100%;
+    min-height: calc(100vh - 200px);
     display: flex;
     flex-direction: column;
+    margin: 4px;
 }
 
 .card-header {
@@ -267,7 +268,9 @@ const refreshWatchlist = () => {
 
 /* 自选股列表样式 */
 .watchlist-list {
-    padding: 8px 0;
+    padding: 8px 0 20px 0;
+    flex: 1;
+    overflow-y: auto;
 }
 
 .watchlist-item {

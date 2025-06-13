@@ -1,7 +1,8 @@
 <template>
-    <div class="stock-recommendations-card">
+    <div class="recommendations-container">
         <div class="card-header">
             <h3 class="card-title">智能荐股</h3>
+            <div class="update-time">{{ updateTime }}</div>
             <el-button size="small" text @click="refreshRecommendations">
                 <svg width="14" height="14" viewBox="0 0 24 24" fill="none">
                     <path d="M3 12a9 9 0 0 1 9-9 9.75 9.75 0 0 1 6.74 2.74L21 8" stroke="currentColor" stroke-width="2"
@@ -156,14 +157,15 @@ const viewMoreRecommendations = () => {
 </script>
 
 <style scoped>
-.stock-recommendations-card {
+.recommendations-container {
     background: #fff;
     border-radius: 12px;
     border: 1px solid #f0f0f0;
     overflow: hidden;
-    height: 100%;
+    min-height: calc(100vh - 200px);
     display: flex;
     flex-direction: column;
+    margin: 4px;
 }
 
 .card-header {

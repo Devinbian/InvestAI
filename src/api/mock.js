@@ -70,6 +70,21 @@ export const mockApi = {
     const buyKeywords = ["购买", "买入", "买", "下单"];
     const isBuyQuery = buyKeywords.some((keyword) => message.includes(keyword));
 
+    // 检查是否是量化相关查询
+    const quantKeywords = [
+      "量化",
+      "策略",
+      "回测",
+      "因子",
+      "算法",
+      "信号",
+      "多因子",
+      "技术指标",
+    ];
+    const isQuantQuery = quantKeywords.some((keyword) =>
+      message.includes(keyword),
+    );
+
     let response;
 
     if (isBuyQuery) {
@@ -100,6 +115,124 @@ export const mockApi = {
         stockInfo: stockInfo,
         hasStockInfo: true,
         isBuyMode: true, // 标识这是购买模式
+      };
+    } else if (isQuantQuery) {
+      // 量化相关响应
+      const quantResponses = {
+        strategy: `🤖 **量化策略推荐**
+
+基于当前市场环境，我为您推荐以下适合散户的量化策略：
+
+**1. 均值回归策略**
+• 适用场景：震荡市场
+• 预期年化收益：12-18%
+• 风险等级：中等
+• 策略原理：利用价格偏离均值后的回归特性
+
+**2. 动量策略**
+• 适用场景：趋势明确的市场
+• 预期年化收益：15-25%
+• 风险等级：较高
+• 策略原理：追踪强势股票的持续上涨
+
+**3. 多因子选股模型**
+• 适用场景：长期投资
+• 预期年化收益：10-20%
+• 风险等级：中等
+• 策略原理：综合估值、盈利、成长等多个因子
+
+💡 **建议**：可以在侧边栏的"量化分析"中进行详细的策略回测和因子分析。`,
+
+        factor: `📊 **多因子选股分析**
+
+基于量化因子模型，我为您分析了当前市场的有效因子：
+
+**估值因子**
+• PE因子：当前有效性较高，IC值0.08
+• PB因子：在银行、地产板块表现突出
+• 建议权重：25%
+
+**盈利因子**
+• ROE因子：持续有效，适合长期持有
+• 净利润增长率：在成长股中表现优异
+• 建议权重：30%
+
+**技术因子**
+• 动量因子：短期有效性强，适合波段操作
+• 反转因子：在超跌股中表现良好
+• 建议权重：20%
+
+**质量因子**
+• 资产负债率：在当前环境下重要性提升
+• 现金流因子：防御性较强
+• 建议权重：25%
+
+🎯 **选股建议**：建议使用多因子综合评分，选择排名前20%的股票构建投资组合。`,
+
+        signal: `📡 **技术指标交易信号**
+
+基于多种技术指标组合，当前市场信号如下：
+
+**买入信号**
+• 平安银行(000001)：MACD金叉 + RSI超卖反弹
+• 招商银行(600036)：均线多头排列 + 成交量放大
+• 五粮液(000858)：布林带下轨反弹 + KDJ金叉
+
+**卖出信号**
+• 某科技股：RSI超买 + 顶背离
+• 某地产股：跌破重要支撑位
+
+**观望信号**
+• 大盘指数：在关键阻力位附近震荡
+• 建议等待明确突破信号
+
+⚠️ **风险提示**：技术指标具有滞后性，建议结合基本面分析使用。信号仅供参考，投资需谨慎。`,
+
+        backtest: `📈 **策略回测结果**
+
+我为您模拟了一个多因子策略的历史回测：
+
+**回测参数**
+• 回测期间：2020-01-01 至 2024-01-01
+• 初始资金：100万元
+• 股票池：沪深300
+• 调仓频率：月度
+
+**回测结果**
+• 总收益率：+68.5%
+• 年化收益率：+14.2%
+• 最大回撤：-12.8%
+• 夏普比率：1.35
+• 胜率：58.3%
+• 交易次数：156次
+
+**基准对比**
+• 沪深300指数同期收益：+28.3%
+• 超额收益：+40.2%
+• 信息比率：1.12
+
+✅ **策略评价**：该策略在历史数据中表现良好，具有较好的风险调整收益。但请注意，历史表现不代表未来收益。`,
+      };
+
+      // 根据消息内容选择合适的响应
+      let quantContent;
+      if (message.includes("策略")) {
+        quantContent = quantResponses.strategy;
+      } else if (message.includes("因子")) {
+        quantContent = quantResponses.factor;
+      } else if (message.includes("信号") || message.includes("技术指标")) {
+        quantContent = quantResponses.signal;
+      } else if (message.includes("回测")) {
+        quantContent = quantResponses.backtest;
+      } else {
+        quantContent = quantResponses.strategy; // 默认返回策略介绍
+      }
+
+      response = {
+        role: "assistant",
+        content: quantContent,
+        hasStockInfo: false,
+        isQuantAnalysis: true, // 标识这是量化分析
       };
     } else if (isStockQuery) {
       // 模拟股票分析响应，包含结构化股票信息

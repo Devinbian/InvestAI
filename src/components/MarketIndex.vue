@@ -116,10 +116,14 @@ onUnmounted(() => {
     border-radius: 12px;
     border: 1px solid #f0f0f0;
     overflow: hidden;
+    min-height: calc(100vh - 200px);
+    display: flex;
+    flex-direction: column;
+    margin: 4px;
 }
 
 .card-header {
-    padding: 16px 20px 12px 20px;
+    padding: 12px 16px 8px 16px;
     border-bottom: 1px solid #f5f5f5;
     display: flex;
     justify-content: space-between;
@@ -127,7 +131,7 @@ onUnmounted(() => {
 }
 
 .card-title {
-    font-size: 1.1rem;
+    font-size: 1rem;
     font-weight: 600;
     color: #18181b;
     margin: 0;
@@ -139,14 +143,17 @@ onUnmounted(() => {
 }
 
 .index-list {
-    padding: 8px 0;
+    padding: 8px 0 20px 0;
+    flex: 1;
+    overflow-y: auto;
+    min-height: 0;
 }
 
 .index-item {
     display: flex;
     justify-content: space-between;
     align-items: center;
-    padding: 12px 20px;
+    padding: 10px 16px;
     transition: background-color 0.2s;
     cursor: pointer;
 }

@@ -64,10 +64,10 @@
                                 </el-button>
                                 <template #dropdown>
                                     <el-dropdown-menu>
-                                        <el-dropdown-item>智能选股</el-dropdown-item>
-                                        <el-dropdown-item>行业分析</el-dropdown-item>
-                                        <el-dropdown-item>投资计划</el-dropdown-item>
-                                        <el-dropdown-item>风险评估</el-dropdown-item>
+                                        <el-dropdown-item>智能荐股</el-dropdown-item>
+                                        <el-dropdown-item>大盘分析</el-dropdown-item>
+                                        <el-dropdown-item>自选分析</el-dropdown-item>
+                                        <el-dropdown-item>量化分析</el-dropdown-item>
                                     </el-dropdown-menu>
                                 </template>
                             </el-dropdown>
@@ -84,10 +84,69 @@
                 </div>
 
                 <div class="ai-suggestions">
-                    <el-button class="ai-suggestion-btn"
-                        @click="setSuggestionAndSend('帮我推荐几只低风险的科技股')">推荐低风险科技股</el-button>
-                    <el-button class="ai-suggestion-btn" @click="setSuggestionAndSend('分析一下当前热门行业')">分析热门行业</el-button>
-                    <el-button class="ai-suggestion-btn" @click="setSuggestionAndSend('帮我制定投资计划')">制定投资计划</el-button>
+                    <!-- 第一行：市场分析类 -->
+                    <div class="suggestion-row">
+                        <el-button class="ai-suggestion-btn hot" @click="setSuggestionAndSend('今日涨停板分析，有哪些值得关注的股票？')">
+                            <span class="btn-icon">🔥</span>
+                            涨停板分析
+                        </el-button>
+                        <el-button class="ai-suggestion-btn" @click="setSuggestionAndSend('分析今日大盘走势和明日预判')">
+                            <span class="btn-icon">📈</span>
+                            大盘走势
+                        </el-button>
+                        <el-button class="ai-suggestion-btn" @click="setSuggestionAndSend('当前热门板块和龙头股分析')">
+                            <span class="btn-icon">🏆</span>
+                            热门板块
+                        </el-button>
+                    </div>
+
+                    <!-- 第二行：选股策略类 -->
+                    <div class="suggestion-row">
+                        <el-button class="ai-suggestion-btn" @click="setSuggestionAndSend('帮我筛选低估值高分红的价值股')">
+                            <span class="btn-icon">💎</span>
+                            价值选股
+                        </el-button>
+                        <el-button class="ai-suggestion-btn" @click="setSuggestionAndSend('推荐近期突破关键技术位的强势股')">
+                            <span class="btn-icon">⚡</span>
+                            技术突破
+                        </el-button>
+                        <el-button class="ai-suggestion-btn" @click="setSuggestionAndSend('分析机构重仓和北向资金流入的股票')">
+                            <span class="btn-icon">🏛️</span>
+                            机构重仓
+                        </el-button>
+                    </div>
+
+                    <!-- 第三行：风险管理类 -->
+                    <div class="suggestion-row">
+                        <el-button class="ai-suggestion-btn warning" @click="setSuggestionAndSend('帮我分析持仓风险和仓位管理建议')">
+                            <span class="btn-icon">⚠️</span>
+                            风险分析
+                        </el-button>
+                        <el-button class="ai-suggestion-btn" @click="setSuggestionAndSend('制定止盈止损策略和资金管理计划')">
+                            <span class="btn-icon">🛡️</span>
+                            止盈止损
+                        </el-button>
+                        <el-button class="ai-suggestion-btn" @click="setSuggestionAndSend('分析市场情绪指标和散户行为')">
+                            <span class="btn-icon">🧠</span>
+                            市场情绪
+                        </el-button>
+                    </div>
+
+                    <!-- 第四行：量化交易类 -->
+                    <div class="suggestion-row">
+                        <el-button class="ai-suggestion-btn quant" @click="setSuggestionAndSend('推荐适合散户的量化交易策略')">
+                            <span class="btn-icon">🤖</span>
+                            量化策略
+                        </el-button>
+                        <el-button class="ai-suggestion-btn quant" @click="setSuggestionAndSend('帮我做多因子选股模型分析')">
+                            <span class="btn-icon">📊</span>
+                            因子选股
+                        </el-button>
+                        <el-button class="ai-suggestion-btn quant" @click="setSuggestionAndSend('分析技术指标组合交易信号')">
+                            <span class="btn-icon">📡</span>
+                            交易信号
+                        </el-button>
+                    </div>
                 </div>
             </div>
 
@@ -1139,7 +1198,7 @@ onMounted(() => {
     width: 100vw;
     box-sizing: border-box;
     transition: justify-content 0.3s;
-    overflow-y: auto;
+    overflow-y: hidden;
     min-height: 0;
 }
 
@@ -1474,26 +1533,129 @@ onMounted(() => {
 
 .ai-suggestions {
     display: flex;
+    flex-direction: column;
     gap: 12px;
-    margin-top: 16px;
-    flex-wrap: wrap;
+    margin-top: 20px;
+    width: 100%;
+}
+
+.suggestion-row {
+    display: flex;
+    gap: 10px;
     justify-content: center;
+    flex-wrap: wrap;
 }
 
 .ai-suggestion-btn {
-    border-radius: 20px;
-    background: #f5f7fa;
-    color: #18181b;
+    border-radius: 16px;
+    background: #f8fafc;
+    color: #374151;
     font-weight: 500;
-    border: none;
-    box-shadow: none;
-    padding: 8px 20px;
-    transition: background 0.2s;
-    font-size: 0.95rem;
+    border: 1px solid #e5e7eb;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+    padding: 10px 16px;
+    transition: all 0.2s ease;
+    font-size: 0.875rem;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    min-width: 120px;
+    justify-content: center;
+    position: relative;
+    overflow: hidden;
 }
 
 .ai-suggestion-btn:hover {
-    background: #e6e8eb;
+    background: #f1f5f9;
+    border-color: #cbd5e1;
+    transform: translateY(-1px);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+}
+
+.ai-suggestion-btn.hot {
+    background: linear-gradient(135deg, #fef3c7 0%, #fde68a 100%);
+    border-color: #f59e0b;
+    color: #92400e;
+    animation: pulse-glow 2s infinite;
+}
+
+.ai-suggestion-btn.hot:hover {
+    background: linear-gradient(135deg, #fde68a 0%, #fcd34d 100%);
+    border-color: #d97706;
+    color: #78350f;
+}
+
+.ai-suggestion-btn.warning {
+    background: linear-gradient(135deg, #fee2e2 0%, #fecaca 100%);
+    border-color: #f87171;
+    color: #991b1b;
+}
+
+.ai-suggestion-btn.warning:hover {
+    background: linear-gradient(135deg, #fecaca 0%, #fca5a5 100%);
+    border-color: #ef4444;
+    color: #7f1d1d;
+}
+
+.ai-suggestion-btn.quant {
+    background: linear-gradient(135deg, #e0e7ff 0%, #c7d2fe 100%);
+    border-color: #6366f1;
+    color: #3730a3;
+    position: relative;
+    overflow: hidden;
+}
+
+.ai-suggestion-btn.quant::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: -100%;
+    width: 100%;
+    height: 100%;
+    background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.4), transparent);
+    transition: left 0.5s ease;
+}
+
+.ai-suggestion-btn.quant:hover::before {
+    left: 100%;
+}
+
+.ai-suggestion-btn.quant:hover {
+    background: linear-gradient(135deg, #c7d2fe 0%, #a5b4fc 100%);
+    border-color: #4f46e5;
+    color: #312e81;
+}
+
+.btn-icon {
+    font-size: 1rem;
+    display: inline-block;
+    filter: drop-shadow(0 1px 2px rgba(0, 0, 0, 0.1));
+}
+
+@keyframes pulse-glow {
+
+    0%,
+    100% {
+        box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05), 0 0 0 0 rgba(245, 158, 11, 0.4);
+    }
+
+    50% {
+        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1), 0 0 0 4px rgba(245, 158, 11, 0.2);
+    }
+}
+
+/* 响应式设计 */
+@media (max-width: 768px) {
+    .suggestion-row {
+        flex-direction: column;
+        align-items: center;
+    }
+
+    .ai-suggestion-btn {
+        min-width: 200px;
+        width: 100%;
+        max-width: 280px;
+    }
 }
 
 .dialog-footer {
@@ -1507,13 +1669,10 @@ body {
     width: 100vw;
     min-height: 100vh;
     overflow-x: hidden !important;
-    overflow-y: scroll !important;
+    overflow-y: hidden !important;
 }
 
-/* 为滚动条预留空间，防止弹窗时页面晃动 */
-html {
-    scrollbar-gutter: stable;
-}
+/* 移除滚动条预留空间 */
 
 :deep(.el-textarea__inner) {
     background: transparent !important;

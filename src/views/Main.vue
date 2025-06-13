@@ -32,9 +32,9 @@
         </header>
 
         <!-- 主体内容 -->
-        <main class="modern-content" :class="{ 'chatting': chatHistory.length > 0 || inputMessage.trim() }">
+        <main class="modern-content" :class="{ 'chatting': isChatMode }">
             <!-- 初始状态：标题、描述和输入区域作为一个整体 -->
-            <div class="center-container" v-if="!(chatHistory.length > 0 || inputMessage.trim())">
+            <div class="center-container" v-if="!isChatMode">
                 <div class="welcome-section">
                     <div class="modern-title">我能帮你做什么？</div>
                     <div class="modern-desc">请输入您的投资问题或需求，智投小助手将为您提供专业建议</div>
@@ -84,14 +84,15 @@
                 </div>
 
                 <div class="ai-suggestions">
-                    <el-button class="ai-suggestion-btn" @click="inputMessage = '帮我推荐几只低风险的科技股'">推荐低风险科技股</el-button>
-                    <el-button class="ai-suggestion-btn" @click="inputMessage = '分析一下当前热门行业'">分析热门行业</el-button>
-                    <el-button class="ai-suggestion-btn" @click="inputMessage = '帮我制定投资计划'">制定投资计划</el-button>
+                    <el-button class="ai-suggestion-btn"
+                        @click="setSuggestionAndSend('帮我推荐几只低风险的科技股')">推荐低风险科技股</el-button>
+                    <el-button class="ai-suggestion-btn" @click="setSuggestionAndSend('分析一下当前热门行业')">分析热门行业</el-button>
+                    <el-button class="ai-suggestion-btn" @click="setSuggestionAndSend('帮我制定投资计划')">制定投资计划</el-button>
                 </div>
             </div>
 
             <!-- 聊天历史区域 -->
-            <div class="chat-history-area" v-if="chatHistory.length" ref="chatHistoryRef">
+            <div class="chat-history-area" v-if="isChatMode && chatHistory.length" ref="chatHistoryRef">
                 <div v-for="(message, idx) in chatHistory" :key="idx" :class="['chat-message', message.role]">
                     <div class="chat-message-content">{{ message.content }}</div>
                 </div>
@@ -99,7 +100,7 @@
         </main>
 
         <!-- 底部输入区域（仅在聊天状态显示） -->
-        <div class="input-area" v-if="chatHistory.length > 0 || inputMessage.trim()">
+        <div class="input-area" v-if="isChatMode">
             <!-- 新聊天按钮 -->
             <div class="new-chat-section" v-if="chatHistory.length > 0">
                 <el-button class="new-chat-btn" @click="createNewChat">
@@ -365,6 +366,7 @@ const userStore = useUserStore();
 const inputMessage = ref('');
 const chatHistory = ref([]);
 const chatHistoryRef = ref(null);
+const isChatMode = ref(false); // 控制是否进入聊天模式
 
 // 登录相关
 const loginDialogVisible = ref(false);
@@ -564,6 +566,10 @@ const sendMessage = async () => {
 
     const message = inputMessage.value;
     inputMessage.value = '';
+
+    // 发送消息后切换到聊天模式
+    isChatMode.value = true;
+
     const res = await mockApi.sendMessage(message);
     chatHistory.value.push(
         { role: 'user', content: message },
@@ -582,6 +588,7 @@ const scrollToBottom = () => {
 const createNewChat = () => {
     chatHistory.value = [];
     inputMessage.value = '';
+    isChatMode.value = false; // 退出聊天模式，回到初始状态
     ElMessage.success('已创建新聊天');
 };
 
@@ -593,6 +600,11 @@ watch(chatHistory, () => {
 
 const onVoiceClick = () => {
     ElMessage.info('语音输入功能开发中...');
+};
+
+const setSuggestionAndSend = (suggestion) => {
+    inputMessage.value = suggestion;
+    sendMessage();
 };
 
 const toggleAuthMode = () => {

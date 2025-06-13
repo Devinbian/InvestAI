@@ -32,7 +32,7 @@
         </header>
 
         <!-- 主体内容 -->
-        <main class="modern-content" :class="{ 'chatting': isChatMode }">
+        <main class="modern-content" :class="{ 'chatting': isChatMode, 'with-sidebar': userStore.isLoggedIn }">
             <!-- 初始状态：标题、描述和输入区域作为一个整体 -->
             <div class="center-container" v-if="!isChatMode">
                 <div class="welcome-section">
@@ -43,7 +43,7 @@
                 <div class="ai-card">
                     <div class="ai-input-row">
                         <el-input v-model="inputMessage" class="ai-input" type="textarea"
-                            :autosize="{ minRows: 2, maxRows: 6 }" placeholder="如：帮我分析一下科技行业的龙头股..."
+                            :autosize="{ minRows: 2, maxRows: 6 }" placeholder="如：帮我分析一下芯片行业的龙头股..."
                             @keyup.enter.ctrl="sendMessage" clearable maxlength="500" show-word-limit />
                         <div class="ai-buttons">
                             <el-button class="ai-func-btn" circle @click="onVoiceClick">
@@ -94,10 +94,67 @@
             <!-- 聊天历史区域 -->
             <div class="chat-history-area" v-if="isChatMode && chatHistory.length" ref="chatHistoryRef">
                 <div v-for="(message, idx) in chatHistory" :key="idx" :class="['chat-message', message.role]">
-                    <div class="chat-message-content">{{ message.content }}</div>
+                    <div class="chat-message-content">
+                        <div class="message-text">{{ message.content }}</div>
+                        <!-- 股票操作按钮 -->
+                        <div v-if="message.hasStockInfo && message.stockInfo" class="stock-actions">
+                            <!-- 购买按钮（购买模式时优先显示） -->
+                            <el-button v-if="message.isBuyMode" type="primary" size="small"
+                                @click="showBuyDialog(message.stockInfo)" class="buy-stock-btn">
+                                <svg width="14" height="14" viewBox="0 0 24 24" fill="none">
+                                    <path d="M12 2v20M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"
+                                        stroke="currentColor" stroke-width="2" />
+                                </svg>
+                                立即购买
+                            </el-button>
+
+                            <!-- 自选股按钮 -->
+                            <el-button v-if="!userStore.isInWatchlist(message.stockInfo.code)" type="primary"
+                                size="small" @click="addToWatchlist(message.stockInfo)" class="add-watchlist-btn">
+                                <svg width="14" height="14" viewBox="0 0 24 24" fill="none">
+                                    <path
+                                        d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"
+                                        stroke="currentColor" stroke-width="2" />
+                                </svg>
+                                加入自选
+                            </el-button>
+                            <el-button v-else type="success" size="small"
+                                @click="removeFromWatchlist(message.stockInfo.code)" class="remove-watchlist-btn">
+                                <svg width="14" height="14" viewBox="0 0 24 24" fill="none">
+                                    <path
+                                        d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"
+                                        fill="currentColor" />
+                                </svg>
+                                已加自选
+                            </el-button>
+
+                            <!-- 继续分析按钮 -->
+                            <el-button v-if="!message.isBuyMode" size="small"
+                                @click="continueAnalysis(message.stockInfo)" class="continue-analysis-btn">
+                                <svg width="14" height="14" viewBox="0 0 24 24" fill="none">
+                                    <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"
+                                        stroke="currentColor" stroke-width="2" />
+                                </svg>
+                                继续分析
+                            </el-button>
+
+                            <!-- 购买按钮（非购买模式时显示） -->
+                            <el-button v-if="!message.isBuyMode" size="small" @click="showBuyDialog(message.stockInfo)"
+                                class="buy-stock-btn-secondary">
+                                <svg width="14" height="14" viewBox="0 0 24 24" fill="none">
+                                    <path d="M12 2v20M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"
+                                        stroke="currentColor" stroke-width="2" />
+                                </svg>
+                                购买
+                            </el-button>
+                        </div>
+                    </div>
                 </div>
             </div>
         </main>
+
+        <!-- 侧边栏（仅在登录后显示） -->
+        <Sidebar v-if="userStore.isLoggedIn" @send-to-chat="handleSidebarInteraction" />
 
         <!-- 底部输入区域（仅在聊天状态显示） -->
         <div class="input-area" v-if="isChatMode">
@@ -115,7 +172,7 @@
             <div class="ai-card">
                 <div class="ai-input-row">
                     <el-input v-model="inputMessage" class="ai-input" type="textarea"
-                        :autosize="{ minRows: 2, maxRows: 6 }" placeholder="如：帮我分析一下科技行业的龙头股..."
+                        :autosize="{ minRows: 2, maxRows: 6 }" placeholder="如：帮我分析一下芯片行业的龙头股..."
                         @keyup.enter.ctrl="sendMessage" clearable maxlength="500" show-word-limit />
                     <div class="ai-buttons">
                         <el-button class="ai-func-btn" circle @click="onVoiceClick">
@@ -338,6 +395,62 @@
             </div>
         </el-dialog>
 
+        <!-- 购买股票对话框 -->
+        <el-dialog v-model="buyDialogVisible" title="购买股票" width="500px" class="buy-dialog">
+            <div class="buy-form" v-if="selectedStock">
+                <div class="stock-info-card">
+                    <div class="stock-header">
+                        <h3>{{ selectedStock.name }} ({{ selectedStock.code }})</h3>
+                        <div class="stock-price">
+                            <span class="current-price">¥{{ selectedStock.price }}</span>
+                            <span :class="['price-change', selectedStock.change >= 0 ? 'positive' : 'negative']">
+                                {{ selectedStock.change >= 0 ? '+' : '' }}{{ selectedStock.change }}
+                                ({{ selectedStock.changePercent >= 0 ? '+' : '' }}{{ selectedStock.changePercent }}%)
+                            </span>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="account-info">
+                    <div class="balance-item">
+                        <span>可用余额：</span>
+                        <span class="balance-amount">¥{{ userStore.balance.toFixed(2) }}</span>
+                    </div>
+                    <div class="position-item" v-if="currentPosition">
+                        <span>当前持仓：</span>
+                        <span class="position-amount">{{ currentPosition.quantity }}股 (成本价¥{{
+                            currentPosition.avgPrice.toFixed(2) }})</span>
+                    </div>
+                </div>
+
+                <el-form :model="buyForm" :rules="buyRules" ref="buyFormRef" label-width="80px">
+                    <el-form-item label="购买数量" prop="quantity">
+                        <el-input-number v-model="buyForm.quantity" :min="100" :step="100" :max="maxBuyQuantity"
+                            controls-position="right" style="width: 100%" />
+                        <div class="quantity-tips">
+                            <span>最少100股，最多{{ maxBuyQuantity }}股</span>
+                        </div>
+                    </el-form-item>
+
+                    <el-form-item label="交易金额">
+                        <div class="trade-amount">
+                            <span class="amount-value">¥{{ totalCost.toFixed(2) }}</span>
+                            <span class="amount-desc">（含手续费）</span>
+                        </div>
+                    </el-form-item>
+                </el-form>
+            </div>
+
+            <template #footer>
+                <div class="buy-dialog-footer">
+                    <el-button @click="buyDialogVisible = false">取消</el-button>
+                    <el-button type="primary" @click="confirmBuy" :loading="buyLoading" :disabled="!canBuy">
+                        确认购买
+                    </el-button>
+                </div>
+            </template>
+        </el-dialog>
+
         <!-- 引导提示 -->
         <div v-if="showGuideTip" class="guide-tip">
             <div class="guide-content">
@@ -361,6 +474,7 @@ import { useUserStore } from '../store/user';
 import { User, Lock, ArrowDown } from '@element-plus/icons-vue';
 import { ElMessage } from 'element-plus';
 import { mockApi } from '../api/mock';
+import Sidebar from '../components/Sidebar.vue';
 
 const userStore = useUserStore();
 const inputMessage = ref('');
@@ -497,6 +611,22 @@ const guideMessage = ref('');
 const guideActionText = ref('');
 const guideType = ref(''); // 'login' | 'register' | 'preferences'
 
+// 购买股票相关
+const buyDialogVisible = ref(false);
+const selectedStock = ref(null);
+const buyLoading = ref(false);
+const buyFormRef = ref(null);
+const buyForm = reactive({
+    quantity: 100
+});
+
+const buyRules = {
+    quantity: [
+        { required: true, message: '请输入购买数量', trigger: 'blur' },
+        { type: 'number', min: 100, message: '最少购买100股', trigger: 'blur' }
+    ]
+};
+
 const showLoginDialog = (isRegister) => {
     isRegisterMode.value = isRegister;
     loginDialogVisible.value = true;
@@ -605,6 +735,79 @@ const onVoiceClick = () => {
 const setSuggestionAndSend = (suggestion) => {
     inputMessage.value = suggestion;
     sendMessage();
+};
+
+// 处理来自侧边栏的交互
+const handleSidebarInteraction = async (data) => {
+    const { type, content, title } = data;
+
+    let message = '';
+
+    switch (type) {
+        case 'stock':
+            message = `请详细分析一下${content.name}(${content.code})这只股票，包括基本面分析、技术面分析、投资建议和风险提示。`;
+            break;
+        case 'message':
+            message = `关于"${title}"这个消息，请帮我分析一下具体的影响和投资机会。消息内容：${content}`;
+            break;
+        case 'market':
+            message = `请分析一下${content.name}当前的走势，包括技术指标分析和后市预判。`;
+            break;
+        default:
+            message = content;
+    }
+
+    // 检查用户是否已登录
+    if (!userStore.isLoggedIn) {
+        ElMessage.warning('请先登录后再开始对话');
+        showGuide('login');
+        return;
+    }
+
+    // 切换到聊天模式
+    isChatMode.value = true;
+
+    // 发送消息
+    const res = await mockApi.sendMessage(message);
+    chatHistory.value.push(
+        { role: 'user', content: message },
+        res.data
+    );
+
+    await nextTick();
+    scrollToBottom();
+
+    ElMessage.success('已为您分析相关内容');
+};
+
+// 自选股相关方法
+const addToWatchlist = (stockInfo) => {
+    if (userStore.addToWatchlist(stockInfo)) {
+        ElMessage.success(`${stockInfo.name} 已加入自选股`);
+    } else {
+        ElMessage.warning(`${stockInfo.name} 已在自选股中`);
+    }
+};
+
+const removeFromWatchlist = (stockCode) => {
+    if (userStore.removeFromWatchlist(stockCode)) {
+        ElMessage.success('已从自选股中移除');
+    } else {
+        ElMessage.error('移除失败');
+    }
+};
+
+const continueAnalysis = async (stockInfo) => {
+    const message = `请进一步分析${stockInfo.name}的投资价值，包括同行业对比、未来发展前景和具体的买入时机建议。`;
+
+    const res = await mockApi.sendMessage(message);
+    chatHistory.value.push(
+        { role: 'user', content: message },
+        res.data
+    );
+
+    await nextTick();
+    scrollToBottom();
 };
 
 const toggleAuthMode = () => {
@@ -761,6 +964,79 @@ const dismissGuide = () => {
     showGuideTip.value = false;
 };
 
+// 购买相关计算属性
+const currentPosition = computed(() => {
+    if (!selectedStock.value) return null;
+    return userStore.getPosition(selectedStock.value.code);
+});
+
+const maxBuyQuantity = computed(() => {
+    if (!selectedStock.value) return 0;
+    const price = parseFloat(selectedStock.value.price);
+    const maxShares = Math.floor(userStore.balance / price / 100) * 100; // 按100股整数倍
+    return Math.max(0, maxShares);
+});
+
+const totalCost = computed(() => {
+    if (!selectedStock.value || !buyForm.quantity) return 0;
+    const price = parseFloat(selectedStock.value.price);
+    const cost = buyForm.quantity * price;
+    const fee = cost * 0.0003; // 0.03% 手续费
+    return cost + fee;
+});
+
+const canBuy = computed(() => {
+    return buyForm.quantity >= 100 &&
+        totalCost.value <= userStore.balance &&
+        buyForm.quantity <= maxBuyQuantity.value;
+});
+
+// 购买相关方法
+const showBuyDialog = (stockInfo) => {
+    selectedStock.value = stockInfo;
+    buyForm.quantity = 100;
+    buyDialogVisible.value = true;
+};
+
+const confirmBuy = async () => {
+    if (!buyFormRef.value) return;
+
+    await buyFormRef.value.validate((valid) => {
+        if (valid) {
+            buyLoading.value = true;
+
+            // 模拟购买延迟
+            setTimeout(() => {
+                const result = userStore.buyStock(
+                    selectedStock.value,
+                    buyForm.quantity,
+                    parseFloat(selectedStock.value.price)
+                );
+
+                if (result.success) {
+                    ElMessage.success(result.message);
+                    buyDialogVisible.value = false;
+
+                    // 发送购买成功的消息到聊天
+                    const successMessage = `✅ 购买成功！您已成功购买${selectedStock.value.name} ${buyForm.quantity}股，花费¥${totalCost.value.toFixed(2)}。当前余额：¥${userStore.balance.toFixed(2)}`;
+                    chatHistory.value.push({
+                        role: 'assistant',
+                        content: successMessage
+                    });
+
+                    nextTick(() => {
+                        scrollToBottom();
+                    });
+                } else {
+                    ElMessage.error(result.message);
+                }
+
+                buyLoading.value = false;
+            }, 1000);
+        }
+    });
+};
+
 // 检查用户状态并显示相应引导
 const checkUserStatus = () => {
     if (!userStore.isLoggedIn) {
@@ -870,8 +1146,12 @@ onMounted(() => {
 .modern-content.chatting {
     justify-content: flex-start;
     padding-top: 88px;
-    padding-bottom: 200px;
+    padding-bottom: 0;
+    height: calc(100vh - 56px);
+    overflow: hidden;
 }
+
+/* 移除对主内容区域的padding限制，让聊天框保持原有大小 */
 
 .center-container {
     display: flex;
@@ -905,6 +1185,36 @@ onMounted(() => {
     max-width: 700px;
     margin: 0 auto;
     padding: 20px 0;
+    overflow-y: auto;
+    height: calc(100vh - 56px - 260px);
+    /* 页面高度 - 导航栏高度 - 输入区域高度(增加到240px) */
+    scrollbar-width: thin;
+    /* Firefox */
+    scrollbar-color: transparent transparent;
+    /* Firefox */
+}
+
+/* 聊天区域滚动条样式 - 只在滚动时显示 */
+.chat-history-area::-webkit-scrollbar {
+    width: 6px;
+}
+
+.chat-history-area::-webkit-scrollbar-track {
+    background: transparent;
+}
+
+.chat-history-area::-webkit-scrollbar-thumb {
+    background: transparent;
+    border-radius: 3px;
+    transition: background 0.3s ease;
+}
+
+.chat-history-area:hover::-webkit-scrollbar-thumb {
+    background: rgba(0, 0, 0, 0.2);
+}
+
+.chat-history-area::-webkit-scrollbar-thumb:hover {
+    background: rgba(0, 0, 0, 0.4);
 }
 
 .chat-message {
@@ -934,20 +1244,127 @@ onMounted(() => {
     line-height: 1.4;
 }
 
+/* 聊天消息内容样式 */
+.message-text {
+    white-space: pre-line;
+    margin-bottom: 8px;
+}
+
+.message-text:last-child {
+    margin-bottom: 0;
+}
+
+/* 股票操作按钮样式 */
+.stock-actions {
+    display: flex;
+    gap: 8px;
+    margin-top: 12px;
+    flex-wrap: wrap;
+}
+
+.add-watchlist-btn,
+.remove-watchlist-btn,
+.continue-analysis-btn {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    font-size: 0.875rem;
+    border-radius: 16px;
+    padding: 6px 12px;
+    transition: all 0.2s ease;
+}
+
+.add-watchlist-btn {
+    background: #3b82f6;
+    border-color: #3b82f6;
+    color: white;
+}
+
+.add-watchlist-btn:hover {
+    background: #2563eb;
+    border-color: #2563eb;
+    transform: translateY(-1px);
+}
+
+.remove-watchlist-btn {
+    background: #10b981;
+    border-color: #10b981;
+    color: white;
+}
+
+.remove-watchlist-btn:hover {
+    background: #059669;
+    border-color: #059669;
+    transform: translateY(-1px);
+}
+
+.continue-analysis-btn {
+    background: #f3f4f6;
+    border-color: #e5e7eb;
+    color: #374151;
+}
+
+.continue-analysis-btn:hover {
+    background: #e5e7eb;
+    border-color: #d1d5db;
+    color: #1f2937;
+    transform: translateY(-1px);
+}
+
+.buy-stock-btn,
+.buy-stock-btn-secondary {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    font-size: 0.875rem;
+    border-radius: 16px;
+    padding: 6px 12px;
+    transition: all 0.2s ease;
+}
+
+.buy-stock-btn {
+    background: #f59e0b;
+    border-color: #f59e0b;
+    color: white;
+}
+
+.buy-stock-btn:hover {
+    background: #d97706;
+    border-color: #d97706;
+    transform: translateY(-1px);
+}
+
+.buy-stock-btn-secondary {
+    background: #f3f4f6;
+    border-color: #e5e7eb;
+    color: #f59e0b;
+}
+
+.buy-stock-btn-secondary:hover {
+    background: #e5e7eb;
+    border-color: #d1d5db;
+    color: #d97706;
+    transform: translateY(-1px);
+}
+
 .input-area {
     position: fixed;
     bottom: 0;
     left: 0;
     right: 0;
-    background: #fff;
+    background: rgba(255, 255, 255, 0.95);
+    backdrop-filter: blur(10px);
     border-top: 1px solid #f0f0f0;
     padding: 20px 32px 32px 32px;
     display: flex;
     flex-direction: column;
     align-items: center;
-    z-index: 5;
+    z-index: 50;
     transition: all 0.3s;
+    box-shadow: 0 -4px 20px rgba(0, 0, 0, 0.1);
 }
+
+/* 移除输入区域的right限制，让它保持全宽 */
 
 .new-chat-section {
     width: 100%;
@@ -1762,5 +2179,163 @@ html {
         transform: translateX(0);
         opacity: 1;
     }
+}
+
+/* 购买对话框样式 */
+:deep(.buy-dialog) {
+    border-radius: 16px;
+    overflow: hidden;
+    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.12);
+}
+
+:deep(.buy-dialog .el-dialog__header) {
+    background: #f8fafc;
+    border-bottom: 1px solid #e5e7eb;
+    padding: 20px 24px;
+}
+
+:deep(.buy-dialog .el-dialog__title) {
+    font-size: 1.25rem;
+    font-weight: 600;
+    color: #18181b;
+}
+
+:deep(.buy-dialog .el-dialog__body) {
+    padding: 24px;
+}
+
+.buy-form {
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+}
+
+.stock-info-card {
+    background: #f8fafc;
+    border-radius: 12px;
+    padding: 20px;
+    border: 1px solid #e5e7eb;
+}
+
+.stock-header h3 {
+    font-size: 1.25rem;
+    font-weight: 600;
+    color: #18181b;
+    margin: 0 0 8px 0;
+}
+
+.stock-price {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+}
+
+.current-price {
+    font-size: 1.5rem;
+    font-weight: 700;
+    color: #18181b;
+}
+
+.price-change {
+    font-size: 0.875rem;
+    font-weight: 500;
+    padding: 2px 8px;
+    border-radius: 6px;
+}
+
+.price-change.positive {
+    color: #059669;
+    background: #d1fae5;
+}
+
+.price-change.negative {
+    color: #dc2626;
+    background: #fee2e2;
+}
+
+.account-info {
+    background: white;
+    border: 1px solid #e5e7eb;
+    border-radius: 8px;
+    padding: 16px;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+
+.balance-item,
+.position-item {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    font-size: 0.875rem;
+}
+
+.balance-item span:first-child,
+.position-item span:first-child {
+    color: #6b7280;
+}
+
+.balance-amount {
+    font-weight: 600;
+    color: #059669;
+}
+
+.position-amount {
+    font-weight: 500;
+    color: #18181b;
+}
+
+.quantity-tips {
+    margin-top: 4px;
+    font-size: 0.75rem;
+    color: #6b7280;
+}
+
+.trade-amount {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.amount-value {
+    font-size: 1.25rem;
+    font-weight: 700;
+    color: #f59e0b;
+}
+
+.amount-desc {
+    font-size: 0.75rem;
+    color: #6b7280;
+}
+
+.buy-dialog-footer {
+    display: flex;
+    gap: 12px;
+    justify-content: flex-end;
+}
+
+:deep(.buy-dialog .el-form-item__label) {
+    font-weight: 500;
+    color: #374151;
+}
+
+:deep(.buy-dialog .el-input-number) {
+    width: 100%;
+}
+
+:deep(.buy-dialog .el-input-number .el-input__wrapper) {
+    border-radius: 8px;
+    border: 1px solid #d1d5db;
+    transition: all 0.2s ease;
+}
+
+:deep(.buy-dialog .el-input-number .el-input__wrapper:hover) {
+    border-color: #9ca3af;
+}
+
+:deep(.buy-dialog .el-input-number.is-focus .el-input__wrapper) {
+    border-color: #f59e0b;
+    box-shadow: 0 0 0 3px rgba(245, 158, 11, 0.1);
 }
 </style>

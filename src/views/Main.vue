@@ -4,6 +4,7 @@
         <header class="modern-navbar">
             <div class="navbar-left">
                 <img src="../assets/logo.svg" class="modern-logo" alt="logo" />
+                <span class="app-title">智投小助</span>
             </div>
             <div class="navbar-right">
                 <template v-if="userStore.isLoggedIn">
@@ -25,7 +26,7 @@
                 </template>
                 <template v-else>
                     <el-button class="modern-btn" @click="showLoginDialog">登录</el-button>
-                    <el-button class="modern-btn" type="primary" @click="showLoginDialog">注册</el-button>
+                    <el-button class="modern-btn" @click="showLoginDialog">注册</el-button>
                 </template>
             </div>
         </header>
@@ -36,7 +37,7 @@
             <div class="center-container" v-if="!(chatHistory.length > 0 || inputMessage.trim())">
                 <div class="welcome-section">
                     <div class="modern-title">我能帮你做什么？</div>
-                    <div class="modern-desc">请输入您的投资问题或需求，智能助手将为您提供专业建议</div>
+                    <div class="modern-desc">请输入您的投资问题或需求，智投小助手将为您提供专业建议</div>
                 </div>
 
                 <div class="ai-card">
@@ -299,9 +300,11 @@ onMounted(() => {
     align-items: center;
     justify-content: space-between;
     padding: 0 32px;
-    position: sticky;
+    position: fixed;
     top: 0;
-    z-index: 10;
+    left: 0;
+    right: 0;
+    z-index: 100;
     box-sizing: border-box;
     overflow: hidden;
 }
@@ -309,11 +312,19 @@ onMounted(() => {
 .navbar-left {
     display: flex;
     align-items: center;
+    gap: 12px;
 }
 
 .modern-logo {
     width: 36px;
     height: 36px;
+}
+
+.app-title {
+    font-size: 1.25rem;
+    font-weight: 700;
+    color: #1a237e;
+    letter-spacing: 0.5px;
 }
 
 .navbar-right {
@@ -349,7 +360,7 @@ onMounted(() => {
     flex-direction: column;
     align-items: center;
     justify-content: center;
-    padding: 0 32px;
+    padding: 56px 32px 0 32px;
     max-width: 800px;
     margin: 0 auto;
     width: 100vw;
@@ -361,7 +372,7 @@ onMounted(() => {
 
 .modern-content.chatting {
     justify-content: flex-start;
-    padding-top: 32px;
+    padding-top: 88px;
     padding-bottom: 200px;
 }
 

@@ -157,7 +157,7 @@
 
         <!-- 登录对话框 -->
         <el-dialog v-model="loginDialogVisible" :show-close="false" :close-on-click-modal="false" :lock-scroll="false"
-            width="420px" class="auth-dialog">
+            width="720px" class="auth-dialog">
             <template #header>
                 <div></div>
             </template>
@@ -215,11 +215,147 @@
                 </div>
             </div>
         </el-dialog>
+
+        <!-- 投资偏好设置对话框 -->
+        <el-dialog v-model="preferencesDialogVisible" :show-close="false" :close-on-click-modal="false"
+            :lock-scroll="false" width="720px" class="preferences-dialog">
+            <template #header>
+                <div></div>
+            </template>
+
+            <div class="preferences-container">
+                <div class="preferences-header">
+                    <div class="preferences-logo">
+                        <img src="../assets/logo.svg" alt="Logo" class="logo-image" />
+                    </div>
+                    <h1 class="preferences-title">完善投资偏好</h1>
+                    <p class="preferences-subtitle">帮助我们为您提供更精准的投资建议</p>
+
+                    <!-- 步骤指示器 -->
+                    <div class="step-indicator">
+                        <div v-for="(step, index) in preferenceSteps" :key="index" class="step-dot" :class="{
+                            'active': index === currentStep,
+                            'completed': index < currentStep
+                        }">
+                            <span v-if="index < currentStep">✓</span>
+                            <span v-else>{{ index + 1 }}</span>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="preferences-form-wrapper">
+                    <!-- 步骤1: 风险偏好 -->
+                    <div v-if="currentStep === 0" class="step-content">
+                        <h3 class="step-title">{{ preferenceSteps[0].title }}</h3>
+                        <p class="step-desc">{{ preferenceSteps[0].desc }}</p>
+
+                        <div class="risk-options">
+                            <div v-for="option in riskOptions" :key="option.value" class="risk-option"
+                                :class="{ 'selected': preferencesForm.riskLevel === option.value }"
+                                @click="preferencesForm.riskLevel = option.value">
+                                <div class="option-radio">
+                                    <div class="radio-dot"
+                                        :class="{ 'checked': preferencesForm.riskLevel === option.value }">
+                                    </div>
+                                </div>
+                                <div class="option-content">
+                                    <div class="option-title">{{ option.title }}</div>
+                                    <div class="option-desc">{{ option.desc }}</div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- 步骤2: 投资经验 -->
+                    <div v-if="currentStep === 1" class="step-content">
+                        <h3 class="step-title">{{ preferenceSteps[1].title }}</h3>
+                        <p class="step-desc">{{ preferenceSteps[1].desc }}</p>
+
+                        <div class="experience-options">
+                            <div v-for="option in experienceOptions" :key="option.value" class="experience-option"
+                                :class="{ 'selected': preferencesForm.experience === option.value }"
+                                @click="preferencesForm.experience = option.value">
+                                <div class="option-radio">
+                                    <div class="radio-dot"
+                                        :class="{ 'checked': preferencesForm.experience === option.value }">
+                                    </div>
+                                </div>
+                                <div class="option-text">{{ option.label }}</div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- 步骤3: 投资目标 -->
+                    <div v-if="currentStep === 2" class="step-content">
+                        <h3 class="step-title">{{ preferenceSteps[2].title }}</h3>
+                        <p class="step-desc">{{ preferenceSteps[2].desc }}</p>
+
+                        <div class="goals-options">
+                            <div v-for="option in goalOptions" :key="option.value" class="goal-option"
+                                :class="{ 'selected': preferencesForm.goals.includes(option.value) }"
+                                @click="toggleGoal(option.value)">
+                                <div class="option-text">{{ option.label }}</div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- 步骤4: 关注板块 -->
+                    <div v-if="currentStep === 3" class="step-content">
+                        <h3 class="step-title">{{ preferenceSteps[3].title }}</h3>
+                        <p class="step-desc">{{ preferenceSteps[3].desc }}</p>
+
+                        <div class="sectors-options">
+                            <div v-for="option in sectorOptions" :key="option.value" class="sector-option"
+                                :class="{ 'selected': preferencesForm.sectors.includes(option.value) }"
+                                @click="toggleSector(option.value)">
+                                <div class="option-text">{{ option.label }}</div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- 导航按钮 -->
+                    <div class="preferences-actions">
+                        <el-button v-if="currentStep > 0" class="preferences-back-btn" @click="previousStep">
+                            上一步
+                        </el-button>
+
+                        <el-button v-if="currentStep < preferenceSteps.length - 1" class="preferences-next-btn"
+                            type="primary" @click="nextStep" :disabled="!canProceedToNext">
+                            下一步
+                        </el-button>
+
+                        <el-button v-if="currentStep === preferenceSteps.length - 1" class="preferences-submit-btn"
+                            type="primary" @click="handlePreferencesSubmit" :loading="preferencesLoading">
+                            完成设置
+                        </el-button>
+
+                        <el-button class="preferences-skip-btn" @click="skipPreferences">
+                            跳过
+                        </el-button>
+                    </div>
+                </div>
+            </div>
+        </el-dialog>
+
+        <!-- 引导提示 -->
+        <div v-if="showGuideTip" class="guide-tip">
+            <div class="guide-content">
+                <div class="guide-icon">👋</div>
+                <div class="guide-text">
+                    <h4>{{ guideTitle }}</h4>
+                    <p>{{ guideMessage }}</p>
+                </div>
+                <div class="guide-actions">
+                    <el-button type="primary" size="small" @click="handleGuideAction">{{ guideActionText }}</el-button>
+                    <el-button size="small" @click="dismissGuide">稍后</el-button>
+                </div>
+            </div>
+        </div>
     </div>
 </template>
 
 <script setup>
-import { ref, reactive, onMounted, nextTick, watch } from 'vue';
+import { ref, reactive, onMounted, nextTick, watch, computed } from 'vue';
 import { useUserStore } from '../store/user';
 import { User, Lock, ArrowDown } from '@element-plus/icons-vue';
 import { ElMessage } from 'element-plus';
@@ -268,6 +404,97 @@ const loginRules = {
 const isRegisterMode = ref(false);
 const loginLoading = ref(false);
 
+// 投资偏好设置
+const preferencesDialogVisible = ref(false);
+const preferencesFormRef = ref(null);
+const preferencesLoading = ref(false);
+const currentStep = ref(0);
+const preferencesForm = reactive({
+    riskLevel: '',
+    experience: '',
+    goals: [],
+    sectors: []
+});
+
+// 步骤配置
+const preferenceSteps = [
+    {
+        title: '风险偏好',
+        desc: '请选择您的风险承受能力'
+    },
+    {
+        title: '投资经验',
+        desc: '请选择您的投资经验水平'
+    },
+    {
+        title: '投资目标',
+        desc: '请选择您的投资目标（可多选）'
+    },
+    {
+        title: '关注板块',
+        desc: '请选择您关注的投资板块（可多选）'
+    }
+];
+
+// 选项配置
+const riskOptions = [
+    {
+        value: 'conservative',
+        title: '保守型',
+        desc: '追求稳健收益，风险承受能力较低'
+    },
+    {
+        value: 'stable',
+        title: '稳健型',
+        desc: '注重资金安全，追求稳定增值'
+    },
+    {
+        value: 'balanced',
+        title: '平衡型',
+        desc: '平衡风险与收益，适度承担风险'
+    },
+    {
+        value: 'growth',
+        title: '成长型',
+        desc: '追求较高收益，能承担一定风险'
+    },
+    {
+        value: 'aggressive',
+        title: '激进型',
+        desc: '追求高收益，能承担较高风险'
+    }
+];
+
+const experienceOptions = [
+    { value: 'beginner', label: '新手（1年以下）' },
+    { value: 'intermediate', label: '中级（1-3年）' },
+    { value: 'advanced', label: '高级（3年以上）' }
+];
+
+const goalOptions = [
+    { value: 'wealth_growth', label: '财富增值' },
+    { value: 'retirement', label: '养老规划' },
+    { value: 'education', label: '教育基金' },
+    { value: 'house', label: '购房置业' },
+    { value: 'emergency', label: '应急储备' }
+];
+
+const sectorOptions = [
+    { value: 'technology', label: '科技股' },
+    { value: 'healthcare', label: '医疗健康' },
+    { value: 'finance', label: '金融' },
+    { value: 'consumer', label: '消费' },
+    { value: 'energy', label: '能源' },
+    { value: 'real_estate', label: '房地产' }
+];
+
+// 引导提示
+const showGuideTip = ref(false);
+const guideTitle = ref('');
+const guideMessage = ref('');
+const guideActionText = ref('');
+const guideType = ref(''); // 'login' | 'register' | 'preferences'
+
 const showLoginDialog = (isRegister) => {
     isRegisterMode.value = isRegister;
     loginDialogVisible.value = true;
@@ -278,16 +505,37 @@ const handleLogin = async () => {
     await loginFormRef.value.validate((valid) => {
         if (valid) {
             loginLoading.value = true;
-            const token = 'mock-token-' + Date.now();
-            const userInfo = {
-                username: loginForm.username,
-                nickname: '测试用户'
-            };
-            userStore.setToken(token);
-            userStore.setUserInfo(userInfo);
-            ElMessage.success('登录成功');
-            loginDialogVisible.value = false;
-            loginLoading.value = false;
+
+            // 模拟API调用
+            setTimeout(() => {
+                const token = 'mock-token-' + Date.now();
+                const userInfo = {
+                    username: loginForm.username,
+                    nickname: loginForm.username,
+                    isNewUser: isRegisterMode.value
+                };
+
+                userStore.setToken(token);
+                userStore.setUserInfo(userInfo);
+
+                if (isRegisterMode.value) {
+                    // 新用户注册成功，引导设置投资偏好
+                    ElMessage.success('注册成功！');
+                    loginDialogVisible.value = false;
+                    loginLoading.value = false;
+
+                    // 延迟显示投资偏好设置
+                    setTimeout(() => {
+                        preferencesDialogVisible.value = true;
+                    }, 500);
+                } else {
+                    // 老用户登录成功
+                    ElMessage.success('登录成功！');
+                    loginDialogVisible.value = false;
+                    loginLoading.value = false;
+                    dismissGuide();
+                }
+            }, 1000);
         }
     });
 };
@@ -306,6 +554,14 @@ const handleCommand = (command) => {
 
 const sendMessage = async () => {
     if (!inputMessage.value.trim()) return;
+
+    // 检查用户是否已登录
+    if (!userStore.isLoggedIn) {
+        ElMessage.warning('请先登录后再开始对话');
+        showGuide('login');
+        return;
+    }
+
     const message = inputMessage.value;
     inputMessage.value = '';
     const res = await mockApi.sendMessage(message);
@@ -345,14 +601,167 @@ const toggleAuthMode = () => {
     loginForm.password = '';
     loginForm.phone = '';
     loginForm.confirmPassword = '';
+
+    // 清除表单验证
+    if (loginFormRef.value) {
+        loginFormRef.value.clearValidate();
+    }
 };
 
 const closeAuthDialog = () => {
     loginDialogVisible.value = false;
 };
 
+// 投资偏好相关方法
+const handlePreferencesSubmit = async () => {
+    preferencesLoading.value = true;
+
+    // 模拟保存投资偏好
+    setTimeout(() => {
+        const preferences = {
+            riskLevel: preferencesForm.riskLevel,
+            experience: preferencesForm.experience,
+            goals: preferencesForm.goals,
+            sectors: preferencesForm.sectors,
+            completedAt: new Date().toISOString()
+        };
+
+        // 保存到用户信息中
+        const currentUser = userStore.userInfo;
+        userStore.setUserInfo({
+            ...currentUser,
+            preferences
+        });
+
+        ElMessage.success('投资偏好设置完成！');
+        preferencesDialogVisible.value = false;
+        preferencesLoading.value = false;
+
+        // 显示欢迎消息
+        setTimeout(() => {
+            chatHistory.value.push({
+                role: 'assistant',
+                content: `欢迎使用智投小助！根据您的投资偏好（${getRiskLevelText(preferences.riskLevel)}），我将为您提供个性化的投资建议。您可以问我任何关于投资的问题。`
+            });
+        }, 500);
+    }, 1000);
+};
+
+const skipPreferences = () => {
+    preferencesDialogVisible.value = false;
+    currentStep.value = 0;
+    ElMessage.info('您可以稍后在设置中完善投资偏好');
+};
+
+// 步骤导航方法
+const nextStep = () => {
+    if (canProceedToNext.value && currentStep.value < preferenceSteps.length - 1) {
+        currentStep.value++;
+    }
+};
+
+const previousStep = () => {
+    if (currentStep.value > 0) {
+        currentStep.value--;
+    }
+};
+
+// 检查是否可以进入下一步
+const canProceedToNext = computed(() => {
+    switch (currentStep.value) {
+        case 0: // 风险偏好
+            return preferencesForm.riskLevel !== '';
+        case 1: // 投资经验
+            return preferencesForm.experience !== '';
+        case 2: // 投资目标
+            return preferencesForm.goals.length > 0;
+        case 3: // 关注板块
+            return preferencesForm.sectors.length > 0;
+        default:
+            return false;
+    }
+});
+
+// 选择切换方法
+const toggleGoal = (value) => {
+    const index = preferencesForm.goals.indexOf(value);
+    if (index > -1) {
+        preferencesForm.goals.splice(index, 1);
+    } else {
+        preferencesForm.goals.push(value);
+    }
+};
+
+const toggleSector = (value) => {
+    const index = preferencesForm.sectors.indexOf(value);
+    if (index > -1) {
+        preferencesForm.sectors.splice(index, 1);
+    } else {
+        preferencesForm.sectors.push(value);
+    }
+};
+
+const getRiskLevelText = (level) => {
+    const map = {
+        'conservative': '保守型',
+        'stable': '稳健型',
+        'balanced': '平衡型',
+        'growth': '成长型',
+        'aggressive': '激进型'
+    };
+    return map[level] || '未设置';
+};
+
+// 引导提示相关方法
+const showGuide = (type) => {
+    guideType.value = type;
+
+    switch (type) {
+        case 'login':
+            guideTitle.value = '欢迎回来！';
+            guideMessage.value = '请先登录您的账号，继续使用智投小助的服务';
+            guideActionText.value = '立即登录';
+            break;
+        case 'register':
+            guideTitle.value = '欢迎使用智投小助！';
+            guideMessage.value = '看起来您是新用户，请先注册账号开始您的投资之旅';
+            guideActionText.value = '立即注册';
+            break;
+    }
+
+    showGuideTip.value = true;
+};
+
+const handleGuideAction = () => {
+    dismissGuide();
+
+    switch (guideType.value) {
+        case 'login':
+            showLoginDialog(false);
+            break;
+        case 'register':
+            showLoginDialog(true);
+            break;
+    }
+};
+
+const dismissGuide = () => {
+    showGuideTip.value = false;
+};
+
+// 检查用户状态并显示相应引导
+const checkUserStatus = () => {
+    if (!userStore.isLoggedIn) {
+        // 未登录，显示登录引导
+        setTimeout(() => {
+            showGuide('login');
+        }, 2000);
+    }
+};
+
 onMounted(() => {
     scrollToBottom();
+    checkUserStatus();
 });
 </script>
 
@@ -733,34 +1142,39 @@ html {
 }
 
 .auth-container {
-    padding: 48px 40px;
+    padding: 32px 40px;
     background: white;
-    text-align: center;
+    display: flex;
+    align-items: center;
+    gap: 40px;
+    min-height: 400px;
 }
 
 .auth-logo-section {
-    margin-bottom: 48px;
+    flex: 1;
+    text-align: center;
+    padding-right: 20px;
 }
 
 .auth-logo {
-    width: 64px;
-    height: 64px;
+    width: 80px;
+    height: 80px;
     background: #18181b;
     border-radius: 50%;
     display: inline-flex;
     align-items: center;
     justify-content: center;
-    margin-bottom: 24px;
+    margin-bottom: 20px;
 }
 
 .logo-image {
-    width: 32px;
-    height: 32px;
+    width: 40px;
+    height: 40px;
     filter: brightness(0) invert(1);
 }
 
 .auth-main-title {
-    font-size: 2rem;
+    font-size: 1.75rem;
     font-weight: 600;
     margin: 0 0 8px 0;
     color: #18181b;
@@ -768,23 +1182,26 @@ html {
 }
 
 .auth-main-subtitle {
-    font-size: 1rem;
-    margin: 0 0 32px 0;
+    font-size: 0.95rem;
+    margin: 0;
     color: #6b7280;
     font-weight: 400;
+    line-height: 1.4;
 }
 
 .auth-form-wrapper {
-    max-width: 320px;
-    margin: 0 auto;
+    flex: 1;
+    max-width: 280px;
+    padding-left: 20px;
+    border-left: 1px solid #f3f4f6;
 }
 
 .auth-form {
-    margin-bottom: 24px;
+    margin-bottom: 20px;
 }
 
 .auth-form-item {
-    margin-bottom: 16px;
+    margin-bottom: 14px;
     text-align: left;
 }
 
@@ -800,13 +1217,13 @@ html {
 }
 
 :deep(.auth-input .el-input__wrapper) {
-    height: 48px !important;
+    height: 44px !important;
     border-radius: 8px !important;
     border: 2px solid #6b7280 !important;
     background: white !important;
     box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1) !important;
     transition: all 0.2s ease !important;
-    padding: 0 16px !important;
+    padding: 0 14px !important;
 }
 
 :deep(.auth-input .el-input__wrapper:hover) {
@@ -833,7 +1250,7 @@ html {
 
 .auth-submit-btn {
     width: 100%;
-    height: 48px;
+    height: 44px;
     border-radius: 8px;
     background: #18181b;
     border: none;
@@ -841,7 +1258,7 @@ html {
     font-weight: 500;
     color: white;
     transition: all 0.2s ease;
-    margin-bottom: 24px;
+    margin-bottom: 20px;
 }
 
 .auth-submit-btn:hover {
@@ -854,7 +1271,7 @@ html {
 
 .auth-mode-switch {
     text-align: center;
-    margin-bottom: 24px;
+    margin-bottom: 16px;
 }
 
 .switch-text {
@@ -883,15 +1300,15 @@ html {
 .auth-footer {
     text-align: center;
     border-top: 1px solid #f3f4f6;
-    padding-top: 24px;
-    margin-top: 24px;
+    padding-top: 16px;
+    margin-top: 16px;
 }
 
 .cancel-btn {
     color: #6b7280;
     font-weight: 500;
     font-size: 0.875rem;
-    padding: 8px 16px;
+    padding: 6px 14px;
     border-radius: 6px;
     border: none;
     background: transparent;
@@ -901,5 +1318,437 @@ html {
 .cancel-btn:hover {
     color: #374151;
     background: #f9fafb;
+}
+
+/* 投资偏好设置对话框样式 */
+:deep(.preferences-dialog) {
+    border-radius: 16px;
+    overflow: hidden;
+    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.12);
+    border: 1px solid #e5e7eb;
+}
+
+:deep(.preferences-dialog .el-dialog__header) {
+    padding: 0;
+    margin: 0;
+}
+
+:deep(.preferences-dialog .el-dialog__body) {
+    padding: 0;
+}
+
+.preferences-container {
+    padding: 40px;
+    background: white;
+    min-height: 500px;
+    display: flex;
+    flex-direction: column;
+}
+
+.preferences-header {
+    text-align: center;
+    margin-bottom: 40px;
+}
+
+.preferences-logo {
+    width: 48px;
+    height: 48px;
+    background: #18181b;
+    border-radius: 50%;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    margin-bottom: 16px;
+}
+
+.preferences-logo .logo-image {
+    width: 24px;
+    height: 24px;
+    filter: brightness(0) invert(1);
+}
+
+.preferences-title {
+    font-size: 1.5rem;
+    font-weight: 600;
+    margin: 0 0 8px 0;
+    color: #18181b;
+}
+
+.preferences-subtitle {
+    font-size: 0.875rem;
+    margin: 0;
+    color: #6b7280;
+}
+
+.preferences-form-wrapper {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    max-width: 620px;
+    margin: 0 auto;
+    width: 100%;
+}
+
+.step-content {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    text-align: center;
+    padding: 20px 0;
+}
+
+.step-title {
+    font-size: 1.5rem;
+    font-weight: 600;
+    color: #18181b;
+    margin: 0 0 8px 0;
+}
+
+.step-desc {
+    font-size: 1rem;
+    color: #6b7280;
+    margin: 0 0 40px 0;
+}
+
+/* 步骤指示器 */
+.step-indicator {
+    display: flex;
+    justify-content: center;
+    gap: 12px;
+    margin-top: 24px;
+}
+
+.step-dot {
+    width: 32px;
+    height: 32px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 0.875rem;
+    font-weight: 600;
+    transition: all 0.3s ease;
+    border: 2px solid #e5e7eb;
+    background: white;
+    color: #9ca3af;
+}
+
+.step-dot.active {
+    border-color: #18181b;
+    background: #18181b;
+    color: white;
+}
+
+.step-dot.completed {
+    border-color: #10b981;
+    background: #10b981;
+    color: white;
+}
+
+/* 风险偏好选项 */
+.risk-options {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+    gap: 20px;
+    max-width: 650px;
+    margin: 0 auto;
+}
+
+.risk-option {
+    border: 2px solid #e5e7eb;
+    border-radius: 12px;
+    padding: 24px;
+    transition: all 0.3s ease;
+    cursor: pointer;
+    display: flex;
+    align-items: flex-start;
+    gap: 20px;
+    text-align: left;
+}
+
+.risk-option:hover {
+    border-color: #d1d5db;
+    background: #f9fafb;
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+}
+
+.risk-option.selected {
+    border-color: #18181b;
+    background: #f8fafc;
+    box-shadow: 0 4px 16px rgba(24, 24, 27, 0.15);
+}
+
+.option-radio {
+    flex-shrink: 0;
+    margin-top: 2px;
+}
+
+.radio-dot {
+    width: 20px;
+    height: 20px;
+    border: 2px solid #d1d5db;
+    border-radius: 50%;
+    transition: all 0.2s ease;
+    position: relative;
+}
+
+.radio-dot.checked {
+    border-color: #18181b;
+    background: #18181b;
+}
+
+.radio-dot.checked::after {
+    content: '';
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    width: 8px;
+    height: 8px;
+    background: white;
+    border-radius: 50%;
+}
+
+.option-content {
+    flex: 1;
+}
+
+.option-title {
+    font-weight: 600;
+    color: #18181b;
+    margin-bottom: 4px;
+    font-size: 1.1rem;
+}
+
+.option-desc {
+    font-size: 0.9rem;
+    color: #6b7280;
+    line-height: 1.4;
+}
+
+/* 投资经验选项 */
+.experience-options {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+    gap: 20px;
+    max-width: 650px;
+    margin: 0 auto;
+}
+
+.experience-option {
+    border: 2px solid #e5e7eb;
+    border-radius: 12px;
+    padding: 24px;
+    transition: all 0.3s ease;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 12px;
+    min-height: 80px;
+    text-align: center;
+}
+
+.experience-option:hover {
+    border-color: #d1d5db;
+    background: #f9fafb;
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+}
+
+.experience-option.selected {
+    border-color: #18181b;
+    background: #f8fafc;
+    box-shadow: 0 4px 16px rgba(24, 24, 27, 0.15);
+}
+
+.option-text {
+    font-size: 1.05rem;
+    font-weight: 500;
+    color: #18181b;
+    line-height: 1.3;
+}
+
+/* 投资目标和关注板块选项 */
+.goals-options,
+.sectors-options {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+    gap: 20px;
+    max-width: 650px;
+    margin: 0 auto;
+}
+
+.goal-option,
+.sector-option {
+    border: 2px solid #e5e7eb;
+    border-radius: 12px;
+    padding: 24px;
+    transition: all 0.3s ease;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    min-height: 80px;
+    position: relative;
+    text-align: center;
+}
+
+.goal-option:hover,
+.sector-option:hover {
+    border-color: #d1d5db;
+    background: #f9fafb;
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+}
+
+.goal-option.selected,
+.sector-option.selected {
+    border-color: #18181b;
+    background: #f8fafc;
+    box-shadow: 0 4px 16px rgba(24, 24, 27, 0.15);
+}
+
+.goal-option.selected::after,
+.sector-option.selected::after {
+    content: '✓';
+    position: absolute;
+    top: 8px;
+    right: 8px;
+    width: 20px;
+    height: 20px;
+    background: #18181b;
+    color: white;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 12px;
+    font-weight: bold;
+}
+
+.preferences-actions {
+    display: flex;
+    gap: 12px;
+    justify-content: center;
+    margin-top: auto;
+    padding-top: 40px;
+    border-top: 1px solid #f3f4f6;
+}
+
+.preferences-back-btn,
+.preferences-next-btn,
+.preferences-submit-btn {
+    height: 48px;
+    padding: 0 32px;
+    border-radius: 8px;
+    font-size: 1rem;
+    font-weight: 500;
+    transition: all 0.2s ease;
+    border: none;
+}
+
+.preferences-back-btn {
+    background: #f3f4f6;
+    color: #6b7280;
+}
+
+.preferences-back-btn:hover {
+    background: #e5e7eb;
+    color: #374151;
+}
+
+.preferences-next-btn,
+.preferences-submit-btn {
+    background: #18181b;
+    color: white;
+}
+
+.preferences-next-btn:hover,
+.preferences-submit-btn:hover {
+    background: #000000;
+}
+
+.preferences-next-btn:disabled {
+    background: #e5e7eb;
+    color: #9ca3af;
+    cursor: not-allowed;
+}
+
+.preferences-skip-btn {
+    height: 48px;
+    padding: 0 24px;
+    border-radius: 8px;
+    border: 1px solid #e5e7eb;
+    background: white;
+    color: #6b7280;
+    font-size: 0.875rem;
+    font-weight: 500;
+    transition: all 0.2s ease;
+}
+
+.preferences-skip-btn:hover {
+    border-color: #d1d5db;
+    background: #f9fafb;
+    color: #374151;
+}
+
+/* 引导提示样式 */
+.guide-tip {
+    position: fixed;
+    top: 80px;
+    right: 32px;
+    z-index: 1000;
+    animation: slideInRight 0.3s ease-out;
+}
+
+.guide-content {
+    background: white;
+    border-radius: 12px;
+    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.12);
+    border: 1px solid #e5e7eb;
+    padding: 20px;
+    max-width: 320px;
+    display: flex;
+    align-items: flex-start;
+    gap: 12px;
+}
+
+.guide-icon {
+    font-size: 1.5rem;
+    flex-shrink: 0;
+}
+
+.guide-text h4 {
+    font-size: 1rem;
+    font-weight: 600;
+    color: #18181b;
+    margin: 0 0 4px 0;
+}
+
+.guide-text p {
+    font-size: 0.875rem;
+    color: #6b7280;
+    margin: 0 0 16px 0;
+    line-height: 1.4;
+}
+
+.guide-actions {
+    display: flex;
+    gap: 8px;
+}
+
+@keyframes slideInRight {
+    from {
+        transform: translateX(100%);
+        opacity: 0;
+    }
+
+    to {
+        transform: translateX(0);
+        opacity: 1;
+    }
 }
 </style>

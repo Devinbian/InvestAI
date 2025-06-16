@@ -55,22 +55,6 @@
                                     <line x1="8" y1="23" x2="16" y2="23" stroke="#888" stroke-width="2" />
                                 </svg>
                             </el-button>
-                            <el-dropdown trigger="click">
-                                <el-button class="ai-func-btn" circle>
-                                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none">
-                                        <circle cx="12" cy="12" r="3" stroke="#888" stroke-width="2" />
-                                        <path d="M12 1v6m0 6v6m11-7h-6m-6 0H1" stroke="#888" stroke-width="2" />
-                                    </svg>
-                                </el-button>
-                                <template #dropdown>
-                                    <el-dropdown-menu>
-                                        <el-dropdown-item>智能荐股</el-dropdown-item>
-                                        <el-dropdown-item>大盘分析</el-dropdown-item>
-                                        <el-dropdown-item>自选分析</el-dropdown-item>
-                                        <el-dropdown-item>量化分析</el-dropdown-item>
-                                    </el-dropdown-menu>
-                                </template>
-                            </el-dropdown>
                             <el-button class="ai-send-btn" type="primary" circle @click="sendMessage"
                                 :disabled="!inputMessage.trim()">
                                 <svg width="20" height="20" viewBox="0 0 24 24" fill="none">
@@ -84,67 +68,24 @@
                 </div>
 
                 <div class="ai-suggestions">
-                    <!-- 第一行：市场分析类 -->
+                    <!-- 快捷操作按钮 -->
                     <div class="suggestion-row">
-                        <el-button class="ai-suggestion-btn hot" @click="setSuggestionAndSend('今日涨停板分析，有哪些值得关注的股票？')">
-                            <span class="btn-icon">🔥</span>
-                            涨停板分析
+                        <el-button class="ai-suggestion-btn"
+                            @click="setSuggestionAndSend('昨日复盘：分析昨日市场表现和我的操作，总结得失并提出改进建议')">
+                            <span class="btn-icon">📝</span>
+                            昨日复盘
                         </el-button>
-                        <el-button class="ai-suggestion-btn" @click="setSuggestionAndSend('分析今日大盘走势和明日预判')">
-                            <span class="btn-icon">📈</span>
-                            大盘走势
+                        <el-button class="ai-suggestion-btn" @click="handleSmartRecommendation">
+                            <span class="btn-icon">🎯</span>
+                            智能荐股
                         </el-button>
-                        <el-button class="ai-suggestion-btn" @click="setSuggestionAndSend('当前热门板块和龙头股分析')">
-                            <span class="btn-icon">🏆</span>
-                            热门板块
+                        <el-button class="ai-suggestion-btn" @click="handleNewsUpdate">
+                            <span class="btn-icon">📰</span>
+                            资讯推送
                         </el-button>
-                    </div>
-
-                    <!-- 第二行：选股策略类 -->
-                    <div class="suggestion-row">
-                        <el-button class="ai-suggestion-btn" @click="setSuggestionAndSend('帮我筛选低估值高分红的价值股')">
-                            <span class="btn-icon">💎</span>
-                            价值选股
-                        </el-button>
-                        <el-button class="ai-suggestion-btn" @click="setSuggestionAndSend('推荐近期突破关键技术位的强势股')">
-                            <span class="btn-icon">⚡</span>
-                            技术突破
-                        </el-button>
-                        <el-button class="ai-suggestion-btn" @click="setSuggestionAndSend('分析机构重仓和北向资金流入的股票')">
-                            <span class="btn-icon">🏛️</span>
-                            机构重仓
-                        </el-button>
-                    </div>
-
-                    <!-- 第三行：风险管理类 -->
-                    <div class="suggestion-row">
-                        <el-button class="ai-suggestion-btn warning" @click="setSuggestionAndSend('帮我分析持仓风险和仓位管理建议')">
-                            <span class="btn-icon">⚠️</span>
-                            风险分析
-                        </el-button>
-                        <el-button class="ai-suggestion-btn" @click="setSuggestionAndSend('制定止盈止损策略和资金管理计划')">
-                            <span class="btn-icon">🛡️</span>
-                            止盈止损
-                        </el-button>
-                        <el-button class="ai-suggestion-btn" @click="setSuggestionAndSend('分析市场情绪指标和散户行为')">
-                            <span class="btn-icon">🧠</span>
-                            市场情绪
-                        </el-button>
-                    </div>
-
-                    <!-- 第四行：量化交易类 -->
-                    <div class="suggestion-row">
-                        <el-button class="ai-suggestion-btn quant" @click="setSuggestionAndSend('推荐适合散户的量化交易策略')">
-                            <span class="btn-icon">🤖</span>
-                            量化策略
-                        </el-button>
-                        <el-button class="ai-suggestion-btn quant" @click="setSuggestionAndSend('帮我做多因子选股模型分析')">
-                            <span class="btn-icon">📊</span>
-                            因子选股
-                        </el-button>
-                        <el-button class="ai-suggestion-btn quant" @click="setSuggestionAndSend('分析技术指标组合交易信号')">
-                            <span class="btn-icon">📡</span>
-                            交易信号
+                        <el-button class="ai-suggestion-btn" @click="handleAssetAnalysis">
+                            <span class="btn-icon">💰</span>
+                            我的资产
                         </el-button>
                     </div>
                 </div>
@@ -155,7 +96,8 @@
                 <div v-for="(message, idx) in chatHistory" :key="idx" :class="['chat-message', message.role]">
                     <div class="chat-message-content">
                         <div class="message-text">{{ message.content }}</div>
-                        <!-- 股票操作按钮 -->
+
+                        <!-- 单只股票操作按钮 -->
                         <div v-if="message.hasStockInfo && message.stockInfo" class="stock-actions">
                             <!-- 购买按钮（购买模式时优先显示） -->
                             <el-button v-if="message.isBuyMode" type="primary" size="small"
@@ -207,6 +149,137 @@
                                 购买
                             </el-button>
                         </div>
+
+                        <!-- 股票列表（智能荐股等场景） -->
+                        <div v-if="message.hasStockInfo && message.stockList" class="stock-list"
+                            :class="{ 'persistent-stock-list': message.isPersistent }">
+                            <!-- 荐股列表操作栏 -->
+                            <div v-if="message.isPersistent" class="recommendation-toolbar">
+                                <div class="toolbar-left">
+                                    <span class="recommendation-time">{{ formatRecommendationTime(message.timestamp)
+                                        }}</span>
+                                </div>
+                                <div class="toolbar-right">
+                                    <el-button size="small" text @click="refreshRecommendation(message)"
+                                        class="refresh-btn">
+                                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none">
+                                            <path
+                                                d="M23 4v6h-6M1 20v-6h6M20.49 9A9 9 0 0 0 5.64 5.64L1 10m22 4l-4.64 4.36A9 9 0 0 1 3.51 15"
+                                                stroke="currentColor" stroke-width="2" fill="none" />
+                                        </svg>
+                                        刷新荐股
+                                    </el-button>
+                                </div>
+                            </div>
+                            <div v-for="(stock, stockIdx) in message.stockList"
+                                :key="`${message.messageId || idx}-${stockIdx}`" class="stock-item">
+                                <div class="stock-info">
+                                    <div class="stock-header">
+                                        <div class="stock-name-code">
+                                            <div class="name-code-row">
+                                                <span class="stock-name">{{ stock.name }}</span>
+                                                <span class="stock-code">({{ stock.code }})</span>
+                                            </div>
+                                            <!-- 推荐指数 -->
+                                            <div class="recommend-index">
+                                                <div class="recommend-stars">
+                                                    <span v-for="i in 5" :key="i" :class="['star', i <= Math.floor(stock.recommendIndex) ? 'filled' :
+                                                        i <= stock.recommendIndex ? 'half' : 'empty']">
+                                                        ★
+                                                    </span>
+                                                </div>
+                                                <span class="recommend-score">{{ stock.recommendIndex }}/5.0</span>
+                                                <span
+                                                    :class="['recommend-level', getRecommendLevelClass(stock.recommendLevel)]">
+                                                    {{ stock.recommendLevel }}
+                                                </span>
+                                            </div>
+                                        </div>
+                                        <div class="stock-price-change">
+                                            <span class="current-price">¥{{ stock.price }}</span>
+                                            <span
+                                                :class="['price-change', stock.change >= 0 ? 'positive' : 'negative']">
+                                                {{ stock.change >= 0 ? '+' : '' }}{{ stock.change }}
+                                                ({{ stock.changePercent >= 0 ? '+' : '' }}{{ stock.changePercent }}%)
+                                            </span>
+                                        </div>
+                                    </div>
+
+                                    <div class="stock-details">
+                                        <div class="detail-row">
+                                            <span class="detail-label">目标价：</span>
+                                            <span class="detail-value target-price">¥{{ stock.targetPrice }}</span>
+                                            <span class="detail-label">预期收益：</span>
+                                            <span class="detail-value expected-return">{{ stock.expectedReturn }}</span>
+                                        </div>
+                                        <div class="detail-row">
+                                            <span class="detail-label">风险等级：</span>
+                                            <span class="detail-value risk-level">{{ stock.riskLevel }}</span>
+                                            <span class="detail-label">所属行业：</span>
+                                            <span class="detail-value industry">{{ stock.industry }}</span>
+                                        </div>
+                                        <div class="stock-reason">
+                                            <span class="reason-label">推荐理由：</span>
+                                            <span class="reason-text">{{ stock.reason }}</span>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <div class="stock-item-actions">
+                                    <!-- 自选股按钮 -->
+                                    <el-button v-if="!userStore.isInWatchlist(stock.code)" type="primary" size="small"
+                                        @click="addToWatchlist(stock)" class="add-watchlist-btn">
+                                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none">
+                                            <path
+                                                d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"
+                                                stroke="currentColor" stroke-width="2" />
+                                        </svg>
+                                        加入自选
+                                    </el-button>
+                                    <el-button v-else type="success" size="small"
+                                        @click="removeFromWatchlist(stock.code)" class="remove-watchlist-btn">
+                                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none">
+                                            <path
+                                                d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"
+                                                fill="currentColor" />
+                                        </svg>
+                                        已加自选
+                                    </el-button>
+
+                                    <!-- 深度分析按钮（付费） -->
+                                    <el-button size="small" @click="showPaidAnalysisDialog(stock)"
+                                        class="paid-analysis-btn">
+                                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none">
+                                            <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"
+                                                stroke="currentColor" stroke-width="2" />
+                                        </svg>
+                                        深度分析
+                                        <span class="price-tag">¥1</span>
+                                    </el-button>
+
+                                    <!-- 量化分析按钮（付费） -->
+                                    <el-button size="small" @click="showQuantAnalysisDialog(stock)"
+                                        class="quant-analysis-btn">
+                                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none">
+                                            <path d="M3 3v18h18M7 16l4-4 4 4 4-4" stroke="currentColor" stroke-width="2"
+                                                fill="none" />
+                                        </svg>
+                                        量化分析
+                                        <span class="price-tag">¥1</span>
+                                    </el-button>
+
+                                    <!-- 购买按钮 -->
+                                    <el-button size="small" @click="showBuyDialog(stock)"
+                                        class="buy-stock-btn-secondary">
+                                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none">
+                                            <path d="M12 2v20M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"
+                                                stroke="currentColor" stroke-width="2" />
+                                        </svg>
+                                        购买
+                                    </el-button>
+                                </div>
+                            </div>
+                        </div>
                     </div>
                 </div>
             </div>
@@ -217,15 +290,53 @@
 
         <!-- 底部输入区域（仅在聊天状态显示） -->
         <div class="input-area" v-if="isChatMode">
-            <!-- 新聊天按钮 -->
+            <!-- 新聊天按钮和快捷操作 -->
             <div class="new-chat-section" v-if="chatHistory.length > 0">
-                <el-button class="new-chat-btn" @click="createNewChat">
-                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none">
-                        <path d="M12 5v14m-7-7h14" stroke="currentColor" stroke-width="2" stroke-linecap="round"
-                            stroke-linejoin="round" />
-                    </svg>
-                    新建聊天
-                </el-button>
+                <div class="chat-actions">
+                    <el-button class="new-chat-btn" @click="createNewChat">
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none">
+                            <path d="M12 5v14m-7-7h14" stroke="currentColor" stroke-width="2" stroke-linecap="round"
+                                stroke-linejoin="round" />
+                        </svg>
+                        新建聊天
+                    </el-button>
+
+                    <!-- 快速跳转到荐股列表 -->
+                    <el-button v-if="hasRecommendationInHistory" class="goto-recommendation-btn"
+                        @click="scrollToRecommendation">
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none">
+                            <path d="M3 3v18h18M7 16l4-4 4 4 4-4" stroke="currentColor" stroke-width="2" fill="none" />
+                        </svg>
+                        查看荐股
+                    </el-button>
+                </div>
+            </div>
+
+            <!-- 快捷操作栏（聊天模式下） -->
+            <div class="chat-shortcuts" v-if="showChatShortcuts">
+                <div class="shortcuts-grid">
+                    <el-button class="chat-shortcut-btn"
+                        @click="setSuggestionAndSend('昨日复盘：分析昨日市场表现和我的操作，总结得失并提出改进建议')">
+                        <span class="btn-icon">📝</span>
+                        <span class="btn-text">复盘</span>
+                    </el-button>
+                    <el-button class="chat-shortcut-btn" @click="handleSmartRecommendation">
+                        <span class="btn-icon">🎯</span>
+                        <span class="btn-text">荐股</span>
+                    </el-button>
+                    <el-button class="chat-shortcut-btn" @click="handleNewsUpdate">
+                        <span class="btn-icon">📰</span>
+                        <span class="btn-text">资讯</span>
+                    </el-button>
+                    <el-button class="chat-shortcut-btn" @click="handleAssetAnalysis">
+                        <span class="btn-icon">💰</span>
+                        <span class="btn-text">资产</span>
+                    </el-button>
+                    <el-button class="chat-shortcut-btn close-btn" @click="toggleChatShortcuts">
+                        <span class="btn-icon">✕</span>
+                        <span class="btn-text">收起</span>
+                    </el-button>
+                </div>
             </div>
 
             <div class="ai-card">
@@ -243,22 +354,13 @@
                                 <line x1="8" y1="23" x2="16" y2="23" stroke="#888" stroke-width="2" />
                             </svg>
                         </el-button>
-                        <el-dropdown trigger="click">
-                            <el-button class="ai-func-btn" circle>
-                                <svg width="20" height="20" viewBox="0 0 24 24" fill="none">
-                                    <circle cx="12" cy="12" r="3" stroke="#888" stroke-width="2" />
-                                    <path d="M12 1v6m0 6v6m11-7h-6m-6 0H1" stroke="#888" stroke-width="2" />
-                                </svg>
-                            </el-button>
-                            <template #dropdown>
-                                <el-dropdown-menu>
-                                    <el-dropdown-item>智能选股</el-dropdown-item>
-                                    <el-dropdown-item>行业分析</el-dropdown-item>
-                                    <el-dropdown-item>投资计划</el-dropdown-item>
-                                    <el-dropdown-item>风险评估</el-dropdown-item>
-                                </el-dropdown-menu>
-                            </template>
-                        </el-dropdown>
+                        <el-button class="ai-func-btn shortcuts-toggle-btn" circle @click="toggleChatShortcuts"
+                            v-if="!showChatShortcuts">
+                            <svg width="20" height="20" viewBox="0 0 24 24" fill="none">
+                                <path d="M12 5v14m-7-7h14" stroke="#888" stroke-width="2" stroke-linecap="round"
+                                    stroke-linejoin="round" />
+                            </svg>
+                        </el-button>
                         <el-button class="ai-send-btn" type="primary" circle @click="sendMessage"
                             :disabled="!inputMessage.trim()">
                             <svg width="20" height="20" viewBox="0 0 24 24" fill="none">
@@ -342,7 +444,7 @@
 
         <!-- 投资偏好设置对话框 -->
         <el-dialog v-model="preferencesDialogVisible" :show-close="false" :close-on-click-modal="false"
-            :lock-scroll="false" width="720px" class="preferences-dialog">
+            :lock-scroll="false" width="1200px" class="preferences-dialog">
             <template #header>
                 <div></div>
             </template>
@@ -383,8 +485,32 @@
                                     </div>
                                 </div>
                                 <div class="option-content">
-                                    <div class="option-title">{{ option.title }}</div>
+                                    <div class="option-header">
+                                        <div class="option-title">
+                                            <span class="option-icon">{{ option.icon }}</span>
+                                            {{ option.title }}
+                                        </div>
+                                        <div class="risk-level-indicator">
+                                            <span v-for="i in 5" :key="i" class="risk-dot"
+                                                :class="{ 'active': i <= option.riskLevel }"></span>
+                                        </div>
+                                    </div>
                                     <div class="option-desc">{{ option.desc }}</div>
+                                    <div class="simple-desc">{{ option.simpleDesc }}</div>
+                                    <div class="option-metrics">
+                                        <div class="metric-item">
+                                            <span class="metric-label">💰 可能收益:</span>
+                                            <span class="metric-value return">{{ option.expectedReturn }}</span>
+                                        </div>
+                                        <div class="metric-item">
+                                            <span class="metric-label">⚠️ 可能亏损:</span>
+                                            <span class="metric-value loss">{{ option.maxLoss }}</span>
+                                        </div>
+                                    </div>
+                                    <div class="option-examples">
+                                        <span class="examples-label">📈 投资什么:</span>
+                                        <span class="examples-text">{{ option.examples }}</span>
+                                    </div>
                                 </div>
                             </div>
                         </div>
@@ -404,21 +530,68 @@
                                         :class="{ 'checked': preferencesForm.experience === option.value }">
                                     </div>
                                 </div>
-                                <div class="option-text">{{ option.label }}</div>
+                                <div class="experience-content">
+                                    <div class="experience-header">
+                                        <span class="experience-icon">{{ option.icon }}</span>
+                                        <div class="experience-title">{{ option.title }}</div>
+                                    </div>
+                                    <div class="experience-label">{{ option.label }}</div>
+                                    <div class="experience-desc">{{ option.desc }}</div>
+                                </div>
                             </div>
                         </div>
                     </div>
 
-                    <!-- 步骤3: 投资目标 -->
+                    <!-- 步骤3: 用户特征 -->
                     <div v-if="currentStep === 2" class="step-content">
                         <h3 class="step-title">{{ preferenceSteps[2].title }}</h3>
                         <p class="step-desc">{{ preferenceSteps[2].desc }}</p>
 
-                        <div class="goals-options">
-                            <div v-for="option in goalOptions" :key="option.value" class="goal-option"
-                                :class="{ 'selected': preferencesForm.goals.includes(option.value) }"
-                                @click="toggleGoal(option.value)">
-                                <div class="option-text">{{ option.label }}</div>
+                        <div class="traits-container">
+                            <div class="traits-hint">
+                                <div class="hint-icon">💡</div>
+                                <div class="hint-text">
+                                    <strong>新手提示：</strong>如果不确定如何选择，我们已为您设置了适合新手的默认选项，您可以直接使用或根据个人情况调整
+                                </div>
+                            </div>
+
+                            <div class="traits-list">
+                                <div v-for="trait in userTraits" :key="trait.id" class="trait-item-compact">
+                                    <div class="trait-header-compact">
+                                        <div class="trait-left">
+                                            <span class="trait-icon">{{ trait.icon }}</span>
+                                            <div class="trait-info">
+                                                <div class="trait-title">{{ trait.title }}</div>
+                                                <div class="trait-desc">{{ trait.desc }}</div>
+                                            </div>
+                                        </div>
+                                        <div class="trait-current-value">
+                                            {{ preferencesForm.userTraits[trait.id] }}分
+                                        </div>
+                                    </div>
+
+                                    <div class="trait-slider-container">
+                                        <div class="slider-track">
+                                            <div class="slider-progress"
+                                                :style="{ width: (preferencesForm.userTraits[trait.id] / 5) * 100 + '%' }">
+                                            </div>
+                                        </div>
+                                        <div class="slider-options">
+                                            <div v-for="option in trait.options" :key="option.value"
+                                                class="slider-option"
+                                                :class="{ 'active': preferencesForm.userTraits[trait.id] === option.value }"
+                                                @click="preferencesForm.userTraits[trait.id] = option.value"
+                                                :title="option.desc">
+                                                <div class="option-dot"></div>
+                                                <div class="option-label">{{ option.value }}</div>
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                    <div class="trait-description">
+                                        {{ getCurrentTraitDescription(trait.id) }}
+                                    </div>
+                                </div>
                             </div>
                         </div>
                     </div>
@@ -428,11 +601,95 @@
                         <h3 class="step-title">{{ preferenceSteps[3].title }}</h3>
                         <p class="step-desc">{{ preferenceSteps[3].desc }}</p>
 
-                        <div class="sectors-options">
-                            <div v-for="option in sectorOptions" :key="option.value" class="sector-option"
-                                :class="{ 'selected': preferencesForm.sectors.includes(option.value) }"
-                                @click="toggleSector(option.value)">
-                                <div class="option-text">{{ option.label }}</div>
+                        <div class="sectors-container">
+                            <div class="sectors-layout">
+                                <!-- 左侧：大分类选择 -->
+                                <div class="left-panel">
+                                    <div class="section-header">
+                                        <h4 class="section-title">
+                                            <span class="section-icon">📊</span>
+                                            选择大分类
+                                            <span class="section-limit">(最多选择2个)</span>
+                                        </h4>
+                                        <div class="section-counter">
+                                            已选择 {{ preferencesForm.sectors.majorCategories.length }}/2
+                                        </div>
+                                    </div>
+
+                                    <div class="major-sectors-list">
+                                        <div v-for="option in majorSectorOptions" :key="option.value"
+                                            class="major-sector-option" :class="{
+                                                'selected': preferencesForm.sectors.majorCategories.includes(option.value),
+                                                'disabled': !preferencesForm.sectors.majorCategories.includes(option.value) && preferencesForm.sectors.majorCategories.length >= 2
+                                            }" @click="toggleMajorSector(option.value)">
+                                            <div class="sector-icon" :style="{ color: option.color }">{{ option.icon }}
+                                            </div>
+                                            <div class="sector-content">
+                                                <div class="sector-label">{{ option.label }}</div>
+                                                <div class="sector-desc">{{ option.desc }}</div>
+                                            </div>
+                                            <div class="sector-check"
+                                                v-if="preferencesForm.sectors.majorCategories.includes(option.value)">
+                                                ✓
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <!-- 右侧：细分行业选择 -->
+                                <div class="right-panel">
+                                    <div v-if="preferencesForm.sectors.majorCategories.length > 0">
+                                        <div class="section-header">
+                                            <h4 class="section-title">
+                                                <span class="section-icon">🎯</span>
+                                                选择细分行业
+                                                <span class="section-limit">(可选择3-4个)</span>
+                                            </h4>
+                                            <div class="section-counter">
+                                                已选择 {{ preferencesForm.sectors.subCategories.length }}/4
+                                            </div>
+                                        </div>
+
+                                        <div class="sub-sectors-container">
+                                            <div v-for="majorCategory in preferencesForm.sectors.majorCategories"
+                                                :key="majorCategory" class="sub-sector-group">
+                                                <div class="group-title">
+                                                    <span class="group-icon">{{ getMajorSectorIcon(majorCategory)
+                                                        }}</span>
+                                                    {{ getMajorSectorLabel(majorCategory) }}
+                                                </div>
+
+                                                <div class="sub-sectors-grid">
+                                                    <div v-for="subOption in getSubSectorsByParent(majorCategory)"
+                                                        :key="subOption.value" class="sub-sector-option" :class="{
+                                                            'selected': preferencesForm.sectors.subCategories.includes(subOption.value),
+                                                            'disabled': !preferencesForm.sectors.subCategories.includes(subOption.value) && preferencesForm.sectors.subCategories.length >= 4
+                                                        }" @click="toggleSubSector(subOption.value)">
+                                                        <div class="sub-sector-icon">{{ subOption.icon }}</div>
+                                                        <div class="sub-sector-content">
+                                                            <div class="sub-sector-label">{{ subOption.label }}</div>
+                                                            <div class="sub-sector-desc">{{ subOption.desc }}</div>
+                                                            <div class="sub-sector-examples">{{ subOption.examples }}
+                                                            </div>
+                                                        </div>
+                                                        <div class="sub-sector-check"
+                                                            v-if="preferencesForm.sectors.subCategories.includes(subOption.value)">
+                                                            ✓
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                    <!-- 选择提示 -->
+                                    <div class="sectors-hint" v-else>
+                                        <div class="hint-icon">💡</div>
+                                        <div class="hint-text">
+                                            请先在左侧选择您感兴趣的大分类板块，然后在这里选择具体的细分行业
+                                        </div>
+                                    </div>
+                                </div>
                             </div>
                         </div>
                     </div>
@@ -529,57 +786,270 @@
         </el-dialog>
 
         <!-- 购买股票对话框 -->
-        <el-dialog v-model="buyDialogVisible" title="购买股票" width="500px" class="buy-dialog">
-            <div class="buy-form" v-if="selectedStock">
-                <div class="stock-info-card">
-                    <div class="stock-header">
-                        <h3>{{ selectedStock.name }} ({{ selectedStock.code }})</h3>
-                        <div class="stock-price">
-                            <span class="current-price">¥{{ selectedStock.price }}</span>
-                            <span :class="['price-change', selectedStock.change >= 0 ? 'positive' : 'negative']">
-                                {{ selectedStock.change >= 0 ? '+' : '' }}{{ selectedStock.change }}
-                                ({{ selectedStock.changePercent >= 0 ? '+' : '' }}{{ selectedStock.changePercent }}%)
-                            </span>
+        <el-dialog v-model="buyDialogVisible" title="" width="800px" class="buy-dialog" :show-close="false">
+            <div class="trading-interface" v-if="selectedStock">
+                <!-- 股票信息头部 -->
+                <div class="stock-header-section">
+                    <!-- 头部主要内容 -->
+                    <div class="header-main-content">
+                        <!-- 左侧：股票基本信息 -->
+                        <div class="stock-basic-info">
+                            <div class="stock-title-row">
+                                <div class="stock-name-group">
+                                    <h2 class="stock-name">{{ selectedStock.name }}</h2>
+                                    <span class="stock-code">{{ selectedStock.code }}</span>
+                                </div>
+                                <div class="stock-tags">
+                                    <span class="tag-item">A股</span>
+                                    <span class="tag-item">主板</span>
+                                </div>
+                            </div>
+
+                            <div class="stock-price-row">
+                                <div class="price-main">
+                                    <span class="current-price">¥{{ selectedStock.price }}</span>
+                                    <div :class="['price-change-group', selectedStock.change >= 0 ? 'up' : 'down']">
+                                        <span class="change-amount">{{ selectedStock.change >= 0 ? '+' : '' }}{{
+                                            selectedStock.change }}</span>
+                                        <span class="change-percent">({{ selectedStock.changePercent >= 0 ? '+' : ''
+                                            }}{{
+                                                selectedStock.changePercent }}%)</span>
+                                    </div>
+                                </div>
+                                <div class="price-stats">
+                                    <div class="stat-item">
+                                        <span class="stat-label">今开</span>
+                                        <span class="stat-value">{{ (parseFloat(selectedStock.price) - 2.5).toFixed(2)
+                                            }}</span>
+                                    </div>
+                                    <div class="stat-item">
+                                        <span class="stat-label">昨收</span>
+                                        <span class="stat-value">{{ (parseFloat(selectedStock.price) -
+                                            parseFloat(selectedStock.change)).toFixed(2) }}</span>
+                                    </div>
+                                    <div class="stat-item">
+                                        <span class="stat-label">成交量</span>
+                                        <span class="stat-value">1.2万手</span>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- 右侧：操作区域 -->
+                        <div class="header-actions">
+                            <div class="market-status-card">
+                                <div class="status-indicator">
+                                    <span class="status-dot"></span>
+                                    <span class="status-text">交易中</span>
+                                </div>
+                                <div class="trading-time">09:30-15:00</div>
+                            </div>
+
+                            <div class="action-buttons">
+                                <el-button class="action-btn favorite-btn" size="small">
+                                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none">
+                                        <path
+                                            d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z"
+                                            stroke="currentColor" stroke-width="2" fill="none" />
+                                    </svg>
+                                    自选
+                                </el-button>
+                                <el-button class="close-btn" circle @click="buyDialogVisible = false">
+                                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none">
+                                        <path d="M18 6L6 18M6 6l12 12" stroke="currentColor" stroke-width="2"
+                                            stroke-linecap="round" />
+                                    </svg>
+                                </el-button>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- 底部：快速信息栏 -->
+                    <div class="header-info-bar">
+                        <div class="info-item">
+                            <span class="info-label">涨停</span>
+                            <span class="info-value up">{{ (parseFloat(selectedStock.price) * 1.1).toFixed(2) }}</span>
+                        </div>
+                        <div class="info-item">
+                            <span class="info-label">跌停</span>
+                            <span class="info-value down">{{ (parseFloat(selectedStock.price) * 0.9).toFixed(2)
+                                }}</span>
+                        </div>
+                        <div class="info-item">
+                            <span class="info-label">总市值</span>
+                            <span class="info-value">1,234.56亿</span>
+                        </div>
+                        <div class="info-item">
+                            <span class="info-label">流通市值</span>
+                            <span class="info-value">987.65亿</span>
+                        </div>
+                        <div class="info-item">
+                            <span class="info-label">市盈率</span>
+                            <span class="info-value">15.6</span>
+                        </div>
+                        <div class="info-item">
+                            <span class="info-label">市净率</span>
+                            <span class="info-value">2.3</span>
                         </div>
                     </div>
                 </div>
 
-                <div class="account-info">
-                    <div class="balance-item">
-                        <span>可用余额：</span>
-                        <span class="balance-amount">¥{{ userStore.balance.toFixed(2) }}</span>
+                <!-- 五档行情 -->
+                <!-- 主要内容区域 - 左右布局 -->
+                <div class="trading-main-content">
+                    <!-- 左侧：交易面板 -->
+                    <div class="left-panel">
+                        <div class="trading-panel">
+                            <div class="panel-tabs">
+                                <div class="tab-item active">买入</div>
+                                <div class="tab-item disabled">卖出</div>
+                                <div class="tab-item disabled">撤单</div>
+                                <div class="tab-item disabled">持仓</div>
+                                <div class="tab-item disabled">查询</div>
+                            </div>
+
+                            <div class="trading-form">
+                                <!-- 限价委托选择 -->
+                                <div class="order-type-section">
+                                    <el-select v-model="buyForm.orderType" class="order-type-select">
+                                        <el-option label="限价委托" value="limit" />
+                                        <el-option label="市价委托" value="market" />
+                                    </el-select>
+                                </div>
+
+                                <!-- 价格输入 -->
+                                <div class="price-section">
+                                    <div class="input-row">
+                                        <span class="input-label">委托价格</span>
+                                        <div class="price-input-group">
+                                            <el-input v-model="buyForm.price" class="price-input"
+                                                :disabled="buyForm.orderType === 'market'" placeholder="185.50" />
+                                            <div class="price-controls">
+                                                <el-button size="small" class="price-btn"
+                                                    @click="adjustPrice(0.01)">+</el-button>
+                                                <el-button size="small" class="price-btn"
+                                                    @click="adjustPrice(-0.01)">-</el-button>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <!-- 数量输入 -->
+                                <div class="quantity-section">
+                                    <div class="input-row">
+                                        <span class="input-label">委托数量</span>
+                                        <div class="quantity-input-group">
+                                            <el-input-number v-model="buyForm.quantity" :min="100" :step="100"
+                                                :max="maxBuyQuantity" controls-position="right"
+                                                class="quantity-input" />
+                                        </div>
+                                    </div>
+
+                                    <!-- 快捷数量选择 -->
+                                    <div class="quantity-shortcuts">
+                                        <el-button size="small" @click="setQuantityByPercent(100)">全仓</el-button>
+                                        <el-button size="small" @click="setQuantityByPercent(50)">1/2</el-button>
+                                        <el-button size="small" @click="setQuantityByPercent(33)">1/3</el-button>
+                                        <el-button size="small" @click="setQuantityByPercent(25)">1/4</el-button>
+                                    </div>
+                                </div>
+
+                                <!-- 可买信息 -->
+                                <div class="available-info">
+                                    <div class="info-row">
+                                        <span class="label">可买---</span>
+                                        <span class="value">{{ availableBuyQuantity }}股</span>
+                                    </div>
+                                </div>
+
+                                <!-- 交易预览 -->
+                                <div class="trade-summary">
+                                    <div class="summary-row">
+                                        <span class="label">委托金额</span>
+                                        <span class="value">{{ estimatedAmount.toFixed(2) }}</span>
+                                    </div>
+                                </div>
+
+                                <!-- 买入按钮 -->
+                                <div class="action-section">
+                                    <el-button class="buy-action-btn" type="danger" size="large" @click="confirmBuy"
+                                        :loading="buyLoading" :disabled="!canBuy">
+                                        委托买入
+                                    </el-button>
+                                </div>
+
+                                <!-- 账户信息 -->
+                                <div class="account-info-section">
+                                    <div class="account-row">
+                                        <span class="label">资金余额</span>
+                                        <span class="value">{{ userStore.balance.toFixed(2) }}</span>
+                                    </div>
+                                    <div class="account-row" v-if="currentPosition">
+                                        <span class="label">持仓数量</span>
+                                        <span class="value">{{ currentPosition.quantity }}</span>
+                                    </div>
+                                    <div class="account-row" v-if="currentPosition">
+                                        <span class="label">可卖数量</span>
+                                        <span class="value">{{ currentPosition.quantity }}</span>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
                     </div>
-                    <div class="position-item" v-if="currentPosition">
-                        <span>当前持仓：</span>
-                        <span class="position-amount">{{ currentPosition.quantity }}股 (成本价¥{{
-                            currentPosition.avgPrice.toFixed(2) }})</span>
+
+                    <!-- 右侧：五档行情 -->
+                    <div class="right-panel">
+                        <div class="market-depth">
+                            <div class="depth-header">
+                                <span>五档行情</span>
+                                <span class="refresh-time">{{ getCurrentTime() }}</span>
+                            </div>
+                            <div class="depth-content">
+                                <div class="depth-table">
+                                    <div class="table-header">
+                                        <span class="col-label">档位</span>
+                                        <span class="col-price">价格</span>
+                                        <span class="col-volume">数量</span>
+                                    </div>
+
+                                    <!-- 卖盘 -->
+                                    <div class="sell-orders">
+                                        <div v-for="(order, index) in sellOrders" :key="index" class="order-row sell">
+                                            <span class="order-label">卖{{ 5 - index }}</span>
+                                            <span class="order-price">{{ order.price }}</span>
+                                            <span class="order-volume">{{ order.volume }}</span>
+                                        </div>
+                                    </div>
+
+                                    <!-- 当前价格 -->
+                                    <div class="current-price-row">
+                                        <span class="current-label">现价</span>
+                                        <span :class="['current-value', selectedStock.change >= 0 ? 'up' : 'down']">
+                                            {{ selectedStock.price }}
+                                        </span>
+                                        <span class="current-change">
+                                            {{ selectedStock.change >= 0 ? '+' : '' }}{{ selectedStock.changePercent }}%
+                                        </span>
+                                    </div>
+
+                                    <!-- 买盘 -->
+                                    <div class="buy-orders">
+                                        <div v-for="(order, index) in buyOrders" :key="index" class="order-row buy">
+                                            <span class="order-label">买{{ index + 1 }}</span>
+                                            <span class="order-price">{{ order.price }}</span>
+                                            <span class="order-volume">{{ order.volume }}</span>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
                     </div>
                 </div>
-
-                <el-form :model="buyForm" :rules="buyRules" ref="buyFormRef" label-width="80px">
-                    <el-form-item label="购买数量" prop="quantity">
-                        <el-input-number v-model="buyForm.quantity" :min="100" :step="100" :max="maxBuyQuantity"
-                            controls-position="right" style="width: 100%" />
-                        <div class="quantity-tips">
-                            <span>最少100股，最多{{ maxBuyQuantity }}股</span>
-                        </div>
-                    </el-form-item>
-
-                    <el-form-item label="交易金额">
-                        <div class="trade-amount">
-                            <span class="amount-value">¥{{ totalCost.toFixed(2) }}</span>
-                            <span class="amount-desc">（含手续费）</span>
-                        </div>
-                    </el-form-item>
-                </el-form>
             </div>
 
             <template #footer>
-                <div class="buy-dialog-footer">
-                    <el-button @click="buyDialogVisible = false">取消</el-button>
-                    <el-button type="primary" @click="confirmBuy" :loading="buyLoading" :disabled="!canBuy">
-                        确认购买
-                    </el-button>
+                <div class="trading-footer">
+                    <el-button class="cancel-btn" @click="buyDialogVisible = false">取消</el-button>
                 </div>
             </template>
         </el-dialog>
@@ -610,7 +1080,7 @@
 import { ref, reactive, onMounted, onUnmounted, nextTick, watch, computed } from 'vue';
 import { useUserStore } from '../store/user';
 import { User, Lock, ArrowDown } from '@element-plus/icons-vue';
-import { ElMessage } from 'element-plus';
+import { ElMessage, ElMessageBox } from 'element-plus';
 import { mockApi } from '../api/mock';
 import Sidebar from '../components/Sidebar.vue';
 import UserProfile from '../components/UserProfile.vue';
@@ -621,6 +1091,7 @@ const chatHistory = ref([]);
 const chatHistoryRef = ref(null);
 const isChatMode = ref(false); // 控制是否进入聊天模式
 const showUserProfile = ref(false); // 控制是否显示个人中心
+const showChatShortcuts = ref(false); // 控制聊天模式下的快捷操作显示
 
 // 登录相关
 const loginDialogVisible = ref(false);
@@ -719,23 +1190,33 @@ const currentStep = ref(0);
 const preferencesForm = reactive({
     riskLevel: '',
     experience: '',
-    goals: [],
-    sectors: []
+    userTraits: {
+        risk_tolerance: 3,
+        active_participation: 3,
+        learning_willingness: 3,
+        strategy_dependency: 2,
+        trading_frequency: 2,
+        innovation_trial: 3
+    },
+    sectors: {
+        majorCategories: [], // 大分类，最多选择2个
+        subCategories: []    // 小分类，可选择3-4个
+    }
 });
 
 // 步骤配置
 const preferenceSteps = [
     {
-        title: '风险偏好',
-        desc: '请选择您的风险承受能力'
+        title: '选择投资风格',
+        desc: '您希望投资收益高一些，还是稳一些？选择最适合您的投资方式'
     },
     {
         title: '投资经验',
-        desc: '请选择您的投资经验水平'
+        desc: '告诉我们您的投资经验，帮助我们推荐合适的投资方案'
     },
     {
-        title: '投资目标',
-        desc: '请选择您的投资目标（可多选）'
+        title: '用户特征',
+        desc: '帮助我们了解您的投资偏好，为您量身定制投资方案'
     },
     {
         title: '关注板块',
@@ -747,52 +1228,373 @@ const preferenceSteps = [
 const riskOptions = [
     {
         value: 'conservative',
-        title: '保守型',
-        desc: '追求稳健收益，风险承受能力较低'
+        title: '求稳型',
+        desc: '像存银行一样稳，但收益比存款高一点',
+        simpleDesc: '投1万元，一年大概赚300-600元',
+        maxLoss: '最多亏500元',
+        examples: '大银行股票（工商银行、建设银行）',
+        maxDrawdown: '5%',
+        expectedReturn: '3-6%',
+        riskLevel: 1,
+        icon: '🛡️'
     },
     {
         value: 'stable',
         title: '稳健型',
-        desc: '注重资金安全，追求稳定增值'
+        desc: '选择知名大公司，收益稳定有保障',
+        simpleDesc: '投1万元，一年大概赚600-1000元',
+        maxLoss: '最多亏1000元',
+        examples: '知名品牌（茅台、招商银行、美的）',
+        maxDrawdown: '10%',
+        expectedReturn: '6-10%',
+        riskLevel: 2,
+        icon: '🏦'
     },
     {
         value: 'balanced',
-        title: '平衡型',
-        desc: '平衡风险与收益，适度承担风险'
+        title: '均衡型',
+        desc: '稳健和成长兼顾，适合大多数人',
+        simpleDesc: '投1万元，一年大概赚1000-1500元',
+        maxLoss: '最多亏1500元',
+        examples: '优质公司组合（银行+白酒+新能源）',
+        maxDrawdown: '15%',
+        expectedReturn: '10-15%',
+        riskLevel: 3,
+        icon: '⚖️'
     },
     {
         value: 'growth',
         title: '成长型',
-        desc: '追求较高收益，能承担一定风险'
+        desc: '追求更高收益，选择有潜力的公司',
+        simpleDesc: '投1万元，一年大概赚1500-2500元',
+        maxLoss: '最多亏2000元',
+        examples: '热门科技股（比亚迪、宁德时代）',
+        maxDrawdown: '20%',
+        expectedReturn: '15-25%',
+        riskLevel: 4,
+        icon: '🚀'
     },
     {
         value: 'aggressive',
-        title: '激进型',
-        desc: '追求高收益，能承担较高风险'
+        title: '进取型',
+        desc: '追求最高收益，但风险也最大',
+        simpleDesc: '投1万元，一年可能赚2500元以上',
+        maxLoss: '可能亏3000元以上',
+        examples: '新兴小公司股票（创业板、科创板）',
+        maxDrawdown: '30%+',
+        expectedReturn: '25%+',
+        riskLevel: 5,
+        icon: '⚡'
     }
 ];
 
 const experienceOptions = [
-    { value: 'beginner', label: '新手（1年以下）' },
-    { value: 'intermediate', label: '中级（1-3年）' },
-    { value: 'advanced', label: '高级（3年以上）' }
+    {
+        value: 'beginner',
+        title: '投资新手',
+        label: '我是投资新手，想稳步学习',
+        desc: '刚开始接触投资，希望从简单稳健的方式开始',
+        icon: '🌱'
+    },
+    {
+        value: 'experienced',
+        title: '有投资经验',
+        label: '我有一定投资经验，可以承担风险',
+        desc: '已经有过投资经历，了解市场波动，能接受一定风险',
+        icon: '📈'
+    }
 ];
 
-const goalOptions = [
-    { value: 'wealth_growth', label: '财富增值' },
-    { value: 'retirement', label: '养老规划' },
-    { value: 'education', label: '教育基金' },
-    { value: 'house', label: '购房置业' },
-    { value: 'emergency', label: '应急储备' }
+const userTraits = [
+    {
+        id: 'risk_tolerance',
+        title: '风险承受',
+        desc: '您能接受多大的投资波动？',
+        icon: '🛡️',
+        options: [
+            { value: 1, label: '1分', desc: '完全不能接受亏损，只要保本' },
+            { value: 2, label: '2分', desc: '可接受很小的波动，亏损不超过5%' },
+            { value: 3, label: '3分', desc: '可接受适度波动，亏损不超过15%' },
+            { value: 4, label: '4分', desc: '可接受较大波动，亏损不超过25%' },
+            { value: 5, label: '5分', desc: '可接受高风险，亏损超过30%也能承受' }
+        ],
+        defaultValue: 3
+    },
+    {
+        id: 'active_participation',
+        title: '主动参与',
+        desc: '您希望多深度参与投资决策？',
+        icon: '🎯',
+        options: [
+            { value: 1, label: '1分', desc: '完全不想管，全部交给专业人士' },
+            { value: 2, label: '2分', desc: '偶尔关注，主要听专业建议' },
+            { value: 3, label: '3分', desc: '适度参与，听建议但自己决定' },
+            { value: 4, label: '4分', desc: '积极参与，自己研究后做决策' },
+            { value: 5, label: '5分', desc: '完全主导，所有决策都自己做' }
+        ],
+        defaultValue: 3
+    },
+    {
+        id: 'learning_willingness',
+        title: '学习意愿',
+        desc: '您愿意花多少时间学习投资？',
+        icon: '📚',
+        options: [
+            { value: 1, label: '1分', desc: '完全没时间学习投资知识' },
+            { value: 2, label: '2分', desc: '偶尔看看新闻，了解大概' },
+            { value: 3, label: '3分', desc: '定期看资讯，学习基础知识' },
+            { value: 4, label: '4分', desc: '主动学习，研究投资策略' },
+            { value: 5, label: '5分', desc: '深度学习，钻研各种投资理论' }
+        ],
+        defaultValue: 3
+    },
+    {
+        id: 'strategy_dependency',
+        title: '策略复杂度',
+        desc: '您更倾向于哪种投资策略？',
+        icon: '📊',
+        options: [
+            { value: 1, label: '1分', desc: '最简单策略，买了就长期持有' },
+            { value: 2, label: '2分', desc: '简单策略，偶尔调整持仓' },
+            { value: 3, label: '3分', desc: '中等策略，定期优化投资组合' },
+            { value: 4, label: '4分', desc: '复杂策略，使用多种投资工具' },
+            { value: 5, label: '5分', desc: '高级策略，运用各种量化模型' }
+        ],
+        defaultValue: 2
+    },
+    {
+        id: 'trading_frequency',
+        title: '交易频次',
+        desc: '您计划多久调整一次投资？',
+        icon: '⏰',
+        options: [
+            { value: 1, label: '1分', desc: '很少交易，半年以上才调整' },
+            { value: 2, label: '2分', desc: '低频交易，2-3个月调整一次' },
+            { value: 3, label: '3分', desc: '中频交易，每月都会看看调整' },
+            { value: 4, label: '4分', desc: '高频交易，每周都关注调整' },
+            { value: 5, label: '5分', desc: '超高频，几乎每天都在交易' }
+        ],
+        defaultValue: 2
+    },
+    {
+        id: 'innovation_trial',
+        title: '创新接受度',
+        desc: '您对新的投资产品态度如何？',
+        icon: '🚀',
+        options: [
+            { value: 1, label: '1分', desc: '非常保守，只投最传统的产品' },
+            { value: 2, label: '2分', desc: '比较保守，只投成熟稳定的产品' },
+            { value: 3, label: '3分', desc: '适度开放，了解清楚后会尝试' },
+            { value: 4, label: '4分', desc: '比较开放，愿意尝试新兴产品' },
+            { value: 5, label: '5分', desc: '非常开放，积极尝试各种新产品' }
+        ],
+        defaultValue: 3
+    }
 ];
 
-const sectorOptions = [
-    { value: 'technology', label: '科技股' },
-    { value: 'healthcare', label: '医疗健康' },
-    { value: 'finance', label: '金融' },
-    { value: 'consumer', label: '消费' },
-    { value: 'energy', label: '能源' },
-    { value: 'real_estate', label: '房地产' }
+// 大分类配置（最多选择2个）
+const majorSectorOptions = [
+    {
+        value: 'technology',
+        label: '科技板块',
+        icon: '💻',
+        desc: '包含互联网、软件、硬件、人工智能等科技相关行业',
+        color: '#3b82f6'
+    },
+    {
+        value: 'finance',
+        label: '金融板块',
+        icon: '🏦',
+        desc: '包含银行、保险、证券、支付等金融服务行业',
+        color: '#10b981'
+    },
+    {
+        value: 'consumer',
+        label: '消费板块',
+        icon: '🛍️',
+        desc: '包含食品饮料、服装、家电、零售等消费相关行业',
+        color: '#f59e0b'
+    },
+    {
+        value: 'healthcare',
+        label: '医疗板块',
+        icon: '🏥',
+        desc: '包含医药、医疗器械、生物技术等医疗健康行业',
+        color: '#ef4444'
+    },
+    {
+        value: 'industrial',
+        label: '工业板块',
+        icon: '🏭',
+        desc: '包含制造业、基建、能源、材料等传统工业行业',
+        color: '#8b5cf6'
+    },
+    {
+        value: 'emerging',
+        label: '新兴板块',
+        icon: '🚀',
+        desc: '包含新能源、环保、军工等新兴战略性行业',
+        color: '#06b6d4'
+    }
+];
+
+// 小分类配置（可选择3-4个）
+const subSectorOptions = [
+    // 科技板块下的小分类
+    {
+        value: 'internet',
+        label: '互联网',
+        parent: 'technology',
+        icon: '🌐',
+        desc: '电商、社交、搜索、云服务等互联网公司',
+        examples: '腾讯、阿里巴巴、百度'
+    },
+    {
+        value: 'chips',
+        label: '芯片半导体',
+        parent: 'technology',
+        icon: '🔬',
+        desc: '芯片设计、制造、封测等半导体产业链',
+        examples: '中芯国际、韦尔股份、紫光国微'
+    },
+    {
+        value: 'software',
+        label: '软件服务',
+        parent: 'technology',
+        icon: '💾',
+        desc: '企业软件、游戏、教育软件等',
+        examples: '用友网络、恒生电子、三六零'
+    },
+    {
+        value: 'ai',
+        label: '人工智能',
+        parent: 'technology',
+        icon: '🤖',
+        desc: 'AI算法、机器学习、智能硬件等',
+        examples: '科大讯飞、海康威视、大华股份'
+    },
+
+    // 金融板块下的小分类
+    {
+        value: 'banks',
+        label: '银行',
+        parent: 'finance',
+        icon: '🏛️',
+        desc: '国有银行、股份制银行、城商行等',
+        examples: '招商银行、平安银行、宁波银行'
+    },
+    {
+        value: 'insurance',
+        label: '保险',
+        parent: 'finance',
+        icon: '🛡️',
+        desc: '人寿保险、财产保险等保险公司',
+        examples: '中国平安、中国人寿、新华保险'
+    },
+    {
+        value: 'securities',
+        label: '证券',
+        parent: 'finance',
+        icon: '📈',
+        desc: '证券公司、基金公司等',
+        examples: '中信证券、华泰证券、东方财富'
+    },
+
+    // 消费板块下的小分类
+    {
+        value: 'food_beverage',
+        label: '食品饮料',
+        parent: 'consumer',
+        icon: '🍷',
+        desc: '白酒、饮料、食品加工等',
+        examples: '贵州茅台、五粮液、伊利股份'
+    },
+    {
+        value: 'retail',
+        label: '零售',
+        parent: 'consumer',
+        icon: '🏪',
+        desc: '超市、百货、电商零售等',
+        examples: '永辉超市、苏宁易购、王府井'
+    },
+    {
+        value: 'appliances',
+        label: '家电',
+        parent: 'consumer',
+        icon: '📺',
+        desc: '白色家电、黑色家电等',
+        examples: '美的集团、格力电器、海尔智家'
+    },
+
+    // 医疗板块下的小分类
+    {
+        value: 'pharma',
+        label: '医药制造',
+        parent: 'healthcare',
+        icon: '💊',
+        desc: '化学药、中药、生物药等',
+        examples: '恒瑞医药、云南白药、片仔癀'
+    },
+    {
+        value: 'medical_devices',
+        label: '医疗器械',
+        parent: 'healthcare',
+        icon: '🩺',
+        desc: '医疗设备、体外诊断等',
+        examples: '迈瑞医疗、鱼跃医疗、乐普医疗'
+    },
+
+    // 工业板块下的小分类
+    {
+        value: 'manufacturing',
+        label: '先进制造',
+        parent: 'industrial',
+        icon: '⚙️',
+        desc: '机械设备、精密制造等',
+        examples: '三一重工、中联重科、徐工机械'
+    },
+    {
+        value: 'materials',
+        label: '基础材料',
+        parent: 'industrial',
+        icon: '🏗️',
+        desc: '钢铁、有色金属、化工等',
+        examples: '宝钢股份、紫金矿业、万华化学'
+    },
+    {
+        value: 'infrastructure',
+        label: '基础设施',
+        parent: 'industrial',
+        icon: '🌉',
+        desc: '建筑、交通、公用事业等',
+        examples: '中国建筑、中国中铁、长江电力'
+    },
+
+    // 新兴板块下的小分类
+    {
+        value: 'new_energy',
+        label: '新能源',
+        parent: 'emerging',
+        icon: '🔋',
+        desc: '光伏、风电、储能、新能源车等',
+        examples: '宁德时代、比亚迪、隆基绿能'
+    },
+    {
+        value: 'environmental',
+        label: '环保',
+        parent: 'emerging',
+        icon: '🌱',
+        desc: '污水处理、固废处理、大气治理等',
+        examples: '碧水源、启迪环境、龙净环保'
+    },
+    {
+        value: 'military',
+        label: '军工',
+        parent: 'emerging',
+        icon: '🛡️',
+        desc: '军工装备、航空航天等',
+        examples: '中航沈飞、航发动力、中直股份'
+    }
 ];
 
 // 引导提示
@@ -808,14 +1610,68 @@ const selectedStock = ref(null);
 const buyLoading = ref(false);
 const buyFormRef = ref(null);
 const buyForm = reactive({
-    quantity: 100
+    quantity: 100,
+    price: 0,
+    orderType: 'limit' // limit: 限价, market: 市价
 });
 
-const buyRules = {
-    quantity: [
-        { required: true, message: '请输入购买数量', trigger: 'blur' },
-        { type: 'number', min: 100, message: '最少购买100股', trigger: 'blur' }
-    ]
+// 五档行情数据
+const sellOrders = ref([]);
+const buyOrders = ref([]);
+
+// 生成五档行情数据
+const generateMarketDepth = (basePrice) => {
+    const price = parseFloat(basePrice);
+    sellOrders.value = [];
+    buyOrders.value = [];
+
+    // 生成卖盘（卖5到卖1）
+    for (let i = 0; i < 5; i++) {
+        sellOrders.value.push({
+            price: (price + (i + 1) * 0.01).toFixed(2),
+            volume: Math.floor(Math.random() * 500 + 100)
+        });
+    }
+
+    // 生成买盘（买1到买5）
+    for (let i = 0; i < 5; i++) {
+        buyOrders.value.push({
+            price: (price - (i + 1) * 0.01).toFixed(2),
+            volume: Math.floor(Math.random() * 500 + 100)
+        });
+    }
+};
+
+// 获取当前时间
+const getCurrentTime = () => {
+    const now = new Date();
+    return now.toLocaleTimeString('zh-CN', {
+        hour: '2-digit',
+        minute: '2-digit',
+        second: '2-digit'
+    });
+};
+
+// 调整价格
+const adjustPrice = (delta) => {
+    const currentPrice = parseFloat(buyForm.price) || 0;
+    const newPrice = Math.max(0.01, currentPrice + delta);
+    buyForm.price = newPrice.toFixed(2);
+};
+
+// 按比例设置购买数量
+const setQuantityByPercent = (percent) => {
+    if (!selectedStock.value) return;
+
+    const price = buyForm.orderType === 'market'
+        ? parseFloat(selectedStock.value.price)
+        : parseFloat(buyForm.price) || parseFloat(selectedStock.value.price);
+
+    const availableFunds = userStore.balance;
+    const maxQuantity = Math.floor(availableFunds / price / 100) * 100; // 向下取整到100的倍数
+
+    const targetQuantity = Math.floor(maxQuantity * (percent / 100) / 100) * 100;
+    buyForm.quantity = Math.max(100, targetQuantity);
 };
 
 const showLoginDialog = (isRegister) => {
@@ -951,9 +1807,182 @@ const onVoiceClick = () => {
     ElMessage.info('语音输入功能开发中...');
 };
 
+// 切换聊天快捷操作显示
+const toggleChatShortcuts = () => {
+    showChatShortcuts.value = !showChatShortcuts.value;
+};
+
+// 处理下拉菜单命令
+const handleDropdownCommand = (command) => {
+    switch (command) {
+        case 'yesterday-review':
+            setSuggestionAndSend('昨日复盘：分析昨日市场表现和我的操作，总结得失并提出改进建议');
+            break;
+        case 'smart-recommendation':
+            handleSmartRecommendation();
+            break;
+        case 'news-update':
+            handleNewsUpdate();
+            break;
+        case 'asset-analysis':
+            handleAssetAnalysis();
+            break;
+    }
+};
+
 const setSuggestionAndSend = (suggestion) => {
     inputMessage.value = suggestion;
     sendMessage();
+    // 使用快捷操作后自动收起
+    if (showChatShortcuts.value) {
+        setTimeout(() => {
+            showChatShortcuts.value = false;
+        }, 300);
+    }
+};
+
+// 智能荐股功能
+const handleSmartRecommendation = async () => {
+    // 检查用户是否已登录
+    if (!userStore.isLoggedIn) {
+        ElMessage.warning('请先登录后再开始对话');
+        showGuide('login');
+        return;
+    }
+
+    // 切换到聊天模式
+    isChatMode.value = true;
+
+    // 构建智能荐股消息
+    const userPreferences = userStore.userInfo?.preferences;
+    let message = '智能荐股：根据我的投资偏好推荐优质股票';
+
+    if (userPreferences) {
+        message += `\n\n我的投资偏好：
+- 风险偏好：${getRiskLevelText(userPreferences.riskLevel)}
+- 投资经验：${userPreferences.experience === 'beginner' ? '新手' : '有经验'}
+- 关注板块：${userPreferences.sectors?.majorCategories?.join('、') || '未设置'}`;
+    }
+
+    const res = await mockApi.sendMessage(message);
+
+    // 为荐股消息添加持久化标识和唯一ID
+    const recommendationMessage = {
+        ...res.data,
+        isPersistent: true,
+        messageId: `recommendation-${Date.now()}`,
+        timestamp: new Date().toISOString()
+    };
+
+    chatHistory.value.push(
+        { role: 'user', content: '智能荐股：根据我的投资偏好推荐优质股票' },
+        recommendationMessage
+    );
+
+    await nextTick();
+    scrollToBottom();
+    ElMessage.success('已为您生成个性化股票推荐');
+
+    // 使用快捷操作后自动收起
+    if (showChatShortcuts.value) {
+        setTimeout(() => {
+            showChatShortcuts.value = false;
+        }, 300);
+    }
+};
+
+// 资讯推送功能
+const handleNewsUpdate = async () => {
+    // 检查用户是否已登录
+    if (!userStore.isLoggedIn) {
+        ElMessage.warning('请先登录后再开始对话');
+        showGuide('login');
+        return;
+    }
+
+    // 切换到聊天模式
+    isChatMode.value = true;
+
+    const message = '资讯推送：今日重要财经新闻和市场动态';
+    const res = await mockApi.sendMessage(message);
+
+    chatHistory.value.push(
+        { role: 'user', content: message },
+        res.data
+    );
+
+    await nextTick();
+    scrollToBottom();
+    ElMessage.success('已为您推送最新财经资讯');
+
+    // 使用快捷操作后自动收起
+    if (showChatShortcuts.value) {
+        setTimeout(() => {
+            showChatShortcuts.value = false;
+        }, 300);
+    }
+};
+
+// 我的资产分析功能
+const handleAssetAnalysis = async () => {
+    // 检查用户是否已登录
+    if (!userStore.isLoggedIn) {
+        ElMessage.warning('请先登录后再开始对话');
+        showGuide('login');
+        return;
+    }
+
+    // 切换到聊天模式
+    isChatMode.value = true;
+
+    // 构建资产分析消息，包含用户的实际资产数据
+    const totalAssets = userStore.getTotalAssets();
+    const portfolioCount = userStore.portfolio.length;
+    const watchlistCount = userStore.watchlist.length;
+
+    let message = `我的资产分析：
+    
+**账户概况**
+- 总资产：¥${totalAssets.toFixed(2)}
+- 可用余额：¥${userStore.balance.toFixed(2)}
+- 持仓股票：${portfolioCount}只
+- 自选股票：${watchlistCount}只`;
+
+    if (portfolioCount > 0) {
+        message += '\n\n**当前持仓**\n';
+        userStore.portfolio.forEach(position => {
+            message += `- ${position.name}(${position.code})：${position.quantity}股，成本价¥${position.avgPrice.toFixed(2)}\n`;
+        });
+    }
+
+    if (watchlistCount > 0) {
+        message += '\n**自选股票**\n';
+        userStore.watchlist.slice(0, 5).forEach(stock => {
+            message += `- ${stock.name}(${stock.code})\n`;
+        });
+        if (watchlistCount > 5) {
+            message += `- 等${watchlistCount}只股票\n`;
+        }
+    }
+
+    message += '\n请帮我分析当前的投资组合表现，并给出优化建议。';
+
+    const res = await mockApi.sendMessage(message);
+    chatHistory.value.push(
+        { role: 'user', content: '我的资产：分析当前持仓情况和投资组合表现' },
+        res.data
+    );
+
+    await nextTick();
+    scrollToBottom();
+    ElMessage.success('已为您分析资产配置情况');
+
+    // 使用快捷操作后自动收起
+    if (showChatShortcuts.value) {
+        setTimeout(() => {
+            showChatShortcuts.value = false;
+        }, 300);
+    }
 };
 
 // 处理来自侧边栏的交互
@@ -1067,12 +2096,43 @@ const removeFromWatchlist = (stockCode) => {
     }
 };
 
-const continueAnalysis = async (stockInfo) => {
-    const message = `请进一步分析${stockInfo.name}的投资价值，包括同行业对比、未来发展前景和具体的买入时机建议。`;
+const continueAnalysis = async (stockInfo, isPaid = false) => {
+    let message;
+    if (isPaid) {
+        message = `【付费深度分析】请对${stockInfo.name}(${stockInfo.code})进行全面深度分析，包括：
+1. 详细的基本面分析（财务指标、盈利能力、成长性）
+2. 技术面分析（K线形态、技术指标、支撑阻力位）
+3. 行业对比分析（同行业竞争优势、市场地位）
+4. 未来发展前景（业务增长点、风险因素）
+5. 具体投资建议（买入时机、目标价位、止损位）
+6. 资金配置建议（仓位管理、分批建仓策略）`;
+    } else {
+        message = `请进一步分析${stockInfo.name}的投资价值，包括同行业对比、未来发展前景和具体的买入时机建议。`;
+    }
 
     const res = await mockApi.sendMessage(message);
     chatHistory.value.push(
-        { role: 'user', content: message },
+        { role: 'user', content: isPaid ? `深度分析 ${stockInfo.name}(${stockInfo.code})` : message },
+        res.data
+    );
+
+    await nextTick();
+    scrollToBottom();
+};
+
+// 量化分析方法
+const performQuantAnalysis = async (stockInfo) => {
+    const message = `【付费量化分析】请对${stockInfo.name}(${stockInfo.code})进行专业量化分析，包括：
+1. 技术指标分析（MACD、RSI、布林带、KDJ等）
+2. 量化选股因子评分（价值因子、成长因子、质量因子）
+3. 风险评估模型（波动率、最大回撤、夏普比率）
+4. 量化交易信号（买入卖出信号、信号强度）
+5. 回测数据分析（历史表现、胜率统计）
+6. 量化投资策略建议（策略类型、参数设置、风控措施）`;
+
+    const res = await mockApi.sendMessage(message);
+    chatHistory.value.push(
+        { role: 'user', content: `量化分析 ${stockInfo.name}(${stockInfo.code})` },
         res.data
     );
 
@@ -1222,7 +2282,7 @@ const handlePreferencesSubmit = async () => {
         const preferences = {
             riskLevel: preferencesForm.riskLevel,
             experience: preferencesForm.experience,
-            goals: preferencesForm.goals,
+            userTraits: preferencesForm.userTraits,
             sectors: preferencesForm.sectors,
             completedAt: new Date().toISOString()
         };
@@ -1274,32 +2334,79 @@ const canProceedToNext = computed(() => {
             return preferencesForm.riskLevel !== '';
         case 1: // 投资经验
             return preferencesForm.experience !== '';
-        case 2: // 投资目标
-            return preferencesForm.goals.length > 0;
+        case 2: // 用户特征
+            return true; // 有默认值，总是可以进入下一步
         case 3: // 关注板块
-            return preferencesForm.sectors.length > 0;
+            return preferencesForm.sectors.majorCategories.length > 0 &&
+                preferencesForm.sectors.subCategories.length >= 3;
         default:
             return false;
     }
 });
 
-// 选择切换方法
-const toggleGoal = (value) => {
-    const index = preferencesForm.goals.indexOf(value);
+// 用户特征相关方法
+const resetUserTraitsToDefault = () => {
+    userTraits.forEach(trait => {
+        preferencesForm.userTraits[trait.id] = trait.defaultValue;
+    });
+};
+
+const getCurrentTraitDescription = (traitId) => {
+    const trait = userTraits.find(t => t.id === traitId);
+    if (!trait) return '';
+
+    const currentValue = preferencesForm.userTraits[traitId];
+    const option = trait.options.find(opt => opt.value === currentValue);
+    return option ? option.desc : '';
+};
+
+// 大分类选择逻辑
+const toggleMajorSector = (value) => {
+    const index = preferencesForm.sectors.majorCategories.indexOf(value);
     if (index > -1) {
-        preferencesForm.goals.splice(index, 1);
+        // 取消选择大分类时，同时移除该分类下的所有小分类
+        preferencesForm.sectors.majorCategories.splice(index, 1);
+        const subSectorsToRemove = subSectorOptions
+            .filter(sub => sub.parent === value)
+            .map(sub => sub.value);
+        preferencesForm.sectors.subCategories = preferencesForm.sectors.subCategories
+            .filter(sub => !subSectorsToRemove.includes(sub));
     } else {
-        preferencesForm.goals.push(value);
+        // 检查是否已达到最大选择数量
+        if (preferencesForm.sectors.majorCategories.length < 2) {
+            preferencesForm.sectors.majorCategories.push(value);
+        }
     }
 };
 
-const toggleSector = (value) => {
-    const index = preferencesForm.sectors.indexOf(value);
+// 小分类选择逻辑
+const toggleSubSector = (value) => {
+    const index = preferencesForm.sectors.subCategories.indexOf(value);
     if (index > -1) {
-        preferencesForm.sectors.splice(index, 1);
+        preferencesForm.sectors.subCategories.splice(index, 1);
     } else {
-        preferencesForm.sectors.push(value);
+        // 检查是否已达到最大选择数量
+        if (preferencesForm.sectors.subCategories.length < 4) {
+            preferencesForm.sectors.subCategories.push(value);
+        }
     }
+};
+
+// 获取大分类的图标
+const getMajorSectorIcon = (value) => {
+    const sector = majorSectorOptions.find(s => s.value === value);
+    return sector ? sector.icon : '';
+};
+
+// 获取大分类的标签
+const getMajorSectorLabel = (value) => {
+    const sector = majorSectorOptions.find(s => s.value === value);
+    return sector ? sector.label : '';
+};
+
+// 根据父分类获取小分类
+const getSubSectorsByParent = (parentValue) => {
+    return subSectorOptions.filter(sub => sub.parent === parentValue);
 };
 
 const getRiskLevelText = (level) => {
@@ -1357,70 +2464,133 @@ const currentPosition = computed(() => {
 });
 
 const maxBuyQuantity = computed(() => {
-    if (!selectedStock.value) return 0;
+    if (!selectedStock.value) return 100; // 至少返回100，避免min > max错误
     const price = parseFloat(selectedStock.value.price);
     const maxShares = Math.floor(userStore.balance / price / 100) * 100; // 按100股整数倍
+    return Math.max(100, maxShares); // 至少返回100股
+});
+
+// 可买数量显示
+const availableBuyQuantity = computed(() => {
+    if (!selectedStock.value) return 0;
+    const price = buyForm.orderType === 'market'
+        ? parseFloat(selectedStock.value.price)
+        : parseFloat(buyForm.price) || parseFloat(selectedStock.value.price);
+    const maxShares = Math.floor(userStore.balance / price / 100) * 100;
     return Math.max(0, maxShares);
 });
 
-const totalCost = computed(() => {
+// 预计成交金额
+const estimatedAmount = computed(() => {
     if (!selectedStock.value || !buyForm.quantity) return 0;
-    const price = parseFloat(selectedStock.value.price);
-    const cost = buyForm.quantity * price;
-    const fee = cost * 0.0003; // 0.03% 手续费
-    return cost + fee;
+    const price = buyForm.orderType === 'market'
+        ? parseFloat(selectedStock.value.price)
+        : parseFloat(buyForm.price) || parseFloat(selectedStock.value.price);
+    return buyForm.quantity * price;
+});
+
+// 手续费计算
+const tradingFee = computed(() => {
+    const amount = estimatedAmount.value;
+    const commissionRate = 0.0003; // 万分之3
+    const minCommission = 5; // 最低5元
+    const stampTax = amount * 0.001; // 印花税千分之1（卖出时收取，买入不收）
+    const transferFee = amount * 0.00002; // 过户费万分之0.2
+
+    const commission = Math.max(amount * commissionRate, minCommission);
+    return commission + transferFee; // 买入时不收印花税
+});
+
+// 总成本
+const totalCost = computed(() => {
+    return estimatedAmount.value + tradingFee.value;
 });
 
 const canBuy = computed(() => {
     return buyForm.quantity >= 100 &&
+        buyForm.quantity % 100 === 0 && // 必须是100的整数倍
         totalCost.value <= userStore.balance &&
-        buyForm.quantity <= maxBuyQuantity.value;
+        buyForm.quantity <= maxBuyQuantity.value &&
+        (buyForm.orderType === 'market' || (buyForm.price && parseFloat(buyForm.price) > 0));
+});
+
+// 检查聊天历史中是否有荐股列表
+const hasRecommendationInHistory = computed(() => {
+    return chatHistory.value.some(message =>
+        message.hasStockInfo &&
+        message.stockList &&
+        message.isPersistent
+    );
 });
 
 // 购买相关方法
 const showBuyDialog = (stockInfo) => {
     selectedStock.value = stockInfo;
     buyForm.quantity = 100;
+    buyForm.price = stockInfo.price; // 设置默认价格为当前价格
+    buyForm.orderType = 'limit'; // 默认限价单
+
+    // 生成五档行情数据
+    generateMarketDepth(stockInfo.price);
+
     buyDialogVisible.value = true;
 };
 
 const confirmBuy = async () => {
-    if (!buyFormRef.value) return;
+    if (!canBuy.value) {
+        ElMessage.warning('请检查交易信息');
+        return;
+    }
 
-    await buyFormRef.value.validate((valid) => {
-        if (valid) {
-            buyLoading.value = true;
+    buyLoading.value = true;
 
-            // 模拟购买延迟
-            setTimeout(() => {
-                const result = userStore.buyStock(
-                    selectedStock.value,
-                    buyForm.quantity,
-                    parseFloat(selectedStock.value.price)
-                );
+    // 模拟购买延迟
+    setTimeout(() => {
+        const actualPrice = buyForm.orderType === 'market'
+            ? parseFloat(selectedStock.value.price)
+            : parseFloat(buyForm.price);
 
-                if (result.success) {
-                    ElMessage.success(result.message);
-                    buyDialogVisible.value = false;
+        const result = userStore.buyStock(
+            selectedStock.value,
+            buyForm.quantity,
+            actualPrice
+        );
 
-                    // 发送购买成功的消息到聊天
-                    const successMessage = `✅ 购买成功！您已成功购买${selectedStock.value.name} ${buyForm.quantity}股，花费¥${totalCost.value.toFixed(2)}。当前余额：¥${userStore.balance.toFixed(2)}`;
-                    chatHistory.value.push({
-                        role: 'assistant',
-                        content: successMessage
-                    });
+        if (result.success) {
+            ElMessage.success(result.message);
+            buyDialogVisible.value = false;
 
-                    nextTick(() => {
-                        scrollToBottom();
-                    });
-                } else {
-                    ElMessage.error(result.message);
-                }
+            // 发送购买成功的消息到聊天
+            const orderTypeText = buyForm.orderType === 'market' ? '市价' : '限价';
+            const successMessage = `✅ 交易成功！
+            
+📊 **交易详情**
+• 股票：${selectedStock.value.name} (${selectedStock.value.code})
+• 类型：${orderTypeText}买入
+• 数量：${buyForm.quantity}股
+• 成交价：¥${actualPrice.toFixed(2)}
+• 成交金额：¥${estimatedAmount.value.toFixed(2)}
+• 手续费：¥${tradingFee.value.toFixed(2)}
+• 总计：¥${totalCost.value.toFixed(2)}
 
-                buyLoading.value = false;
-            }, 1000);
+💰 **账户信息**
+• 当前余额：¥${userStore.balance.toFixed(2)}
+• 持仓数量：${userStore.getPosition(selectedStock.value.code)?.quantity || buyForm.quantity}股`;
+
+            chatHistory.value.push({
+                role: 'assistant',
+                content: successMessage
+            });
+
+            nextTick(() => {
+                scrollToBottom();
+            });
+        } else {
+            ElMessage.error(result.message);
         }
-    });
+
+        buyLoading.value = false;
+    }, 1500);
 };
 
 // 检查用户状态并显示相应引导
@@ -1461,6 +2631,167 @@ onUnmounted(() => {
 
 const closeUserProfile = () => {
     showUserProfile.value = false;
+};
+
+// 滚动到最新的荐股列表
+const scrollToRecommendation = () => {
+    nextTick(() => {
+        const recommendationElements = document.querySelectorAll('.persistent-stock-list');
+        if (recommendationElements.length > 0) {
+            // 滚动到最后一个荐股列表
+            const lastRecommendation = recommendationElements[recommendationElements.length - 1];
+            lastRecommendation.scrollIntoView({
+                behavior: 'smooth',
+                block: 'center'
+            });
+
+            // 添加高亮效果
+            lastRecommendation.classList.add('highlight-recommendation');
+            setTimeout(() => {
+                lastRecommendation.classList.remove('highlight-recommendation');
+            }, 2000);
+        }
+    });
+};
+
+// 格式化荐股时间
+const formatRecommendationTime = (timestamp) => {
+    if (!timestamp) return '';
+    const date = new Date(timestamp);
+    const now = new Date();
+    const diffTime = now - date;
+    const diffMinutes = Math.floor(diffTime / (1000 * 60));
+    const diffHours = Math.floor(diffTime / (1000 * 60 * 60));
+    const diffDays = Math.floor(diffTime / (1000 * 60 * 60 * 24));
+
+    if (diffMinutes < 1) {
+        return '刚刚生成';
+    } else if (diffMinutes < 60) {
+        return `${diffMinutes}分钟前`;
+    } else if (diffHours < 24) {
+        return `${diffHours}小时前`;
+    } else if (diffDays < 7) {
+        return `${diffDays}天前`;
+    } else {
+        return date.toLocaleDateString('zh-CN', {
+            month: 'short',
+            day: 'numeric'
+        });
+    }
+};
+
+// 刷新荐股列表
+const refreshRecommendation = async (message) => {
+    ElMessage.info('正在刷新荐股列表...');
+
+    // 重新调用智能荐股API
+    const userPreferences = userStore.userInfo?.preferences;
+    let requestMessage = '智能荐股：根据我的投资偏好推荐优质股票';
+
+    if (userPreferences) {
+        requestMessage += `\n\n我的投资偏好：
+- 风险偏好：${getRiskLevelText(userPreferences.riskLevel)}
+- 投资经验：${userPreferences.experience === 'beginner' ? '新手' : '有经验'}
+- 关注板块：${userPreferences.sectors?.majorCategories?.join('、') || '未设置'}`;
+    }
+
+    try {
+        const res = await mockApi.sendMessage(requestMessage);
+
+        // 更新现有的荐股消息
+        const messageIndex = chatHistory.value.findIndex(msg => msg.messageId === message.messageId);
+        if (messageIndex !== -1) {
+            chatHistory.value[messageIndex] = {
+                ...res.data,
+                isPersistent: true,
+                messageId: message.messageId, // 保持原有ID
+                timestamp: new Date().toISOString() // 更新时间戳
+            };
+        }
+
+        ElMessage.success('荐股列表已刷新');
+
+        // 滚动到更新的荐股列表
+        nextTick(() => {
+            scrollToRecommendation();
+        });
+    } catch (error) {
+        ElMessage.error('刷新失败，请稍后重试');
+    }
+};
+
+// 获取推荐等级样式类
+const getRecommendLevelClass = (level) => {
+    switch (level) {
+        case '强烈推荐':
+            return 'strong-recommend';
+        case '推荐':
+            return 'recommend';
+        case '中性':
+            return 'neutral';
+        case '谨慎':
+            return 'caution';
+        default:
+            return 'recommend';
+    }
+};
+
+// 付费深度分析
+const showPaidAnalysisDialog = (stock) => {
+    ElMessageBox.confirm(
+        `深度分析 ${stock.name}(${stock.code}) 需要支付 ¥1，是否继续？`,
+        '付费服务确认',
+        {
+            confirmButtonText: '确认支付',
+            cancelButtonText: '取消',
+            type: 'warning',
+            customClass: 'paid-service-dialog'
+        }
+    ).then(() => {
+        // 检查余额
+        if (userStore.balance < 1) {
+            ElMessage.error('余额不足，请先充值');
+            return;
+        }
+
+        // 扣费并执行分析
+        userStore.deductBalance(1);
+        ElMessage.success('支付成功，正在生成深度分析报告...');
+
+        // 执行深度分析
+        continueAnalysis(stock, true);
+    }).catch(() => {
+        ElMessage.info('已取消付费分析');
+    });
+};
+
+// 付费量化分析
+const showQuantAnalysisDialog = (stock) => {
+    ElMessageBox.confirm(
+        `量化分析 ${stock.name}(${stock.code}) 需要支付 ¥1，是否继续？`,
+        '付费服务确认',
+        {
+            confirmButtonText: '确认支付',
+            cancelButtonText: '取消',
+            type: 'warning',
+            customClass: 'paid-service-dialog'
+        }
+    ).then(() => {
+        // 检查余额
+        if (userStore.balance < 1) {
+            ElMessage.error('余额不足，请先充值');
+            return;
+        }
+
+        // 扣费并执行量化分析
+        userStore.deductBalance(1);
+        ElMessage.success('支付成功，正在生成量化分析报告...');
+
+        // 执行量化分析
+        performQuantAnalysis(stock);
+    }).catch(() => {
+        ElMessage.info('已取消量化分析');
+    });
 };
 </script>
 
@@ -1700,6 +3031,413 @@ const closeUserProfile = () => {
     flex-wrap: wrap;
 }
 
+/* 股票列表样式 */
+.stock-list {
+    margin-top: 16px;
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+}
+
+/* 持久化荐股列表样式 */
+.persistent-stock-list {
+    position: relative;
+    border: 2px solid transparent;
+    border-radius: 12px;
+    padding: 8px;
+    margin: -8px;
+    transition: all 0.3s ease;
+}
+
+.persistent-stock-list::before {
+    content: '📊 智能荐股';
+    position: absolute;
+    top: -12px;
+    left: 12px;
+    background: #fef3c7;
+    color: #92400e;
+    font-size: 0.75rem;
+    font-weight: 600;
+    padding: 2px 8px;
+    border-radius: 8px;
+    border: 1px solid #fbbf24;
+}
+
+/* 荐股工具栏样式 */
+.recommendation-toolbar {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 8px 12px;
+    background: #f8fafc;
+    border: 1px solid #e2e8f0;
+    border-radius: 8px;
+    margin-bottom: 12px;
+    font-size: 0.875rem;
+}
+
+.toolbar-left {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.recommendation-time {
+    color: #64748b;
+    font-size: 0.8rem;
+    font-weight: 500;
+}
+
+.toolbar-right {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.refresh-btn {
+    color: #6366f1 !important;
+    font-size: 0.8rem;
+    padding: 4px 8px !important;
+    height: auto !important;
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    transition: all 0.2s ease;
+}
+
+.refresh-btn:hover {
+    color: #4f46e5 !important;
+    background: #eef2ff !important;
+}
+
+/* 高亮效果 */
+.highlight-recommendation {
+    border-color: #fbbf24 !important;
+    background: rgba(254, 243, 199, 0.1) !important;
+    box-shadow: 0 0 0 4px rgba(251, 191, 36, 0.1) !important;
+}
+
+.stock-item {
+    background: #f8fafc;
+    border: 1px solid #e2e8f0;
+    border-radius: 12px;
+    padding: 16px;
+    transition: all 0.2s ease;
+}
+
+.stock-item:hover {
+    background: #f1f5f9;
+    border-color: #cbd5e1;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+}
+
+.stock-info {
+    margin-bottom: 12px;
+}
+
+.stock-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    margin-bottom: 12px;
+}
+
+.stock-name-code {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+
+.name-code-row {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+}
+
+.stock-name {
+    font-size: 1rem;
+    font-weight: 600;
+    color: #1e293b;
+}
+
+.stock-code {
+    font-size: 0.875rem;
+    color: #64748b;
+    font-weight: 500;
+}
+
+/* 推荐指数样式 */
+.recommend-index {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin-top: 4px;
+}
+
+.recommend-stars {
+    display: flex;
+    align-items: center;
+    gap: 1px;
+}
+
+.star {
+    font-size: 0.875rem;
+    transition: all 0.2s ease;
+}
+
+.star.filled {
+    color: #fbbf24;
+    text-shadow: 0 0 2px rgba(251, 191, 36, 0.5);
+}
+
+.star.half {
+    color: #fbbf24;
+    opacity: 0.6;
+    text-shadow: 0 0 2px rgba(251, 191, 36, 0.3);
+}
+
+.star.empty {
+    color: #e5e7eb;
+}
+
+.recommend-score {
+    font-size: 0.75rem;
+    font-weight: 600;
+    color: #374151;
+    background: #f3f4f6;
+    padding: 2px 6px;
+    border-radius: 4px;
+}
+
+.recommend-level {
+    font-size: 0.75rem;
+    font-weight: 600;
+    padding: 2px 8px;
+    border-radius: 12px;
+    text-align: center;
+    min-width: 60px;
+    white-space: nowrap;
+    flex-shrink: 0;
+}
+
+.recommend-level.strong-recommend {
+    color: #059669;
+    background: #d1fae5;
+    border: 1px solid #10b981;
+}
+
+.recommend-level.recommend {
+    color: #0ea5e9;
+    background: #e0f2fe;
+    border: 1px solid #0ea5e9;
+}
+
+.recommend-level.neutral {
+    color: #6b7280;
+    background: #f3f4f6;
+    border: 1px solid #d1d5db;
+}
+
+.recommend-level.caution {
+    color: #dc2626;
+    background: #fee2e2;
+    border: 1px solid #f87171;
+}
+
+.stock-price-change {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.current-price {
+    font-size: 1.1rem;
+    font-weight: 700;
+    color: #1e293b;
+}
+
+.price-change {
+    font-size: 0.875rem;
+    font-weight: 500;
+    padding: 2px 6px;
+    border-radius: 4px;
+}
+
+.price-change.positive {
+    color: #059669;
+    background: #d1fae5;
+}
+
+.price-change.negative {
+    color: #dc2626;
+    background: #fee2e2;
+}
+
+.stock-details {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+
+.detail-row {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    flex-wrap: wrap;
+}
+
+.detail-label {
+    font-size: 0.875rem;
+    color: #64748b;
+    font-weight: 500;
+    min-width: 60px;
+}
+
+.detail-value {
+    font-size: 0.875rem;
+    font-weight: 600;
+}
+
+.target-price {
+    color: #0ea5e9;
+}
+
+.expected-return {
+    color: #059669;
+}
+
+.risk-level {
+    color: #f59e0b;
+}
+
+.industry {
+    color: #8b5cf6;
+}
+
+.stock-reason {
+    margin-top: 8px;
+    padding-top: 8px;
+    border-top: 1px solid #e2e8f0;
+}
+
+.reason-label {
+    font-size: 0.875rem;
+    color: #64748b;
+    font-weight: 500;
+}
+
+.reason-text {
+    font-size: 0.875rem;
+    color: #475569;
+    line-height: 1.4;
+    margin-left: 8px;
+}
+
+.stock-item-actions {
+    display: flex;
+    gap: 8px;
+    flex-wrap: wrap;
+    justify-content: flex-end;
+}
+
+/* 付费功能按钮样式 */
+.paid-analysis-btn,
+.quant-analysis-btn {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    font-size: 0.875rem;
+    border-radius: 16px;
+    padding: 6px 12px;
+    transition: all 0.2s ease;
+    position: relative;
+}
+
+.paid-analysis-btn {
+    background: #f3f4f6;
+    border-color: #e5e7eb;
+    color: #374151;
+}
+
+.paid-analysis-btn:hover {
+    background: #e5e7eb;
+    border-color: #d1d5db;
+    color: #1f2937;
+    transform: translateY(-1px);
+}
+
+.quant-analysis-btn {
+    background: #fef3c7;
+    border-color: #fbbf24;
+    color: #92400e;
+}
+
+.quant-analysis-btn:hover {
+    background: #fde68a;
+    border-color: #f59e0b;
+    color: #78350f;
+    transform: translateY(-1px);
+}
+
+.price-tag {
+    background: #ef4444;
+    color: white;
+    font-size: 0.7rem;
+    font-weight: 600;
+    padding: 1px 4px;
+    border-radius: 4px;
+    margin-left: 4px;
+    line-height: 1;
+    min-width: 20px;
+    text-align: center;
+}
+
+/* 响应式设计 */
+@media (max-width: 768px) {
+    .stock-header {
+        flex-direction: column;
+        gap: 8px;
+        align-items: flex-start;
+    }
+
+    .stock-price-change {
+        align-self: flex-end;
+    }
+
+    .detail-row {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 4px;
+    }
+
+    .detail-label {
+        min-width: auto;
+    }
+
+    .stock-item-actions {
+        justify-content: flex-start;
+    }
+
+    .recommend-index {
+        flex-wrap: nowrap;
+        gap: 4px;
+        overflow: hidden;
+    }
+
+    .recommend-score {
+        font-size: 0.65rem;
+        padding: 1px 3px;
+        white-space: nowrap;
+    }
+
+    .recommend-level {
+        font-size: 0.65rem;
+        padding: 1px 4px;
+        min-width: 40px;
+        white-space: nowrap;
+    }
+}
+
 .add-watchlist-btn,
 .remove-watchlist-btn,
 .continue-analysis-btn {
@@ -1812,6 +3550,12 @@ const closeUserProfile = () => {
     justify-content: center;
 }
 
+.chat-actions {
+    display: flex;
+    gap: 12px;
+    align-items: center;
+}
+
 .new-chat-btn {
     border-radius: 20px;
     background: #f5f7fa;
@@ -1830,6 +3574,148 @@ const closeUserProfile = () => {
 .new-chat-btn:hover {
     background: #e6e8eb;
     border-color: #d0d0d0;
+}
+
+.goto-recommendation-btn {
+    border-radius: 20px;
+    background: #fef3c7;
+    color: #92400e;
+    font-weight: 500;
+    border: 1px solid #fbbf24;
+    box-shadow: none;
+    padding: 8px 20px;
+    transition: all 0.2s;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 0.95rem;
+}
+
+.goto-recommendation-btn:hover {
+    background: #fde68a;
+    border-color: #f59e0b;
+    color: #78350f;
+}
+
+/* 聊天模式快捷操作样式 */
+.chat-shortcuts {
+    width: 100%;
+    max-width: 700px;
+    margin-bottom: 12px;
+    animation: slideDown 0.3s ease-out;
+}
+
+.shortcuts-grid {
+    display: flex;
+    gap: 8px;
+    justify-content: center;
+    flex-wrap: wrap;
+}
+
+.chat-shortcut-btn {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 2px;
+    padding: 8px 12px;
+    border-radius: 12px;
+    background: #f8fafc;
+    border: 1px solid #e5e7eb;
+    color: #374151;
+    font-weight: 500;
+    transition: all 0.2s ease;
+    min-height: 50px;
+    min-width: 60px;
+    justify-content: center;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+}
+
+.chat-shortcut-btn:hover {
+    background: #f1f5f9;
+    border-color: #cbd5e1;
+    color: #1f2937;
+    transform: translateY(-1px);
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+}
+
+.chat-shortcut-btn .btn-icon {
+    font-size: 1.1rem;
+    display: block;
+}
+
+.chat-shortcut-btn .btn-text {
+    font-size: 0.75rem;
+    line-height: 1;
+    text-align: center;
+    white-space: nowrap;
+}
+
+/* 收起按钮保持与其他按钮一致的样式 */
+.chat-shortcut-btn.close-btn {
+    background: #f8fafc !important;
+    border-color: #e2e8f0 !important;
+    color: #475569 !important;
+    border-radius: 12px !important;
+    width: auto !important;
+    height: auto !important;
+    min-height: 50px !important;
+    min-width: 60px !important;
+    padding: 8px 12px !important;
+    display: flex !important;
+    flex-direction: column !important;
+    align-items: center !important;
+    justify-content: center !important;
+    gap: 2px !important;
+}
+
+.chat-shortcut-btn.close-btn:hover {
+    background: #f1f5f9 !important;
+    border-color: #cbd5e1 !important;
+    color: #334155 !important;
+    transform: translateY(-1px) !important;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1) !important;
+}
+
+/* 确保收起按钮的图标和文字颜色正确 */
+.chat-shortcut-btn.close-btn .btn-icon {
+    color: #475569 !important;
+    font-size: 1.1rem;
+}
+
+.chat-shortcut-btn.close-btn .btn-text {
+    color: #475569 !important;
+    font-size: 0.75rem;
+}
+
+.chat-shortcut-btn.close-btn:hover .btn-icon {
+    color: #334155 !important;
+}
+
+.chat-shortcut-btn.close-btn:hover .btn-text {
+    color: #334155 !important;
+}
+
+/* 快捷操作切换按钮 */
+.shortcuts-toggle-btn {
+    transition: all 0.2s ease;
+}
+
+.shortcuts-toggle-btn:hover {
+    background: #f0f0f0 !important;
+    transform: rotate(45deg);
+}
+
+/* 动画效果 */
+@keyframes slideDown {
+    from {
+        opacity: 0;
+        transform: translateY(-10px);
+    }
+
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
 }
 
 .ai-card {
@@ -2034,6 +3920,38 @@ const closeUserProfile = () => {
         min-width: 200px;
         width: 100%;
         max-width: 280px;
+    }
+
+    /* 聊天快捷操作移动端适配 */
+    .shortcuts-grid {
+        gap: 6px;
+        justify-content: space-around;
+    }
+
+    .chat-shortcut-btn {
+        min-height: 45px;
+        min-width: 55px;
+        padding: 6px 8px;
+        gap: 2px;
+    }
+
+    .chat-shortcut-btn .btn-icon {
+        font-size: 1rem;
+    }
+
+    .chat-shortcut-btn .btn-text {
+        font-size: 0.7rem;
+    }
+
+    .chat-actions {
+        flex-direction: column;
+        gap: 8px;
+    }
+
+    .new-chat-btn,
+    .goto-recommendation-btn {
+        width: 100%;
+        max-width: 200px;
     }
 }
 
@@ -2534,6 +4452,7 @@ body {
     overflow: hidden;
     box-shadow: 0 8px 32px rgba(0, 0, 0, 0.12);
     border: 1px solid #e5e7eb;
+    max-height: 90vh;
 }
 
 :deep(.preferences-dialog .el-dialog__header) {
@@ -2543,14 +4462,18 @@ body {
 
 :deep(.preferences-dialog .el-dialog__body) {
     padding: 0;
+    overflow-y: auto;
+    max-height: calc(90vh - 60px);
 }
 
 .preferences-container {
-    padding: 40px;
+    padding: 40px 32px;
     background: white;
     min-height: 500px;
     display: flex;
     flex-direction: column;
+    max-width: 100%;
+    overflow-x: hidden;
 }
 
 .preferences-header {
@@ -2592,7 +4515,7 @@ body {
     flex: 1;
     display: flex;
     flex-direction: column;
-    max-width: 620px;
+    max-width: 100%;
     margin: 0 auto;
     width: 100%;
 }
@@ -2657,22 +4580,25 @@ body {
 /* 风险偏好选项 */
 .risk-options {
     display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+    grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
     gap: 20px;
-    max-width: 650px;
+    max-width: 1100px;
     margin: 0 auto;
+    padding: 0 20px;
 }
 
 .risk-option {
     border: 2px solid #e5e7eb;
     border-radius: 12px;
-    padding: 24px;
+    padding: 20px;
     transition: all 0.3s ease;
     cursor: pointer;
     display: flex;
     align-items: flex-start;
-    gap: 20px;
+    gap: 16px;
     text-align: left;
+    min-height: 280px;
+    box-sizing: border-box;
 }
 
 .risk-option:hover {
@@ -2723,25 +4649,133 @@ body {
     flex: 1;
 }
 
+.option-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 8px;
+}
+
 .option-title {
     font-weight: 600;
     color: #18181b;
-    margin-bottom: 4px;
     font-size: 1.1rem;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.option-icon {
+    font-size: 1.2rem;
+}
+
+.risk-level-indicator {
+    display: flex;
+    gap: 3px;
+    align-items: center;
+}
+
+.risk-dot {
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    background: #e5e7eb;
+    transition: all 0.2s ease;
+}
+
+.risk-dot.active {
+    background: #ef4444;
 }
 
 .option-desc {
     font-size: 0.9rem;
     color: #6b7280;
     line-height: 1.4;
+    margin-bottom: 8px;
+}
+
+.simple-desc {
+    font-size: 0.9rem;
+    color: #059669;
+    font-weight: 600;
+    background: #f0fdf4;
+    padding: 10px 12px;
+    border-radius: 6px;
+    margin-bottom: 12px;
+    border-left: 3px solid #10b981;
+    line-height: 1.3;
+}
+
+.option-metrics {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    margin-bottom: 12px;
+}
+
+.metric-item {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 8px;
+}
+
+.metric-label {
+    font-size: 0.85rem;
+    color: #6b7280;
+    font-weight: 500;
+    flex: 1;
+}
+
+.metric-value {
+    font-size: 0.85rem;
+    font-weight: 600;
+    padding: 4px 8px;
+    border-radius: 4px;
+    white-space: nowrap;
+}
+
+.metric-value.return {
+    color: #059669;
+    background: #d1fae5;
+}
+
+.metric-value.drawdown {
+    color: #dc2626;
+    background: #fee2e2;
+}
+
+.metric-value.loss {
+    color: #dc2626;
+    background: #fee2e2;
+}
+
+.option-examples {
+    margin-top: 8px;
+    padding-top: 8px;
+    border-top: 1px solid #f3f4f6;
+}
+
+.examples-label {
+    font-size: 0.8rem;
+    color: #6b7280;
+    font-weight: 500;
+}
+
+.examples-text {
+    font-size: 0.8rem;
+    color: #6b7280;
+    line-height: 1.3;
+    display: block;
+    margin-top: 2px;
 }
 
 /* 投资经验选项 */
 .experience-options {
     display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
-    gap: 20px;
-    max-width: 650px;
+    grid-template-columns: repeat(auto-fit, minmax(350px, 1fr));
+    gap: 24px;
+    max-width: 800px;
     margin: 0 auto;
 }
 
@@ -2752,11 +4786,10 @@ body {
     transition: all 0.3s ease;
     cursor: pointer;
     display: flex;
-    align-items: center;
-    justify-content: center;
-    gap: 12px;
-    min-height: 80px;
-    text-align: center;
+    align-items: flex-start;
+    gap: 16px;
+    min-height: 120px;
+    text-align: left;
 }
 
 .experience-option:hover {
@@ -2772,61 +4805,475 @@ body {
     box-shadow: 0 4px 16px rgba(24, 24, 27, 0.15);
 }
 
-.option-text {
-    font-size: 1.05rem;
-    font-weight: 500;
-    color: #18181b;
-    line-height: 1.3;
+.experience-content {
+    flex: 1;
 }
 
-/* 投资目标和关注板块选项 */
-.goals-options,
-.sectors-options {
-    display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
-    gap: 20px;
-    max-width: 650px;
+.experience-header {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin-bottom: 8px;
+}
+
+.experience-icon {
+    font-size: 1.2rem;
+}
+
+.experience-title {
+    font-size: 1.1rem;
+    font-weight: 600;
+    color: #18181b;
+}
+
+.experience-label {
+    font-size: 0.95rem;
+    font-weight: 500;
+    color: #374151;
+    margin-bottom: 6px;
+}
+
+.experience-desc {
+    font-size: 0.85rem;
+    color: #6b7280;
+    line-height: 1.4;
+}
+
+/* 用户特征样式 */
+.traits-container {
+    max-width: 1000px;
     margin: 0 auto;
 }
 
-.goal-option,
-.sector-option {
-    border: 2px solid #e5e7eb;
+.traits-hint {
+    display: flex;
+    align-items: flex-start;
+    gap: 12px;
+    background: #f0f9ff;
+    border: 1px solid #bae6fd;
+    border-radius: 8px;
+    padding: 16px;
+    margin-bottom: 32px;
+}
+
+.hint-icon {
+    font-size: 1.2rem;
+    flex-shrink: 0;
+    margin-top: 2px;
+}
+
+.hint-text {
+    font-size: 0.9rem;
+    color: #0c4a6e;
+    line-height: 1.4;
+}
+
+.traits-list {
+    display: flex;
+    flex-direction: column;
+    gap: 24px;
+    max-width: 800px;
+    margin: 0 auto;
+}
+
+.trait-item-compact {
+    border: 2px solid #f3f4f6;
     border-radius: 12px;
-    padding: 24px;
-    transition: all 0.3s ease;
-    cursor: pointer;
+    padding: 20px;
+    background: #fafafa;
+    transition: all 0.2s ease;
+}
+
+.trait-item-compact:hover {
+    border-color: #e5e7eb;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+}
+
+.trait-header-compact {
     display: flex;
     align-items: center;
-    justify-content: center;
-    min-height: 80px;
-    position: relative;
+    justify-content: space-between;
+    margin-bottom: 16px;
+}
+
+.trait-left {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    flex: 1;
+}
+
+.trait-icon {
+    font-size: 1.3rem;
+    flex-shrink: 0;
+}
+
+.trait-info {
+    flex: 1;
+}
+
+.trait-title {
+    font-size: 1rem;
+    font-weight: 600;
+    color: #18181b;
+    margin-bottom: 2px;
+}
+
+.trait-desc {
+    font-size: 0.85rem;
+    color: #6b7280;
+    line-height: 1.3;
+}
+
+.trait-current-value {
+    font-size: 1.1rem;
+    font-weight: 700;
+    color: #18181b;
+    background: #f0f9ff;
+    border: 1px solid #0ea5e9;
+    border-radius: 20px;
+    padding: 4px 12px;
+    min-width: 50px;
     text-align: center;
 }
 
-.goal-option:hover,
-.sector-option:hover {
+.trait-slider-container {
+    position: relative;
+    margin-bottom: 12px;
+}
+
+.slider-track {
+    height: 6px;
+    background: #e5e7eb;
+    border-radius: 3px;
+    position: relative;
+    margin: 20px 0;
+}
+
+.slider-progress {
+    height: 100%;
+    background: linear-gradient(90deg, #10b981 0%, #0ea5e9 50%, #8b5cf6 100%);
+    border-radius: 3px;
+    transition: width 0.3s ease;
+}
+
+.slider-options {
+    display: flex;
+    justify-content: space-between;
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: 100%;
+}
+
+.slider-option {
+    position: relative;
+    cursor: pointer;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    flex: 1;
+}
+
+.option-dot {
+    width: 16px;
+    height: 16px;
+    border: 2px solid #d1d5db;
+    border-radius: 50%;
+    background: white;
+    position: absolute;
+    top: -5px;
+    transition: all 0.2s ease;
+    z-index: 2;
+}
+
+.slider-option:hover .option-dot {
+    border-color: #18181b;
+    transform: scale(1.1);
+}
+
+.slider-option.active .option-dot {
+    border-color: #18181b;
+    background: #18181b;
+    transform: scale(1.2);
+}
+
+.option-label {
+    font-size: 0.75rem;
+    font-weight: 600;
+    color: #6b7280;
+    position: absolute;
+    top: 20px;
+    white-space: nowrap;
+    transition: color 0.2s ease;
+}
+
+.slider-option.active .option-label {
+    color: #18181b;
+}
+
+.trait-description {
+    font-size: 0.85rem;
+    color: #4b5563;
+    background: #f8fafc;
+    border: 1px solid #e5e7eb;
+    border-radius: 8px;
+    padding: 12px;
+    text-align: center;
+    font-style: italic;
+}
+
+/* 关注板块选项 */
+.sectors-container {
+    max-width: 1100px;
+    margin: 0 auto;
+}
+
+.sectors-layout {
+    display: flex;
+    gap: 24px;
+    min-height: 500px;
+}
+
+.left-panel {
+    flex: 0 0 400px;
+    background: #fafbfc;
+    border-radius: 12px;
+    padding: 20px;
+    border: 1px solid #e5e7eb;
+}
+
+.right-panel {
+    flex: 1;
+    background: #ffffff;
+    border-radius: 12px;
+    padding: 20px;
+    border: 1px solid #e5e7eb;
+    min-height: 460px;
+    display: flex;
+    flex-direction: column;
+}
+
+.sector-section {
+    margin-bottom: 32px;
+}
+
+.section-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 20px;
+    padding-bottom: 12px;
+    border-bottom: 2px solid #f3f4f6;
+}
+
+.section-title {
+    font-size: 1.1rem;
+    font-weight: 600;
+    color: #18181b;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin: 0;
+}
+
+.section-icon {
+    font-size: 1.2rem;
+}
+
+.section-limit {
+    font-size: 0.85rem;
+    color: #6b7280;
+    font-weight: 400;
+}
+
+.section-counter {
+    font-size: 0.9rem;
+    color: #059669;
+    font-weight: 600;
+    background: #d1fae5;
+    padding: 4px 12px;
+    border-radius: 20px;
+}
+
+/* 大分类样式 */
+.major-sectors-list {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+}
+
+.major-sector-option {
+    border: 2px solid #e5e7eb;
+    border-radius: 8px;
+    padding: 16px;
+    transition: all 0.3s ease;
+    cursor: pointer;
+    display: flex;
+    align-items: flex-start;
+    gap: 12px;
+    position: relative;
+    background: white;
+}
+
+.major-sector-option:hover:not(.disabled) {
     border-color: #d1d5db;
     background: #f9fafb;
     transform: translateY(-2px);
     box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
 }
 
-.goal-option.selected,
-.sector-option.selected {
+.major-sector-option.selected {
     border-color: #18181b;
     background: #f8fafc;
     box-shadow: 0 4px 16px rgba(24, 24, 27, 0.15);
 }
 
-.goal-option.selected::after,
-.sector-option.selected::after {
-    content: '✓';
+.major-sector-option.disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+}
+
+.sector-icon {
+    font-size: 1.5rem;
+    flex-shrink: 0;
+    margin-top: 2px;
+}
+
+.sector-content {
+    flex: 1;
+}
+
+.sector-label {
+    font-size: 0.95rem;
+    font-weight: 600;
+    color: #18181b;
+    margin-bottom: 4px;
+}
+
+.sector-desc {
+    font-size: 0.8rem;
+    color: #6b7280;
+    line-height: 1.4;
+}
+
+.sector-check {
     position: absolute;
     top: 8px;
     right: 8px;
-    width: 20px;
-    height: 20px;
+    width: 24px;
+    height: 24px;
+    background: #18181b;
+    color: white;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 14px;
+    font-weight: bold;
+}
+
+/* 小分类样式 */
+.sub-sectors-container {
+    display: flex;
+    flex-direction: column;
+    gap: 24px;
+}
+
+.sub-sector-group {
+    border: 1px solid #e5e7eb;
+    border-radius: 12px;
+    padding: 20px;
+    background: #fafbfc;
+}
+
+.group-title {
+    font-size: 1rem;
+    font-weight: 600;
+    color: #18181b;
+    margin-bottom: 16px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.group-icon {
+    font-size: 1.2rem;
+}
+
+.sub-sectors-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+    gap: 10px;
+}
+
+.sub-sector-option {
+    border: 1px solid #e5e7eb;
+    border-radius: 8px;
+    padding: 14px;
+    transition: all 0.2s ease;
+    cursor: pointer;
+    display: flex;
+    align-items: flex-start;
+    gap: 10px;
+    position: relative;
+    background: white;
+}
+
+.sub-sector-option:hover:not(.disabled) {
+    border-color: #d1d5db;
+    background: #f9fafb;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+}
+
+.sub-sector-option.selected {
+    border-color: #18181b;
+    background: #f8fafc;
+    box-shadow: 0 2px 8px rgba(24, 24, 27, 0.1);
+}
+
+.sub-sector-option.disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+}
+
+.sub-sector-icon {
+    font-size: 1.2rem;
+    flex-shrink: 0;
+    margin-top: 2px;
+}
+
+.sub-sector-content {
+    flex: 1;
+}
+
+.sub-sector-label {
+    font-size: 0.9rem;
+    font-weight: 600;
+    color: #18181b;
+    margin-bottom: 4px;
+}
+
+.sub-sector-desc {
+    font-size: 0.8rem;
+    color: #6b7280;
+    line-height: 1.3;
+    margin-bottom: 4px;
+}
+
+.sub-sector-examples {
+    font-size: 0.75rem;
+    color: #9ca3af;
+    font-style: italic;
+}
+
+.sub-sector-check {
+    position: absolute;
+    top: 6px;
+    right: 6px;
+    width: 18px;
+    height: 18px;
     background: #18181b;
     color: white;
     border-radius: 50%;
@@ -2835,6 +5282,30 @@ body {
     justify-content: center;
     font-size: 12px;
     font-weight: bold;
+}
+
+/* 选择提示 */
+.sectors-hint {
+    background: #fef3c7;
+    border: 1px solid #fbbf24;
+    border-radius: 12px;
+    padding: 16px;
+    display: flex;
+    align-items: flex-start;
+    gap: 12px;
+    margin-top: 20px;
+}
+
+.sectors-hint .hint-icon {
+    font-size: 1.2rem;
+    flex-shrink: 0;
+    margin-top: 2px;
+}
+
+.sectors-hint .hint-text {
+    color: #92400e;
+    font-size: 0.9rem;
+    line-height: 1.4;
 }
 
 .preferences-actions {
@@ -2901,6 +5372,176 @@ body {
     border-color: #d1d5db;
     background: #f9fafb;
     color: #374151;
+}
+
+/* 响应式布局 */
+@media (max-width: 768px) {
+    .preferences-dialog {
+        width: 95vw !important;
+        max-width: none !important;
+        margin: 5vh auto !important;
+    }
+
+    .risk-options {
+        grid-template-columns: 1fr;
+        gap: 16px;
+        padding: 0 8px;
+    }
+
+    .risk-option {
+        min-height: auto;
+        padding: 16px;
+        gap: 12px;
+    }
+
+    .preferences-container {
+        padding: 24px 16px;
+    }
+
+    .option-title {
+        font-size: 1rem;
+    }
+
+    .experience-options {
+        grid-template-columns: 1fr;
+        gap: 16px;
+    }
+
+    .experience-option {
+        min-height: auto;
+        padding: 16px;
+        gap: 12px;
+    }
+
+    .experience-title {
+        font-size: 1rem;
+    }
+
+    .experience-label {
+        font-size: 0.9rem;
+    }
+
+    .experience-desc {
+        font-size: 0.8rem;
+    }
+
+    .traits-list {
+        gap: 16px;
+        max-width: 100%;
+    }
+
+    .trait-item-compact {
+        padding: 16px;
+    }
+
+    .trait-header-compact {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 8px;
+        margin-bottom: 12px;
+    }
+
+    .trait-left {
+        gap: 8px;
+    }
+
+    .trait-title {
+        font-size: 0.95rem;
+    }
+
+    .trait-desc {
+        font-size: 0.8rem;
+    }
+
+    .trait-current-value {
+        font-size: 1rem;
+        padding: 3px 10px;
+        align-self: flex-end;
+    }
+
+    .slider-track {
+        margin: 16px 0;
+    }
+
+    .option-label {
+        font-size: 0.7rem;
+        top: 18px;
+    }
+
+    .trait-description {
+        font-size: 0.8rem;
+        padding: 10px;
+    }
+
+    .simple-desc {
+        font-size: 0.85rem;
+        padding: 8px 10px;
+    }
+
+    .metric-label {
+        font-size: 0.8rem;
+    }
+
+    .metric-value {
+        font-size: 0.8rem;
+        padding: 3px 6px;
+    }
+
+    .sectors-layout {
+        flex-direction: column;
+        gap: 16px;
+        min-height: auto;
+    }
+
+    .left-panel {
+        flex: none;
+    }
+
+    .right-panel {
+        min-height: auto;
+    }
+
+    .major-sectors-list {
+        gap: 8px;
+    }
+
+    .major-sector-option {
+        padding: 12px;
+        gap: 10px;
+    }
+
+    .sector-icon {
+        font-size: 1.3rem;
+    }
+
+    .sub-sectors-grid {
+        grid-template-columns: 1fr;
+        gap: 8px;
+    }
+
+    .sub-sector-option {
+        padding: 12px;
+        gap: 8px;
+    }
+}
+
+@media (max-width: 1400px) {
+    .preferences-dialog {
+        width: 90vw !important;
+        max-width: 1200px !important;
+    }
+}
+
+@media (max-width: 1200px) {
+    .risk-options {
+        grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+        max-width: 960px;
+    }
+
+    .preferences-dialog {
+        width: 95vw !important;
+        max-width: 1000px !important;
+    }
 }
 
 /* 引导提示样式 */
@@ -2978,154 +5619,811 @@ body {
     box-shadow: 0 8px 32px rgba(0, 0, 0, 0.12);
 }
 
-:deep(.buy-dialog .el-dialog__header) {
-    background: #f8fafc;
-    border-bottom: 1px solid #e5e7eb;
-    padding: 20px 24px;
-}
-
-:deep(.buy-dialog .el-dialog__title) {
-    font-size: 1.25rem;
-    font-weight: 600;
-    color: #18181b;
-}
-
 :deep(.buy-dialog .el-dialog__body) {
-    padding: 24px;
+    padding: 0;
 }
 
-.buy-form {
+:deep(.buy-dialog .el-dialog__footer) {
+    padding: 0;
+}
+
+.trading-interface {
+    background: #f8f9fa;
+    min-height: 600px;
+}
+
+/* 股票信息头部 */
+.stock-header-section {
+    background: linear-gradient(135deg, #1e293b 0%, #334155 50%, #475569 100%);
+    color: white;
+    position: relative;
+    overflow: hidden;
+}
+
+.stock-header-section::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background:
+        radial-gradient(circle at 20% 50%, rgba(59, 130, 246, 0.15) 0%, transparent 50%),
+        radial-gradient(circle at 80% 20%, rgba(139, 92, 246, 0.15) 0%, transparent 50%),
+        linear-gradient(45deg, transparent 30%, rgba(255, 255, 255, 0.02) 50%, transparent 70%);
+}
+
+/* 头部主要内容 */
+.header-main-content {
     display: flex;
-    flex-direction: column;
-    gap: 20px;
+    justify-content: space-between;
+    align-items: flex-start;
+    padding: 24px 28px 20px;
+    position: relative;
+    z-index: 1;
 }
 
-.stock-info-card {
-    background: #f8fafc;
-    border-radius: 12px;
-    padding: 20px;
-    border: 1px solid #e5e7eb;
+/* 股票基本信息 */
+.stock-basic-info {
+    flex: 1;
 }
 
-.stock-header h3 {
-    font-size: 1.25rem;
-    font-weight: 600;
-    color: #18181b;
-    margin: 0 0 8px 0;
+.stock-title-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    margin-bottom: 16px;
 }
 
-.stock-price {
+.stock-name-group {
     display: flex;
     align-items: center;
+    gap: 12px;
+}
+
+.stock-name {
+    font-size: 24px;
+    font-weight: 700;
+    margin: 0;
+    text-shadow: 0 1px 3px rgba(0, 0, 0, 0.2);
+    letter-spacing: -0.3px;
+}
+
+.stock-code {
+    font-size: 13px;
+    background: rgba(255, 255, 255, 0.2);
+    padding: 6px 12px;
+    border-radius: 16px;
+    font-weight: 600;
+    backdrop-filter: blur(10px);
+    border: 1px solid rgba(255, 255, 255, 0.25);
+    letter-spacing: 0.5px;
+}
+
+.stock-tags {
+    display: flex;
+    gap: 6px;
+}
+
+.tag-item {
+    font-size: 11px;
+    background: rgba(59, 130, 246, 0.3);
+    color: rgba(255, 255, 255, 0.9);
+    padding: 4px 8px;
+    border-radius: 10px;
+    font-weight: 500;
+    border: 1px solid rgba(59, 130, 246, 0.4);
+}
+
+.stock-price-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-end;
+}
+
+.price-main {
+    display: flex;
+    align-items: baseline;
     gap: 12px;
 }
 
 .current-price {
-    font-size: 1.5rem;
+    font-size: 36px;
+    font-weight: 800;
+    text-shadow: 0 2px 6px rgba(0, 0, 0, 0.15);
+    letter-spacing: -0.8px;
+    font-family: 'SF Pro Display', -apple-system, BlinkMacSystemFont, sans-serif;
+}
+
+.price-change-group {
+    display: flex;
+    align-items: baseline;
+    gap: 6px;
+}
+
+.price-change-group.up {
+    color: #10b981;
+}
+
+.price-change-group.down {
+    color: #ef4444;
+}
+
+.change-amount {
+    font-size: 18px;
     font-weight: 700;
-    color: #18181b;
+    text-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
 }
 
-.price-change {
-    font-size: 0.875rem;
-    font-weight: 500;
-    padding: 2px 8px;
-    border-radius: 6px;
+.change-percent {
+    font-size: 16px;
+    font-weight: 600;
+    opacity: 0.9;
 }
 
-.price-change.positive {
-    color: #059669;
-    background: #d1fae5;
+.price-stats {
+    display: flex;
+    gap: 20px;
+    align-items: flex-end;
 }
 
-.price-change.negative {
-    color: #dc2626;
-    background: #fee2e2;
-}
-
-.account-info {
-    background: white;
-    border: 1px solid #e5e7eb;
-    border-radius: 8px;
-    padding: 16px;
+.stat-item {
     display: flex;
     flex-direction: column;
-    gap: 8px;
+    align-items: flex-end;
+    gap: 2px;
 }
 
-.balance-item,
-.position-item {
+.stat-label {
+    font-size: 11px;
+    color: rgba(255, 255, 255, 0.7);
+    font-weight: 500;
+}
+
+.stat-value {
+    font-size: 13px;
+    font-weight: 600;
+    color: rgba(255, 255, 255, 0.95);
+    font-family: 'SF Mono', Monaco, 'Cascadia Code', monospace;
+}
+
+/* 右侧操作区域 */
+.header-actions {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-end;
+    gap: 12px;
+}
+
+.market-status-card {
+    background: rgba(255, 255, 255, 0.12);
+    padding: 12px 16px;
+    border-radius: 16px;
+    backdrop-filter: blur(15px);
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    text-align: center;
+    min-width: 120px;
+}
+
+.status-indicator {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    font-size: 14px;
+    font-weight: 600;
+    margin-bottom: 4px;
+}
+
+.trading-time {
+    font-size: 12px;
+    color: rgba(255, 255, 255, 0.8);
+    font-weight: 500;
+}
+
+.action-buttons {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+}
+
+.action-btn.favorite-btn {
+    background: rgba(255, 255, 255, 0.1) !important;
+    border: 1px solid rgba(255, 255, 255, 0.25) !important;
+    color: rgba(255, 255, 255, 0.9) !important;
+    font-size: 12px;
+    font-weight: 500;
+    padding: 8px 12px;
+    border-radius: 12px;
+    backdrop-filter: blur(10px);
+    transition: all 0.3s ease;
+}
+
+.action-btn.favorite-btn:hover {
+    background: rgba(255, 255, 255, 0.2) !important;
+    border-color: rgba(255, 255, 255, 0.4) !important;
+    color: white !important;
+    transform: translateY(-1px);
+}
+
+.close-btn {
+    background: rgba(255, 255, 255, 0.15) !important;
+    border: 1px solid rgba(255, 255, 255, 0.25) !important;
+    color: white !important;
+    width: 36px !important;
+    height: 36px !important;
+    transition: all 0.3s ease;
+    backdrop-filter: blur(10px);
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.close-btn:hover {
+    background: rgba(255, 255, 255, 0.25) !important;
+    border-color: rgba(255, 255, 255, 0.4) !important;
+    transform: scale(1.1) rotate(90deg);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+}
+
+/* 底部信息栏 */
+.header-info-bar {
     display: flex;
     justify-content: space-between;
     align-items: center;
-    font-size: 0.875rem;
+    padding: 16px 28px;
+    background: rgba(0, 0, 0, 0.1);
+    border-top: 1px solid rgba(255, 255, 255, 0.1);
+    position: relative;
+    z-index: 1;
 }
 
-.balance-item span:first-child,
-.position-item span:first-child {
-    color: #6b7280;
-}
-
-.balance-amount {
-    font-weight: 600;
-    color: #059669;
-}
-
-.position-amount {
-    font-weight: 500;
-    color: #18181b;
-}
-
-.quantity-tips {
-    margin-top: 4px;
-    font-size: 0.75rem;
-    color: #6b7280;
-}
-
-.trade-amount {
+.info-item {
     display: flex;
+    flex-direction: column;
     align-items: center;
-    gap: 8px;
+    gap: 4px;
+    flex: 1;
 }
 
-.amount-value {
-    font-size: 1.25rem;
-    font-weight: 700;
-    color: #f59e0b;
-}
-
-.amount-desc {
-    font-size: 0.75rem;
-    color: #6b7280;
-}
-
-.buy-dialog-footer {
-    display: flex;
-    gap: 12px;
-    justify-content: flex-end;
-}
-
-:deep(.buy-dialog .el-form-item__label) {
+.info-label {
+    font-size: 11px;
+    color: rgba(255, 255, 255, 0.7);
     font-weight: 500;
-    color: #374151;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
 }
 
-:deep(.buy-dialog .el-input-number) {
+.info-value {
+    font-size: 13px;
+    font-weight: 600;
+    color: rgba(255, 255, 255, 0.95);
+    font-family: 'SF Mono', Monaco, 'Cascadia Code', monospace;
+}
+
+.info-value.up {
+    color: #10b981;
+}
+
+.info-value.down {
+    color: #ef4444;
+}
+
+.status-dot {
+    width: 10px;
+    height: 10px;
+    background: #10b981;
+    border-radius: 50%;
+    animation: pulse-dot 2s infinite;
+    box-shadow: 0 0 0 0 rgba(16, 185, 129, 0.7);
+}
+
+@keyframes pulse-dot {
+    0% {
+        transform: scale(0.95);
+        box-shadow: 0 0 0 0 rgba(16, 185, 129, 0.7);
+    }
+
+    70% {
+        transform: scale(1);
+        box-shadow: 0 0 0 6px rgba(16, 185, 129, 0);
+    }
+
+    100% {
+        transform: scale(0.95);
+        box-shadow: 0 0 0 0 rgba(16, 185, 129, 0);
+    }
+}
+
+/* 主要内容区域 - 左右布局 */
+.trading-main-content {
+    display: flex;
+    gap: 16px;
+    padding: 16px;
+    min-height: 500px;
+}
+
+.left-panel {
+    flex: 0 0 340px;
+    min-width: 340px;
+}
+
+.right-panel {
+    flex: 1;
+    min-width: 400px;
+}
+
+/* 五档行情 */
+.market-depth {
+    background: white;
+    border-radius: 8px;
+    overflow: hidden;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+    height: fit-content;
+}
+
+.depth-header {
+    background: #f5f7fa;
+    padding: 12px 16px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    font-weight: 600;
+    border-bottom: 1px solid #ebeef5;
+    font-size: 14px;
+}
+
+.refresh-time {
+    font-size: 12px;
+    color: #909399;
+    font-weight: normal;
+}
+
+.depth-content {
+    padding: 0;
+}
+
+.depth-table {
     width: 100%;
 }
 
-:deep(.buy-dialog .el-input-number .el-input__wrapper) {
+.table-header {
+    display: grid;
+    grid-template-columns: 50px 1fr 100px;
+    padding: 8px 16px;
+    background: #fafafa;
+    font-size: 12px;
+    color: #666;
+    font-weight: 500;
+    border-bottom: 1px solid #eee;
+}
+
+.col-label {
+    text-align: left;
+}
+
+.col-price {
+    text-align: center;
+}
+
+.col-volume {
+    text-align: right;
+}
+
+.order-row {
+    display: grid;
+    grid-template-columns: 50px 1fr 100px;
+    padding: 6px 16px;
+    font-size: 13px;
+    border-bottom: 1px solid #f8f8f8;
+    transition: background-color 0.2s;
+}
+
+.order-row:hover {
+    background: #f0f0f0;
+}
+
+.order-row:last-child {
+    border-bottom: none;
+}
+
+.order-row.sell {
+    background: rgba(245, 108, 108, 0.03);
+}
+
+.order-row.buy {
+    background: rgba(103, 194, 58, 0.03);
+}
+
+.order-label {
+    color: #666;
+    font-weight: 500;
+    font-size: 12px;
+}
+
+.order-price {
+    text-align: center;
+    font-weight: 600;
+    font-family: 'Courier New', monospace;
+}
+
+.sell .order-price {
+    color: #f56c6c;
+}
+
+.buy .order-price {
+    color: #67c23a;
+}
+
+.order-volume {
+    text-align: right;
+    color: #999;
+    font-size: 12px;
+}
+
+.current-price-row {
+    display: grid;
+    grid-template-columns: 50px 1fr 100px;
+    padding: 10px 16px;
+    background: #f0f2f5;
+    font-weight: 600;
+    border-top: 2px solid #409eff;
+    border-bottom: 2px solid #409eff;
+    margin: 2px 0;
+}
+
+.current-label {
+    color: #606266;
+    font-size: 12px;
+}
+
+.current-value {
+    text-align: center;
+    font-size: 16px;
+    font-weight: bold;
+    font-family: 'Courier New', monospace;
+}
+
+.current-value.up {
+    color: #67c23a;
+}
+
+.current-value.down {
+    color: #f56c6c;
+}
+
+.current-change {
+    text-align: right;
+    font-size: 12px;
+    font-weight: 500;
+}
+
+/* 交易面板 */
+.trading-panel {
+    background: white;
     border-radius: 8px;
-    border: 1px solid #d1d5db;
-    transition: all 0.2s ease;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+    overflow: hidden;
+    height: fit-content;
 }
 
-:deep(.buy-dialog .el-input-number .el-input__wrapper:hover) {
-    border-color: #9ca3af;
+.panel-tabs {
+    display: flex;
+    background: #f5f7fa;
+    border-bottom: 1px solid #ebeef5;
 }
 
-:deep(.buy-dialog .el-input-number.is-focus .el-input__wrapper) {
+.tab-item {
+    flex: 1;
+    padding: 8px 4px;
+    text-align: center;
+    font-weight: 500;
+    font-size: 13px;
+    cursor: pointer;
+    transition: all 0.3s;
+    border-right: 1px solid #ebeef5;
+}
+
+.tab-item:last-child {
+    border-right: none;
+}
+
+.tab-item.active {
+    background: #e74c3c;
+    color: white;
+}
+
+.tab-item.disabled {
+    color: #c0c4cc;
+    cursor: not-allowed;
+}
+
+.trading-form {
+    padding: 16px;
+}
+
+/* 委托类型选择 */
+.order-type-section {
+    margin-bottom: 16px;
+}
+
+.order-type-select {
+    width: 100%;
+}
+
+.order-type-select :deep(.el-input__wrapper) {
+    height: 36px;
+}
+
+/* 价格输入区域 */
+.price-section {
+    margin-bottom: 16px;
+}
+
+.input-row {
+    display: flex;
+    align-items: center;
+    margin-bottom: 8px;
+}
+
+.input-label {
+    width: 70px;
+    font-size: 13px;
+    color: #666;
+    flex-shrink: 0;
+}
+
+.price-input-group {
+    flex: 1;
+    display: flex;
+    gap: 6px;
+    align-items: flex-start;
+    height: 36px;
+}
+
+.price-input {
+    flex: 1;
+    height: 36px;
+}
+
+.price-input :deep(.el-input__wrapper) {
+    height: 36px !important;
+}
+
+.price-controls {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+    height: 36px;
+    width: 28px;
+}
+
+.price-btn {
+    width: 28px !important;
+    height: 17px !important;
+    padding: 0 !important;
+    font-size: 12px !important;
+    line-height: 1 !important;
+    min-height: auto !important;
+    border-radius: 2px !important;
+    margin: 0 !important;
+    border: 1px solid #dcdfe6 !important;
+}
+
+.price-btn:first-child {
+    margin-bottom: 0 !important;
+}
+
+.price-btn:last-child {
+    margin-top: 0 !important;
+}
+
+/* 数量输入区域 */
+.quantity-section {
+    margin-bottom: 16px;
+}
+
+.quantity-input-group {
+    flex: 1;
+}
+
+.quantity-input {
+    width: 100%;
+}
+
+.quantity-input :deep(.el-input__wrapper) {
+    height: 36px;
+}
+
+.quantity-shortcuts {
+    display: flex;
+    gap: 4px;
+    margin-top: 8px;
+}
+
+.quantity-shortcuts .el-button {
+    flex: 1;
+    font-size: 12px;
+    padding: 4px 8px;
+}
+
+/* 可买信息 */
+.available-info {
+    margin-bottom: 16px;
+    padding: 8px;
+    background: #f8f9fa;
+    border-radius: 4px;
+}
+
+.info-row {
+    display: flex;
+    justify-content: space-between;
+    font-size: 13px;
+}
+
+.info-row .label {
+    color: #666;
+}
+
+.info-row .value {
+    color: #333;
+    font-weight: 500;
+}
+
+/* 交易预览 */
+.trade-summary {
+    margin-bottom: 16px;
+    padding: 8px;
+    background: #f8f9fa;
+    border-radius: 4px;
+}
+
+.summary-row {
+    display: flex;
+    justify-content: space-between;
+    font-size: 13px;
+}
+
+.summary-row .label {
+    color: #666;
+}
+
+.summary-row .value {
+    color: #333;
+    font-weight: 500;
+}
+
+/* 买入按钮 */
+.action-section {
+    margin-bottom: 16px;
+}
+
+.buy-action-btn {
+    width: 100%;
+    height: 40px;
+    font-size: 16px;
+    font-weight: 600;
+}
+
+/* 账户信息 */
+.account-info-section {
+    border-top: 1px solid #eee;
+    padding-top: 12px;
+}
+
+.account-row {
+    display: flex;
+    justify-content: space-between;
+    margin-bottom: 6px;
+    font-size: 12px;
+}
+
+.account-row:last-child {
+    margin-bottom: 0;
+}
+
+.account-row .label {
+    color: #666;
+}
+
+.account-row .value {
+    color: #333;
+    font-weight: 500;
+}
+
+/* 响应式设计 */
+@media (max-width: 768px) {
+    .trading-main-content {
+        flex-direction: column;
+        gap: 12px;
+        padding: 12px;
+    }
+
+    .left-panel,
+    .right-panel {
+        min-width: auto;
+    }
+
+    .tab-item {
+        padding: 6px 2px;
+        font-size: 12px;
+    }
+
+    .trading-form {
+        padding: 12px;
+    }
+
+    .input-label {
+        width: 60px;
+        font-size: 12px;
+    }
+
+    .quantity-shortcuts .el-button {
+        font-size: 11px;
+        padding: 2px 4px;
+    }
+}
+
+
+
+/* 底部按钮 */
+.trading-footer {
+    display: flex;
+    justify-content: center;
+    padding: 16px;
+    background: white;
+    border-top: 1px solid #ebeef5;
+}
+
+.cancel-btn {
+    min-width: 100px;
+}
+
+/* 付费服务确认对话框样式 */
+:deep(.paid-service-dialog) {
+    border-radius: 12px;
+    overflow: hidden;
+}
+
+:deep(.paid-service-dialog .el-message-box__header) {
+    background: #fef3c7;
+    border-bottom: 1px solid #fbbf24;
+    padding: 20px 24px 16px 24px;
+}
+
+:deep(.paid-service-dialog .el-message-box__title) {
+    color: #92400e;
+    font-weight: 600;
+    font-size: 1.1rem;
+}
+
+:deep(.paid-service-dialog .el-message-box__content) {
+    padding: 20px 24px;
+    background: white;
+}
+
+:deep(.paid-service-dialog .el-message-box__message) {
+    color: #374151;
+    font-size: 0.95rem;
+    line-height: 1.5;
+}
+
+:deep(.paid-service-dialog .el-message-box__btns) {
+    padding: 16px 24px 20px 24px;
+    background: #f9fafb;
+    border-top: 1px solid #e5e7eb;
+}
+
+:deep(.paid-service-dialog .el-button--primary) {
+    background: #f59e0b;
     border-color: #f59e0b;
-    box-shadow: 0 0 0 3px rgba(245, 158, 11, 0.1);
+    color: white;
+    font-weight: 500;
+}
+
+:deep(.paid-service-dialog .el-button--primary:hover) {
+    background: #d97706;
+    border-color: #d97706;
 }
 </style>

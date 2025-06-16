@@ -1,0 +1,863 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>关注板块设置 - 大分类+小分类</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: #f8fafc;
+            padding: 20px;
+            line-height: 1.6;
+        }
+
+        .container {
+            max-width: 1000px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 16px;
+            padding: 40px;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
+        }
+
+        .title {
+            font-size: 2rem;
+            font-weight: 700;
+            color: #1a202c;
+            text-align: center;
+            margin-bottom: 8px;
+        }
+
+        .subtitle {
+            font-size: 1rem;
+            color: #718096;
+            text-align: center;
+            margin-bottom: 40px;
+        }
+
+        .sectors-container {
+            max-width: 1100px;
+            margin: 0 auto;
+        }
+
+        .sectors-layout {
+            display: flex;
+            gap: 24px;
+            min-height: 500px;
+        }
+
+        .left-panel {
+            flex: 0 0 400px;
+            background: #fafbfc;
+            border-radius: 12px;
+            padding: 20px;
+            border: 1px solid #e5e7eb;
+        }
+
+        .right-panel {
+            flex: 1;
+            background: #ffffff;
+            border-radius: 12px;
+            padding: 20px;
+            border: 1px solid #e5e7eb;
+            min-height: 460px;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .sector-section {
+            margin-bottom: 32px;
+        }
+
+        .section-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+            padding-bottom: 12px;
+            border-bottom: 2px solid #f3f4f6;
+        }
+
+        .section-title {
+            font-size: 1.1rem;
+            font-weight: 600;
+            color: #18181b;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            margin: 0;
+        }
+
+        .section-icon {
+            font-size: 1.2rem;
+        }
+
+        .section-limit {
+            font-size: 0.85rem;
+            color: #6b7280;
+            font-weight: 400;
+        }
+
+        .section-counter {
+            font-size: 0.9rem;
+            color: #059669;
+            font-weight: 600;
+            background: #d1fae5;
+            padding: 4px 12px;
+            border-radius: 20px;
+        }
+
+        /* 大分类样式 */
+        .major-sectors-list {
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+        }
+
+        .major-sector-option {
+            border: 2px solid #e5e7eb;
+            border-radius: 8px;
+            padding: 16px;
+            transition: all 0.3s ease;
+            cursor: pointer;
+            display: flex;
+            align-items: flex-start;
+            gap: 12px;
+            position: relative;
+            background: white;
+        }
+
+        .major-sector-option:hover:not(.disabled) {
+            border-color: #d1d5db;
+            background: #f9fafb;
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+        }
+
+        .major-sector-option.selected {
+            border-color: #18181b;
+            background: #f8fafc;
+            box-shadow: 0 4px 16px rgba(24, 24, 27, 0.15);
+        }
+
+        .major-sector-option.disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+
+        .sector-icon {
+            font-size: 1.5rem;
+            flex-shrink: 0;
+            margin-top: 2px;
+        }
+
+        .sector-content {
+            flex: 1;
+        }
+
+        .sector-label {
+            font-size: 0.95rem;
+            font-weight: 600;
+            color: #18181b;
+            margin-bottom: 4px;
+        }
+
+        .sector-desc {
+            font-size: 0.8rem;
+            color: #6b7280;
+            line-height: 1.4;
+        }
+
+        .sector-check {
+            position: absolute;
+            top: 8px;
+            right: 8px;
+            width: 24px;
+            height: 24px;
+            background: #18181b;
+            color: white;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 14px;
+            font-weight: bold;
+        }
+
+        /* 小分类样式 */
+        .sub-sectors-container {
+            display: flex;
+            flex-direction: column;
+            gap: 24px;
+        }
+
+        .sub-sector-group {
+            border: 1px solid #e5e7eb;
+            border-radius: 12px;
+            padding: 20px;
+            background: #fafbfc;
+        }
+
+        .group-title {
+            font-size: 1rem;
+            font-weight: 600;
+            color: #18181b;
+            margin-bottom: 16px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .group-icon {
+            font-size: 1.2rem;
+        }
+
+        .sub-sectors-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+            gap: 10px;
+        }
+
+        .sub-sector-option {
+            border: 1px solid #e5e7eb;
+            border-radius: 8px;
+            padding: 14px;
+            transition: all 0.2s ease;
+            cursor: pointer;
+            display: flex;
+            align-items: flex-start;
+            gap: 10px;
+            position: relative;
+            background: white;
+        }
+
+        .sub-sector-option:hover:not(.disabled) {
+            border-color: #d1d5db;
+            background: #f9fafb;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+        }
+
+        .sub-sector-option.selected {
+            border-color: #18181b;
+            background: #f8fafc;
+            box-shadow: 0 2px 8px rgba(24, 24, 27, 0.1);
+        }
+
+        .sub-sector-option.disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+
+        .sub-sector-icon {
+            font-size: 1.2rem;
+            flex-shrink: 0;
+            margin-top: 2px;
+        }
+
+        .sub-sector-content {
+            flex: 1;
+        }
+
+        .sub-sector-label {
+            font-size: 0.9rem;
+            font-weight: 600;
+            color: #18181b;
+            margin-bottom: 4px;
+        }
+
+        .sub-sector-desc {
+            font-size: 0.8rem;
+            color: #6b7280;
+            line-height: 1.3;
+            margin-bottom: 4px;
+        }
+
+        .sub-sector-examples {
+            font-size: 0.75rem;
+            color: #9ca3af;
+            font-style: italic;
+        }
+
+        .sub-sector-check {
+            position: absolute;
+            top: 6px;
+            right: 6px;
+            width: 18px;
+            height: 18px;
+            background: #18181b;
+            color: white;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 12px;
+            font-weight: bold;
+        }
+
+        /* 选择提示 */
+        .sectors-hint {
+            background: #fef3c7;
+            border: 1px solid #fbbf24;
+            border-radius: 12px;
+            padding: 16px;
+            display: flex;
+            align-items: flex-start;
+            gap: 12px;
+            margin-top: 20px;
+        }
+
+        .sectors-hint .hint-icon {
+            font-size: 1.2rem;
+            flex-shrink: 0;
+            margin-top: 2px;
+        }
+
+        .sectors-hint .hint-text {
+            color: #92400e;
+            font-size: 0.9rem;
+            line-height: 1.4;
+        }
+
+        .summary {
+            margin-top: 40px;
+            padding: 24px;
+            background: #f7fafc;
+            border-radius: 12px;
+            border: 1px solid #e2e8f0;
+        }
+
+        .summary-title {
+            font-size: 1.1rem;
+            font-weight: 600;
+            color: #2d3748;
+            margin-bottom: 16px;
+            text-align: center;
+        }
+
+        .summary-content {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 24px;
+        }
+
+        .summary-section {
+            background: white;
+            padding: 16px;
+            border-radius: 8px;
+            border: 1px solid #e2e8f0;
+        }
+
+        .summary-section-title {
+            font-size: 0.95rem;
+            font-weight: 600;
+            color: #2d3748;
+            margin-bottom: 12px;
+        }
+
+        .summary-item {
+            padding: 4px 0;
+            font-size: 0.85rem;
+            color: #4a5568;
+        }
+
+        @media (max-width: 768px) {
+            .container {
+                padding: 24px;
+            }
+
+            .sectors-layout {
+                flex-direction: column;
+                gap: 16px;
+                min-height: auto;
+            }
+
+            .left-panel {
+                flex: none;
+            }
+
+            .right-panel {
+                min-height: auto;
+            }
+
+            .major-sectors-list {
+                gap: 8px;
+            }
+
+            .major-sector-option {
+                padding: 12px;
+                gap: 10px;
+            }
+
+            .sector-icon {
+                font-size: 1.3rem;
+            }
+
+            .sub-sectors-grid {
+                grid-template-columns: 1fr;
+                gap: 8px;
+            }
+
+            .sub-sector-option {
+                padding: 12px;
+                gap: 8px;
+            }
+
+            .summary-content {
+                grid-template-columns: 1fr;
+                gap: 16px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1 class="title">关注板块设置</h1>
+        <p class="subtitle">大分类+小分类层级选择，包含芯片半导体等重点行业</p>
+        
+        <div class="sectors-container">
+            <div class="sectors-layout">
+                <!-- 左侧：大分类选择 -->
+                <div class="left-panel">
+                    <div class="section-header">
+                        <h4 class="section-title">
+                            <span class="section-icon">📊</span>
+                            选择大分类
+                            <span class="section-limit">(最多选择2个)</span>
+                        </h4>
+                        <div class="section-counter" id="majorCounter">
+                            已选择 0/2
+                        </div>
+                    </div>
+                    
+                    <div class="major-sectors-list" id="majorSectorsGrid">
+                        <!-- 动态生成的大分类选项 -->
+                    </div>
+                </div>
+
+                <!-- 右侧：细分行业选择 -->
+                <div class="right-panel">
+                    <div id="subSectorContent" style="display: none;">
+                        <div class="section-header">
+                            <h4 class="section-title">
+                                <span class="section-icon">🎯</span>
+                                选择细分行业
+                                <span class="section-limit">(可选择3-4个)</span>
+                            </h4>
+                            <div class="section-counter" id="subCounter">
+                                已选择 0/4
+                            </div>
+                        </div>
+
+                        <div class="sub-sectors-container" id="subSectorsContainer">
+                            <!-- 动态生成的小分类选项 -->
+                        </div>
+                    </div>
+
+                    <!-- 选择提示 -->
+                    <div class="sectors-hint" id="sectorsHint">
+                        <div class="hint-icon">💡</div>
+                        <div class="hint-text">
+                            请先在左侧选择您感兴趣的大分类板块，然后在这里选择具体的细分行业
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="summary">
+            <div class="summary-title">您的板块选择总结</div>
+            <div class="summary-content">
+                <div class="summary-section">
+                    <div class="summary-section-title">大分类板块</div>
+                    <div id="majorSummary">暂未选择</div>
+                </div>
+                <div class="summary-section">
+                    <div class="summary-section-title">细分行业</div>
+                    <div id="subSummary">暂未选择</div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // 大分类配置
+        const majorSectorOptions = [
+            {
+                value: 'technology',
+                label: '科技板块',
+                icon: '💻',
+                desc: '包含互联网、软件、硬件、人工智能等科技相关行业',
+                color: '#3b82f6'
+            },
+            {
+                value: 'finance',
+                label: '金融板块',
+                icon: '🏦',
+                desc: '包含银行、保险、证券、支付等金融服务行业',
+                color: '#10b981'
+            },
+            {
+                value: 'consumer',
+                label: '消费板块',
+                icon: '🛍️',
+                desc: '包含食品饮料、服装、家电、零售等消费相关行业',
+                color: '#f59e0b'
+            },
+            {
+                value: 'healthcare',
+                label: '医疗板块',
+                icon: '🏥',
+                desc: '包含医药、医疗器械、生物技术等医疗健康行业',
+                color: '#ef4444'
+            },
+            {
+                value: 'industrial',
+                label: '工业板块',
+                icon: '🏭',
+                desc: '包含制造业、基建、能源、材料等传统工业行业',
+                color: '#8b5cf6'
+            },
+            {
+                value: 'emerging',
+                label: '新兴板块',
+                icon: '🚀',
+                desc: '包含新能源、环保、军工等新兴战略性行业',
+                color: '#06b6d4'
+            }
+        ];
+
+        // 小分类配置
+        const subSectorOptions = [
+            // 科技板块下的小分类
+            {
+                value: 'internet',
+                label: '互联网',
+                parent: 'technology',
+                icon: '🌐',
+                desc: '电商、社交、搜索、云服务等互联网公司',
+                examples: '腾讯、阿里巴巴、百度'
+            },
+            {
+                value: 'chips',
+                label: '芯片半导体',
+                parent: 'technology',
+                icon: '🔬',
+                desc: '芯片设计、制造、封测等半导体产业链',
+                examples: '中芯国际、韦尔股份、紫光国微'
+            },
+            {
+                value: 'software',
+                label: '软件服务',
+                parent: 'technology',
+                icon: '💾',
+                desc: '企业软件、游戏、教育软件等',
+                examples: '用友网络、恒生电子、三六零'
+            },
+            {
+                value: 'ai',
+                label: '人工智能',
+                parent: 'technology',
+                icon: '🤖',
+                desc: 'AI算法、机器学习、智能硬件等',
+                examples: '科大讯飞、海康威视、大华股份'
+            },
+            
+            // 金融板块下的小分类
+            {
+                value: 'banks',
+                label: '银行',
+                parent: 'finance',
+                icon: '🏛️',
+                desc: '国有银行、股份制银行、城商行等',
+                examples: '招商银行、平安银行、宁波银行'
+            },
+            {
+                value: 'insurance',
+                label: '保险',
+                parent: 'finance',
+                icon: '🛡️',
+                desc: '人寿保险、财产保险等保险公司',
+                examples: '中国平安、中国人寿、新华保险'
+            },
+            {
+                value: 'securities',
+                label: '证券',
+                parent: 'finance',
+                icon: '📈',
+                desc: '证券公司、基金公司等',
+                examples: '中信证券、华泰证券、东方财富'
+            },
+            
+            // 消费板块下的小分类
+            {
+                value: 'food_beverage',
+                label: '食品饮料',
+                parent: 'consumer',
+                icon: '🍷',
+                desc: '白酒、饮料、食品加工等',
+                examples: '贵州茅台、五粮液、伊利股份'
+            },
+            {
+                value: 'retail',
+                label: '零售',
+                parent: 'consumer',
+                icon: '🏪',
+                desc: '超市、百货、电商零售等',
+                examples: '永辉超市、苏宁易购、王府井'
+            },
+            {
+                value: 'appliances',
+                label: '家电',
+                parent: 'consumer',
+                icon: '📺',
+                desc: '白色家电、黑色家电等',
+                examples: '美的集团、格力电器、海尔智家'
+            },
+            
+            // 医疗板块下的小分类
+            {
+                value: 'pharma',
+                label: '医药制造',
+                parent: 'healthcare',
+                icon: '💊',
+                desc: '化学药、中药、生物药等',
+                examples: '恒瑞医药、云南白药、片仔癀'
+            },
+            {
+                value: 'medical_devices',
+                label: '医疗器械',
+                parent: 'healthcare',
+                icon: '🩺',
+                desc: '医疗设备、体外诊断等',
+                examples: '迈瑞医疗、鱼跃医疗、乐普医疗'
+            },
+            
+            // 工业板块下的小分类
+            {
+                value: 'manufacturing',
+                label: '先进制造',
+                parent: 'industrial',
+                icon: '⚙️',
+                desc: '机械设备、精密制造等',
+                examples: '三一重工、中联重科、徐工机械'
+            },
+            {
+                value: 'materials',
+                label: '基础材料',
+                parent: 'industrial',
+                icon: '🏗️',
+                desc: '钢铁、有色金属、化工等',
+                examples: '宝钢股份、紫金矿业、万华化学'
+            },
+            {
+                value: 'infrastructure',
+                label: '基础设施',
+                parent: 'industrial',
+                icon: '🌉',
+                desc: '建筑、交通、公用事业等',
+                examples: '中国建筑、中国中铁、长江电力'
+            },
+            
+            // 新兴板块下的小分类
+            {
+                value: 'new_energy',
+                label: '新能源',
+                parent: 'emerging',
+                icon: '🔋',
+                desc: '光伏、风电、储能、新能源车等',
+                examples: '宁德时代、比亚迪、隆基绿能'
+            },
+            {
+                value: 'environmental',
+                label: '环保',
+                parent: 'emerging',
+                icon: '🌱',
+                desc: '污水处理、固废处理、大气治理等',
+                examples: '碧水源、启迪环境、龙净环保'
+            },
+            {
+                value: 'military',
+                label: '军工',
+                parent: 'emerging',
+                icon: '🛡️',
+                desc: '军工装备、航空航天等',
+                examples: '中航沈飞、航发动力、中直股份'
+            }
+        ];
+
+        // 用户选择状态
+        const selectedSectors = {
+            majorCategories: [],
+            subCategories: []
+        };
+
+        // 渲染大分类
+        function renderMajorSectors() {
+            const grid = document.getElementById('majorSectorsGrid');
+            grid.innerHTML = '';
+            
+            majorSectorOptions.forEach(option => {
+                const isSelected = selectedSectors.majorCategories.includes(option.value);
+                const isDisabled = !isSelected && selectedSectors.majorCategories.length >= 2;
+                
+                const element = document.createElement('div');
+                element.className = `major-sector-option ${isSelected ? 'selected' : ''} ${isDisabled ? 'disabled' : ''}`;
+                element.onclick = () => toggleMajorSector(option.value);
+                
+                element.innerHTML = `
+                    <div class="sector-icon" style="color: ${option.color}">${option.icon}</div>
+                    <div class="sector-content">
+                        <div class="sector-label">${option.label}</div>
+                        <div class="sector-desc">${option.desc}</div>
+                    </div>
+                    ${isSelected ? '<div class="sector-check">✓</div>' : ''}
+                `;
+                
+                grid.appendChild(element);
+            });
+            
+            // 更新计数器
+            document.getElementById('majorCounter').textContent = `已选择 ${selectedSectors.majorCategories.length}/2`;
+        }
+
+        // 渲染小分类
+        function renderSubSectors() {
+            const container = document.getElementById('subSectorsContainer');
+            const content = document.getElementById('subSectorContent');
+            const hint = document.getElementById('sectorsHint');
+            
+            if (selectedSectors.majorCategories.length === 0) {
+                content.style.display = 'none';
+                hint.style.display = 'flex';
+                return;
+            }
+            
+            content.style.display = 'block';
+            hint.style.display = 'none';
+            container.innerHTML = '';
+            
+            selectedSectors.majorCategories.forEach(majorCategory => {
+                const majorSector = majorSectorOptions.find(s => s.value === majorCategory);
+                const subSectors = subSectorOptions.filter(sub => sub.parent === majorCategory);
+                
+                const groupElement = document.createElement('div');
+                groupElement.className = 'sub-sector-group';
+                
+                const gridHtml = subSectors.map(subOption => {
+                    const isSelected = selectedSectors.subCategories.includes(subOption.value);
+                    const isDisabled = !isSelected && selectedSectors.subCategories.length >= 4;
+                    
+                    return `
+                        <div class="sub-sector-option ${isSelected ? 'selected' : ''} ${isDisabled ? 'disabled' : ''}" 
+                             onclick="toggleSubSector('${subOption.value}')">
+                            <div class="sub-sector-icon">${subOption.icon}</div>
+                            <div class="sub-sector-content">
+                                <div class="sub-sector-label">${subOption.label}</div>
+                                <div class="sub-sector-desc">${subOption.desc}</div>
+                                <div class="sub-sector-examples">${subOption.examples}</div>
+                            </div>
+                            ${isSelected ? '<div class="sub-sector-check">✓</div>' : ''}
+                        </div>
+                    `;
+                }).join('');
+                
+                groupElement.innerHTML = `
+                    <div class="group-title">
+                        <span class="group-icon">${majorSector.icon}</span>
+                        ${majorSector.label}
+                    </div>
+                    <div class="sub-sectors-grid">
+                        ${gridHtml}
+                    </div>
+                `;
+                
+                container.appendChild(groupElement);
+            });
+            
+            // 更新计数器
+            document.getElementById('subCounter').textContent = `已选择 ${selectedSectors.subCategories.length}/4`;
+        }
+
+        // 切换大分类选择
+        function toggleMajorSector(value) {
+            const index = selectedSectors.majorCategories.indexOf(value);
+            if (index > -1) {
+                // 取消选择大分类时，同时移除该分类下的所有小分类
+                selectedSectors.majorCategories.splice(index, 1);
+                const subSectorsToRemove = subSectorOptions
+                    .filter(sub => sub.parent === value)
+                    .map(sub => sub.value);
+                selectedSectors.subCategories = selectedSectors.subCategories
+                    .filter(sub => !subSectorsToRemove.includes(sub));
+            } else {
+                // 检查是否已达到最大选择数量
+                if (selectedSectors.majorCategories.length < 2) {
+                    selectedSectors.majorCategories.push(value);
+                }
+            }
+            
+            renderMajorSectors();
+            renderSubSectors();
+            renderSummary();
+        }
+
+        // 切换小分类选择
+        function toggleSubSector(value) {
+            const index = selectedSectors.subCategories.indexOf(value);
+            if (index > -1) {
+                selectedSectors.subCategories.splice(index, 1);
+            } else {
+                // 检查是否已达到最大选择数量
+                if (selectedSectors.subCategories.length < 4) {
+                    selectedSectors.subCategories.push(value);
+                }
+            }
+            
+            renderSubSectors();
+            renderSummary();
+        }
+
+        // 渲染总结
+        function renderSummary() {
+            const majorSummary = document.getElementById('majorSummary');
+            const subSummary = document.getElementById('subSummary');
+            
+            if (selectedSectors.majorCategories.length === 0) {
+                majorSummary.textContent = '暂未选择';
+            } else {
+                const majorLabels = selectedSectors.majorCategories.map(value => {
+                    const sector = majorSectorOptions.find(s => s.value === value);
+                    return sector ? sector.label : value;
+                });
+                majorSummary.innerHTML = majorLabels.map(label => 
+                    `<div class="summary-item">${label}</div>`
+                ).join('');
+            }
+            
+            if (selectedSectors.subCategories.length === 0) {
+                subSummary.textContent = '暂未选择';
+            } else {
+                const subLabels = selectedSectors.subCategories.map(value => {
+                    const sector = subSectorOptions.find(s => s.value === value);
+                    return sector ? sector.label : value;
+                });
+                subSummary.innerHTML = subLabels.map(label => 
+                    `<div class="summary-item">${label}</div>`
+                ).join('');
+            }
+        }
+
+        // 初始化
+        renderMajorSectors();
+        renderSubSectors();
+        renderSummary();
+    </script>
+</body>
+</html> 

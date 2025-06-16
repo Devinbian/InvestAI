@@ -162,5 +162,15 @@ export const useUserStore = defineStore("user", {
 
       return this.balance + portfolioValue;
     },
+
+    // 扣费方法（用于付费服务）
+    deductBalance(amount) {
+      if (this.balance >= amount) {
+        this.balance -= amount;
+        localStorage.setItem("balance", this.balance.toString());
+        return true;
+      }
+      return false;
+    },
   },
 });

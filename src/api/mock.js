@@ -49,6 +49,15 @@ export const mockApi = {
 
   // 发送消息
   sendMessage: (message) => {
+    // 检查是否是智能荐股查询
+    const isSmartRecommendation = message.includes("智能荐股");
+
+    // 检查是否是资讯推送查询
+    const isNewsUpdate = message.includes("资讯推送");
+
+    // 检查是否是我的资产查询
+    const isAssetAnalysis = message.includes("我的资产");
+
     // 检查是否是股票相关查询
     const stockKeywords = [
       "股票",
@@ -98,7 +107,294 @@ export const mockApi = {
 
     let response;
 
-    if (isBuyQuery) {
+    if (isSmartRecommendation) {
+      // 智能荐股响应 - 返回多只股票的推荐列表
+      const recommendedStocks = [
+        {
+          code: "000001",
+          name: "平安银行",
+          price: "12.45",
+          change: 0.23,
+          changePercent: 1.88,
+          targetPrice: "14.20",
+          expectedReturn: "14.1%",
+          reason: "估值合理，ROE持续提升，银行业复苏预期强烈",
+          riskLevel: "中等",
+          industry: "银行",
+          pe: 5.2,
+          pb: 0.8,
+          marketCap: 240000000000,
+          score: 85,
+          recommendation: "买入",
+          recommendIndex: 4.2,
+          recommendLevel: "推荐",
+        },
+        {
+          code: "600519",
+          name: "贵州茅台",
+          price: "1678.90",
+          change: -12.5,
+          changePercent: -0.74,
+          targetPrice: "1850.00",
+          expectedReturn: "10.2%",
+          reason: "品牌价值稳固，消费复苏带动业绩增长",
+          riskLevel: "较低",
+          industry: "白酒",
+          pe: 28.5,
+          pb: 8.2,
+          marketCap: 2100000000000,
+          score: 88,
+          recommendation: "买入",
+          recommendIndex: 4.6,
+          recommendLevel: "强烈推荐",
+        },
+        {
+          code: "300750",
+          name: "宁德时代",
+          price: "185.50",
+          change: 8.2,
+          changePercent: 4.62,
+          targetPrice: "220.00",
+          expectedReturn: "18.6%",
+          reason: "新能源车产业链核心，技术领先优势明显",
+          riskLevel: "较高",
+          industry: "新能源",
+          pe: 35.8,
+          pb: 4.5,
+          marketCap: 432000000000,
+          score: 82,
+          recommendation: "买入",
+          recommendIndex: 4.0,
+          recommendLevel: "推荐",
+        },
+      ];
+
+      response = {
+        role: "assistant",
+        content: `🎯 **智能荐股推荐**
+
+基于您的投资偏好和当前市场环境，我为您推荐以下优质股票：
+
+**推荐股票列表**
+以下股票均经过多维度分析筛选，具有良好的投资价值。您可以点击下方的股票操作按钮进行进一步分析、添加自选股或购买操作。
+
+**投资建议**
+• 建议分散投资，每只股票配置不超过总资金的20%
+• 关注市场情绪变化，适时调整仓位
+• 设置止损位，控制单笔投资风险在10%以内
+• 定期关注公司基本面变化和行业发展趋势
+
+**风险提示**
+以上推荐仅供参考，投资有风险，入市需谨慎。建议结合自身风险承受能力做出投资决策。`,
+        hasStockInfo: true,
+        stockList: recommendedStocks, // 返回股票列表而不是单只股票
+        isRecommendation: true,
+      };
+    } else if (message.includes("【付费深度分析】")) {
+      // 付费深度分析响应
+      const stockMatch = message.match(/【付费深度分析】请对(.+?)\((.+?)\)/);
+      const stockName = stockMatch ? stockMatch[1] : "该股票";
+      const stockCode = stockMatch ? stockMatch[2] : "";
+
+      response = {
+        role: "assistant",
+        content: `🔍 **${stockName}(${stockCode}) 深度分析报告**
+
+**📊 基本面分析**
+• 财务指标：ROE 15.2%，净利润增长率 18.5%，资产负债率 45.3%
+• 盈利能力：毛利率 35.8%，净利率 12.4%，营收增长稳定
+• 成长性：近三年复合增长率 22.1%，业务扩张能力强
+
+**📈 技术面分析**
+• K线形态：突破上升三角形，多头排列明显
+• 技术指标：MACD金叉，RSI(65)适中，布林带上轨突破
+• 支撑阻力：支撑位¥${(parseFloat("168.50") * 0.95).toFixed(2)}，阻力位¥${(parseFloat("168.50") * 1.08).toFixed(2)}
+
+**🏭 行业对比分析**
+• 市场地位：行业前三，市占率15.2%
+• 竞争优势：技术壁垒高，品牌影响力强
+• 行业前景：预计未来3年行业增速12-15%
+
+**🔮 未来发展前景**
+• 业务增长点：新产品线贡献30%增量，海外市场拓展
+• 风险因素：原材料价格波动，政策监管变化
+• 催化剂：新技术应用，战略合作推进
+
+**💡 投资建议**
+• 买入时机：回调至¥${(parseFloat("168.50") * 0.97).toFixed(2)}附近分批建仓
+• 目标价位：6个月目标价¥185.00，12个月目标价¥195.00
+• 止损位：跌破¥${(parseFloat("168.50") * 0.92).toFixed(2)}止损
+
+**📋 资金配置建议**
+• 仓位管理：建议配置5-8%仓位，分3次建仓
+• 分批策略：首次30%，回调加仓40%，突破确认30%
+• 风控措施：设置8%止损，20%止盈减仓50%
+
+*本报告基于当前市场数据分析，投资有风险，请谨慎决策*`,
+        hasStockInfo: false,
+        isPaidAnalysis: true,
+      };
+    } else if (message.includes("【付费量化分析】")) {
+      // 付费量化分析响应
+      const stockMatch = message.match(/【付费量化分析】请对(.+?)\((.+?)\)/);
+      const stockName = stockMatch ? stockMatch[1] : "该股票";
+      const stockCode = stockMatch ? stockMatch[2] : "";
+
+      response = {
+        role: "assistant",
+        content: `⚡ **${stockName}(${stockCode}) 量化分析报告**
+
+**📊 技术指标分析**
+• MACD：DIF(1.25) > DEA(0.89)，金叉信号强度85%
+• RSI：14日RSI(65.2)，处于强势区间，未超买
+• 布林带：价格突破上轨，带宽扩张，趋势加速
+• KDJ：K(78) > D(65) > J(85)，多头排列
+
+**🔢 量化选股因子评分**
+• 价值因子：PE(18.5) PB(2.1) 评分7.2/10
+• 成长因子：营收增长(18.5%) 净利增长(22.1%) 评分8.5/10
+• 质量因子：ROE(15.2%) 资产周转率(1.8) 评分7.8/10
+• 综合评分：7.8/10 (超越78%同行业股票)
+
+**⚠️ 风险评估模型**
+• 历史波动率：年化波动率28.5%，属中等风险
+• 最大回撤：近一年最大回撤15.2%，风控良好
+• 夏普比率：1.35，风险调整后收益优秀
+• VaR(95%)：日风险价值2.1%
+
+**🎯 量化交易信号**
+• 买入信号：多因子模型评分85/100，信号强度【强】
+• 信号类型：趋势突破+动量确认，双重验证
+• 持续性：预计信号有效期5-8个交易日
+• 成功概率：基于历史回测，成功率72%
+
+**📈 回测数据分析**
+• 策略表现：近一年收益率35.2% vs 基准15.8%
+• 胜率统计：交易胜率68%，盈亏比1.8:1
+• 最佳持仓：平均最佳持仓周期12个交易日
+• 风险指标：最大连续亏损3次，平均亏损1.2%
+
+**🤖 量化投资策略建议**
+• 策略类型：趋势跟踪+均值回归组合策略
+• 参数设置：
+  - 买入阈值：多因子评分>80
+  - 止盈设置：15%分批止盈
+  - 止损设置：8%严格止损
+• 风控措施：
+  - 单股最大仓位8%
+  - 相关性控制<0.6
+  - 动态调仓周期7天
+
+**📊 量化评级：A级 (强烈推荐)**
+
+*本量化分析基于历史数据建模，市场有风险，量化策略仅供参考*`,
+        hasStockInfo: false,
+        isQuantAnalysis: true,
+      };
+    } else if (isNewsUpdate) {
+      // 资讯推送响应
+      const newsItems = [
+        {
+          title: "央行降准0.25个百分点，释放流动性约5000亿元",
+          time: "2024-01-15 09:30",
+          impact: "利好",
+          summary:
+            "央行宣布下调存款准备金率，为市场注入流动性，有利于降低融资成本",
+        },
+        {
+          title: "新能源汽车销量创新高，产业链公司受益",
+          time: "2024-01-15 10:15",
+          impact: "利好",
+          summary:
+            "12月新能源车销量同比增长46.8%，宁德时代、比亚迪等龙头股有望受益",
+        },
+        {
+          title: "美联储暗示年内可能降息，全球股市普涨",
+          time: "2024-01-15 08:45",
+          impact: "利好",
+          summary:
+            "美联储主席鲍威尔表示通胀压力缓解，为降息打开空间，利好风险资产",
+        },
+        {
+          title: "房地产政策进一步放松，地产股集体上涨",
+          time: "2024-01-15 11:20",
+          impact: "利好",
+          summary: "多地出台房地产支持政策，万科A、保利发展等地产股涨幅居前",
+        },
+      ];
+
+      let newsContent = newsItems
+        .map(
+          (news) =>
+            `**${news.title}**
+📅 ${news.time} | ${news.impact === "利好" ? "📈" : "📉"} ${news.impact}
+${news.summary}`,
+        )
+        .join("\n\n");
+
+      response = {
+        role: "assistant",
+        content: `📰 **今日财经资讯**
+
+${newsContent}
+
+**市场观点**
+• 货币政策边际宽松，有利于提振市场信心
+• 新能源板块景气度持续，关注产业链投资机会
+• 全球流动性预期改善，A股有望迎来估值修复
+• 房地产政策底部确认，相关板块或迎来反弹
+
+**投资策略**
+• 短期关注政策受益板块：银行、地产、新能源
+• 中期布局高景气赛道：人工智能、生物医药
+• 长期配置核心资产：消费白马、科技龙头
+
+💡 **温馨提示**：以上资讯仅供参考，投资决策请结合个人风险偏好。`,
+        hasStockInfo: false,
+        isNewsUpdate: true,
+      };
+    } else if (isAssetAnalysis) {
+      // 我的资产分析响应
+      response = {
+        role: "assistant",
+        content: `💰 **资产配置分析报告**
+
+根据您提供的资产信息，我为您做出以下分析：
+
+**资产结构评估**
+• 现金比例：根据您的余额情况，建议保持20-30%的现金仓位
+• 股票配置：当前持仓分散度${message.includes("持仓股票：0只") ? "不足，建议增加" : "适中，可以优化"}
+• 行业分布：${message.includes("持仓股票：0只") ? "暂无持仓" : "建议关注行业配置均衡性"}
+
+**投资组合建议**
+• **核心配置(50%)**：选择业绩稳定的蓝筹股，如银行、消费龙头
+• **成长配置(30%)**：关注新兴行业，如新能源、人工智能
+• **防御配置(20%)**：配置高分红股票或债券基金
+
+**风险控制建议**
+• 单只股票仓位不超过总资产的15%
+• 同一行业配置不超过总资产的25%
+• 设置止损线，及时控制亏损
+• 定期调仓，保持组合活力
+
+**优化方案**
+${
+  message.includes("持仓股票：0只")
+    ? "• 建议从稳健的蓝筹股开始建仓\n• 可以考虑定投方式分批买入\n• 优先配置自选股中的优质标的"
+    : "• 检查持仓股票基本面变化\n• 适当调整仓位配置\n• 考虑增加防御性资产"
+}
+
+**下一步行动**
+1. 完善投资偏好设置，获得更精准的建议
+2. 关注市场热点，寻找投资机会
+3. 定期回顾投资组合表现
+4. 学习投资知识，提升投资能力
+
+📊 **个性化提醒**：建议您定期查看资产配置情况，根据市场变化及时调整投资策略。`,
+        hasStockInfo: false,
+        isAssetAnalysis: true,
+      };
+    } else if (isBuyQuery) {
       // 购买相关响应
       const stockInfo = {
         code: "000001",

@@ -528,7 +528,7 @@
 </template>
 
 <script setup>
-import { ref, reactive, onMounted, nextTick, watch, computed } from 'vue';
+import { ref, reactive, onMounted, onUnmounted, nextTick, watch, computed } from 'vue';
 import { useUserStore } from '../store/user';
 import { User, Lock, ArrowDown } from '@element-plus/icons-vue';
 import { ElMessage } from 'element-plus';
@@ -774,6 +774,27 @@ const scrollToBottom = () => {
     }
 };
 
+// 滚动条显示控制
+let scrollTimer = null;
+const handleScroll = () => {
+    if (chatHistoryRef.value) {
+        // 添加滚动中的类名
+        chatHistoryRef.value.classList.add('scrolling');
+
+        // 清除之前的定时器
+        if (scrollTimer) {
+            clearTimeout(scrollTimer);
+        }
+
+        // 设置定时器，滚动停止后1.5秒隐藏滚动条
+        scrollTimer = setTimeout(() => {
+            if (chatHistoryRef.value) {
+                chatHistoryRef.value.classList.remove('scrolling');
+            }
+        }, 1500);
+    }
+};
+
 const createNewChat = () => {
     chatHistory.value = [];
     inputMessage.value = '';
@@ -784,6 +805,11 @@ const createNewChat = () => {
 watch(chatHistory, () => {
     nextTick(() => {
         scrollToBottom();
+        // 确保滚动事件监听器已绑定
+        if (chatHistoryRef.value && !chatHistoryRef.value.hasScrollListener) {
+            chatHistoryRef.value.addEventListener('scroll', handleScroll);
+            chatHistoryRef.value.hasScrollListener = true;
+        }
     });
 }, { deep: true });
 
@@ -1109,6 +1135,24 @@ const checkUserStatus = () => {
 onMounted(() => {
     scrollToBottom();
     checkUserStatus();
+
+    // 添加滚动事件监听
+    nextTick(() => {
+        if (chatHistoryRef.value && !chatHistoryRef.value.hasScrollListener) {
+            chatHistoryRef.value.addEventListener('scroll', handleScroll);
+            chatHistoryRef.value.hasScrollListener = true;
+        }
+    });
+});
+
+// 组件卸载时清理
+onUnmounted(() => {
+    if (chatHistoryRef.value) {
+        chatHistoryRef.value.removeEventListener('scroll', handleScroll);
+    }
+    if (scrollTimer) {
+        clearTimeout(scrollTimer);
+    }
 });
 </script>
 
@@ -1251,9 +1295,18 @@ onMounted(() => {
     /* Firefox */
     scrollbar-color: transparent transparent;
     /* Firefox */
+    transition: scrollbar-color 0.3s ease;
 }
 
-/* 聊天区域滚动条样式 - 只在滚动时显示 */
+.chat-history-area:hover {
+    scrollbar-color: rgba(0, 0, 0, 0.2) transparent;
+}
+
+.chat-history-area.scrolling {
+    scrollbar-color: rgba(0, 0, 0, 0.3) transparent;
+}
+
+/* 聊天区域滚动条样式 - 只在滚动时或悬停时显示 */
 .chat-history-area::-webkit-scrollbar {
     width: 6px;
 }
@@ -1265,15 +1318,32 @@ onMounted(() => {
 .chat-history-area::-webkit-scrollbar-thumb {
     background: transparent;
     border-radius: 3px;
-    transition: background 0.3s ease;
+    transition: background 0.3s ease, opacity 0.3s ease;
+    opacity: 0;
 }
 
+/* 鼠标悬停在滚动区域时显示滚动条 */
 .chat-history-area:hover::-webkit-scrollbar-thumb {
     background: rgba(0, 0, 0, 0.2);
+    opacity: 1;
 }
 
+/* 鼠标悬停在滚动条本身时加深颜色 */
 .chat-history-area::-webkit-scrollbar-thumb:hover {
+    background: rgba(0, 0, 0, 0.4) !important;
+    opacity: 1;
+}
+
+/* 滚动时显示滚动条的动画效果 */
+.chat-history-area.scrolling::-webkit-scrollbar-thumb {
+    background: rgba(0, 0, 0, 0.3);
+    opacity: 1;
+}
+
+/* 确保滚动条在滚动时优先显示 */
+.chat-history-area.scrolling:hover::-webkit-scrollbar-thumb {
     background: rgba(0, 0, 0, 0.4);
+    opacity: 1;
 }
 
 .chat-message {

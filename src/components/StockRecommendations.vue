@@ -25,11 +25,11 @@
                         <div class="stock-name">{{ stock.name }}</div>
                         <div class="stock-code">{{ stock.code }}</div>
                     </div>
-                    <div class="recommendation-score">
-                        <div class="score-value" :class="getScoreClass(stock.score)">
+                    <div class="stock-score">
+                        <span class="score-label">推荐指数</span>
+                        <span class="score-value" :class="getScoreClass(stock.score)">
                             {{ stock.score }}
-                        </div>
-                        <div class="score-label">推荐指数</div>
+                        </span>
                     </div>
                 </div>
 
@@ -112,9 +112,11 @@ const recommendations = ref([
 ]);
 
 const getScoreClass = (score) => {
-    if (score >= 9) return 'excellent';
-    if (score >= 8) return 'good';
-    if (score >= 7) return 'fair';
+    // 将10分制转换为100分制进行判断
+    const numScore = score * 10;
+    if (numScore >= 85) return 'excellent';
+    if (numScore >= 75) return 'good';
+    if (numScore >= 65) return 'average';
     return 'poor';
 };
 
@@ -228,36 +230,43 @@ const viewMoreRecommendations = () => {
     color: #9ca3af;
 }
 
-.recommendation-score {
-    text-align: center;
-    min-width: 60px;
-}
-
-.score-value {
-    font-size: 1.1rem;
-    font-weight: 700;
-    margin-bottom: 2px;
-}
-
-.score-value.excellent {
-    color: #10b981;
-}
-
-.score-value.good {
-    color: #3b82f6;
-}
-
-.score-value.fair {
-    color: #f59e0b;
-}
-
-.score-value.poor {
-    color: #ef4444;
+.stock-score {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-end;
+    gap: 2px;
 }
 
 .score-label {
-    font-size: 0.7rem;
+    font-size: 0.75rem;
     color: #9ca3af;
+}
+
+.score-value {
+    font-size: 1.25rem;
+    font-weight: 700;
+    padding: 4px 8px;
+    border-radius: 6px;
+}
+
+.score-value.excellent {
+    color: #059669;
+    background: #d1fae5;
+}
+
+.score-value.good {
+    color: #0891b2;
+    background: #cffafe;
+}
+
+.score-value.average {
+    color: #d97706;
+    background: #fef3c7;
+}
+
+.score-value.poor {
+    color: #dc2626;
+    background: #fee2e2;
 }
 
 .stock-price-info {

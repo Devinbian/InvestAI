@@ -838,6 +838,57 @@ const handleSidebarInteraction = async (data) => {
         case 'market':
             message = `请分析一下${content.name}当前的走势，包括技术指标分析和后市预判。`;
             break;
+        case 'strategy':
+            message = `请详细分析"${content.name}"量化策略的具体实施方案，包括：
+1. 策略原理和适用市场环境
+2. 具体的交易规则和参数设置
+3. 风险控制措施和止损策略
+4. 预期收益和最大回撤分析
+5. 实际操作建议和注意事项
+
+策略信息：
+- 策略类型：${content.name}
+- 风险等级：${content.riskText}
+- 预期年化收益：${content.annualReturn}%
+- 最大回撤：${content.maxDrawdown}%
+- 夏普比率：${content.sharpeRatio}`;
+            break;
+        case 'signal':
+            message = `请分析"${content.name}(${content.code})"的交易信号，详细说明：
+1. 信号产生的技术原理
+2. 当前市场环境是否适合该信号
+3. 具体的买入/卖出建议和时机
+4. 风险评估和止损位设置
+5. 后续跟踪要点
+
+信号详情：
+- 股票：${content.name}(${content.code})
+- 信号类型：${content.signal === 'buy' ? '买入' : '卖出'}
+- 策略：${content.strategy}
+- 当前价格：¥${content.price}
+- 置信度：${content.confidence}%
+- 信号时间：${content.time}`;
+            break;
+        case 'factor':
+            message = `请分析多因子选股模型的应用，包括：
+1. 各因子的有效性分析
+2. 因子权重配置建议
+3. 选股策略优化方案
+4. 风险控制和组合管理
+5. 实际操作指导
+
+请基于当前市场环境给出具体的多因子选股建议。`;
+            break;
+        case 'backtest':
+            message = `请分析量化策略的回测结果，包括：
+1. 回测结果的可信度评估
+2. 策略优缺点分析
+3. 市场适应性评价
+4. 实盘交易建议
+5. 风险提示和改进方向
+
+请帮我解读这些回测数据的实际意义。`;
+            break;
         default:
             message = content;
     }

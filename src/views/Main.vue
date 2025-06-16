@@ -157,7 +157,7 @@
                             <div v-if="message.isPersistent" class="recommendation-toolbar">
                                 <div class="toolbar-left">
                                     <span class="recommendation-time">{{ formatRecommendationTime(message.timestamp)
-                                        }}</span>
+                                    }}</span>
                                 </div>
                                 <div class="toolbar-right">
                                     <el-button size="small" text @click="refreshRecommendation(message)"
@@ -655,7 +655,7 @@
                                                 :key="majorCategory" class="sub-sector-group">
                                                 <div class="group-title">
                                                     <span class="group-icon">{{ getMajorSectorIcon(majorCategory)
-                                                        }}</span>
+                                                    }}</span>
                                                     {{ getMajorSectorLabel(majorCategory) }}
                                                 </div>
 
@@ -812,7 +812,7 @@
                                         <span class="change-amount">{{ selectedStock.change >= 0 ? '+' : '' }}{{
                                             selectedStock.change }}</span>
                                         <span class="change-percent">({{ selectedStock.changePercent >= 0 ? '+' : ''
-                                            }}{{
+                                        }}{{
                                                 selectedStock.changePercent }}%)</span>
                                     </div>
                                 </div>
@@ -820,7 +820,7 @@
                                     <div class="stat-item">
                                         <span class="stat-label">今开</span>
                                         <span class="stat-value">{{ (parseFloat(selectedStock.price) - 2.5).toFixed(2)
-                                            }}</span>
+                                        }}</span>
                                     </div>
                                     <div class="stat-item">
                                         <span class="stat-label">昨收</span>
@@ -873,7 +873,7 @@
                         <div class="info-item">
                             <span class="info-label">跌停</span>
                             <span class="info-value down">{{ (parseFloat(selectedStock.price) * 0.9).toFixed(2)
-                                }}</span>
+                            }}</span>
                         </div>
                         <div class="info-item">
                             <span class="info-label">总市值</span>

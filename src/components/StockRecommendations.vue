@@ -18,37 +18,55 @@
         </div>
 
         <div class="recommendations-list">
-            <div v-for="stock in recommendations" :key="stock.code" class="recommendation-item"
-                @click="showStockDetail(stock)">
-                <div class="stock-header">
-                    <div class="stock-info">
-                        <div class="stock-name">{{ stock.name }}</div>
-                        <div class="stock-code">{{ stock.code }}</div>
+            <div v-for="stock in recommendations" :key="stock.code" class="stock-item" @click="showStockDetail(stock)">
+                <div class="stock-info">
+                    <div class="stock-header">
+                        <div class="stock-name-code">
+                            <div class="name-code-row">
+                                <span class="stock-name">{{ stock.name }}</span>
+                                <span class="stock-code">({{ stock.code }})</span>
+                            </div>
+                            <!-- 推荐指数 -->
+                            <div class="recommend-index">
+                                <div class="recommend-stars">
+                                    <span v-for="i in 5" :key="i" :class="['star', i <= Math.floor(stock.recommendIndex) ? 'filled' :
+                                        i <= stock.recommendIndex ? 'half' : 'empty']">
+                                        ★
+                                    </span>
+                                </div>
+                                <span class="recommend-score">{{ stock.recommendIndex }}/5.0</span>
+                                <span :class="['recommend-level', getRecommendLevelClass(stock.recommendLevel)]">
+                                    {{ stock.recommendLevel }}
+                                </span>
+                            </div>
+                        </div>
+                        <div class="stock-price-change">
+                            <span class="current-price">¥{{ stock.price }}</span>
+                            <span :class="['price-change', stock.change >= 0 ? 'positive' : 'negative']">
+                                {{ stock.change >= 0 ? '+' : '' }}{{ stock.change }}
+                                ({{ stock.changePercent >= 0 ? '+' : '' }}{{ stock.changePercent }}%)
+                            </span>
+                        </div>
                     </div>
-                    <div class="stock-score">
-                        <span class="score-label">推荐指数</span>
-                        <span class="score-value" :class="getScoreClass(stock.score)">
-                            {{ stock.score }}
-                        </span>
+
+                    <div class="stock-details">
+                        <div class="detail-row">
+                            <span class="detail-label">目标价：</span>
+                            <span class="detail-value target-price">¥{{ stock.targetPrice }}</span>
+                            <span class="detail-label">预期收益：</span>
+                            <span class="detail-value expected-return">{{ stock.expectedReturn }}</span>
+                        </div>
+                        <div class="detail-row">
+                            <span class="detail-label">风险等级：</span>
+                            <span class="detail-value risk-level">{{ stock.riskLevel }}</span>
+                            <span class="detail-label">所属行业：</span>
+                            <span class="detail-value industry">{{ stock.industry }}</span>
+                        </div>
+                        <div class="stock-reason">
+                            <span class="reason-label">推荐理由：</span>
+                            <span class="reason-text">{{ stock.reason }}</span>
+                        </div>
                     </div>
-                </div>
-
-                <div class="stock-price-info">
-                    <div class="current-price">¥{{ stock.currentPrice }}</div>
-                    <div class="price-change" :class="{ 'positive': stock.change > 0, 'negative': stock.change < 0 }">
-                        {{ stock.change > 0 ? '+' : '' }}{{ stock.change }}%
-                    </div>
-                </div>
-
-                <div class="recommendation-reason">
-                    <div class="reason-title">推荐理由</div>
-                    <div class="reason-content">{{ stock.reason }}</div>
-                </div>
-
-                <div class="recommendation-tags">
-                    <span v-for="tag in stock.tags" :key="tag" class="tag" :class="getTagClass(tag)">
-                        {{ tag }}
-                    </span>
                 </div>
             </div>
         </div>
@@ -76,66 +94,69 @@ const recommendations = ref([
     {
         code: '000001',
         name: '平安银行',
-        currentPrice: '12.45',
-        change: 2.3,
-        score: 8.5,
-        reason: '业绩稳健增长，ROE持续提升，估值处于历史低位，具备较好的投资价值。',
-        tags: ['价值投资', '银行股', '高股息']
+        price: '12.45',
+        change: 0.28,
+        changePercent: 2.3,
+        recommendIndex: 4.2,
+        recommendLevel: '推荐',
+        targetPrice: '15.80',
+        expectedReturn: '+26.9%',
+        riskLevel: '中等',
+        industry: '银行',
+        reason: '业绩稳健增长，ROE持续提升，估值处于历史低位，具备较好的投资价值。'
     },
     {
         code: '000858',
         name: '五粮液',
-        currentPrice: '168.90',
-        change: -1.2,
-        score: 9.2,
-        reason: '白酒龙头企业，品牌价值突出，渠道优势明显，长期成长性确定。',
-        tags: ['消费升级', '白酒', '品牌价值']
+        price: '168.90',
+        change: -2.05,
+        changePercent: -1.2,
+        recommendIndex: 4.6,
+        recommendLevel: '强烈推荐',
+        targetPrice: '195.00',
+        expectedReturn: '+15.5%',
+        riskLevel: '中等',
+        industry: '食品饮料',
+        reason: '白酒龙头企业，品牌价值突出，渠道优势明显，长期成长性确定。'
     },
     {
         code: '000002',
         name: '万科A',
-        currentPrice: '18.76',
-        change: 0.8,
-        score: 7.8,
-        reason: '房地产行业回暖，公司财务稳健，土地储备充足，估值合理。',
-        tags: ['地产龙头', '估值修复', '政策利好']
+        price: '18.76',
+        change: 0.15,
+        changePercent: 0.8,
+        recommendIndex: 3.9,
+        recommendLevel: '推荐',
+        targetPrice: '22.50',
+        expectedReturn: '+19.9%',
+        riskLevel: '中等',
+        industry: '房地产',
+        reason: '房地产行业回暖，公司财务稳健，土地储备充足，估值合理。'
     },
     {
         code: '300750',
         name: '宁德时代',
-        currentPrice: '198.50',
-        change: 3.5,
-        score: 9.0,
-        reason: '新能源汽车产业链核心标的，技术领先，市场份额稳固，成长空间巨大。',
-        tags: ['新能源', '科技成长', '行业龙头']
+        price: '198.50',
+        change: 6.72,
+        changePercent: 3.5,
+        recommendIndex: 4.5,
+        recommendLevel: '强烈推荐',
+        targetPrice: '245.00',
+        expectedReturn: '+23.4%',
+        riskLevel: '较高',
+        industry: '电池',
+        reason: '新能源汽车产业链核心标的，技术领先，市场份额稳固，成长空间巨大。'
     }
 ]);
 
-const getScoreClass = (score) => {
-    // 将10分制转换为100分制进行判断
-    const numScore = score * 10;
-    if (numScore >= 85) return 'excellent';
-    if (numScore >= 75) return 'good';
-    if (numScore >= 65) return 'average';
-    return 'poor';
-};
-
-const getTagClass = (tag) => {
-    const tagClassMap = {
-        '价值投资': 'value',
-        '银行股': 'finance',
-        '高股息': 'dividend',
-        '消费升级': 'consumer',
-        '白酒': 'liquor',
-        '品牌价值': 'brand',
-        '地产龙头': 'realestate',
-        '估值修复': 'valuation',
-        '政策利好': 'policy',
-        '新能源': 'newenergy',
-        '科技成长': 'tech',
-        '行业龙头': 'leader'
+const getRecommendLevelClass = (level) => {
+    const levelClassMap = {
+        '强烈推荐': 'strong-recommend',
+        '推荐': 'recommend',
+        '中性': 'neutral',
+        '谨慎': 'caution'
     };
-    return tagClassMap[tag] || 'default';
+    return levelClassMap[level] || 'neutral';
 };
 
 const refreshRecommendations = () => {
@@ -192,215 +213,213 @@ const viewMoreRecommendations = () => {
     min-height: 0;
 }
 
-.recommendation-item {
-    padding: 16px 20px;
-    border-bottom: 1px solid #f8f9fa;
+.stock-item {
+    background: #f8fafc;
+    border: 1px solid #e2e8f0;
+    border-radius: 12px;
+    padding: 16px;
+    margin: 12px;
+    transition: all 0.2s ease;
     cursor: pointer;
-    transition: all 0.2s;
 }
 
-.recommendation-item:hover {
-    background: #f9fafb;
+.stock-item:hover {
+    background: #f1f5f9;
+    border-color: #cbd5e1;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
 }
 
-.recommendation-item:last-child {
-    border-bottom: none;
+.stock-info {
+    margin-bottom: 12px;
 }
 
 .stock-header {
     display: flex;
     justify-content: space-between;
     align-items: flex-start;
-    margin-bottom: 8px;
+    margin-bottom: 12px;
 }
 
-.stock-info {
-    flex: 1;
+.stock-name-code {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+
+.name-code-row {
+    display: flex;
+    align-items: center;
+    gap: 6px;
 }
 
 .stock-name {
-    font-size: 0.95rem;
+    font-size: 1rem;
     font-weight: 600;
-    color: #18181b;
-    margin-bottom: 2px;
+    color: #1e293b;
 }
 
 .stock-code {
-    font-size: 0.75rem;
-    color: #9ca3af;
+    font-size: 0.875rem;
+    color: #64748b;
+    font-weight: 500;
 }
 
-.stock-score {
+/* 推荐指数样式 */
+.recommend-index {
     display: flex;
-    flex-direction: column;
-    align-items: flex-end;
+    align-items: center;
+    gap: 8px;
+    margin-top: 4px;
+}
+
+.recommend-stars {
+    display: flex;
     gap: 2px;
 }
 
-.score-label {
+.star {
+    font-size: 14px;
+    color: #fbbf24;
+}
+
+.star.filled {
+    color: #f59e0b;
+}
+
+.star.empty {
+    color: #d1d5db;
+}
+
+.recommend-score {
+    font-size: 0.875rem;
+    font-weight: 600;
+    color: #374151;
+}
+
+.recommend-level {
     font-size: 0.75rem;
-    color: #9ca3af;
+    font-weight: 600;
+    padding: 2px 6px;
+    border-radius: 4px;
 }
 
-.score-value {
-    font-size: 1.25rem;
+.recommend-level.strong-recommend {
+    background: #dcfce7;
+    color: #166534;
+}
+
+.recommend-level.recommend {
+    background: #dbeafe;
+    color: #1d4ed8;
+}
+
+.recommend-level.neutral {
+    background: #fef3c7;
+    color: #92400e;
+}
+
+.recommend-level.caution {
+    background: #fee2e2;
+    color: #dc2626;
+}
+
+.stock-price-change {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-end;
+    gap: 4px;
+}
+
+.current-price {
+    font-size: 1.125rem;
     font-weight: 700;
-    padding: 4px 8px;
-    border-radius: 6px;
+    color: #1e293b;
 }
 
-.score-value.excellent {
+.price-change {
+    font-size: 0.875rem;
+    font-weight: 600;
+}
+
+.price-change.positive {
+    color: #dc2626;
+}
+
+.price-change.negative {
+    color: #16a34a;
+}
+
+/* 股票详情样式 */
+.stock-details {
+    margin-top: 12px;
+    padding-top: 12px;
+    border-top: 1px solid #e2e8f0;
+}
+
+.detail-row {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    margin-bottom: 8px;
+    flex-wrap: wrap;
+}
+
+.detail-label {
+    font-size: 0.875rem;
+    color: #64748b;
+    font-weight: 500;
+    min-width: 60px;
+}
+
+.detail-value {
+    font-size: 0.875rem;
+    font-weight: 600;
+}
+
+.target-price {
+    color: #dc2626;
+}
+
+.expected-return {
+    color: #16a34a;
+}
+
+.risk-level {
+    color: #ea580c;
+}
+
+.industry {
+    color: #7c3aed;
+}
+
+.stock-reason {
+    margin-top: 12px;
+    padding-top: 8px;
+    border-top: 1px solid #f1f5f9;
+}
+
+.reason-label {
+    font-size: 0.875rem;
+    color: #64748b;
+    font-weight: 500;
+}
+
+.reason-text {
+    font-size: 0.875rem;
+    color: #374151;
+    line-height: 1.5;
+    margin-top: 4px;
+    display: block;
+}
+
+.price-change.positive {
     color: #059669;
     background: #d1fae5;
 }
 
-.score-value.good {
-    color: #0891b2;
-    background: #cffafe;
-}
-
-.score-value.average {
-    color: #d97706;
-    background: #fef3c7;
-}
-
-.score-value.poor {
+.price-change.negative {
     color: #dc2626;
     background: #fee2e2;
-}
-
-.stock-price-info {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    margin-bottom: 12px;
-}
-
-.current-price {
-    font-size: 1rem;
-    font-weight: 600;
-    color: #18181b;
-}
-
-.price-change {
-    font-size: 0.85rem;
-    font-weight: 500;
-}
-
-.price-change.positive {
-    color: #ef4444;
-}
-
-.price-change.negative {
-    color: #10b981;
-}
-
-.recommendation-reason {
-    margin-bottom: 12px;
-}
-
-.reason-title {
-    font-size: 0.8rem;
-    color: #6b7280;
-    margin-bottom: 4px;
-}
-
-.reason-content {
-    font-size: 0.85rem;
-    color: #374151;
-    line-height: 1.4;
-}
-
-.recommendation-tags {
-    display: flex;
-    flex-wrap: wrap;
-    gap: 6px;
-}
-
-.tag {
-    padding: 2px 8px;
-    border-radius: 12px;
-    font-size: 0.7rem;
-    font-weight: 500;
-    border: 1px solid;
-}
-
-.tag.value {
-    background: #fef3c7;
-    color: #92400e;
-    border-color: #fcd34d;
-}
-
-.tag.finance {
-    background: #dbeafe;
-    color: #1e40af;
-    border-color: #93c5fd;
-}
-
-.tag.dividend {
-    background: #d1fae5;
-    color: #065f46;
-    border-color: #6ee7b7;
-}
-
-.tag.consumer {
-    background: #fce7f3;
-    color: #be185d;
-    border-color: #f9a8d4;
-}
-
-.tag.liquor {
-    background: #fef2f2;
-    color: #991b1b;
-    border-color: #fca5a5;
-}
-
-.tag.brand {
-    background: #ede9fe;
-    color: #5b21b6;
-    border-color: #c4b5fd;
-}
-
-.tag.realestate {
-    background: #f0f9ff;
-    color: #0c4a6e;
-    border-color: #7dd3fc;
-}
-
-.tag.valuation {
-    background: #ecfdf5;
-    color: #14532d;
-    border-color: #86efac;
-}
-
-.tag.policy {
-    background: #fff7ed;
-    color: #9a3412;
-    border-color: #fed7aa;
-}
-
-.tag.newenergy {
-    background: #f0fdf4;
-    color: #166534;
-    border-color: #bbf7d0;
-}
-
-.tag.tech {
-    background: #f8fafc;
-    color: #334155;
-    border-color: #cbd5e1;
-}
-
-.tag.leader {
-    background: #fdf4ff;
-    color: #86198f;
-    border-color: #e879f9;
-}
-
-.tag.default {
-    background: #f3f4f6;
-    color: #6b7280;
-    border-color: #d1d5db;
 }
 
 .card-footer {

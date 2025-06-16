@@ -172,5 +172,11 @@ export const useUserStore = defineStore("user", {
       }
       return false;
     },
+
+    // 充值方法
+    addBalance(amount) {
+      this.balance += parseFloat(amount);
+      localStorage.setItem("balance", this.balance.toString());
+    },
   },
 });

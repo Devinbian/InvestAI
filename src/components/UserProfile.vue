@@ -27,6 +27,10 @@
                             <div class="stat-item">
                                 <span class="stat-value">¥{{ (userStore.balance || 0).toFixed(2) }}</span>
                                 <span class="stat-label">账户余额</span>
+                                <el-button type="primary" size="small" @click="showRecharge = true"
+                                    class="recharge-btn">
+                                    充值
+                                </el-button>
                             </div>
                             <div class="stat-item">
                                 <span class="stat-value">{{ (userStore.watchlist || []).length }}</span>
@@ -238,6 +242,73 @@
                         class="dialog-submit-btn">确认修改</el-button>
                 </template>
             </el-dialog>
+
+            <!-- 充值对话框 -->
+            <el-dialog v-model="showRecharge" title="账户充值" width="450px" class="profile-dialog">
+                <div class="recharge-content">
+                    <div class="current-balance">
+                        <span class="balance-label">当前余额：</span>
+                        <span class="balance-value">¥{{ (userStore.balance || 0).toFixed(2) }}</span>
+                    </div>
+
+                    <div class="recharge-amounts">
+                        <h4>选择充值金额</h4>
+                        <div class="amount-grid">
+                            <div v-for="amount in rechargeAmounts" :key="amount" class="amount-item"
+                                :class="{ active: selectedAmount === amount }" @click="selectedAmount = amount">
+                                ¥{{ amount }}
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="custom-amount">
+                        <h4>自定义金额</h4>
+                        <el-input v-model="customAmount" placeholder="请输入充值金额" type="number" min="1" max="100000"
+                            class="profile-input" @input="selectedAmount = null">
+                            <template #prepend>¥</template>
+                        </el-input>
+                    </div>
+
+                    <div class="payment-methods">
+                        <h4>支付方式</h4>
+                        <div class="payment-grid">
+                            <div class="payment-item" :class="{ active: selectedPayment === 'alipay' }"
+                                @click="selectedPayment = 'alipay'">
+                                <div class="payment-icon alipay">支</div>
+                                <span>支付宝</span>
+                            </div>
+                            <div class="payment-item" :class="{ active: selectedPayment === 'wechat' }"
+                                @click="selectedPayment = 'wechat'">
+                                <div class="payment-icon wechat">微</div>
+                                <span>微信支付</span>
+                            </div>
+                            <div class="payment-item" :class="{ active: selectedPayment === 'bank' }"
+                                @click="selectedPayment = 'bank'">
+                                <div class="payment-icon bank">银</div>
+                                <span>银行卡</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="recharge-summary">
+                        <div class="summary-item">
+                            <span>充值金额：</span>
+                            <span class="amount">¥{{ getFinalAmount() }}</span>
+                        </div>
+                        <div class="summary-item">
+                            <span>充值后余额：</span>
+                            <span class="amount">¥{{ ((userStore.balance || 0) + getFinalAmount()).toFixed(2) }}</span>
+                        </div>
+                    </div>
+                </div>
+                <template #footer>
+                    <el-button @click="showRecharge = false" class="dialog-cancel-btn">取消</el-button>
+                    <el-button type="primary" @click="handleRecharge" :loading="recharging"
+                        :disabled="getFinalAmount() <= 0" class="dialog-submit-btn">
+                        确认充值 ¥{{ getFinalAmount() }}
+                    </el-button>
+                </template>
+            </el-dialog>
         </div>
     </div>
 </template>
@@ -261,6 +332,14 @@ const showBindPhone = ref(false);
 const showBindEmail = ref(false);
 const saving = ref(false);
 const changingPassword = ref(false);
+const showRecharge = ref(false);
+const selectedAmount = ref(null);
+const selectedPayment = ref(null);
+const customAmount = ref(null);
+const recharging = ref(false);
+
+// 充值金额选项
+const rechargeAmounts = [100, 500, 1000, 2000, 5000, 10000];
 
 // 通知设置
 const notificationSettings = reactive({
@@ -369,6 +448,44 @@ const initEditForm = () => {
     editForm.nickname = userStore.userInfo?.nickname || '';
     editForm.phone = userStore.userInfo?.phone || '';
     editForm.email = userStore.userInfo?.email || '';
+};
+
+const getFinalAmount = () => {
+    if (selectedAmount.value) {
+        return selectedAmount.value;
+    } else if (customAmount.value) {
+        return parseFloat(customAmount.value) || 0;
+    } else {
+        return 0;
+    }
+};
+
+const handleRecharge = async () => {
+    const amount = getFinalAmount();
+    if (amount <= 0) {
+        ElMessage.warning('请选择充值金额');
+        return;
+    }
+
+    if (!selectedPayment.value) {
+        ElMessage.warning('请选择支付方式');
+        return;
+    }
+
+    recharging.value = true;
+
+    // 模拟支付过程
+    setTimeout(() => {
+        userStore.addBalance(amount);
+        ElMessage.success(`充值成功！已充值 ¥${amount.toFixed(2)}`);
+
+        // 重置表单
+        selectedAmount.value = null;
+        customAmount.value = null;
+        selectedPayment.value = null;
+        showRecharge.value = false;
+        recharging.value = false;
+    }, 2000);
 };
 
 onMounted(() => {
@@ -530,6 +647,23 @@ onMounted(() => {
     font-weight: 500;
 }
 
+.recharge-btn {
+    margin-top: 8px;
+    background: #3b82f6;
+    border-color: #3b82f6;
+    color: white;
+    border-radius: 6px;
+    font-weight: 500;
+    font-size: 0.75rem;
+    padding: 4px 12px;
+    height: auto;
+}
+
+.recharge-btn:hover {
+    background: #2563eb;
+    border-color: #2563eb;
+}
+
 .header-actions {
     padding-bottom: 8px;
 }
@@ -567,12 +701,37 @@ onMounted(() => {
 
 .tab-content {
     padding-top: 24px;
-    max-height: calc(90vh - 300px);
+    max-height: calc(90vh - 320px);
     overflow-y: auto;
+    padding-bottom: 60px;
+    box-sizing: border-box;
+}
+
+/* Tab内容滚动条样式 */
+.tab-content::-webkit-scrollbar {
+    width: 6px;
+}
+
+.tab-content::-webkit-scrollbar-track {
+    background: #f5f5f5;
+    border-radius: 3px;
+}
+
+.tab-content::-webkit-scrollbar-thumb {
+    background: #d1d5db;
+    border-radius: 3px;
+}
+
+.tab-content::-webkit-scrollbar-thumb:hover {
+    background: #9ca3af;
 }
 
 .info-section {
     margin-bottom: 32px;
+}
+
+.info-section:last-child {
+    margin-bottom: 80px;
 }
 
 .section-title {
@@ -879,6 +1038,160 @@ onMounted(() => {
 :deep(.el-switch.is-checked .el-switch__core) {
     background-color: #18181b;
     border-color: #18181b;
+}
+
+/* 充值对话框样式 */
+.recharge-content {
+    padding: 20px 0;
+}
+
+.current-balance {
+    text-align: center;
+    padding: 20px;
+    background: #f8fafc;
+    border-radius: 12px;
+    margin-bottom: 24px;
+}
+
+.balance-label {
+    font-size: 0.875rem;
+    color: #6b7280;
+    margin-right: 8px;
+}
+
+.balance-value {
+    font-size: 1.5rem;
+    font-weight: 600;
+    color: #18181b;
+}
+
+.recharge-amounts h4,
+.custom-amount h4,
+.payment-methods h4 {
+    font-size: 0.875rem;
+    font-weight: 600;
+    color: #18181b;
+    margin: 0 0 12px 0;
+}
+
+.amount-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 12px;
+    margin-bottom: 24px;
+}
+
+.amount-item {
+    padding: 16px;
+    border: 2px solid #e5e7eb;
+    border-radius: 8px;
+    text-align: center;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    font-weight: 500;
+    color: #374151;
+}
+
+.amount-item:hover {
+    border-color: #3b82f6;
+    background: #eff6ff;
+}
+
+.amount-item.active {
+    border-color: #3b82f6;
+    background: #3b82f6;
+    color: white;
+}
+
+.custom-amount {
+    margin-bottom: 24px;
+}
+
+.payment-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 12px;
+    margin-bottom: 24px;
+}
+
+.payment-item {
+    padding: 16px;
+    border: 2px solid #e5e7eb;
+    border-radius: 8px;
+    text-align: center;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 8px;
+}
+
+.payment-item:hover {
+    border-color: #3b82f6;
+    background: #eff6ff;
+}
+
+.payment-item.active {
+    border-color: #3b82f6;
+    background: #3b82f6;
+    color: white;
+}
+
+.payment-icon {
+    width: 32px;
+    height: 32px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: 600;
+    font-size: 0.875rem;
+}
+
+.payment-icon.alipay {
+    background: #1677ff;
+    color: white;
+}
+
+.payment-icon.wechat {
+    background: #07c160;
+    color: white;
+}
+
+.payment-icon.bank {
+    background: #f56565;
+    color: white;
+}
+
+.payment-item.active .payment-icon {
+    background: rgba(255, 255, 255, 0.2);
+    color: white;
+}
+
+.recharge-summary {
+    background: #f8fafc;
+    border-radius: 8px;
+    padding: 16px;
+    border: 1px solid #e5e7eb;
+}
+
+.summary-item {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 8px;
+}
+
+.summary-item:last-child {
+    margin-bottom: 0;
+    font-weight: 600;
+    color: #18181b;
+}
+
+.summary-item .amount {
+    font-weight: 600;
+    color: #3b82f6;
 }
 
 /* 响应式设计 */

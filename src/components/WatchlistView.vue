@@ -34,52 +34,91 @@
 
             <!-- 自选股列表 -->
             <div v-else class="watchlist-list">
-                <div v-for="stock in userStore.watchlist" :key="stock.code" class="watchlist-item"
+                <div v-for="stock in userStore.watchlist" :key="stock.code" class="stock-item"
                     @click="analyzeStock(stock)">
-                    <div class="stock-main-info">
-                        <div class="stock-basic">
-                            <div class="stock-name">{{ stock.name }}</div>
-                            <div class="stock-code">{{ stock.code }}</div>
-                        </div>
-                        <div class="stock-price-info">
-                            <div class="current-price">¥{{ getCurrentPrice(stock) }}</div>
-                            <div class="price-change" :class="getPriceChangeClass(stock)">
-                                {{ getPriceChangeText(stock) }}
+                    <div class="stock-info">
+                        <div class="stock-header">
+                            <div class="stock-name-code">
+                                <div class="name-code-row">
+                                    <span class="stock-name">{{ stock.name }}</span>
+                                    <span class="stock-code">({{ stock.code }})</span>
+                                </div>
+                                <!-- 自选股状态 -->
+                                <div class="watchlist-status">
+                                    <span class="status-label">关注：</span>
+                                    <span class="status-value">{{ formatAddedTime(stock.addedAt) }}</span>
+                                </div>
+                            </div>
+                            <div class="stock-price-change">
+                                <div class="current-price">¥{{ getCurrentPrice(stock) }}</div>
+                                <div class="price-change" :class="getPriceChangeClass(stock)">
+                                    {{ (stock.change || 0) > 0 ? '📈' : (stock.change || 0) < 0 ? '📉' : '➖' }} </div>
+                                </div>
+                            </div>
+
+                            <div class="stock-details">
+                                <div class="detail-row">
+                                    <span class="detail-label">当前价格：</span>
+                                    <span class="detail-value target-price">¥{{ getCurrentPrice(stock) }}</span>
+                                    <span class="detail-label">涨跌幅：</span>
+                                    <span class="detail-value" :class="getPriceChangeClass(stock)">{{
+                                        getPriceChangeText(stock) }}</span>
+                                </div>
+                                <div class="detail-row">
+                                    <span class="detail-label">所属行业：</span>
+                                    <span class="detail-value industry">{{ stock.industry || '未分类' }}</span>
+                                    <span class="detail-label">推荐等级：</span>
+                                    <span class="detail-value recommend-level">{{ stock.recommendLevel || '中性' }}</span>
+                                </div>
                             </div>
                         </div>
-                    </div>
 
-                    <div class="stock-details">
-                        <div class="stock-industry">{{ stock.industry }}</div>
-                        <div class="added-time">{{ formatAddedTime(stock.addedAt) }}</div>
-                    </div>
-
-                    <div class="stock-actions">
-                        <el-button size="small" text @click.stop="analyzeStock(stock)" class="analyze-btn">
-                            <svg width="12" height="12" viewBox="0 0 24 24" fill="none">
-                                <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"
-                                    stroke="currentColor" stroke-width="2" />
-                            </svg>
-                            分析
-                        </el-button>
-                        <el-button size="small" text @click.stop="removeFromWatchlist(stock.code)" class="remove-btn">
-                            <svg width="12" height="12" viewBox="0 0 24 24" fill="none">
-                                <path d="M18 6L6 18M6 6l12 12" stroke="currentColor" stroke-width="2"
-                                    stroke-linecap="round" />
-                            </svg>
-                            移除
-                        </el-button>
+                        <div class="stock-actions">
+                            <el-button size="small" @click.stop="buyStock(stock)" class="buy-stock-btn-secondary">
+                                <svg width="12" height="12" viewBox="0 0 24 24" fill="none">
+                                    <path d="M12 2v20M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"
+                                        stroke="currentColor" stroke-width="2" />
+                                </svg>
+                                买入
+                            </el-button>
+                            <el-button size="small" @click.stop="showPaidAnalysisDialog(stock)"
+                                class="paid-analysis-btn">
+                                <svg width="12" height="12" viewBox="0 0 24 24" fill="none">
+                                    <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"
+                                        stroke="currentColor" stroke-width="2" />
+                                </svg>
+                                深度分析
+                                <span class="price-tag">¥1</span>
+                            </el-button>
+                            <el-button size="small" @click.stop="showQuantAnalysisDialog(stock)"
+                                class="quant-analysis-btn">
+                                <svg width="12" height="12" viewBox="0 0 24 24" fill="none">
+                                    <path d="M3 3v18h18M7 16l4-4 4 4 4-4" stroke="currentColor" stroke-width="2"
+                                        fill="none" />
+                                </svg>
+                                量化分析
+                                <span class="price-tag">¥1</span>
+                            </el-button>
+                            <el-button size="small" text @click.stop="removeFromWatchlist(stock.code)"
+                                class="remove-watchlist-btn">
+                                <svg width="12" height="12" viewBox="0 0 24 24" fill="none">
+                                    <path
+                                        d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"
+                                        fill="currentColor" />
+                                </svg>
+                                移除关注
+                            </el-button>
+                        </div>
                     </div>
                 </div>
             </div>
-        </div>
 
-        <div v-if="userStore.watchlist.length > 0" class="card-footer">
-            <el-button size="small" text @click="clearAllWatchlist">
-                清空自选股
-            </el-button>
+            <div v-if="userStore.watchlist.length > 0" class="card-footer">
+                <el-button size="small" text @click="clearAllWatchlist">
+                    清空自选股
+                </el-button>
+            </div>
         </div>
-    </div>
 </template>
 
 <script setup>
@@ -146,6 +185,81 @@ const analyzeStock = (stock) => {
         type: 'stock',
         content: stock,
         title: `${stock.name}(${stock.code})股票分析`
+    });
+};
+
+// 买入股票
+const buyStock = (stock) => {
+    emit('send-to-chat', {
+        type: 'buy',
+        content: stock,
+        title: `买入${stock.name}(${stock.code})`
+    });
+};
+
+// 付费深度分析
+const showPaidAnalysisDialog = (stock) => {
+    // 检查余额是否足够
+    if (userStore.balance < 1) {
+        ElMessage.warning('余额不足，请先充值');
+        return;
+    }
+
+    ElMessageBox.confirm(
+        `深度分析 ${stock.name}(${stock.code}) 需要支付 ¥1，是否继续？`,
+        '付费服务确认',
+        {
+            confirmButtonText: '确认支付',
+            cancelButtonText: '取消',
+            type: 'info',
+        }
+    ).then(() => {
+        // 扣费
+        if (userStore.deductBalance(1)) {
+            ElMessage.success('支付成功，正在生成深度分析...');
+            emit('send-to-chat', {
+                type: 'paid-analysis',
+                content: stock,
+                title: `深度分析${stock.name}(${stock.code})`
+            });
+        } else {
+            ElMessage.error('支付失败，余额不足');
+        }
+    }).catch(() => {
+        // 用户取消
+    });
+};
+
+// 付费量化分析
+const showQuantAnalysisDialog = (stock) => {
+    // 检查余额是否足够
+    if (userStore.balance < 1) {
+        ElMessage.warning('余额不足，请先充值');
+        return;
+    }
+
+    ElMessageBox.confirm(
+        `量化分析 ${stock.name}(${stock.code}) 需要支付 ¥1，是否继续？`,
+        '付费服务确认',
+        {
+            confirmButtonText: '确认支付',
+            cancelButtonText: '取消',
+            type: 'info',
+        }
+    ).then(() => {
+        // 扣费
+        if (userStore.deductBalance(1)) {
+            ElMessage.success('支付成功，正在生成量化分析...');
+            emit('send-to-chat', {
+                type: 'quant-analysis',
+                content: stock,
+                title: `量化分析${stock.name}(${stock.code})`
+            });
+        } else {
+            ElMessage.error('支付失败，余额不足');
+        }
+    }).catch(() => {
+        // 用户取消
     });
 };
 
@@ -268,130 +382,253 @@ const refreshWatchlist = () => {
 
 /* 自选股列表样式 */
 .watchlist-list {
-    padding: 8px 0 20px 0;
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+    padding: 16px;
     flex: 1;
     overflow-y: auto;
 }
 
-.watchlist-item {
-    padding: 16px 20px;
-    border-bottom: 1px solid #f8f9fa;
+.stock-item {
+    background: white;
+    border: 1px solid #e5e7eb;
+    border-radius: 12px;
+    padding: 20px;
     cursor: pointer;
-    transition: all 0.2s;
-}
-
-.watchlist-item:hover {
-    background: #f9fafb;
-}
-
-.watchlist-item:last-child {
-    border-bottom: none;
-}
-
-.stock-main-info {
+    transition: all 0.3s ease;
     display: flex;
-    justify-content: space-between;
-    align-items: flex-start;
-    margin-bottom: 8px;
+    flex-direction: column;
+    gap: 16px;
 }
 
-.stock-basic {
+.stock-item:hover {
+    border-color: #d1d5db;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+    transform: translateY(-2px);
+}
+
+.stock-info {
     flex: 1;
 }
 
+.stock-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    margin-bottom: 16px;
+}
+
+.stock-name-code {
+    flex: 1;
+}
+
+.name-code-row {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin-bottom: 8px;
+}
+
 .stock-name {
-    font-size: 0.95rem;
+    font-size: 1.1rem;
     font-weight: 600;
-    color: #18181b;
-    margin-bottom: 2px;
+    color: #1e293b;
 }
 
 .stock-code {
+    font-size: 0.875rem;
+    color: #64748b;
+}
+
+.watchlist-status {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    margin-top: 4px;
+}
+
+.status-label {
     font-size: 0.75rem;
-    color: #9ca3af;
-}
-
-.stock-price-info {
-    text-align: right;
-}
-
-.current-price {
-    font-size: 1rem;
-    font-weight: 600;
-    color: #18181b;
-    margin-bottom: 2px;
-}
-
-.price-change {
-    font-size: 0.8rem;
+    color: #64748b;
     font-weight: 500;
 }
 
+.status-value {
+    font-size: 0.875rem;
+    font-weight: 600;
+    color: #8b5cf6;
+}
+
+.stock-price-change {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.current-price {
+    font-size: 1.1rem;
+    font-weight: 700;
+    color: #1e293b;
+}
+
+.price-change {
+    font-size: 0.875rem;
+    font-weight: 500;
+    padding: 2px 6px;
+    border-radius: 4px;
+}
+
 .price-change.positive {
-    color: #ef4444;
+    color: #059669;
+    background: #d1fae5;
 }
 
 .price-change.negative {
-    color: #10b981;
+    color: #dc2626;
+    background: #fee2e2;
 }
 
 .price-change.neutral {
     color: #6b7280;
+    background: #f3f4f6;
 }
 
 .stock-details {
     display: flex;
-    justify-content: space-between;
+    flex-direction: column;
+    gap: 8px;
+}
+
+.detail-row {
+    display: flex;
     align-items: center;
-    margin-bottom: 12px;
+    gap: 12px;
+    flex-wrap: wrap;
 }
 
-.stock-industry {
-    font-size: 0.8rem;
-    color: #6b7280;
-    background: #f3f4f6;
-    padding: 2px 8px;
-    border-radius: 12px;
+.detail-label {
+    font-size: 0.875rem;
+    color: #64748b;
+    font-weight: 500;
+    min-width: 60px;
 }
 
-.added-time {
-    font-size: 0.75rem;
-    color: #9ca3af;
+.detail-value {
+    font-size: 0.875rem;
+    font-weight: 600;
+}
+
+.target-price {
+    color: #0ea5e9;
+}
+
+.industry {
+    color: #8b5cf6;
+}
+
+.recommend-level {
+    color: #059669;
 }
 
 .stock-actions {
     display: flex;
-    gap: 8px;
+    gap: 6px;
     justify-content: flex-end;
+    padding-top: 12px;
+    border-top: 1px solid #f1f5f9;
+    flex-wrap: wrap;
 }
 
-.analyze-btn,
-.remove-btn {
+.buy-stock-btn-secondary {
     display: flex;
     align-items: center;
-    gap: 4px;
-    font-size: 0.8rem;
-    padding: 4px 8px;
+    gap: 3px;
+    font-size: 0.75rem;
     border-radius: 12px;
-    transition: all 0.2s;
+    padding: 4px 8px;
+    transition: all 0.2s ease;
+    background: #f3f4f6;
+    border-color: #e5e7eb;
+    color: #f59e0b;
 }
 
-.analyze-btn {
-    color: #3b82f6;
+.buy-stock-btn-secondary:hover {
+    background: #e5e7eb;
+    border-color: #d1d5db;
+    color: #d97706;
+    transform: translateY(-1px);
 }
 
-.analyze-btn:hover {
-    background: #eff6ff;
-    color: #2563eb;
+/* 付费功能按钮样式 */
+.paid-analysis-btn,
+.quant-analysis-btn {
+    display: flex;
+    align-items: center;
+    gap: 3px;
+    font-size: 0.75rem;
+    border-radius: 12px;
+    padding: 4px 8px;
+    transition: all 0.2s ease;
+    position: relative;
 }
 
-.remove-btn {
-    color: #ef4444;
+.paid-analysis-btn {
+    background: #f3f4f6;
+    border-color: #e5e7eb;
+    color: #374151;
 }
 
-.remove-btn:hover {
-    background: #fef2f2;
-    color: #dc2626;
+.paid-analysis-btn:hover {
+    background: #e5e7eb;
+    border-color: #d1d5db;
+    color: #1f2937;
+    transform: translateY(-1px);
+}
+
+.quant-analysis-btn {
+    background: #fef3c7;
+    border-color: #fbbf24;
+    color: #92400e;
+}
+
+.quant-analysis-btn:hover {
+    background: #fde68a;
+    border-color: #f59e0b;
+    color: #78350f;
+    transform: translateY(-1px);
+}
+
+.price-tag {
+    background: #ef4444;
+    color: white;
+    font-size: 0.6rem;
+    font-weight: 600;
+    padding: 1px 3px;
+    border-radius: 3px;
+    margin-left: 2px;
+    line-height: 1;
+    min-width: 16px;
+    text-align: center;
+}
+
+.remove-watchlist-btn {
+    display: flex;
+    align-items: center;
+    gap: 3px;
+    font-size: 0.75rem;
+    border-radius: 12px;
+    padding: 4px 8px;
+    transition: all 0.2s ease;
+    background: #10b981;
+    border-color: #10b981;
+    color: white;
+}
+
+.remove-watchlist-btn:hover {
+    background: #059669;
+    border-color: #059669;
+    transform: translateY(-1px);
 }
 
 .card-footer {

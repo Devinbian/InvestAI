@@ -72,49 +72,87 @@
             </div>
 
             <div v-else class="portfolio-list">
-                <div v-for="position in userStore.portfolio" :key="position.code" class="position-item"
+                <div v-for="position in userStore.portfolio" :key="position.code" class="stock-item"
                     @click="analyzeStock(position)">
-                    <div class="position-header">
-                        <div class="stock-info">
-                            <h4 class="stock-name">{{ position.name }}</h4>
-                            <span class="stock-code">{{ position.code }}</span>
+                    <div class="stock-info">
+                        <div class="stock-header">
+                            <div class="stock-name-code">
+                                <div class="name-code-row">
+                                    <span class="stock-name">{{ position.name }}</span>
+                                    <span class="stock-code">({{ position.code }})</span>
+                                </div>
+                                <!-- 持仓盈亏状态 -->
+                                <div class="position-status"
+                                    :class="getPositionProfitLoss(position) >= 0 ? 'profit' : 'loss'">
+                                    <span class="status-label">盈亏：</span>
+                                    <span class="status-value">
+                                        {{ getPositionProfitLoss(position) >= 0 ? '+' : '' }}¥{{
+                                            Math.abs(getPositionProfitLoss(position)).toFixed(2) }}
+                                        ({{ getPositionProfitPercent(position) >= 0 ? '+' : '' }}{{
+                                            getPositionProfitPercent(position).toFixed(2) }}%)
+                                    </span>
+                                </div>
+                            </div>
+                            <div class="stock-price-change">
+                                <div class="current-price">¥{{ getCurrentPrice(position.code) }}</div>
+                                <div class="price-change"
+                                    :class="getPositionProfitLoss(position) >= 0 ? 'positive' : 'negative'">
+                                    {{ getPositionProfitLoss(position) >= 0 ? '+' : '' }}{{
+                                        getPositionProfitPercent(position).toFixed(2) }}%
+                                </div>
+                            </div>
                         </div>
-                        <div class="position-actions">
-                            <el-button size="small" type="danger" @click.stop="showSellDialog(position)"
-                                class="sell-btn">
-                                卖出
-                            </el-button>
+
+                        <div class="stock-details">
+                            <div class="detail-row">
+                                <span class="detail-label">持仓数量：</span>
+                                <span class="detail-value">{{ position.quantity.toLocaleString() }}股</span>
+                                <span class="detail-label">成本价：</span>
+                                <span class="detail-value">¥{{ position.avgPrice.toFixed(2) }}</span>
+                            </div>
+                            <div class="detail-row">
+                                <span class="detail-label">持仓市值：</span>
+                                <span class="detail-value target-price">¥{{ (position.quantity *
+                                    getCurrentPrice(position.code)).toFixed(2) }}</span>
+                                <span class="detail-label">所属行业：</span>
+                                <span class="detail-value industry">{{ position.industry || '未分类' }}</span>
+                            </div>
                         </div>
                     </div>
 
-                    <div class="position-details">
-                        <div class="detail-row">
-                            <span class="detail-label">持仓数量</span>
-                            <span class="detail-value">{{ position.quantity }}股</span>
-                        </div>
-                        <div class="detail-row">
-                            <span class="detail-label">成本价</span>
-                            <span class="detail-value">¥{{ position.avgPrice.toFixed(2) }}</span>
-                        </div>
-                        <div class="detail-row">
-                            <span class="detail-label">当前价</span>
-                            <span class="detail-value current-price">¥{{ getCurrentPrice(position.code) }}</span>
-                        </div>
-                        <div class="detail-row">
-                            <span class="detail-label">盈亏</span>
-                            <span
-                                :class="['detail-value', 'profit-loss', getPositionProfitLoss(position) >= 0 ? 'positive' : 'negative']">
-                                {{ getPositionProfitLoss(position) >= 0 ? '+' : '' }}¥{{
-                                    Math.abs(getPositionProfitLoss(position)).toFixed(2) }}
-                                ({{ getPositionProfitPercent(position) >= 0 ? '+' : '' }}{{
-                                    getPositionProfitPercent(position).toFixed(2) }}%)
-                            </span>
-                        </div>
-                    </div>
-
-                    <div class="position-footer">
-                        <span class="buy-time">买入时间：{{ formatTime(position.buyTime) }}</span>
-                        <div class="industry-tag">{{ position.industry || '未分类' }}</div>
+                    <div class="stock-actions">
+                        <el-button size="small" @click.stop="showSellDialog(position)" class="sell-stock-btn">
+                            <svg width="14" height="14" viewBox="0 0 24 24" fill="none">
+                                <path d="M12 2v20M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"
+                                    stroke="currentColor" stroke-width="2" />
+                            </svg>
+                            卖出
+                        </el-button>
+                        <el-button size="small" @click.stop="showBuyDialog(position)" class="buy-stock-btn-secondary">
+                            <svg width="14" height="14" viewBox="0 0 24 24" fill="none">
+                                <path d="M12 2v20M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"
+                                    stroke="currentColor" stroke-width="2" />
+                            </svg>
+                            加仓
+                        </el-button>
+                        <el-button size="small" @click.stop="showPaidAnalysisDialog(position)"
+                            class="paid-analysis-btn">
+                            <svg width="14" height="14" viewBox="0 0 24 24" fill="none">
+                                <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"
+                                    stroke="currentColor" stroke-width="2" />
+                            </svg>
+                            深度分析
+                            <span class="price-tag">¥1</span>
+                        </el-button>
+                        <el-button size="small" @click.stop="showQuantAnalysisDialog(position)"
+                            class="quant-analysis-btn">
+                            <svg width="14" height="14" viewBox="0 0 24 24" fill="none">
+                                <path d="M3 3v18h18M7 16l4-4 4 4 4-4" stroke="currentColor" stroke-width="2"
+                                    fill="none" />
+                            </svg>
+                            量化分析
+                            <span class="price-tag">¥1</span>
+                        </el-button>
                     </div>
                 </div>
             </div>
@@ -174,7 +212,7 @@
 <script setup>
 import { ref, reactive, computed } from 'vue';
 import { useUserStore } from '../store/user';
-import { ElMessage } from 'element-plus';
+import { ElMessage, ElMessageBox } from 'element-plus';
 
 // 定义emit
 const emit = defineEmits(['send-to-chat']);
@@ -256,6 +294,78 @@ const analyzeStock = (position) => {
         type: 'stock',
         content: position,
         title: `分析${position.name}(${position.code})`
+    });
+};
+
+const showBuyDialog = (position) => {
+    emit('send-to-chat', {
+        type: 'buy',
+        content: position,
+        title: `加仓${position.name}(${position.code})`
+    });
+};
+
+const showPaidAnalysisDialog = (position) => {
+    // 检查余额是否足够
+    if (userStore.balance < 1) {
+        ElMessage.warning('余额不足，请先充值');
+        return;
+    }
+
+    ElMessageBox.confirm(
+        `深度分析 ${position.name}(${position.code}) 需要支付 ¥1，是否继续？`,
+        '付费服务确认',
+        {
+            confirmButtonText: '确认支付',
+            cancelButtonText: '取消',
+            type: 'info',
+        }
+    ).then(() => {
+        // 扣费
+        if (userStore.deductBalance(1)) {
+            ElMessage.success('支付成功，正在生成深度分析...');
+            emit('send-to-chat', {
+                type: 'paid-analysis',
+                content: position,
+                title: `深度分析${position.name}(${position.code})`
+            });
+        } else {
+            ElMessage.error('支付失败，余额不足');
+        }
+    }).catch(() => {
+        // 用户取消
+    });
+};
+
+const showQuantAnalysisDialog = (position) => {
+    // 检查余额是否足够
+    if (userStore.balance < 1) {
+        ElMessage.warning('余额不足，请先充值');
+        return;
+    }
+
+    ElMessageBox.confirm(
+        `量化分析 ${position.name}(${position.code}) 需要支付 ¥1，是否继续？`,
+        '付费服务确认',
+        {
+            confirmButtonText: '确认支付',
+            cancelButtonText: '取消',
+            type: 'info',
+        }
+    ).then(() => {
+        // 扣费
+        if (userStore.deductBalance(1)) {
+            ElMessage.success('支付成功，正在生成量化分析...');
+            emit('send-to-chat', {
+                type: 'quant-analysis',
+                content: position,
+                title: `量化分析${position.name}(${position.code})`
+            });
+        } else {
+            ElMessage.error('支付失败，余额不足');
+        }
+    }).catch(() => {
+        // 用户取消
     });
 };
 
@@ -663,106 +773,242 @@ const confirmSell = async () => {
     gap: 16px;
 }
 
-.position-item {
+.stock-item {
     background: white;
     border: 1px solid #e5e7eb;
     border-radius: 12px;
-    padding: 16px;
+    padding: 20px;
     cursor: pointer;
-    transition: all 0.2s ease;
+    transition: all 0.3s ease;
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
 }
 
-.position-item:hover {
+.stock-item:hover {
     border-color: #d1d5db;
     box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
     transform: translateY(-2px);
 }
 
-.position-header {
+.stock-info {
+    flex: 1;
+}
+
+.stock-header {
     display: flex;
     justify-content: space-between;
     align-items: flex-start;
-    margin-bottom: 12px;
+    margin-bottom: 16px;
 }
 
-.stock-info h4 {
-    font-size: 1rem;
+.stock-name-code {
+    flex: 1;
+}
+
+.name-code-row {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin-bottom: 8px;
+}
+
+.stock-name {
+    font-size: 1.1rem;
     font-weight: 600;
-    color: #18181b;
-    margin: 0 0 4px 0;
+    color: #1e293b;
 }
 
 .stock-code {
+    font-size: 0.875rem;
+    color: #64748b;
+}
+
+.position-status {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    margin-top: 4px;
+}
+
+.status-label {
     font-size: 0.75rem;
-    color: #6b7280;
-    background: #f3f4f6;
+    color: #64748b;
+    font-weight: 500;
+}
+
+.status-value {
+    font-size: 0.875rem;
+    font-weight: 600;
+}
+
+.position-status.profit .status-value {
+    color: #dc2626;
+}
+
+.position-status.loss .status-value {
+    color: #16a34a;
+}
+
+.stock-price-change {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.current-price {
+    font-size: 1.1rem;
+    font-weight: 700;
+    color: #1e293b;
+}
+
+.price-change {
+    font-size: 0.875rem;
+    font-weight: 500;
     padding: 2px 6px;
     border-radius: 4px;
 }
 
-.sell-btn {
-    font-size: 0.75rem;
-    padding: 4px 12px;
-    border-radius: 6px;
+.price-change.positive {
+    color: #059669;
+    background: #d1fae5;
 }
 
-.position-details {
+.price-change.negative {
+    color: #dc2626;
+    background: #fee2e2;
+}
+
+.stock-details {
     display: flex;
     flex-direction: column;
     gap: 8px;
-    margin-bottom: 12px;
 }
 
 .detail-row {
     display: flex;
-    justify-content: space-between;
     align-items: center;
-    font-size: 0.875rem;
+    gap: 12px;
+    flex-wrap: wrap;
 }
 
 .detail-label {
-    color: #6b7280;
+    font-size: 0.875rem;
+    color: #64748b;
+    font-weight: 500;
+    min-width: 60px;
 }
 
 .detail-value {
-    font-weight: 500;
-    color: #18181b;
-}
-
-.detail-value.current-price {
-    color: #3b82f6;
+    font-size: 0.875rem;
     font-weight: 600;
 }
 
-.detail-value.profit-loss.positive {
-    color: #10b981;
-    font-weight: 600;
+.target-price {
+    color: #0ea5e9;
 }
 
-.detail-value.profit-loss.negative {
-    color: #ef4444;
-    font-weight: 600;
+.industry {
+    color: #8b5cf6;
 }
 
-.position-footer {
+.stock-actions {
     display: flex;
-    justify-content: space-between;
-    align-items: center;
+    gap: 8px;
+    justify-content: flex-end;
     padding-top: 12px;
-    border-top: 1px solid #f3f4f6;
+    border-top: 1px solid #f1f5f9;
 }
 
-.buy-time {
-    font-size: 0.75rem;
-    color: #9ca3af;
+.sell-stock-btn {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    font-size: 0.875rem;
+    border-radius: 16px;
+    padding: 6px 12px;
+    transition: all 0.2s ease;
+    background: #ef4444;
+    border-color: #ef4444;
+    color: white;
 }
 
-.industry-tag {
-    font-size: 0.75rem;
-    color: #6366f1;
-    background: #eef2ff;
-    padding: 2px 8px;
-    border-radius: 12px;
+.sell-stock-btn:hover {
+    background: #dc2626;
+    border-color: #dc2626;
+    transform: translateY(-1px);
+}
+
+.buy-stock-btn-secondary {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    font-size: 0.875rem;
+    border-radius: 16px;
+    padding: 6px 12px;
+    transition: all 0.2s ease;
+    background: #f3f4f6;
+    border-color: #e5e7eb;
+    color: #f59e0b;
+}
+
+.buy-stock-btn-secondary:hover {
+    background: #e5e7eb;
+    border-color: #d1d5db;
+    color: #d97706;
+    transform: translateY(-1px);
+}
+
+/* 付费功能按钮样式 */
+.paid-analysis-btn,
+.quant-analysis-btn {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    font-size: 0.875rem;
+    border-radius: 16px;
+    padding: 6px 12px;
+    transition: all 0.2s ease;
+    position: relative;
+}
+
+.paid-analysis-btn {
+    background: #f3f4f6;
+    border-color: #e5e7eb;
+    color: #374151;
+}
+
+.paid-analysis-btn:hover {
+    background: #e5e7eb;
+    border-color: #d1d5db;
+    color: #1f2937;
+    transform: translateY(-1px);
+}
+
+.quant-analysis-btn {
+    background: #fef3c7;
+    border-color: #fbbf24;
+    color: #92400e;
+}
+
+.quant-analysis-btn:hover {
+    background: #fde68a;
+    border-color: #f59e0b;
+    color: #78350f;
+    transform: translateY(-1px);
+}
+
+.price-tag {
+    background: #ef4444;
+    color: white;
+    font-size: 0.7rem;
+    font-weight: 600;
+    padding: 1px 4px;
+    border-radius: 4px;
+    margin-left: 4px;
+    line-height: 1;
+    min-width: 20px;
+    text-align: center;
 }
 
 /* 卖出对话框样式 */

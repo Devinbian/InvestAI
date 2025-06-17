@@ -4,12 +4,7 @@ import { fileURLToPath, URL } from "node:url";
 
 export default defineConfig({
   plugins: [vue()],
-  base:
-    process.env.NODE_ENV === "production"
-      ? process.env.GITHUB_REPOSITORY
-        ? `/${process.env.GITHUB_REPOSITORY.split("/")[1]}/`
-        : "/InvestAI/"
-      : "/",
+  base: process.env.NODE_ENV === "production" ? "/InvestAI/" : "/",
   resolve: {
     alias: {
       "@": fileURLToPath(new URL("./src", import.meta.url)),

@@ -26,7 +26,4 @@ app.use(ElementPlus, {
   locale: zhCn,
 });
 
-// 等待DOM加载完成再挂载
-document.addEventListener("DOMContentLoaded", () => {
-  app.mount("#app");
-});
+app.mount("#app");

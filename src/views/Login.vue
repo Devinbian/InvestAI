@@ -3,7 +3,7 @@
         <div class="login-content">
             <div class="login-left">
                 <div class="brand">
-                    <img src="../assets/logo.svg" alt="Logo" class="logo" />
+                    <img src="/logo.png" alt="InvestAI Logo" class="logo" />
                     <h1>股票智能投资助手</h1>
                     <p class="slogan">AI驱动的智能投资决策平台</p>
                 </div>
@@ -149,6 +149,11 @@ const handleLogin = async () => {
     width: 80px;
     height: 80px;
     margin-bottom: 20px;
+    object-fit: contain;
+    border-radius: 12px;
+    background: rgba(255, 255, 255, 0.95);
+    padding: 8px;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
 }
 
 .slogan {

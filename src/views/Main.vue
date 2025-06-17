@@ -3,7 +3,7 @@
         <!-- 顶部导航栏 -->
         <header class="modern-navbar">
             <div class="navbar-left">
-                <img src="../assets/logo.svg" class="modern-logo" alt="logo" />
+                <img src="/logo.png" class="modern-logo" alt="InvestAI Logo" />
                 <span class="app-title">智投小助</span>
             </div>
             <div class="navbar-right">
@@ -45,27 +45,33 @@
                     <div class="modern-desc">
                         您的AI投资管家——自动分析、个性推荐、智能交易，全程陪伴，让赚钱更轻松
                         <div class="quick-examples">
-                            <div class="examples-header">
-                                <span class="examples-indicator">{{ currentExampleGroupIndex + 1 }}/{{
-                                    exampleGroups.length
-                                }}</span>
-                                <el-button class="refresh-examples-btn" size="small" circle @click="switchExampleGroup"
-                                    :title="`换一批问题 (${currentExampleGroupIndex + 1}/${exampleGroups.length})`">
-                                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none">
-                                        <path d="M3 12a9 9 0 0 1 9-9 9.75 9.75 0 0 1 6.74 2.74L21 8"
-                                            stroke="currentColor" stroke-width="2" fill="none" />
-                                        <path d="M21 3v5h-5" stroke="currentColor" stroke-width="2" fill="none" />
-                                        <path d="M21 12a9 9 0 0 1-9 9 9.75 9.75 0 0 1-6.74-2.74L3 16"
-                                            stroke="currentColor" stroke-width="2" fill="none" />
-                                        <path d="M3 21v-5h5" stroke="currentColor" stroke-width="2" fill="none" />
-                                    </svg>
-                                </el-button>
-                            </div>
                             <div class="examples-content">
                                 <span v-for="example in currentExampleGroup" :key="example" class="example-tag"
                                     @click="setSuggestionText(example)">
                                     {{ example }}
                                 </span>
+                            </div>
+                            <div class="examples-control">
+                                <div class="control-container">
+                                    <span class="examples-label">换一批问题</span>
+                                    <div class="control-group">
+                                        <span class="examples-indicator">{{ currentExampleGroupIndex + 1 }}/{{
+                                            exampleGroups.length }}</span>
+                                        <el-button class="refresh-examples-btn" size="small" @click="switchExampleGroup"
+                                            :title="`点击切换到下一组问题`">
+                                            <svg width="12" height="12" viewBox="0 0 24 24" fill="none">
+                                                <path d="M3 12a9 9 0 0 1 9-9 9.75 9.75 0 0 1 6.74 2.74L21 8"
+                                                    stroke="currentColor" stroke-width="2" fill="none" />
+                                                <path d="M21 3v5h-5" stroke="currentColor" stroke-width="2"
+                                                    fill="none" />
+                                                <path d="M21 12a9 9 0 0 1-9 9 9.75 9.75 0 0 1-6.74-2.74L3 16"
+                                                    stroke="currentColor" stroke-width="2" fill="none" />
+                                                <path d="M3 21v-5h5" stroke="currentColor" stroke-width="2"
+                                                    fill="none" />
+                                            </svg>
+                                        </el-button>
+                                    </div>
+                                </div>
                             </div>
                         </div>
                     </div>
@@ -224,13 +230,13 @@
                                         <div class="asset-amount">
                                             <span class="amount-label">总资产</span>
                                             <span class="amount-value">¥{{ formatCurrency(message.assetData.totalAssets)
-                                            }}</span>
+                                                }}</span>
                                         </div>
                                         <div class="asset-change"
                                             :class="[message.assetData.totalProfitPercent >= 0 ? 'profit' : 'loss']">
                                             <span class="change-icon">{{ message.assetData.totalProfitPercent >= 0 ?
                                                 '📈' : '📉'
-                                            }}</span>
+                                                }}</span>
                                             <span class="change-label">今日盈亏：</span>
                                             <span class="change-text">
                                                 {{ message.assetData.totalProfitPercent >= 0 ? '+' : '' }}¥{{
@@ -256,7 +262,7 @@
                                         <div class="stat-info">
                                             <div class="stat-label">持仓市值</div>
                                             <div class="stat-value">¥{{ formatCurrency(message.assetData.portfolioValue)
-                                            }}
+                                                }}
                                             </div>
                                         </div>
                                     </div>
@@ -317,7 +323,7 @@
                                                         <div class="stock-price-change">
                                                             <span class="current-price">¥{{
                                                                 position.currentPrice.toFixed(2)
-                                                                }}</span>
+                                                            }}</span>
                                                             <span
                                                                 :class="['price-change', position.profitPercent >= 0 ? 'positive' : 'negative']">
                                                                 {{ position.profitPercent >= 0 ? '+' : '' }}¥{{
@@ -331,10 +337,10 @@
                                                             <span class="detail-label">持仓数量：</span>
                                                             <span class="detail-value">{{
                                                                 position.quantity.toLocaleString()
-                                                                }}股</span>
+                                                            }}股</span>
                                                             <span class="detail-label">成本价：</span>
                                                             <span class="detail-value">¥{{ position.avgPrice.toFixed(2)
-                                                                }}</span>
+                                                            }}</span>
                                                         </div>
                                                         <div class="detail-row">
                                                             <span class="detail-label">持仓市值：</span>
@@ -343,7 +349,7 @@
                                                             <span class="detail-label">所属行业：</span>
                                                             <span class="detail-value industry">{{ position.industry ||
                                                                 '未分类'
-                                                                }}</span>
+                                                            }}</span>
                                                         </div>
                                                     </div>
                                                 </div>
@@ -524,7 +530,7 @@
                             <div v-if="message.isPersistent" class="recommendation-toolbar">
                                 <div class="toolbar-left">
                                     <span class="recommendation-time">{{ formatRecommendationTime(message.timestamp)
-                                    }}</span>
+                                        }}</span>
                                 </div>
                                 <div class="toolbar-right">
                                     <el-button size="small" text @click="refreshRecommendation(message)"
@@ -753,7 +759,7 @@
                 <!-- LOGO区域 -->
                 <div class="auth-logo-section">
                     <div class="auth-logo">
-                        <img src="../assets/logo.svg" alt="Logo" class="logo-image" />
+                        <img src="/logo.png" alt="InvestAI Logo" class="logo-image" />
                     </div>
                     <h1 class="auth-main-title">{{ isRegisterMode ? '注册智投小助' : '登录智投小助' }}</h1>
                     <p class="auth-main-subtitle">{{ isRegisterMode ? '创建您的智投小助账号' : '使用您的账号登录智投小助' }}</p>
@@ -840,7 +846,7 @@
             <div class="preferences-container">
                 <div class="preferences-header">
                     <div class="preferences-logo">
-                        <img src="../assets/logo.svg" alt="Logo" class="logo-image" />
+                        <img src="/logo.png" alt="InvestAI Logo" class="logo-image" />
                     </div>
                     <h1 class="preferences-title">完善投资偏好</h1>
                     <p class="preferences-subtitle">帮助我们为您提供更精准的投资建议</p>
@@ -989,92 +995,111 @@
                         <h3 class="step-title">{{ preferenceSteps[3].title }}</h3>
                         <p class="step-desc">{{ preferenceSteps[3].desc }}</p>
 
-                        <div class="sectors-container">
-                            <div class="sectors-layout">
-                                <!-- 左侧：大分类选择 -->
-                                <div class="left-panel">
-                                    <div class="section-header">
-                                        <h4 class="section-title">
-                                            <span class="section-icon">📊</span>
-                                            选择大分类
-                                            <span class="section-limit">(最多选择2个)</span>
-                                        </h4>
-                                        <div class="section-counter">
-                                            已选择 {{ preferencesForm.sectors.majorCategories.length }}/2
-                                        </div>
-                                    </div>
+                        <div class="sectors-container-compact">
+                            <!-- 顶部搜索和统计 -->
+                            <div class="sectors-header">
+                                <div class="search-section">
+                                    <el-input v-model="sectorSearchQuery" placeholder="搜索行业..." class="compact-search"
+                                        clearable @input="handleSectorSearch">
+                                        <template #prefix>
+                                            <svg width="14" height="14" viewBox="0 0 24 24" fill="none">
+                                                <path d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"
+                                                    stroke="currentColor" stroke-width="2" fill="none" />
+                                            </svg>
+                                        </template>
+                                    </el-input>
+                                </div>
+                                <div class="stats-section">
+                                    <span class="stat-chip">大分类 {{ preferencesForm.sectors.majorCategories.length
+                                    }}/2</span>
+                                    <span class="stat-chip">细分 {{ preferencesForm.sectors.subCategories.length
+                                    }}/4</span>
+                                </div>
+                            </div>
 
-                                    <div class="major-sectors-list">
-                                        <div v-for="option in majorSectorOptions" :key="option.value"
-                                            class="major-sector-option" :class="{
-                                                'selected': preferencesForm.sectors.majorCategories.includes(option.value),
-                                                'disabled': !preferencesForm.sectors.majorCategories.includes(option.value) && preferencesForm.sectors.majorCategories.length >= 2
-                                            }" @click="toggleMajorSector(option.value)">
-                                            <div class="sector-icon" :style="{ color: option.color }">{{ option.icon }}
+                            <!-- 左右分栏内容 -->
+                            <div class="sectors-content">
+                                <!-- 搜索结果模式 -->
+                                <div v-if="sectorSearchQuery && filteredSubSectors.length > 0" class="search-mode">
+                                    <div class="search-header">🔍 找到 {{ filteredSubSectors.length }} 个匹配行业</div>
+                                    <div class="search-grid">
+                                        <div v-for="sector in filteredSubSectors" :key="sector.value"
+                                            class="sector-card" :class="{
+                                                'selected': preferencesForm.sectors.subCategories.includes(sector.value),
+                                                'disabled': !preferencesForm.sectors.subCategories.includes(sector.value) && preferencesForm.sectors.subCategories.length >= 4
+                                            }" @click="toggleSubSectorFromSearch(sector)">
+                                            <div class="card-icon">{{ sector.icon }}</div>
+                                            <div class="card-content">
+                                                <div class="card-title" v-html="highlightSearchTerm(sector.label)">
+                                                </div>
+                                                <div class="card-desc" v-html="highlightSearchTerm(sector.desc)"></div>
+                                                <div class="card-parent">{{ getMajorSectorLabel(sector.parent) }}</div>
                                             </div>
-                                            <div class="sector-content">
-                                                <div class="sector-label">{{ option.label }}</div>
-                                                <div class="sector-desc">{{ option.desc }}</div>
-                                            </div>
-                                            <div class="sector-check"
-                                                v-if="preferencesForm.sectors.majorCategories.includes(option.value)">
-                                                ✓
+                                            <div class="card-check"
+                                                v-if="preferencesForm.sectors.subCategories.includes(sector.value)">✓
                                             </div>
                                         </div>
                                     </div>
                                 </div>
 
-                                <!-- 右侧：细分行业选择 -->
-                                <div class="right-panel">
-                                    <div v-if="preferencesForm.sectors.majorCategories.length > 0">
-                                        <div class="section-header">
-                                            <h4 class="section-title">
-                                                <span class="section-icon">🎯</span>
-                                                选择细分行业
-                                                <span class="section-limit">(可选择3-4个)</span>
-                                            </h4>
-                                            <div class="section-counter">
-                                                已选择 {{ preferencesForm.sectors.subCategories.length }}/4
+                                <!-- 无搜索结果 -->
+                                <div v-else-if="sectorSearchQuery && filteredSubSectors.length === 0"
+                                    class="no-results">
+                                    <div class="no-results-content">
+                                        <div class="no-results-icon">🔍</div>
+                                        <div class="no-results-text">未找到匹配的行业</div>
+                                    </div>
+                                </div>
+
+                                <!-- 正常模式：左右分栏 -->
+                                <div v-else class="normal-layout">
+                                    <!-- 左侧：大分类 -->
+                                    <div class="left-section">
+                                        <div class="section-title">📊 选择大分类 (最多2个)</div>
+                                        <div class="major-grid">
+                                            <div v-for="major in majorSectorOptions" :key="major.value"
+                                                class="major-card" :class="{
+                                                    'selected': preferencesForm.sectors.majorCategories.includes(major.value),
+                                                    'disabled': !preferencesForm.sectors.majorCategories.includes(major.value) && preferencesForm.sectors.majorCategories.length >= 2
+                                                }" @click="toggleMajorSector(major.value)">
+                                                <div class="major-icon" :style="{ color: major.color }">{{ major.icon }}
+                                                </div>
+                                                <div class="major-name">{{ major.label }}</div>
+                                                <div class="major-check"
+                                                    v-if="preferencesForm.sectors.majorCategories.includes(major.value)">
+                                                    ✓</div>
                                             </div>
                                         </div>
+                                    </div>
 
-                                        <div class="sub-sectors-container">
-                                            <div v-for="majorCategory in preferencesForm.sectors.majorCategories"
-                                                :key="majorCategory" class="sub-sector-group">
-                                                <div class="group-title">
-                                                    <span class="group-icon">{{ getMajorSectorIcon(majorCategory)
-                                                    }}</span>
-                                                    {{ getMajorSectorLabel(majorCategory) }}
-                                                </div>
-
-                                                <div class="sub-sectors-grid">
-                                                    <div v-for="subOption in getSubSectorsByParent(majorCategory)"
-                                                        :key="subOption.value" class="sub-sector-option" :class="{
-                                                            'selected': preferencesForm.sectors.subCategories.includes(subOption.value),
-                                                            'disabled': !preferencesForm.sectors.subCategories.includes(subOption.value) && preferencesForm.sectors.subCategories.length >= 4
-                                                        }" @click="toggleSubSector(subOption.value)">
-                                                        <div class="sub-sector-icon">{{ subOption.icon }}</div>
-                                                        <div class="sub-sector-content">
-                                                            <div class="sub-sector-label">{{ subOption.label }}</div>
-                                                            <div class="sub-sector-desc">{{ subOption.desc }}</div>
-                                                            <div class="sub-sector-examples">{{ subOption.examples }}
-                                                            </div>
-                                                        </div>
-                                                        <div class="sub-sector-check"
-                                                            v-if="preferencesForm.sectors.subCategories.includes(subOption.value)">
-                                                            ✓
+                                    <!-- 右侧：细分行业 -->
+                                    <div class="right-section">
+                                        <div v-if="preferencesForm.sectors.majorCategories.length > 0">
+                                            <div class="section-title">🎯 选择细分行业 (3-4个)</div>
+                                            <div class="sub-grid">
+                                                <div v-for="majorCategory in preferencesForm.sectors.majorCategories"
+                                                    :key="majorCategory" class="sub-group">
+                                                    <div class="group-header">{{ getMajorSectorIcon(majorCategory) }} {{
+                                                        getMajorSectorLabel(majorCategory) }}</div>
+                                                    <div class="sub-cards">
+                                                        <div v-for="sub in getSubSectorsByParent(majorCategory)"
+                                                            :key="sub.value" class="sub-card" :class="{
+                                                                'selected': preferencesForm.sectors.subCategories.includes(sub.value),
+                                                                'disabled': !preferencesForm.sectors.subCategories.includes(sub.value) && preferencesForm.sectors.subCategories.length >= 4
+                                                            }" @click="toggleSubSector(sub.value)">
+                                                            <div class="sub-icon">{{ sub.icon }}</div>
+                                                            <div class="sub-name">{{ sub.label }}</div>
+                                                            <div class="sub-check"
+                                                                v-if="preferencesForm.sectors.subCategories.includes(sub.value)">
+                                                                ✓</div>
                                                         </div>
                                                     </div>
                                                 </div>
                                             </div>
                                         </div>
-                                    </div>
-
-                                    <!-- 选择提示 -->
-                                    <div class="sectors-hint" v-else>
-                                        <div class="hint-icon">💡</div>
-                                        <div class="hint-text">
-                                            请先在左侧选择您感兴趣的大分类板块，然后在这里选择具体的细分行业
+                                        <div v-else class="selection-hint">
+                                            <div class="hint-icon">💡</div>
+                                            <div class="hint-text">请先在左侧选择大分类</div>
                                         </div>
                                     </div>
                                 </div>
@@ -1116,7 +1141,7 @@
             <div class="recovery-container">
                 <div class="recovery-header">
                     <div class="recovery-logo">
-                        <img src="../assets/logo.svg" alt="Logo" class="logo-image" />
+                        <img src="/logo.png" alt="InvestAI Logo" class="logo-image" />
                     </div>
                     <h1 class="recovery-title">找回账号</h1>
                     <p class="recovery-subtitle">请输入您的注册手机号或邮箱，我们将发送验证码帮您重置密码</p>
@@ -1200,7 +1225,7 @@
                                         <span class="change-amount">{{ selectedStock.change >= 0 ? '+' : '' }}{{
                                             selectedStock.change }}</span>
                                         <span class="change-percent">({{ selectedStock.changePercent >= 0 ? '+' : ''
-                                        }}{{
+                                            }}{{
                                                 selectedStock.changePercent }}%)</span>
                                     </div>
                                 </div>
@@ -1208,7 +1233,7 @@
                                     <div class="stat-item">
                                         <span class="stat-label">今开</span>
                                         <span class="stat-value">{{ (parseFloat(selectedStock.price) - 2.5).toFixed(2)
-                                        }}</span>
+                                            }}</span>
                                     </div>
                                     <div class="stat-item">
                                         <span class="stat-label">昨收</span>
@@ -1272,7 +1297,7 @@
                         <div class="info-item">
                             <span class="info-label">跌停</span>
                             <span class="info-value down">{{ (parseFloat(selectedStock.price) * 0.9).toFixed(2)
-                            }}</span>
+                                }}</span>
                         </div>
                         <div class="info-item">
                             <span class="info-label">总市值</span>
@@ -1475,6 +1500,13 @@
 
         <!-- 个人中心 -->
         <UserProfile v-if="showUserProfile" @close="closeUserProfile" />
+
+        <!-- 版权信息 -->
+        <div class="copyright-footer">
+            <div class="copyright-content">
+                <p>&copy; 2024 上海九方云智能科技有限公司 版权所有</p>
+            </div>
+        </div>
     </div>
 </template>
 
@@ -1498,6 +1530,10 @@ const showChatShortcuts = ref(false); // 控制聊天模式下的快捷操作显
 
 // 预置问题组轮换
 const currentExampleGroupIndex = ref(0);
+
+// 板块搜索相关
+const sectorSearchQuery = ref('');
+const filteredSubSectors = ref([]);
 const exampleGroups = [
     [
         '我刚开始投资，应该从哪里入手？',
@@ -3088,6 +3124,47 @@ const getSubSectorsByParent = (parentValue) => {
     return subSectorOptions.filter(sub => sub.parent === parentValue);
 };
 
+// 板块搜索功能
+const handleSectorSearch = () => {
+    if (!sectorSearchQuery.value.trim()) {
+        filteredSubSectors.value = [];
+        return;
+    }
+
+    const query = sectorSearchQuery.value.toLowerCase().trim();
+    filteredSubSectors.value = subSectorOptions.filter(sector => {
+        return sector.label.toLowerCase().includes(query) ||
+            sector.desc.toLowerCase().includes(query) ||
+            sector.examples.toLowerCase().includes(query);
+    });
+};
+
+// 高亮搜索关键词
+const highlightSearchTerm = (text) => {
+    if (!sectorSearchQuery.value.trim()) return text;
+
+    const query = sectorSearchQuery.value.trim();
+    const regex = new RegExp(`(${query})`, 'gi');
+    return text.replace(regex, '<mark class="search-highlight">$1</mark>');
+};
+
+// 从搜索结果中选择板块
+const toggleSubSectorFromSearch = (subOption) => {
+    // 首先确保相应的大分类已选中
+    if (!preferencesForm.sectors.majorCategories.includes(subOption.parent)) {
+        // 如果大分类未选择且还可以选择，自动添加大分类
+        if (preferencesForm.sectors.majorCategories.length < 2) {
+            preferencesForm.sectors.majorCategories.push(subOption.parent);
+        } else {
+            ElMessage.warning('请先移除一个大分类，再选择此细分行业');
+            return;
+        }
+    }
+
+    // 然后切换细分行业
+    toggleSubSector(subOption.value);
+};
+
 const getRiskLevelText = (level) => {
     const map = {
         'conservative': '保守型',
@@ -3679,7 +3756,11 @@ body.onboarding-mode {
 .modern-logo {
     width: 36px;
     height: 36px;
-    filter: brightness(0) saturate(100%) invert(9%) sepia(7%) saturate(1115%) hue-rotate(202deg) brightness(95%) contrast(95%);
+    object-fit: contain;
+    border-radius: 6px;
+    background: rgba(255, 255, 255, 0.9);
+    padding: 2px;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
 }
 
 .app-title {
@@ -3783,18 +3864,59 @@ body.onboarding-mode {
     margin-top: 16px;
 }
 
-.examples-header {
+.examples-content {
     display: flex;
-    justify-content: space-between;
+    flex-wrap: wrap;
+    gap: 8px;
+    justify-content: center;
+    margin-bottom: 16px;
+}
+
+.examples-control {
+    display: flex;
+    justify-content: center;
+    margin-top: 8px;
+}
+
+.control-container {
+    display: flex;
     align-items: center;
-    margin-bottom: 12px;
-    padding: 0 4px;
+    gap: 12px;
+    padding: 8px 16px;
+    background: rgba(248, 250, 252, 0.8);
+    border: 1px solid rgba(226, 232, 240, 0.6);
+    border-radius: 20px;
+    backdrop-filter: blur(4px);
+    transition: all 0.2s ease;
+}
+
+.control-container:hover {
+    background: rgba(248, 250, 252, 0.9);
+    border-color: rgba(59, 130, 246, 0.2);
+    box-shadow: 0 2px 8px rgba(59, 130, 246, 0.1);
+}
+
+.examples-label {
+    font-size: 0.75rem;
+    color: #64748b;
+    font-weight: 500;
+    white-space: nowrap;
+}
+
+.control-group {
+    display: flex;
+    align-items: center;
+    gap: 8px;
 }
 
 .examples-indicator {
     font-size: 0.75rem;
-    color: #64748b;
-    font-weight: 500;
+    color: #475569;
+    font-weight: 600;
+    padding: 2px 8px;
+    background: rgba(59, 130, 246, 0.1);
+    border-radius: 10px;
+    border: 1px solid rgba(59, 130, 246, 0.2);
 }
 
 .refresh-examples-btn {
@@ -3802,19 +3924,20 @@ body.onboarding-mode {
     border: 1px solid rgba(59, 130, 246, 0.2);
     color: #1d4ed8;
     transition: all 0.2s ease;
+    border-radius: 50%;
+    width: 28px;
+    height: 28px;
+    padding: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
 }
 
 .refresh-examples-btn:hover {
-    background: rgba(59, 130, 246, 0.15);
-    border-color: rgba(59, 130, 246, 0.3);
-    transform: scale(1.05);
-}
-
-.examples-content {
-    display: flex;
-    flex-wrap: wrap;
-    gap: 8px;
-    justify-content: center;
+    background: rgba(59, 130, 246, 0.2);
+    border-color: rgba(59, 130, 246, 0.4);
+    transform: rotate(180deg) scale(1.1);
+    box-shadow: 0 2px 6px rgba(59, 130, 246, 0.3);
 }
 
 .example-tag {
@@ -5629,9 +5752,13 @@ body {
 }
 
 .logo-image {
-    width: 40px;
-    height: 40px;
-    filter: brightness(0) invert(1);
+    width: 80px;
+    height: 80px;
+    object-fit: contain;
+    border-radius: 8px;
+    background: rgba(255, 255, 255, 0.95);
+    padding: 4px;
+    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.1);
 }
 
 .auth-main-title {
@@ -5898,10 +6025,6 @@ body {
 }
 
 .recovery-logo {
-    width: 48px;
-    height: 48px;
-    background: #18181b;
-    border-radius: 50%;
     display: inline-flex;
     align-items: center;
     justify-content: center;
@@ -5909,9 +6032,13 @@ body {
 }
 
 .recovery-logo .logo-image {
-    width: 24px;
-    height: 24px;
-    filter: brightness(0) invert(1);
+    width: 48px;
+    height: 48px;
+    object-fit: contain;
+    border-radius: 12px;
+    background: rgba(255, 255, 255, 0.95);
+    padding: 8px;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
 }
 
 .recovery-title {
@@ -6120,10 +6247,6 @@ body {
 }
 
 .preferences-logo {
-    width: 48px;
-    height: 48px;
-    background: #18181b;
-    border-radius: 50%;
     display: inline-flex;
     align-items: center;
     justify-content: center;
@@ -6131,9 +6254,13 @@ body {
 }
 
 .preferences-logo .logo-image {
-    width: 24px;
-    height: 24px;
-    filter: brightness(0) invert(1);
+    width: 48px;
+    height: 48px;
+    object-fit: contain;
+    border-radius: 12px;
+    background: rgba(255, 255, 255, 0.95);
+    padding: 8px;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
 }
 
 .preferences-title {
@@ -6663,16 +6790,583 @@ body {
     font-style: italic;
 }
 
-/* 关注板块选项 */
+/* 紧凑的左右分栏板块选择布局 */
+.sectors-container-compact {
+    width: 100%;
+    max-width: 900px;
+    margin: 0 auto;
+}
+
+/* 顶部搜索和统计栏 */
+.sectors-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 16px;
+    margin-bottom: 16px;
+    padding: 12px 16px;
+    background: linear-gradient(135deg, #f8fafc 0%, #f1f5f9 100%);
+    border: 1px solid #e2e8f0;
+    border-radius: 10px;
+}
+
+.search-section {
+    flex: 1;
+    max-width: 300px;
+}
+
+:deep(.compact-search .el-input__wrapper) {
+    border-radius: 8px !important;
+    border: 1px solid #d1d5db !important;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1) !important;
+    transition: all 0.2s ease !important;
+}
+
+:deep(.compact-search .el-input__wrapper:hover) {
+    border-color: #9ca3af !important;
+    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.15) !important;
+}
+
+:deep(.compact-search.is-focus .el-input__wrapper) {
+    border-color: #3b82f6 !important;
+    box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.15) !important;
+}
+
+.stats-section {
+    display: flex;
+    gap: 8px;
+}
+
+.stat-chip {
+    font-size: 0.75rem;
+    color: #059669;
+    font-weight: 600;
+    background: #d1fae5;
+    padding: 4px 10px;
+    border-radius: 16px;
+    white-space: nowrap;
+}
+
+/* 主要内容区域 */
+.sectors-content {
+    min-height: 320px;
+    border: 1px solid #e5e7eb;
+    border-radius: 10px;
+    background: white;
+    overflow: hidden;
+}
+
+/* 搜索模式 */
+.search-mode {
+    padding: 16px;
+}
+
+.search-header {
+    background: #3b82f6;
+    color: white;
+    padding: 8px 12px;
+    font-size: 0.875rem;
+    font-weight: 500;
+    border-radius: 6px;
+    margin-bottom: 12px;
+}
+
+.search-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+    gap: 12px;
+}
+
+.sector-card {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 12px;
+    border: 1px solid #e5e7eb;
+    border-radius: 8px;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    background: white;
+}
+
+.sector-card:hover:not(.disabled) {
+    background: #f8fafc;
+    border-color: #cbd5e1;
+    transform: translateY(-1px);
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+}
+
+.sector-card.selected {
+    background: rgba(59, 130, 246, 0.05);
+    border-color: #3b82f6;
+    box-shadow: 0 0 0 1px rgba(59, 130, 246, 0.2);
+}
+
+.sector-card.disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+}
+
+.card-icon {
+    font-size: 1.25rem;
+    flex-shrink: 0;
+    width: 32px;
+    text-align: center;
+}
+
+.card-content {
+    flex: 1;
+    min-width: 0;
+}
+
+.card-title {
+    font-size: 0.875rem;
+    font-weight: 600;
+    color: #18181b;
+    margin-bottom: 2px;
+    line-height: 1.3;
+}
+
+.card-desc {
+    font-size: 0.75rem;
+    color: #6b7280;
+    line-height: 1.3;
+    margin-bottom: 2px;
+}
+
+.card-parent {
+    font-size: 0.7rem;
+    color: #9ca3af;
+    background: rgba(107, 114, 128, 0.1);
+    padding: 1px 4px;
+    border-radius: 3px;
+    display: inline-block;
+}
+
+.card-check {
+    width: 20px;
+    height: 20px;
+    background: #3b82f6;
+    color: white;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 12px;
+    font-weight: bold;
+    flex-shrink: 0;
+}
+
+/* 无搜索结果 */
+.no-results {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    min-height: 200px;
+}
+
+.no-results-content {
+    text-align: center;
+    color: #6b7280;
+}
+
+.no-results-icon {
+    font-size: 2rem;
+    margin-bottom: 8px;
+    opacity: 0.6;
+}
+
+.no-results-text {
+    font-size: 0.875rem;
+}
+
+/* 正常模式：左右分栏 */
+.normal-layout {
+    display: flex;
+    height: 320px;
+}
+
+/* 左侧：大分类 */
+.left-section {
+    width: 40%;
+    border-right: 1px solid #e5e7eb;
+    display: flex;
+    flex-direction: column;
+}
+
+.section-title {
+    font-size: 0.875rem;
+    font-weight: 600;
+    color: #374151;
+    padding: 12px 16px;
+    background: #f8fafc;
+    border-bottom: 1px solid #e5e7eb;
+    margin: 0;
+}
+
+.major-grid {
+    flex: 1;
+    padding: 12px;
+    overflow-y: auto;
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: 8px;
+    align-content: start;
+}
+
+.major-card {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 12px;
+    border: 1px solid #e5e7eb;
+    border-radius: 8px;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    background: white;
+    position: relative;
+}
+
+.major-card:hover:not(.disabled) {
+    background: #f8fafc;
+    border-color: #cbd5e1;
+    transform: translateY(-1px);
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+}
+
+.major-card.selected {
+    background: rgba(59, 130, 246, 0.05);
+    border-color: #3b82f6;
+    box-shadow: 0 0 0 1px rgba(59, 130, 246, 0.2);
+}
+
+.major-card.disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+}
+
+.major-icon {
+    font-size: 1.5rem;
+    flex-shrink: 0;
+    width: 36px;
+    text-align: center;
+}
+
+.major-name {
+    flex: 1;
+    font-size: 0.875rem;
+    font-weight: 600;
+    color: #18181b;
+    line-height: 1.3;
+}
+
+.major-check {
+    width: 18px;
+    height: 18px;
+    background: #3b82f6;
+    color: white;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 10px;
+    font-weight: bold;
+    flex-shrink: 0;
+}
+
+/* 右侧：细分行业 */
+.right-section {
+    width: 60%;
+    display: flex;
+    flex-direction: column;
+}
+
+.sub-grid {
+    flex: 1;
+    padding: 12px;
+    overflow-y: auto;
+}
+
+.sub-group {
+    margin-bottom: 16px;
+}
+
+.sub-group:last-child {
+    margin-bottom: 0;
+}
+
+.group-header {
+    font-size: 0.75rem;
+    font-weight: 600;
+    color: #3730a3;
+    background: #e0e7ff;
+    padding: 6px 12px;
+    border-radius: 6px;
+    margin-bottom: 8px;
+}
+
+.sub-cards {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(120px, 1fr));
+    gap: 6px;
+}
+
+.sub-card {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 4px;
+    padding: 8px 6px;
+    border: 1px solid #e5e7eb;
+    border-radius: 6px;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    background: white;
+    text-align: center;
+    position: relative;
+    min-height: 60px;
+}
+
+.sub-card:hover:not(.disabled) {
+    background: #f8fafc;
+    border-color: #cbd5e1;
+    transform: translateY(-1px);
+    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.1);
+}
+
+.sub-card.selected {
+    background: rgba(59, 130, 246, 0.05);
+    border-color: #3b82f6;
+    box-shadow: 0 0 0 1px rgba(59, 130, 246, 0.2);
+}
+
+.sub-card.disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+}
+
+.sub-icon {
+    font-size: 1rem;
+    line-height: 1;
+}
+
+.sub-name {
+    font-size: 0.75rem;
+    font-weight: 500;
+    color: #18181b;
+    line-height: 1.2;
+    flex: 1;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.sub-check {
+    position: absolute;
+    top: -2px;
+    right: -2px;
+    width: 14px;
+    height: 14px;
+    background: #3b82f6;
+    color: white;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 8px;
+    font-weight: bold;
+    border: 2px solid white;
+}
+
+/* 提示信息 */
+.selection-hint {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    height: 100%;
+    padding: 20px;
+    background: #fef3c7;
+    color: #92400e;
+    text-align: center;
+}
+
+.hint-icon {
+    font-size: 2rem;
+    margin-bottom: 8px;
+}
+
+.hint-text {
+    font-size: 0.875rem;
+    line-height: 1.4;
+}
+
+/* 自定义滚动条 */
+.major-grid::-webkit-scrollbar,
+.sub-grid::-webkit-scrollbar {
+    width: 4px;
+}
+
+.major-grid::-webkit-scrollbar-track,
+.sub-grid::-webkit-scrollbar-track {
+    background: #f1f5f9;
+    border-radius: 2px;
+}
+
+.major-grid::-webkit-scrollbar-thumb,
+.sub-grid::-webkit-scrollbar-thumb {
+    background: #cbd5e1;
+    border-radius: 2px;
+    transition: background 0.2s ease;
+}
+
+.major-grid::-webkit-scrollbar-thumb:hover,
+.sub-grid::-webkit-scrollbar-thumb:hover {
+    background: #94a3b8;
+}
+
+/* 搜索高亮 */
+.search-highlight {
+    background: #fef3c7;
+    color: #92400e;
+    padding: 1px 2px;
+    border-radius: 2px;
+    font-weight: 600;
+}
+
+/* 老的样式保留（防止其他地方使用） */
 .sectors-container {
     max-width: 1100px;
     margin: 0 auto;
 }
 
+/* 搜索功能样式 */
+.sector-search-container {
+    margin-bottom: 16px;
+    padding: 12px;
+    background: rgba(248, 250, 252, 0.8);
+    border: 1px solid rgba(226, 232, 240, 0.6);
+    border-radius: 8px;
+    backdrop-filter: blur(4px);
+}
+
+.sector-search-input {
+    margin-bottom: 6px;
+}
+
+:deep(.sector-search-input .el-input__wrapper) {
+    border-radius: 8px !important;
+    border: 1px solid #d1d5db !important;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1) !important;
+    transition: all 0.2s ease !important;
+}
+
+:deep(.sector-search-input .el-input__wrapper:hover) {
+    border-color: #9ca3af !important;
+    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.15) !important;
+}
+
+:deep(.sector-search-input.is-focus .el-input__wrapper) {
+    border-color: #3b82f6 !important;
+    box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.15) !important;
+}
+
+.search-results-hint {
+    font-size: 0.875rem;
+    color: #059669;
+    font-weight: 500;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+}
+
+.search-results-hint::before {
+    content: '✓';
+    font-weight: 600;
+}
+
+.search-no-results {
+    font-size: 0.875rem;
+    color: #dc2626;
+    font-weight: 500;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+}
+
+.search-no-results::before {
+    content: '!';
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 16px;
+    height: 16px;
+    background: #fef2f2;
+    border: 1px solid #fecaca;
+    border-radius: 50%;
+    font-size: 0.75rem;
+    font-weight: 600;
+}
+
+/* 搜索结果高亮 */
+.search-highlight {
+    background: #fef3c7;
+    color: #92400e;
+    padding: 1px 2px;
+    border-radius: 2px;
+    font-weight: 600;
+}
+
+/* 搜索结果组样式 */
+.search-results-group {
+    border: 1px solid #3b82f6;
+    border-radius: 8px;
+    background: rgba(59, 130, 246, 0.02);
+}
+
+.search-group-title {
+    background: #3b82f6;
+    color: white;
+    margin: -1px -1px 10px -1px;
+    padding: 8px 12px;
+    border-radius: 7px 7px 0 0;
+    font-size: 0.85rem;
+}
+
+/* 搜索匹配项样式增强 */
+.sub-sector-option.search-match {
+    border: 1px solid #e0e7ff;
+    background: rgba(245, 247, 255, 0.8);
+}
+
+.sub-sector-option.search-match:hover {
+    border-color: #c7d2fe;
+    background: rgba(238, 242, 255, 0.9);
+    box-shadow: 0 2px 8px rgba(59, 130, 246, 0.15);
+}
+
+.sub-sector-option.search-match.selected {
+    border-color: #3b82f6;
+    background: rgba(219, 234, 254, 0.8);
+}
+
+/* 搜索结果中显示所属大分类 */
+.sub-sector-parent {
+    font-size: 0.65rem;
+    color: #6b7280;
+    margin-top: 3px;
+    padding: 1px 4px;
+    background: rgba(107, 114, 128, 0.1);
+    border-radius: 3px;
+    display: inline-block;
+    line-height: 1.2;
+}
+
 .sectors-layout {
     display: flex;
     gap: 24px;
-    min-height: 500px;
+    min-height: 480px;
+    max-height: 580px;
 }
 
 .left-panel {
@@ -6689,9 +7383,9 @@ body {
     border-radius: 12px;
     padding: 20px;
     border: 1px solid #e5e7eb;
-    min-height: 460px;
     display: flex;
     flex-direction: column;
+    min-height: 0;
 }
 
 .sector-section {
@@ -6702,18 +7396,19 @@ body {
     display: flex;
     justify-content: space-between;
     align-items: center;
-    margin-bottom: 20px;
-    padding-bottom: 12px;
-    border-bottom: 2px solid #f3f4f6;
+    margin-bottom: 16px;
+    padding-bottom: 8px;
+    border-bottom: 1px solid #e5e7eb;
+    flex-shrink: 0;
 }
 
 .section-title {
-    font-size: 1.1rem;
+    font-size: 1rem;
     font-weight: 600;
     color: #18181b;
     display: flex;
     align-items: center;
-    gap: 8px;
+    gap: 6px;
     margin: 0;
 }
 
@@ -6817,24 +7512,47 @@ body {
 .sub-sectors-container {
     display: flex;
     flex-direction: column;
-    gap: 24px;
+    gap: 16px;
+    flex: 1;
+    overflow-y: auto;
+    padding-right: 8px;
+}
+
+/* 自定义滚动条样式 */
+.sub-sectors-container::-webkit-scrollbar {
+    width: 6px;
+}
+
+.sub-sectors-container::-webkit-scrollbar-track {
+    background: #f1f5f9;
+    border-radius: 3px;
+}
+
+.sub-sectors-container::-webkit-scrollbar-thumb {
+    background: #cbd5e1;
+    border-radius: 3px;
+    transition: background 0.2s ease;
+}
+
+.sub-sectors-container::-webkit-scrollbar-thumb:hover {
+    background: #94a3b8;
 }
 
 .sub-sector-group {
     border: 1px solid #e5e7eb;
-    border-radius: 12px;
-    padding: 20px;
+    border-radius: 8px;
+    padding: 12px;
     background: #fafbfc;
 }
 
 .group-title {
-    font-size: 1rem;
+    font-size: 0.9rem;
     font-weight: 600;
     color: #18181b;
-    margin-bottom: 16px;
+    margin-bottom: 12px;
     display: flex;
     align-items: center;
-    gap: 8px;
+    gap: 6px;
 }
 
 .group-icon {
@@ -6843,21 +7561,22 @@ body {
 
 .sub-sectors-grid {
     display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
     gap: 10px;
 }
 
 .sub-sector-option {
     border: 1px solid #e5e7eb;
-    border-radius: 8px;
-    padding: 14px;
+    border-radius: 6px;
+    padding: 10px;
     transition: all 0.2s ease;
     cursor: pointer;
     display: flex;
     align-items: flex-start;
-    gap: 10px;
+    gap: 8px;
     position: relative;
     background: white;
+    min-height: 85px;
 }
 
 .sub-sector-option:hover:not(.disabled) {
@@ -6888,23 +7607,25 @@ body {
 }
 
 .sub-sector-label {
-    font-size: 0.9rem;
+    font-size: 0.85rem;
     font-weight: 600;
     color: #18181b;
-    margin-bottom: 4px;
+    margin-bottom: 3px;
+    line-height: 1.2;
 }
 
 .sub-sector-desc {
-    font-size: 0.8rem;
+    font-size: 0.75rem;
     color: #6b7280;
     line-height: 1.3;
-    margin-bottom: 4px;
+    margin-bottom: 3px;
 }
 
 .sub-sector-examples {
-    font-size: 0.75rem;
+    font-size: 0.7rem;
     color: #9ca3af;
     font-style: italic;
+    line-height: 1.2;
 }
 
 .sub-sector-check {
@@ -8455,6 +9176,43 @@ body {
 
     .action-btn {
         width: 100%;
+    }
+}
+
+/* 版权信息样式 */
+.copyright-footer {
+    margin-top: 60px;
+    padding: 20px 0;
+    background: linear-gradient(135deg, rgba(248, 250, 252, 0.9) 0%, rgba(241, 245, 249, 0.9) 100%);
+    border-top: 1px solid rgba(226, 232, 240, 0.6);
+    backdrop-filter: blur(8px);
+}
+
+.copyright-content {
+    max-width: 1200px;
+    margin: 0 auto;
+    text-align: center;
+    padding: 0 20px;
+}
+
+.copyright-content p {
+    margin: 0;
+    font-size: 14px;
+    color: #64748b;
+    font-weight: 400;
+    letter-spacing: 0.5px;
+}
+
+/* 响应式版权信息 */
+@media (max-width: 768px) {
+    .copyright-footer {
+        margin-top: 40px;
+        padding: 16px 0;
+    }
+
+    .copyright-content p {
+        font-size: 13px;
+        padding: 0 16px;
     }
 }
 </style>

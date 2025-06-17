@@ -175,89 +175,103 @@
             </div>
 
             <div class="step-content">
-                <div class="sectors-container">
-                    <div class="sectors-layout">
-                        <!-- 左侧：大分类选择 -->
-                        <div class="left-panel">
-                            <div class="section-header">
-                                <h4 class="section-title">
-                                    <span class="section-icon">📊</span>
-                                    选择大分类
-                                    <span class="section-limit">(至少选择1个，最多2个)</span>
-                                </h4>
-                                <div class="section-counter">
-                                    已选择 {{ userAnswers[3].majorCategories.length }}/2
-                                </div>
-                            </div>
+                <div class="sectors-container-compact">
+                    <!-- 顶部搜索和统计栏 -->
+                    <div class="sectors-header">
+                        <div class="search-section">
+                            <el-input v-model="sectorSearchQuery" placeholder="搜索行业..." class="compact-search" clearable
+                                @input="handleSectorSearch">
+                                <template #prefix>
+                                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none">
+                                        <path d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" stroke="currentColor"
+                                            stroke-width="2" fill="none" />
+                                    </svg>
+                                </template>
+                            </el-input>
+                        </div>
+                        <div class="stats-section">
+                            <span class="stat-chip">大分类 {{ userAnswers[3].majorCategories.length }}/2</span>
+                            <span class="stat-chip">细分 {{ userAnswers[3].subCategories.length }}/4</span>
+                        </div>
+                    </div>
 
-                            <div class="major-sectors-list">
-                                <div v-for="option in majorSectorOptions" :key="option.value"
-                                    class="major-sector-option" :class="{
-                                        'selected': userAnswers[3].majorCategories.includes(option.value),
-                                        'disabled': !userAnswers[3].majorCategories.includes(option.value) && userAnswers[3].majorCategories.length >= 2
-                                    }" @click="toggleMajorSector(option.value)">
-                                    <div class="sector-icon" :style="{ color: option.color }">{{ option.icon }}</div>
-                                    <div class="sector-content">
-                                        <div class="sector-label">{{ option.label }}</div>
-                                        <div class="sector-desc">{{ option.desc }}</div>
+                    <!-- 左右分栏内容 -->
+                    <div class="sectors-content">
+                        <!-- 搜索结果模式 -->
+                        <div v-if="sectorSearchQuery && filteredSubSectors.length > 0" class="search-mode">
+                            <div class="search-header">🔍 找到 {{ filteredSubSectors.length }} 个匹配行业</div>
+                            <div class="search-grid">
+                                <div v-for="sector in filteredSubSectors" :key="sector.value" class="sector-card"
+                                    :class="{
+                                        'selected': userAnswers[3].subCategories.includes(sector.value),
+                                        'disabled': !userAnswers[3].subCategories.includes(sector.value) && userAnswers[3].subCategories.length >= 4
+                                    }" @click="toggleSubSectorFromSearch(sector)">
+                                    <div class="card-icon">{{ sector.icon }}</div>
+                                    <div class="card-content">
+                                        <div class="card-title" v-html="highlightSearchTerm(sector.label)"></div>
+                                        <div class="card-desc" v-html="highlightSearchTerm(sector.desc)"></div>
+                                        <div class="card-parent">{{ getMajorSectorLabel(sector.parent) }}</div>
                                     </div>
-                                    <div class="sector-check"
-                                        v-if="userAnswers[3].majorCategories.includes(option.value)">
-                                        ✓
+                                    <div class="card-check" v-if="userAnswers[3].subCategories.includes(sector.value)">✓
                                     </div>
                                 </div>
                             </div>
                         </div>
 
-                        <!-- 右侧：细分行业选择 -->
-                        <div class="right-panel">
-                            <div v-if="userAnswers[3].majorCategories.length > 0">
-                                <div class="section-header">
-                                    <h4 class="section-title">
-                                        <span class="section-icon">🎯</span>
-                                        选择细分行业
-                                        <span class="section-limit">(至少选择1个，最多4个)</span>
-                                    </h4>
-                                    <div class="section-counter">
-                                        已选择 {{ userAnswers[3].subCategories.length }}/4
+                        <!-- 无搜索结果 -->
+                        <div v-else-if="sectorSearchQuery && filteredSubSectors.length === 0" class="no-results">
+                            <div class="no-results-content">
+                                <div class="no-results-icon">🔍</div>
+                                <div class="no-results-text">未找到匹配的行业</div>
+                            </div>
+                        </div>
+
+                        <!-- 正常模式：左右分栏 -->
+                        <div v-else class="normal-layout">
+                            <!-- 左侧：大分类 -->
+                            <div class="left-section">
+                                <div class="section-title">📊 选择大分类 (最多2个)</div>
+                                <div class="major-grid">
+                                    <div v-for="major in majorSectorOptions" :key="major.value" class="major-card"
+                                        :class="{
+                                            'selected': userAnswers[3].majorCategories.includes(major.value),
+                                            'disabled': !userAnswers[3].majorCategories.includes(major.value) && userAnswers[3].majorCategories.length >= 2
+                                        }" @click="toggleMajorSector(major.value)">
+                                        <div class="major-icon" :style="{ color: major.color }">{{ major.icon }}</div>
+                                        <div class="major-name">{{ major.label }}</div>
+                                        <div class="major-check"
+                                            v-if="userAnswers[3].majorCategories.includes(major.value)">✓</div>
                                     </div>
                                 </div>
+                            </div>
 
-                                <div class="sub-sectors-container">
-                                    <div v-for="majorCategory in userAnswers[3].majorCategories" :key="majorCategory"
-                                        class="sub-sector-group">
-                                        <div class="group-title">
-                                            <span class="group-icon">{{ getMajorSectorIcon(majorCategory) }}</span>
-                                            {{ getMajorSectorLabel(majorCategory) }}
-                                        </div>
-
-                                        <div class="sub-sectors-grid">
-                                            <div v-for="subOption in getSubSectorsByParent(majorCategory)"
-                                                :key="subOption.value" class="sub-sector-option" :class="{
-                                                    'selected': userAnswers[3].subCategories.includes(subOption.value),
-                                                    'disabled': !userAnswers[3].subCategories.includes(subOption.value) && userAnswers[3].subCategories.length >= 4
-                                                }" @click="toggleSubSector(subOption.value)">
-                                                <div class="sub-sector-icon">{{ subOption.icon }}</div>
-                                                <div class="sub-sector-content">
-                                                    <div class="sub-sector-label">{{ subOption.label }}</div>
-                                                    <div class="sub-sector-desc">{{ subOption.desc }}</div>
-                                                    <div class="sub-sector-examples">{{ subOption.examples }}</div>
-                                                </div>
-                                                <div class="sub-sector-check"
-                                                    v-if="userAnswers[3].subCategories.includes(subOption.value)">
-                                                    ✓
+                            <!-- 右侧：细分行业 -->
+                            <div class="right-section">
+                                <div v-if="userAnswers[3].majorCategories.length > 0">
+                                    <div class="section-title">🎯 选择细分行业 (最多4个)</div>
+                                    <div class="sub-grid">
+                                        <div v-for="majorCategory in userAnswers[3].majorCategories"
+                                            :key="majorCategory" class="sub-group">
+                                            <div class="group-header">{{ getMajorSectorIcon(majorCategory) }} {{
+                                                getMajorSectorLabel(majorCategory) }}</div>
+                                            <div class="sub-cards">
+                                                <div v-for="sub in getSubSectorsByParent(majorCategory)"
+                                                    :key="sub.value" class="sub-card" :class="{
+                                                        'selected': userAnswers[3].subCategories.includes(sub.value),
+                                                        'disabled': !userAnswers[3].subCategories.includes(sub.value) && userAnswers[3].subCategories.length >= 4
+                                                    }" @click="toggleSubSector(sub.value)">
+                                                    <div class="sub-icon">{{ sub.icon }}</div>
+                                                    <div class="sub-name">{{ sub.label }}</div>
+                                                    <div class="sub-check"
+                                                        v-if="userAnswers[3].subCategories.includes(sub.value)">✓</div>
                                                 </div>
                                             </div>
                                         </div>
                                     </div>
                                 </div>
-                            </div>
-
-                            <!-- 选择提示 -->
-                            <div class="sectors-hint" v-else>
-                                <div class="hint-icon">💡</div>
-                                <div class="hint-text">
-                                    请先在左侧选择您感兴趣的大分类板块，然后在这里选择具体的细分行业
+                                <div v-else class="selection-hint">
+                                    <div class="hint-icon">💡</div>
+                                    <div class="hint-text">请先在左侧选择大分类</div>
                                 </div>
                             </div>
                         </div>
@@ -307,9 +321,9 @@
                         <div class="summary-content">
                             <div class="experience-info">
                                 <span class="experience-label">{{ getExperienceOptionByValue(userAnswers[0])?.title
-                                    }}</span>
+                                }}</span>
                                 <span class="experience-icon">{{ getExperienceOptionByValue(userAnswers[0])?.icon
-                                    }}</span>
+                                }}</span>
                             </div>
                             <p class="experience-desc">{{ getExperienceOptionByValue(userAnswers[0])?.label }}</p>
                         </div>
@@ -429,6 +443,10 @@ const userAnswers = ref(['', '', {
 }, { majorCategories: [], subCategories: [] }]);
 const currentTask = ref(1);
 const totalPoints = ref(0);
+
+// 搜索相关状态
+const sectorSearchQuery = ref('');
+const filteredSubSectors = ref([]);
 
 // Main.vue中的完整配置数据
 const riskOptions = [
@@ -1282,6 +1300,44 @@ const getMajorSectorLabel = (majorCategory) => {
 
 const getSubSectorsByParent = (parentValue) => {
     return subSectorOptions.filter(option => option.parent === parentValue);
+};
+
+// 搜索相关方法
+const handleSectorSearch = () => {
+    if (!sectorSearchQuery.value) {
+        filteredSubSectors.value = [];
+        return;
+    }
+
+    const query = sectorSearchQuery.value.toLowerCase();
+    filteredSubSectors.value = subSectorOptions.filter(sector =>
+        sector.label.toLowerCase().includes(query) ||
+        sector.desc.toLowerCase().includes(query) ||
+        sector.examples.toLowerCase().includes(query)
+    );
+};
+
+const highlightSearchTerm = (text) => {
+    if (!sectorSearchQuery.value) return text;
+
+    const query = sectorSearchQuery.value;
+    const regex = new RegExp(`(${query})`, 'gi');
+    return text.replace(regex, '<span class="search-highlight">$1</span>');
+};
+
+const toggleSubSectorFromSearch = (sector) => {
+    // 先确保大分类被选中
+    if (!userAnswers.value[3].majorCategories.includes(sector.parent)) {
+        if (userAnswers.value[3].majorCategories.length < 2) {
+            userAnswers.value[3].majorCategories.push(sector.parent);
+        } else {
+            ElMessage.warning('最多只能选择2个大分类，请先取消一个大分类的选择');
+            return;
+        }
+    }
+
+    // 然后切换细分行业选择状态
+    toggleSubSector(sector.value);
 };
 
 // 结果页面辅助函数
@@ -2779,226 +2835,448 @@ const completeOnboarding = () => {
     font-style: italic;
 }
 
-/* 板块选择样式 */
-.sectors-container {
-    max-width: 1200px;
+/* 紧凑的左右分栏板块选择布局 */
+.sectors-container-compact {
+    width: 100%;
+    max-width: 900px;
     margin: 0 auto;
 }
 
-.sectors-layout {
-    display: grid;
-    grid-template-columns: 1fr 1fr;
-    gap: 40px;
-}
-
-.section-header {
+/* 顶部搜索和统计栏 */
+.sectors-header {
     display: flex;
+    align-items: center;
     justify-content: space-between;
-    align-items: center;
-    margin-bottom: 20px;
-    padding-bottom: 12px;
-    border-bottom: 2px solid #e2e8f0;
+    gap: 16px;
+    margin-bottom: 16px;
+    padding: 12px 16px;
+    background: linear-gradient(135deg, #f8fafc 0%, #f1f5f9 100%);
+    border: 1px solid #e2e8f0;
+    border-radius: 10px;
 }
 
-.section-title {
-    font-size: 1.1rem;
-    font-weight: 700;
-    color: #1a202c;
+.search-section {
+    flex: 1;
+    max-width: 300px;
+}
+
+:deep(.compact-search .el-input__wrapper) {
+    border-radius: 8px !important;
+    border: 1px solid #d1d5db !important;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1) !important;
+    transition: all 0.2s ease !important;
+}
+
+:deep(.compact-search .el-input__wrapper:hover) {
+    border-color: #9ca3af !important;
+    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.15) !important;
+}
+
+:deep(.compact-search.is-focus .el-input__wrapper) {
+    border-color: #3b82f6 !important;
+    box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.15) !important;
+}
+
+.stats-section {
     display: flex;
-    align-items: center;
     gap: 8px;
 }
 
-.section-limit {
-    font-size: 0.85rem;
-    color: #718096;
-    font-weight: 400;
-}
-
-.section-counter {
-    font-size: 0.9rem;
-    color: #18181b;
+.stat-chip {
+    font-size: 0.75rem;
+    color: #059669;
     font-weight: 600;
+    background: #d1fae5;
+    padding: 4px 10px;
+    border-radius: 16px;
+    white-space: nowrap;
 }
 
-.major-sectors-list {
-    display: flex;
-    flex-direction: column;
+/* 主要内容区域 */
+.sectors-content {
+    min-height: 320px;
+    border: 1px solid #e5e7eb;
+    border-radius: 10px;
+    background: white;
+    overflow: hidden;
+}
+
+/* 搜索模式 */
+.search-mode {
+    padding: 16px;
+}
+
+.search-header {
+    background: #3b82f6;
+    color: white;
+    padding: 8px 12px;
+    font-size: 0.875rem;
+    font-weight: 500;
+    border-radius: 6px;
+    margin-bottom: 12px;
+}
+
+.search-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
     gap: 12px;
 }
 
-.major-sector-option {
+.sector-card {
     display: flex;
     align-items: center;
-    gap: 16px;
-    padding: 16px;
-    border: 2px solid #e2e8f0;
-    border-radius: 12px;
-    cursor: pointer;
-    transition: all 0.3s ease;
-    position: relative;
-}
-
-.major-sector-option.selected {
-    border-color: #18181b;
-    background: #f7faff;
-}
-
-.major-sector-option.disabled {
-    opacity: 0.5;
-    cursor: not-allowed;
-}
-
-.major-sector-option:hover:not(.disabled) {
-    border-color: #18181b;
-    transform: translateY(-1px);
-}
-
-.sector-icon {
-    font-size: 1.5rem;
-    flex-shrink: 0;
-}
-
-.sector-content {
-    flex: 1;
-}
-
-.sector-label {
-    font-size: 1rem;
-    font-weight: 700;
-    color: #1a202c;
-    margin-bottom: 4px;
-}
-
-.sector-desc {
-    font-size: 0.85rem;
-    color: #718096;
-    line-height: 1.4;
-}
-
-.sector-check {
-    width: 20px;
-    height: 20px;
-    background: #18181b;
-    color: white;
-    border-radius: 50%;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    font-weight: bold;
-    font-size: 0.8rem;
-}
-
-.sub-sectors-container {
-    display: flex;
-    flex-direction: column;
-    gap: 24px;
-}
-
-.sub-sector-group {
-    border: 1px solid #e2e8f0;
-    border-radius: 12px;
-    padding: 16px;
-}
-
-.group-title {
-    display: flex;
-    align-items: center;
-    gap: 8px;
-    font-size: 1rem;
-    font-weight: 700;
-    color: #1a202c;
-    margin-bottom: 16px;
-    padding-bottom: 8px;
-    border-bottom: 1px solid #e2e8f0;
-}
-
-.sub-sectors-grid {
-    display: grid;
-    grid-template-columns: 1fr;
-    gap: 8px;
-}
-
-.sub-sector-option {
-    display: flex;
-    align-items: flex-start;
     gap: 12px;
     padding: 12px;
-    border: 1px solid #e2e8f0;
+    border: 1px solid #e5e7eb;
     border-radius: 8px;
     cursor: pointer;
-    transition: all 0.3s ease;
-    position: relative;
+    transition: all 0.2s ease;
+    background: white;
 }
 
-.sub-sector-option.selected {
-    border-color: #18181b;
-    background: #f7faff;
+.sector-card:hover:not(.disabled) {
+    background: #f8fafc;
+    border-color: #cbd5e1;
+    transform: translateY(-1px);
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
 }
 
-.sub-sector-option.disabled {
+.sector-card.selected {
+    background: rgba(59, 130, 246, 0.05);
+    border-color: #3b82f6;
+    box-shadow: 0 0 0 1px rgba(59, 130, 246, 0.2);
+}
+
+.sector-card.disabled {
     opacity: 0.5;
     cursor: not-allowed;
 }
 
-.sub-sector-option:hover:not(.disabled) {
-    border-color: #18181b;
-}
-
-.sub-sector-icon {
-    font-size: 1.2rem;
+.card-icon {
+    font-size: 1.25rem;
     flex-shrink: 0;
-    margin-top: 2px;
+    width: 32px;
+    text-align: center;
 }
 
-.sub-sector-content {
+.card-content {
     flex: 1;
+    min-width: 0;
 }
 
-.sub-sector-label {
-    font-size: 0.9rem;
+.card-title {
+    font-size: 0.875rem;
     font-weight: 600;
-    color: #1a202c;
+    color: #18181b;
+    margin-bottom: 2px;
+    line-height: 1.3;
+}
+
+.card-desc {
+    font-size: 0.75rem;
+    color: #6b7280;
+    line-height: 1.3;
     margin-bottom: 2px;
 }
 
-.sub-sector-desc {
-    font-size: 0.8rem;
-    color: #718096;
-    margin-bottom: 4px;
+.card-parent {
+    font-size: 0.7rem;
+    color: #9ca3af;
+    background: rgba(107, 114, 128, 0.1);
+    padding: 1px 4px;
+    border-radius: 3px;
+    display: inline-block;
 }
 
-.sub-sector-examples {
-    font-size: 0.75rem;
-    color: #18181b;
-    font-weight: 500;
-}
-
-.sub-sector-check {
-    width: 16px;
-    height: 16px;
-    background: #18181b;
+.card-check {
+    width: 20px;
+    height: 20px;
+    background: #3b82f6;
     color: white;
     border-radius: 50%;
     display: flex;
     align-items: center;
     justify-content: center;
+    font-size: 12px;
     font-weight: bold;
-    font-size: 0.7rem;
-    position: absolute;
-    top: 8px;
-    right: 8px;
+    flex-shrink: 0;
 }
 
-.sectors-hint {
+/* 无搜索结果 */
+.no-results {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    min-height: 200px;
+}
+
+.no-results-content {
+    text-align: center;
+    color: #6b7280;
+}
+
+.no-results-icon {
+    font-size: 2rem;
+    margin-bottom: 8px;
+    opacity: 0.6;
+}
+
+.no-results-text {
+    font-size: 0.875rem;
+}
+
+/* 正常模式：左右分栏 */
+.normal-layout {
+    display: flex;
+    height: 320px;
+}
+
+/* 左侧：大分类 */
+.left-section {
+    width: 40%;
+    border-right: 1px solid #e5e7eb;
+    display: flex;
+    flex-direction: column;
+}
+
+.section-title {
+    font-size: 0.875rem;
+    font-weight: 600;
+    color: #374151;
+    padding: 12px 16px;
+    background: #f8fafc;
+    border-bottom: 1px solid #e5e7eb;
+    margin: 0;
+}
+
+.major-grid {
+    flex: 1;
+    padding: 12px;
+    overflow-y: auto;
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: 8px;
+    align-content: start;
+}
+
+.major-card {
     display: flex;
     align-items: center;
     gap: 12px;
-    background: #f7faff;
-    padding: 24px;
-    border-radius: 12px;
-    border: 2px dashed #18181b;
+    padding: 12px;
+    border: 1px solid #e5e7eb;
+    border-radius: 8px;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    background: white;
+    position: relative;
+}
+
+.major-card:hover:not(.disabled) {
+    background: #f8fafc;
+    border-color: #cbd5e1;
+    transform: translateY(-1px);
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+}
+
+.major-card.selected {
+    background: rgba(59, 130, 246, 0.05);
+    border-color: #3b82f6;
+    box-shadow: 0 0 0 1px rgba(59, 130, 246, 0.2);
+}
+
+.major-card.disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+}
+
+.major-icon {
+    font-size: 1.5rem;
+    flex-shrink: 0;
+    width: 36px;
     text-align: center;
+}
+
+.major-name {
+    flex: 1;
+    font-size: 0.875rem;
+    font-weight: 600;
+    color: #18181b;
+    line-height: 1.3;
+}
+
+.major-check {
+    width: 18px;
+    height: 18px;
+    background: #3b82f6;
+    color: white;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 10px;
+    font-weight: bold;
+    flex-shrink: 0;
+}
+
+/* 右侧：细分行业 */
+.right-section {
+    width: 60%;
+    display: flex;
+    flex-direction: column;
+}
+
+.sub-grid {
+    flex: 1;
+    padding: 12px;
+    overflow-y: auto;
+}
+
+.sub-group {
+    margin-bottom: 16px;
+}
+
+.sub-group:last-child {
+    margin-bottom: 0;
+}
+
+.group-header {
+    font-size: 0.75rem;
+    font-weight: 600;
+    color: #3730a3;
+    background: #e0e7ff;
+    padding: 6px 12px;
+    border-radius: 6px;
+    margin-bottom: 8px;
+}
+
+.sub-cards {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(120px, 1fr));
+    gap: 6px;
+}
+
+.sub-card {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 4px;
+    padding: 8px 6px;
+    border: 1px solid #e5e7eb;
+    border-radius: 6px;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    background: white;
+    text-align: center;
+    position: relative;
+    min-height: 60px;
+}
+
+.sub-card:hover:not(.disabled) {
+    background: #f8fafc;
+    border-color: #cbd5e1;
+    transform: translateY(-1px);
+    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.1);
+}
+
+.sub-card.selected {
+    background: rgba(59, 130, 246, 0.05);
+    border-color: #3b82f6;
+    box-shadow: 0 0 0 1px rgba(59, 130, 246, 0.2);
+}
+
+.sub-card.disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+}
+
+.sub-icon {
+    font-size: 1rem;
+    line-height: 1;
+}
+
+.sub-name {
+    font-size: 0.75rem;
+    font-weight: 500;
+    color: #18181b;
+    line-height: 1.2;
+    flex: 1;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.sub-check {
+    position: absolute;
+    top: -2px;
+    right: -2px;
+    width: 14px;
+    height: 14px;
+    background: #3b82f6;
+    color: white;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 8px;
+    font-weight: bold;
+    border: 2px solid white;
+}
+
+/* 提示信息 */
+.selection-hint {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    height: 100%;
+    padding: 20px;
+    background: #fef3c7;
+    color: #92400e;
+    text-align: center;
+}
+
+.hint-icon {
+    font-size: 2rem;
+    margin-bottom: 8px;
+}
+
+.hint-text {
+    font-size: 0.875rem;
+    line-height: 1.4;
+}
+
+/* 自定义滚动条 */
+.major-grid::-webkit-scrollbar,
+.sub-grid::-webkit-scrollbar {
+    width: 4px;
+}
+
+.major-grid::-webkit-scrollbar-track,
+.sub-grid::-webkit-scrollbar-track {
+    background: #f1f5f9;
+    border-radius: 2px;
+}
+
+.major-grid::-webkit-scrollbar-thumb,
+.sub-grid::-webkit-scrollbar-thumb {
+    background: #cbd5e1;
+    border-radius: 2px;
+    transition: background 0.2s ease;
+}
+
+.major-grid::-webkit-scrollbar-thumb:hover,
+.sub-grid::-webkit-scrollbar-thumb:hover {
+    background: #94a3b8;
+}
+
+/* 搜索高亮 */
+.search-highlight {
+    background: #fef3c7;
+    color: #92400e;
+    padding: 1px 2px;
+    border-radius: 2px;
+    font-weight: 600;
 }
 
 /* 结果展示页面样式 */

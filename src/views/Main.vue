@@ -45,13 +45,28 @@
                     <div class="modern-desc">
                         您的AI投资管家——自动分析、个性推荐、智能交易，全程陪伴，让赚钱更轻松
                         <div class="quick-examples">
-                            <span class="example-tag"
-                                @click="setSuggestionText('我刚开始投资，应该从哪里入手？')">我刚开始投资，应该从哪里入手？</span>
-                            <span class="example-tag"
-                                @click="setSuggestionText('根据我的偏好，推荐一些适合的投资产品')">根据我的偏好，推荐一些适合的投资产品</span>
-                            <span class="example-tag" @click="setSuggestionText('帮我解释一下股票和基金的区别')">帮我解释一下股票和基金的区别</span>
-                            <span class="example-tag"
-                                @click="setSuggestionText('投资1万元，有什么好的建议吗？')">投资1万元，有什么好的建议吗？</span>
+                            <div class="examples-header">
+                                <span class="examples-indicator">{{ currentExampleGroupIndex + 1 }}/{{
+                                    exampleGroups.length
+                                }}</span>
+                                <el-button class="refresh-examples-btn" size="small" circle @click="switchExampleGroup"
+                                    :title="`换一批问题 (${currentExampleGroupIndex + 1}/${exampleGroups.length})`">
+                                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none">
+                                        <path d="M3 12a9 9 0 0 1 9-9 9.75 9.75 0 0 1 6.74 2.74L21 8"
+                                            stroke="currentColor" stroke-width="2" fill="none" />
+                                        <path d="M21 3v5h-5" stroke="currentColor" stroke-width="2" fill="none" />
+                                        <path d="M21 12a9 9 0 0 1-9 9 9.75 9.75 0 0 1-6.74-2.74L3 16"
+                                            stroke="currentColor" stroke-width="2" fill="none" />
+                                        <path d="M3 21v-5h5" stroke="currentColor" stroke-width="2" fill="none" />
+                                    </svg>
+                                </el-button>
+                            </div>
+                            <div class="examples-content">
+                                <span v-for="example in currentExampleGroup" :key="example" class="example-tag"
+                                    @click="setSuggestionText(example)">
+                                    {{ example }}
+                                </span>
+                            </div>
                         </div>
                     </div>
                 </div>
@@ -1481,6 +1496,45 @@ const isChatMode = ref(false); // 控制是否进入聊天模式
 const showUserProfile = ref(false); // 控制是否显示个人中心
 const showChatShortcuts = ref(false); // 控制聊天模式下的快捷操作显示
 
+// 预置问题组轮换
+const currentExampleGroupIndex = ref(0);
+const exampleGroups = [
+    [
+        '我刚开始投资，应该从哪里入手？',
+        '根据我的偏好，推荐一些适合的投资产品',
+        '帮我解释一下股票和基金的区别',
+        '投资1万元，有什么好的建议吗？'
+    ],
+    [
+        '现在哪些板块值得关注？',
+        '怎样判断一只股票是否值得买入？',
+        '如何分散投资风险？',
+        '新能源汽车行业还有投资机会吗？'
+    ],
+    [
+        '最近市场波动很大，怎么应对？',
+        '请分析一下当前的宏观经济形势',
+        '什么时候应该止损离场？',
+        '如何设置合理的仓位管理？'
+    ],
+    [
+        '价值投资和成长投资哪个更好？',
+        '技术分析对投资决策有帮助吗？',
+        '如何挖掘被低估的优质股票？',
+        '长期持有还是波段操作更赚钱？'
+    ],
+    [
+        '国外市场投资机会怎么样？',
+        'A股、港股、美股哪个更值得投资？',
+        '人民币汇率对投资有什么影响？',
+        '如何投资REITS房地产基金？'
+    ]
+];
+
+const currentExampleGroup = computed(() => {
+    return exampleGroups[currentExampleGroupIndex.value];
+});
+
 // 个性化引导流程控制
 const showOnboarding = ref(false); // 是否显示引导流程
 
@@ -2305,6 +2359,12 @@ const setSuggestionText = (suggestion) => {
             inputEl.focus();
         }
     });
+};
+
+// 切换预置问题组
+const switchExampleGroup = () => {
+    currentExampleGroupIndex.value = (currentExampleGroupIndex.value + 1) % exampleGroups.length;
+    ElMessage.success(`已切换到第${currentExampleGroupIndex.value + 1}组问题`);
 };
 
 // 智能荐股功能
@@ -3720,11 +3780,41 @@ body.onboarding-mode {
 
 /* 快捷示例标签 */
 .quick-examples {
+    margin-top: 16px;
+}
+
+.examples-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 12px;
+    padding: 0 4px;
+}
+
+.examples-indicator {
+    font-size: 0.75rem;
+    color: #64748b;
+    font-weight: 500;
+}
+
+.refresh-examples-btn {
+    background: rgba(59, 130, 246, 0.1);
+    border: 1px solid rgba(59, 130, 246, 0.2);
+    color: #1d4ed8;
+    transition: all 0.2s ease;
+}
+
+.refresh-examples-btn:hover {
+    background: rgba(59, 130, 246, 0.15);
+    border-color: rgba(59, 130, 246, 0.3);
+    transform: scale(1.05);
+}
+
+.examples-content {
     display: flex;
     flex-wrap: wrap;
     gap: 8px;
     justify-content: center;
-    margin-top: 16px;
 }
 
 .example-tag {
@@ -3750,13 +3840,22 @@ body.onboarding-mode {
 
 /* 响应式设计 */
 @media (max-width: 768px) {
-    .quick-examples {
+    .examples-content {
         gap: 6px;
     }
 
     .example-tag {
         font-size: 0.8rem;
         padding: 5px 10px;
+    }
+
+    .examples-indicator {
+        font-size: 0.7rem;
+    }
+
+    .refresh-examples-btn {
+        width: 28px;
+        height: 28px;
     }
 }
 

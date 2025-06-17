@@ -28,7 +28,6 @@
                 <template v-else>
                     <el-button class="modern-btn" @click="showLoginDialog(false)">登录</el-button>
                     <el-button class="modern-btn" @click="showLoginDialog(true)">注册</el-button>
-                    <el-button class="modern-btn" @click="resetOnboarding" style="color: #667eea;">重新引导</el-button>
                 </template>
             </div>
         </header>
@@ -1483,7 +1482,7 @@ const showUserProfile = ref(false); // 控制是否显示个人中心
 const showChatShortcuts = ref(false); // 控制聊天模式下的快捷操作显示
 
 // 个性化引导流程控制
-const showOnboarding = ref(!localStorage.getItem('onboardingCompleted')); // 是否显示引导流程
+const showOnboarding = ref(false); // 是否显示引导流程
 
 // 登录相关
 const loginDialogVisible = ref(false);
@@ -2117,6 +2116,11 @@ const handleLogin = async () => {
                     loginDialogVisible.value = false;
                     loginLoading.value = false;
                     dismissGuide();
+
+                    // 检查老用户是否已设置偏好，如果没有则引导设置
+                    setTimeout(() => {
+                        checkUserStatus();
+                    }, 500);
                 }
             }, 1000);
         }
@@ -2149,6 +2153,11 @@ const handleWechatLogin = async () => {
             ElMessage.success('微信登录成功！');
             loginDialogVisible.value = false;
             dismissGuide();
+
+            // 检查微信登录用户是否已设置偏好
+            setTimeout(() => {
+                checkUserStatus();
+            }, 500);
         } else {
             ElMessage.error('微信登录失败，请重试');
         }
@@ -2901,6 +2910,9 @@ const handlePreferencesSubmit = async () => {
             preferences
         });
 
+        // 标记引导已完成
+        localStorage.setItem('onboardingCompleted', 'true');
+
         ElMessage.success('投资偏好设置完成！');
         preferencesDialogVisible.value = false;
         preferencesLoading.value = false;
@@ -3261,11 +3273,11 @@ const confirmBuy = async () => {
 
 // 检查用户状态并显示相应引导
 const checkUserStatus = () => {
-    if (!userStore.isLoggedIn) {
-        // 未登录，显示登录引导
+    // 只有在登录且没有偏好设置时才显示引导
+    if (userStore.isLoggedIn && (!userStore.userInfo.preferences || !userStore.userInfo.preferences.riskLevel)) {
         setTimeout(() => {
-            showGuide('login');
-        }, 2000);
+            showOnboarding.value = true;
+        }, 1000);
     }
 };
 
@@ -3470,6 +3482,9 @@ const onOnboardingComplete = (data) => {
             ...userStore.userInfo,
             preferences: data.preferences
         });
+
+        // 标记引导已完成
+        localStorage.setItem('onboardingCompleted', 'true');
 
         // 根据用户偏好显示欢迎消息
         setTimeout(() => {

@@ -4,6 +4,7 @@ import { fileURLToPath, URL } from "node:url";
 
 export default defineConfig({
   plugins: [vue()],
+  base: process.env.NODE_ENV === "production" ? "/InvestAI/" : "/",
   resolve: {
     alias: {
       "@": fileURLToPath(new URL("./src", import.meta.url)),
@@ -13,5 +14,9 @@ export default defineConfig({
     port: 5173,
     open: true,
     host: true,
+  },
+  build: {
+    outDir: "dist",
+    assetsDir: "assets",
   },
 });

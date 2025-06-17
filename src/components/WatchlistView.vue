@@ -52,73 +52,73 @@
                             <div class="stock-price-change">
                                 <div class="current-price">¥{{ getCurrentPrice(stock) }}</div>
                                 <div class="price-change" :class="getPriceChangeClass(stock)">
-                                    {{ (stock.change || 0) > 0 ? '📈' : (stock.change || 0) < 0 ? '📉' : '➖' }} </div>
-                                </div>
-                            </div>
-
-                            <div class="stock-details">
-                                <div class="detail-row">
-                                    <span class="detail-label">当前价格：</span>
-                                    <span class="detail-value target-price">¥{{ getCurrentPrice(stock) }}</span>
-                                    <span class="detail-label">涨跌幅：</span>
-                                    <span class="detail-value" :class="getPriceChangeClass(stock)">{{
-                                        getPriceChangeText(stock) }}</span>
-                                </div>
-                                <div class="detail-row">
-                                    <span class="detail-label">所属行业：</span>
-                                    <span class="detail-value industry">{{ stock.industry || '未分类' }}</span>
-                                    <span class="detail-label">推荐等级：</span>
-                                    <span class="detail-value recommend-level">{{ stock.recommendLevel || '中性' }}</span>
+                                    {{ getPriceChangeText(stock) }}
                                 </div>
                             </div>
                         </div>
 
-                        <div class="stock-actions">
-                            <el-button size="small" @click.stop="buyStock(stock)" class="buy-stock-btn-secondary">
-                                <svg width="12" height="12" viewBox="0 0 24 24" fill="none">
-                                    <path d="M12 2v20M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"
-                                        stroke="currentColor" stroke-width="2" />
-                                </svg>
-                                买入
-                            </el-button>
-                            <el-button size="small" @click.stop="showPaidAnalysisDialog(stock)"
-                                class="paid-analysis-btn">
-                                <svg width="12" height="12" viewBox="0 0 24 24" fill="none">
-                                    <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"
-                                        stroke="currentColor" stroke-width="2" />
-                                </svg>
-                                深度分析
-                                <span class="price-tag">¥1</span>
-                            </el-button>
-                            <el-button size="small" @click.stop="showQuantAnalysisDialog(stock)"
-                                class="quant-analysis-btn">
-                                <svg width="12" height="12" viewBox="0 0 24 24" fill="none">
-                                    <path d="M3 3v18h18M7 16l4-4 4 4 4-4" stroke="currentColor" stroke-width="2"
-                                        fill="none" />
-                                </svg>
-                                量化分析
-                                <span class="price-tag">¥1</span>
-                            </el-button>
-                            <el-button size="small" text @click.stop="removeFromWatchlist(stock.code)"
-                                class="remove-watchlist-btn">
-                                <svg width="12" height="12" viewBox="0 0 24 24" fill="none">
-                                    <path
-                                        d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"
-                                        fill="currentColor" />
-                                </svg>
-                                移除关注
-                            </el-button>
+                        <div class="stock-details">
+                            <div class="detail-row">
+                                <span class="detail-label">当前价格：</span>
+                                <span class="detail-value target-price">¥{{ getCurrentPrice(stock) }}</span>
+                                <span class="detail-label">涨跌幅：</span>
+                                <span class="detail-value" :class="getPriceChangeClass(stock)">{{
+                                    getPriceChangeText(stock) }}</span>
+                            </div>
+                            <div class="detail-row">
+                                <span class="detail-label">所属行业：</span>
+                                <span class="detail-value industry">{{ stock.industry || '未分类' }}</span>
+                                <span class="detail-label">推荐等级：</span>
+                                <span class="detail-value recommend-level">{{ stock.recommendLevel || '中性' }}</span>
+                            </div>
                         </div>
+                    </div>
+
+                    <div class="stock-actions">
+                        <el-button size="small" text @click.stop="removeFromWatchlist(stock.code)"
+                            class="remove-watchlist-btn">
+                            <svg width="10" height="10" viewBox="0 0 24 24" fill="none">
+                                <path
+                                    d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"
+                                    fill="currentColor" />
+                            </svg>
+                            移除关注
+                        </el-button>
+                        <el-button size="small" @click.stop="showPaidAnalysisDialog(stock)" class="paid-analysis-btn">
+                            <svg width="10" height="10" viewBox="0 0 24 24" fill="none">
+                                <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"
+                                    stroke="currentColor" stroke-width="2" />
+                            </svg>
+                            深度分析
+                            <span class="price-tag">¥1</span>
+                        </el-button>
+                        <el-button size="small" @click.stop="showQuantAnalysisDialog(stock)" class="quant-analysis-btn">
+                            <svg width="10" height="10" viewBox="0 0 24 24" fill="none">
+                                <path d="M3 3v18h18M7 16l4-4 4 4 4-4" stroke="currentColor" stroke-width="2"
+                                    fill="none" />
+                            </svg>
+                            量化分析
+                            <span class="price-tag">¥1</span>
+                        </el-button>
+
+                        <el-button size="small" @click.stop="showBuyDialog(stock)" class="buy-stock-btn-secondary">
+                            <svg width="10" height="10" viewBox="0 0 24 24" fill="none">
+                                <path d="M12 2v20M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"
+                                    stroke="currentColor" stroke-width="2" />
+                            </svg>
+                            买入
+                        </el-button>
                     </div>
                 </div>
             </div>
-
-            <div v-if="userStore.watchlist.length > 0" class="card-footer">
-                <el-button size="small" text @click="clearAllWatchlist">
-                    清空自选股
-                </el-button>
-            </div>
         </div>
+
+        <div v-if="userStore.watchlist.length > 0" class="card-footer">
+            <el-button size="small" text @click="clearAllWatchlist">
+                清空自选股
+            </el-button>
+        </div>
+    </div>
 </template>
 
 <script setup>
@@ -126,7 +126,7 @@ import { useUserStore } from '../store/user';
 import { ElMessage, ElMessageBox } from 'element-plus';
 
 // 定义emit
-const emit = defineEmits(['send-to-chat']);
+const emit = defineEmits(['send-to-chat', 'show-buy-dialog']);
 
 const userStore = useUserStore();
 
@@ -141,7 +141,13 @@ const getCurrentPrice = (stock) => {
 
 // 获取价格变化样式类
 const getPriceChangeClass = (stock) => {
-    const change = stock.change || 0;
+    let change = stock.change || 0;
+
+    // 如果change是字符串，解析数字
+    if (typeof change === 'string') {
+        change = parseFloat(change.replace(/[+%]/g, '')) || 0;
+    }
+
     return {
         'positive': change > 0,
         'negative': change < 0,
@@ -151,8 +157,16 @@ const getPriceChangeClass = (stock) => {
 
 // 获取价格变化文本
 const getPriceChangeText = (stock) => {
-    const change = stock.change || 0;
-    const changePercent = stock.changePercent || 0;
+    // 处理字符串格式的change和changePercent
+    let change = stock.change || 0;
+    let changePercent = stock.changePercent || 0;
+
+    // 如果是字符串，直接返回
+    if (typeof change === 'string' && typeof changePercent === 'string') {
+        return `${change} (${changePercent})`;
+    }
+
+    // 如果是数字，格式化显示
     const changeText = change > 0 ? `+${change}` : change.toString();
     const percentText = changePercent > 0 ? `+${changePercent}%` : `${changePercent}%`;
     return `${changeText} (${percentText})`;
@@ -188,13 +202,9 @@ const analyzeStock = (stock) => {
     });
 };
 
-// 买入股票
-const buyStock = (stock) => {
-    emit('send-to-chat', {
-        type: 'buy',
-        content: stock,
-        title: `买入${stock.name}(${stock.code})`
-    });
+// 买入股票 - 调用买入对话框
+const showBuyDialog = (stock) => {
+    emit('show-buy-dialog', stock);
 };
 
 // 付费深度分析
@@ -533,24 +543,27 @@ const refreshWatchlist = () => {
 
 .stock-actions {
     display: flex;
-    gap: 6px;
+    gap: 4px;
     justify-content: flex-end;
     padding-top: 12px;
     border-top: 1px solid #f1f5f9;
-    flex-wrap: wrap;
+    flex-wrap: nowrap;
+    align-items: center;
 }
 
 .buy-stock-btn-secondary {
     display: flex;
     align-items: center;
-    gap: 3px;
-    font-size: 0.75rem;
-    border-radius: 12px;
-    padding: 4px 8px;
+    gap: 2px;
+    font-size: 0.7rem;
+    border-radius: 10px;
+    padding: 3px 6px;
     transition: all 0.2s ease;
     background: #f3f4f6;
     border-color: #e5e7eb;
     color: #f59e0b;
+    white-space: nowrap;
+    flex-shrink: 0;
 }
 
 .buy-stock-btn-secondary:hover {
@@ -565,12 +578,14 @@ const refreshWatchlist = () => {
 .quant-analysis-btn {
     display: flex;
     align-items: center;
-    gap: 3px;
-    font-size: 0.75rem;
-    border-radius: 12px;
-    padding: 4px 8px;
+    gap: 2px;
+    font-size: 0.7rem;
+    border-radius: 10px;
+    padding: 3px 6px;
     transition: all 0.2s ease;
     position: relative;
+    white-space: nowrap;
+    flex-shrink: 0;
 }
 
 .paid-analysis-btn {
@@ -602,27 +617,29 @@ const refreshWatchlist = () => {
 .price-tag {
     background: #ef4444;
     color: white;
-    font-size: 0.6rem;
+    font-size: 0.55rem;
     font-weight: 600;
-    padding: 1px 3px;
-    border-radius: 3px;
-    margin-left: 2px;
+    padding: 1px 2px;
+    border-radius: 2px;
+    margin-left: 1px;
     line-height: 1;
-    min-width: 16px;
+    min-width: 14px;
     text-align: center;
 }
 
 .remove-watchlist-btn {
     display: flex;
     align-items: center;
-    gap: 3px;
-    font-size: 0.75rem;
-    border-radius: 12px;
-    padding: 4px 8px;
+    gap: 2px;
+    font-size: 0.7rem;
+    border-radius: 10px;
+    padding: 3px 6px;
     transition: all 0.2s ease;
     background: #10b981;
     border-color: #10b981;
     color: white;
+    white-space: nowrap;
+    flex-shrink: 0;
 }
 
 .remove-watchlist-btn:hover {

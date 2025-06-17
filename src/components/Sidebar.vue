@@ -11,6 +11,7 @@
         <div class="sidebar-content" v-show="!isCollapsed">
             <!-- Tab导航 -->
             <div class="tab-nav">
+                <!-- 1. 大盘指数 -->
                 <div class="tab-item" :class="{ 'active': activeTab === 'market' }" @click="activeTab = 'market'">
                     <svg width="16" height="16" viewBox="0 0 24 24" fill="none">
                         <path d="M3 3v18h18" stroke="currentColor" stroke-width="2" />
@@ -18,13 +19,16 @@
                     </svg>
                     大盘指数
                 </div>
-                <div class="tab-item" :class="{ 'active': activeTab === 'portfolio' }" @click="activeTab = 'portfolio'">
+                <!-- 2. 智能荐股 -->
+                <div class="tab-item" :class="{ 'active': activeTab === 'stocks' }" @click="activeTab = 'stocks'">
                     <svg width="16" height="16" viewBox="0 0 24 24" fill="none">
-                        <path d="M3 3h18v18H3zM12 8v8m-4-4h8" stroke="currentColor" stroke-width="2" />
+                        <path
+                            d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"
+                            stroke="currentColor" stroke-width="2" />
                     </svg>
-                    持仓
-                    <span v-if="portfolioCount > 0" class="count-badge">{{ portfolioCount }}</span>
+                    智能荐股
                 </div>
+                <!-- 3. 自选股 -->
                 <div class="tab-item" :class="{ 'active': activeTab === 'watchlist' }" @click="activeTab = 'watchlist'">
                     <svg width="16" height="16" viewBox="0 0 24 24" fill="none">
                         <path
@@ -34,15 +38,15 @@
                     自选股
                     <span v-if="watchlistCount > 0" class="count-badge">{{ watchlistCount }}</span>
                 </div>
-                <div class="tab-item" :class="{ 'active': activeTab === 'stocks' }" @click="activeTab = 'stocks'">
+                <!-- 4. 持仓 -->
+                <div class="tab-item" :class="{ 'active': activeTab === 'portfolio' }" @click="activeTab = 'portfolio'">
                     <svg width="16" height="16" viewBox="0 0 24 24" fill="none">
-                        <path
-                            d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"
-                            stroke="currentColor" stroke-width="2" />
+                        <path d="M3 3h18v18H3zM12 8v8m-4-4h8" stroke="currentColor" stroke-width="2" />
                     </svg>
-                    智能荐股
+                    持仓
+                    <span v-if="portfolioCount > 0" class="count-badge">{{ portfolioCount }}</span>
                 </div>
-
+                <!-- 5. 消息推送 -->
                 <div class="tab-item" :class="{ 'active': activeTab === 'messages' }" @click="activeTab = 'messages'">
                     <svg width="16" height="16" viewBox="0 0 24 24" fill="none">
                         <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z" stroke="currentColor"
@@ -55,19 +59,24 @@
 
             <!-- Tab内容区域 -->
             <div class="tab-content" @wheel="handleWheel">
+                <!-- 1. 大盘指数 -->
                 <div v-show="activeTab === 'market'" class="tab-panel">
                     <MarketIndex @send-to-chat="handleSendToChat" />
                 </div>
-                <div v-show="activeTab === 'portfolio'" class="tab-panel">
-                    <PortfolioView @send-to-chat="handleSendToChat" />
-                </div>
-                <div v-show="activeTab === 'watchlist'" class="tab-panel">
-                    <WatchlistView @send-to-chat="handleSendToChat" />
-                </div>
+                <!-- 2. 智能荐股 -->
                 <div v-show="activeTab === 'stocks'" class="tab-panel">
                     <StockRecommendations @send-to-chat="handleSendToChat" />
                 </div>
-
+                <!-- 3. 自选股 -->
+                <div v-show="activeTab === 'watchlist'" class="tab-panel">
+                    <WatchlistView @send-to-chat="handleSendToChat" @show-buy-dialog="handleShowBuyDialog" />
+                </div>
+                <!-- 4. 持仓 -->
+                <div v-show="activeTab === 'portfolio'" class="tab-panel">
+                    <PortfolioView @send-to-chat="handleSendToChat" @show-buy-dialog="handleShowBuyDialog"
+                        @show-sell-dialog="handleShowSellDialog" />
+                </div>
+                <!-- 5. 消息推送 -->
                 <div v-show="activeTab === 'messages'" class="tab-panel">
                     <MessageNotifications @send-to-chat="handleSendToChat" />
                 </div>
@@ -87,11 +96,11 @@ import PortfolioView from './PortfolioView.vue';
 
 
 // 定义emit
-const emit = defineEmits(['send-to-chat']);
+const emit = defineEmits(['send-to-chat', 'show-buy-dialog', 'show-sell-dialog']);
 
 const userStore = useUserStore();
 
-const isCollapsed = ref(false);
+const isCollapsed = ref(true);
 const activeTab = ref('market'); // 默认显示大盘指数
 const unreadCount = ref(2); // 未读消息数量，这里可以从消息组件获取
 
@@ -108,6 +117,16 @@ const toggleSidebar = () => {
 // 处理子组件发送到聊天的事件
 const handleSendToChat = (data) => {
     emit('send-to-chat', data);
+};
+
+// 处理子组件显示买入对话框的事件
+const handleShowBuyDialog = (stockInfo) => {
+    emit('show-buy-dialog', stockInfo);
+};
+
+// 处理子组件显示卖出对话框的事件
+const handleShowSellDialog = (stockInfo) => {
+    emit('show-sell-dialog', stockInfo);
 };
 
 // 防止滚动事件冒泡到外部页面

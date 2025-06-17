@@ -49,6 +49,17 @@ export const mockApi = {
 
   // 发送消息
   sendMessage: (message) => {
+    // 确保message是字符串类型
+    if (typeof message !== "string") {
+      if (message && typeof message === "object") {
+        // 如果是对象，尝试获取content或title字段，或转换为JSON字符串
+        message = message.content || message.title || JSON.stringify(message);
+      } else {
+        // 其他类型转换为字符串
+        message = String(message || "");
+      }
+    }
+
     // 检查是否是智能荐股查询
     const isSmartRecommendation = message.includes("智能荐股");
 

@@ -122,14 +122,14 @@
 
                     <div class="stock-actions">
                         <el-button size="small" @click.stop="showSellDialog(position)" class="sell-stock-btn">
-                            <svg width="14" height="14" viewBox="0 0 24 24" fill="none">
+                            <svg width="11" height="11" viewBox="0 0 24 24" fill="none">
                                 <path d="M12 2v20M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"
                                     stroke="currentColor" stroke-width="2" />
                             </svg>
                             卖出
                         </el-button>
                         <el-button size="small" @click.stop="showBuyDialog(position)" class="buy-stock-btn-secondary">
-                            <svg width="14" height="14" viewBox="0 0 24 24" fill="none">
+                            <svg width="11" height="11" viewBox="0 0 24 24" fill="none">
                                 <path d="M12 2v20M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"
                                     stroke="currentColor" stroke-width="2" />
                             </svg>
@@ -137,7 +137,7 @@
                         </el-button>
                         <el-button size="small" @click.stop="showPaidAnalysisDialog(position)"
                             class="paid-analysis-btn">
-                            <svg width="14" height="14" viewBox="0 0 24 24" fill="none">
+                            <svg width="11" height="11" viewBox="0 0 24 24" fill="none">
                                 <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"
                                     stroke="currentColor" stroke-width="2" />
                             </svg>
@@ -146,7 +146,7 @@
                         </el-button>
                         <el-button size="small" @click.stop="showQuantAnalysisDialog(position)"
                             class="quant-analysis-btn">
-                            <svg width="14" height="14" viewBox="0 0 24 24" fill="none">
+                            <svg width="11" height="11" viewBox="0 0 24 24" fill="none">
                                 <path d="M3 3v18h18M7 16l4-4 4 4 4-4" stroke="currentColor" stroke-width="2"
                                     fill="none" />
                             </svg>
@@ -158,54 +158,7 @@
             </div>
         </div>
 
-        <!-- 卖出对话框 -->
-        <el-dialog v-model="sellDialogVisible" title="卖出股票" width="450px" class="sell-dialog">
-            <div class="sell-form" v-if="selectedPosition">
-                <div class="stock-info-card">
-                    <h3>{{ selectedPosition.name }} ({{ selectedPosition.code }})</h3>
-                    <div class="position-summary">
-                        <div class="summary-row">
-                            <span>持仓数量：</span>
-                            <span>{{ selectedPosition.quantity }}股</span>
-                        </div>
-                        <div class="summary-row">
-                            <span>成本价：</span>
-                            <span>¥{{ selectedPosition.avgPrice.toFixed(2) }}</span>
-                        </div>
-                        <div class="summary-row">
-                            <span>当前价：</span>
-                            <span>¥{{ getCurrentPrice(selectedPosition.code) }}</span>
-                        </div>
-                    </div>
-                </div>
-
-                <el-form :model="sellForm" :rules="sellRules" ref="sellFormRef" label-width="80px">
-                    <el-form-item label="卖出数量" prop="quantity">
-                        <el-input-number v-model="sellForm.quantity" :min="100" :step="100"
-                            :max="selectedPosition.quantity" controls-position="right" style="width: 100%" />
-                        <div class="quantity-tips">
-                            <span>最少100股，最多{{ selectedPosition.quantity }}股</span>
-                        </div>
-                    </el-form-item>
-
-                    <el-form-item label="预计收入">
-                        <div class="trade-amount">
-                            <span class="amount-value">¥{{ sellRevenue.toFixed(2) }}</span>
-                            <span class="amount-desc">（扣除手续费）</span>
-                        </div>
-                    </el-form-item>
-                </el-form>
-            </div>
-
-            <template #footer>
-                <div class="sell-dialog-footer">
-                    <el-button @click="sellDialogVisible = false">取消</el-button>
-                    <el-button type="danger" @click="confirmSell" :loading="sellLoading">
-                        确认卖出
-                    </el-button>
-                </div>
-            </template>
-        </el-dialog>
+        <!-- 移除本地卖出对话框，改为使用主窗口的统一交易对话框 -->
     </div>
 </template>
 
@@ -215,25 +168,25 @@ import { useUserStore } from '../store/user';
 import { ElMessage, ElMessageBox } from 'element-plus';
 
 // 定义emit
-const emit = defineEmits(['send-to-chat']);
+const emit = defineEmits(['send-to-chat', 'show-buy-dialog', 'show-sell-dialog']);
 
 const userStore = useUserStore();
 
-// 卖出相关
-const sellDialogVisible = ref(false);
-const selectedPosition = ref(null);
-const sellLoading = ref(false);
-const sellFormRef = ref(null);
-const sellForm = reactive({
-    quantity: 100
-});
+// 移除卖出相关的本地状态和方法，改为通过事件调用
+// const sellDialogVisible = ref(false);
+// const selectedPosition = ref(null);
+// const sellLoading = ref(false);
+// const sellFormRef = ref(null);
+// const sellForm = reactive({
+//     quantity: 100
+// });
 
-const sellRules = {
-    quantity: [
-        { required: true, message: '请输入卖出数量', trigger: 'blur' },
-        { type: 'number', min: 100, message: '最少卖出100股', trigger: 'blur' }
-    ]
-};
+// const sellRules = {
+//     quantity: [
+//         { required: true, message: '请输入卖出数量', trigger: 'blur' },
+//         { type: 'number', min: 100, message: '最少卖出100股', trigger: 'blur' }
+//     ]
+// };
 
 // 模拟当前价格数据
 const currentPrices = {
@@ -261,13 +214,14 @@ const totalProfitLoss = computed(() => {
     }, 0);
 });
 
-const sellRevenue = computed(() => {
-    if (!selectedPosition.value || !sellForm.quantity) return 0;
-    const currentPrice = getCurrentPrice(selectedPosition.value.code);
-    const revenue = sellForm.quantity * currentPrice;
-    const fee = revenue * 0.0003; // 0.03% 手续费
-    return revenue - fee;
-});
+// 移除卖出收入计算，因为不再使用本地卖出对话框
+// const sellRevenue = computed(() => {
+//     if (!selectedPosition.value || !sellForm.quantity) return 0;
+//     const currentPrice = getCurrentPrice(selectedPosition.value.code);
+//     const revenue = sellForm.quantity * currentPrice;
+//     const fee = revenue * 0.0003; // 0.03% 手续费
+//     return revenue - fee;
+// });
 
 // 方法
 const getCurrentPrice = (stockCode) => {
@@ -298,11 +252,18 @@ const analyzeStock = (position) => {
 };
 
 const showBuyDialog = (position) => {
-    emit('send-to-chat', {
-        type: 'buy',
-        content: position,
-        title: `加仓${position.name}(${position.code})`
-    });
+    emit('show-buy-dialog', position);
+};
+
+// 修改卖出方法，通过事件调用主窗口的卖出对话框
+const showSellDialog = (position) => {
+    // 添加当前价格信息到position对象
+    const enhancedPosition = {
+        ...position,
+        currentPrice: getCurrentPrice(position.code), // 添加当前价格
+        price: position.price || getCurrentPrice(position.code) // 确保有价格信息
+    };
+    emit('show-sell-dialog', enhancedPosition);
 };
 
 const showPaidAnalysisDialog = (position) => {
@@ -381,39 +342,34 @@ const refreshData = () => {
     // 这里可以添加实际的数据刷新逻辑
 };
 
-const showSellDialog = (position) => {
-    selectedPosition.value = position;
-    sellForm.quantity = Math.min(100, position.quantity);
-    sellDialogVisible.value = true;
-};
+// 移除本地卖出对话框的确认方法
+// const confirmSell = async () => {
+//     if (!sellFormRef.value) return;
 
-const confirmSell = async () => {
-    if (!sellFormRef.value) return;
+//     await sellFormRef.value.validate((valid) => {
+//         if (valid) {
+//             sellLoading.value = true;
 
-    await sellFormRef.value.validate((valid) => {
-        if (valid) {
-            sellLoading.value = true;
+//             setTimeout(() => {
+//                 const currentPrice = getCurrentPrice(selectedPosition.value.code);
+//                 const result = userStore.sellStock(
+//                     selectedPosition.value.code,
+//                     sellForm.quantity,
+//                     currentPrice
+//                 );
 
-            setTimeout(() => {
-                const currentPrice = getCurrentPrice(selectedPosition.value.code);
-                const result = userStore.sellStock(
-                    selectedPosition.value.code,
-                    sellForm.quantity,
-                    currentPrice
-                );
+//                 if (result.success) {
+//                     ElMessage.success(result.message);
+//                     sellDialogVisible.value = false;
+//                 } else {
+//                     ElMessage.error(result.message);
+//                 }
 
-                if (result.success) {
-                    ElMessage.success(result.message);
-                    sellDialogVisible.value = false;
-                } else {
-                    ElMessage.error(result.message);
-                }
-
-                sellLoading.value = false;
-            }, 1000);
-        }
-    });
-};
+//                 sellLoading.value = false;
+//             }, 1000);
+//         }
+//     });
+// };
 </script>
 
 <style scoped>
@@ -914,23 +870,27 @@ const confirmSell = async () => {
 
 .stock-actions {
     display: flex;
-    gap: 8px;
+    gap: 4px;
     justify-content: flex-end;
     padding-top: 12px;
     border-top: 1px solid #f1f5f9;
+    flex-wrap: nowrap;
+    align-items: center;
 }
 
 .sell-stock-btn {
     display: flex;
     align-items: center;
-    gap: 4px;
-    font-size: 0.875rem;
-    border-radius: 16px;
-    padding: 6px 12px;
+    gap: 2px;
+    font-size: 0.7rem;
+    border-radius: 10px;
+    padding: 3px 6px;
     transition: all 0.2s ease;
     background: #ef4444;
     border-color: #ef4444;
     color: white;
+    white-space: nowrap;
+    flex-shrink: 0;
 }
 
 .sell-stock-btn:hover {
@@ -942,14 +902,16 @@ const confirmSell = async () => {
 .buy-stock-btn-secondary {
     display: flex;
     align-items: center;
-    gap: 4px;
-    font-size: 0.875rem;
-    border-radius: 16px;
-    padding: 6px 12px;
+    gap: 2px;
+    font-size: 0.7rem;
+    border-radius: 10px;
+    padding: 3px 6px;
     transition: all 0.2s ease;
     background: #f3f4f6;
     border-color: #e5e7eb;
     color: #f59e0b;
+    white-space: nowrap;
+    flex-shrink: 0;
 }
 
 .buy-stock-btn-secondary:hover {
@@ -964,12 +926,14 @@ const confirmSell = async () => {
 .quant-analysis-btn {
     display: flex;
     align-items: center;
-    gap: 4px;
-    font-size: 0.875rem;
-    border-radius: 16px;
-    padding: 6px 12px;
+    gap: 2px;
+    font-size: 0.7rem;
+    border-radius: 10px;
+    padding: 3px 6px;
     transition: all 0.2s ease;
     position: relative;
+    white-space: nowrap;
+    flex-shrink: 0;
 }
 
 .paid-analysis-btn {
@@ -1001,129 +965,17 @@ const confirmSell = async () => {
 .price-tag {
     background: #ef4444;
     color: white;
-    font-size: 0.7rem;
+    font-size: 0.55rem;
     font-weight: 600;
-    padding: 1px 4px;
-    border-radius: 4px;
-    margin-left: 4px;
+    padding: 1px 2px;
+    border-radius: 2px;
+    margin-left: 1px;
     line-height: 1;
-    min-width: 20px;
+    min-width: 14px;
     text-align: center;
 }
 
-/* 卖出对话框样式 */
-:deep(.sell-dialog) {
-    border-radius: 16px;
-    overflow: hidden;
-    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.12);
-}
-
-:deep(.sell-dialog .el-dialog__header) {
-    background: #fef2f2;
-    border-bottom: 1px solid #fecaca;
-    padding: 20px 24px;
-}
-
-:deep(.sell-dialog .el-dialog__title) {
-    font-size: 1.25rem;
-    font-weight: 600;
-    color: #dc2626;
-}
-
-:deep(.sell-dialog .el-dialog__body) {
-    padding: 24px;
-}
-
-.sell-form {
-    display: flex;
-    flex-direction: column;
-    gap: 20px;
-}
-
-.stock-info-card {
-    background: #fef2f2;
-    border-radius: 12px;
-    padding: 20px;
-    border: 1px solid #fecaca;
-}
-
-.stock-info-card h3 {
-    font-size: 1.125rem;
-    font-weight: 600;
-    color: #18181b;
-    margin: 0 0 12px 0;
-}
-
-.position-summary {
-    display: flex;
-    flex-direction: column;
-    gap: 8px;
-}
-
-.summary-row {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    font-size: 0.875rem;
-}
-
-.summary-row span:first-child {
-    color: #6b7280;
-}
-
-.summary-row span:last-child {
-    font-weight: 500;
-    color: #18181b;
-}
-
-.quantity-tips {
-    margin-top: 4px;
-    font-size: 0.75rem;
-    color: #6b7280;
-}
-
-.trade-amount {
-    display: flex;
-    align-items: center;
-    gap: 8px;
-}
-
-.amount-value {
-    font-size: 1.25rem;
-    font-weight: 700;
-    color: #dc2626;
-}
-
-.amount-desc {
-    font-size: 0.75rem;
-    color: #6b7280;
-}
-
-.sell-dialog-footer {
-    display: flex;
-    gap: 12px;
-    justify-content: flex-end;
-}
-
-:deep(.sell-dialog .el-form-item__label) {
-    font-weight: 500;
-    color: #374151;
-}
-
-:deep(.sell-dialog .el-input-number .el-input__wrapper) {
-    border-radius: 8px;
-    border: 1px solid #d1d5db;
-    transition: all 0.2s ease;
-}
-
-:deep(.sell-dialog .el-input-number .el-input__wrapper:hover) {
-    border-color: #9ca3af;
-}
-
-:deep(.sell-dialog .el-input-number.is-focus .el-input__wrapper) {
-    border-color: #dc2626;
-    box-shadow: 0 0 0 3px rgba(220, 38, 38, 0.1);
-}
+/* 移除卖出对话框样式，改为使用主窗口的统一交易对话框 */
 
 /* 主容器样式 */
 .portfolio-container {

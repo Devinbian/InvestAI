@@ -36,8 +36,16 @@
             <!-- 初始状态：标题、描述和输入区域作为一个整体 -->
             <div class="center-container" v-if="!isChatMode">
                 <div class="welcome-section">
-                    <div class="modern-title">我能帮你做什么？</div>
-                    <div class="modern-desc">请输入您的投资问题或需求，智投小助手将为您提供专业建议</div>
+                    <div class="modern-title">👋 您好，我是智投小助</div>
+                    <div class="modern-desc">
+                        您的AI投资管家——自动分析、个性推荐、智能交易，全程陪伴，让赚钱更轻松
+                        <div class="quick-examples">
+                            <span class="example-tag" @click="setSuggestionText('茅台股价最近为什么下跌？')">茅台股价最近为什么下跌？</span>
+                            <span class="example-tag" @click="setSuggestionText('新能源汽车板块还能投资吗？')">新能源汽车板块还能投资吗？</span>
+                            <span class="example-tag" @click="setSuggestionText('如何选择适合自己的基金？')">如何选择适合自己的基金？</span>
+                            <span class="example-tag" @click="setSuggestionText('美联储降息对A股有什么影响？')">美联储降息对A股有什么影响？</span>
+                        </div>
+                    </div>
                 </div>
 
                 <div class="ai-card">
@@ -193,13 +201,13 @@
                                         <div class="asset-amount">
                                             <span class="amount-label">总资产</span>
                                             <span class="amount-value">¥{{ formatCurrency(message.assetData.totalAssets)
-                                            }}</span>
+                                                }}</span>
                                         </div>
                                         <div class="asset-change"
                                             :class="[message.assetData.totalProfitPercent >= 0 ? 'profit' : 'loss']">
                                             <span class="change-icon">{{ message.assetData.totalProfitPercent >= 0 ?
                                                 '📈' : '📉'
-                                            }}</span>
+                                                }}</span>
                                             <span class="change-label">今日盈亏：</span>
                                             <span class="change-text">
                                                 {{ message.assetData.totalProfitPercent >= 0 ? '+' : '' }}¥{{
@@ -225,7 +233,7 @@
                                         <div class="stat-info">
                                             <div class="stat-label">持仓市值</div>
                                             <div class="stat-value">¥{{ formatCurrency(message.assetData.portfolioValue)
-                                            }}
+                                                }}
                                             </div>
                                         </div>
                                     </div>
@@ -286,7 +294,7 @@
                                                         <div class="stock-price-change">
                                                             <span class="current-price">¥{{
                                                                 position.currentPrice.toFixed(2)
-                                                                }}</span>
+                                                            }}</span>
                                                             <span
                                                                 :class="['price-change', position.profitPercent >= 0 ? 'positive' : 'negative']">
                                                                 {{ position.profitPercent >= 0 ? '+' : '' }}¥{{
@@ -300,10 +308,10 @@
                                                             <span class="detail-label">持仓数量：</span>
                                                             <span class="detail-value">{{
                                                                 position.quantity.toLocaleString()
-                                                                }}股</span>
+                                                            }}股</span>
                                                             <span class="detail-label">成本价：</span>
                                                             <span class="detail-value">¥{{ position.avgPrice.toFixed(2)
-                                                                }}</span>
+                                                            }}</span>
                                                         </div>
                                                         <div class="detail-row">
                                                             <span class="detail-label">持仓市值：</span>
@@ -312,7 +320,7 @@
                                                             <span class="detail-label">所属行业：</span>
                                                             <span class="detail-value industry">{{ position.industry ||
                                                                 '未分类'
-                                                                }}</span>
+                                                            }}</span>
                                                         </div>
                                                     </div>
                                                 </div>
@@ -321,7 +329,7 @@
                                                     <!-- 卖出按钮 -->
                                                     <el-button size="small" @click="showBuyDialog(position, 'sell')"
                                                         class="sell-stock-btn">
-                                                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none">
+                                                        <svg width="11" height="11" viewBox="0 0 24 24" fill="none">
                                                             <path
                                                                 d="M12 2v20M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"
                                                                 stroke="currentColor" stroke-width="2" />
@@ -332,7 +340,7 @@
                                                     <!-- 买入按钮（加仓） -->
                                                     <el-button size="small" @click="showBuyDialog(position, 'buy')"
                                                         class="buy-stock-btn-secondary">
-                                                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none">
+                                                        <svg width="11" height="11" viewBox="0 0 24 24" fill="none">
                                                             <path
                                                                 d="M12 2v20M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"
                                                                 stroke="currentColor" stroke-width="2" />
@@ -343,7 +351,7 @@
                                                     <!-- 深度分析按钮（付费） -->
                                                     <el-button size="small" @click="showPaidAnalysisDialog(position)"
                                                         class="paid-analysis-btn">
-                                                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none">
+                                                        <svg width="11" height="11" viewBox="0 0 24 24" fill="none">
                                                             <path
                                                                 d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"
                                                                 stroke="currentColor" stroke-width="2" />
@@ -355,7 +363,7 @@
                                                     <!-- 量化分析按钮（付费） -->
                                                     <el-button size="small" @click="showQuantAnalysisDialog(position)"
                                                         class="quant-analysis-btn">
-                                                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none">
+                                                        <svg width="11" height="11" viewBox="0 0 24 24" fill="none">
                                                             <path d="M3 3v18h18M7 16l4-4 4 4 4-4" stroke="currentColor"
                                                                 stroke-width="2" fill="none" />
                                                         </svg>
@@ -428,7 +436,7 @@
                                                     <!-- 移除自选按钮 -->
                                                     <el-button size="small" @click="removeFromWatchlist(stock.code)"
                                                         class="remove-watchlist-btn">
-                                                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none">
+                                                        <svg width="10" height="10" viewBox="0 0 24 24" fill="none">
                                                             <path
                                                                 d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"
                                                                 fill="currentColor" />
@@ -439,7 +447,7 @@
                                                     <!-- 深度分析按钮（付费） -->
                                                     <el-button size="small" @click="showPaidAnalysisDialog(stock)"
                                                         class="paid-analysis-btn">
-                                                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none">
+                                                        <svg width="10" height="10" viewBox="0 0 24 24" fill="none">
                                                             <path
                                                                 d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"
                                                                 stroke="currentColor" stroke-width="2" />
@@ -451,7 +459,7 @@
                                                     <!-- 量化分析按钮（付费） -->
                                                     <el-button size="small" @click="showQuantAnalysisDialog(stock)"
                                                         class="quant-analysis-btn">
-                                                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none">
+                                                        <svg width="10" height="10" viewBox="0 0 24 24" fill="none">
                                                             <path d="M3 3v18h18M7 16l4-4 4 4 4-4" stroke="currentColor"
                                                                 stroke-width="2" fill="none" />
                                                         </svg>
@@ -462,7 +470,7 @@
                                                     <!-- 购买按钮 -->
                                                     <el-button size="small" @click="showBuyDialog(stock)"
                                                         class="buy-stock-btn-secondary">
-                                                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none">
+                                                        <svg width="10" height="10" viewBox="0 0 24 24" fill="none">
                                                             <path
                                                                 d="M12 2v20M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"
                                                                 stroke="currentColor" stroke-width="2" />
@@ -493,7 +501,7 @@
                             <div v-if="message.isPersistent" class="recommendation-toolbar">
                                 <div class="toolbar-left">
                                     <span class="recommendation-time">{{ formatRecommendationTime(message.timestamp)
-                                    }}</span>
+                                        }}</span>
                                 </div>
                                 <div class="toolbar-right">
                                     <el-button size="small" text @click="refreshRecommendation(message)"
@@ -622,7 +630,8 @@
         </main>
 
         <!-- 侧边栏（仅在登录后显示） -->
-        <Sidebar v-if="userStore.isLoggedIn" @send-to-chat="handleSidebarInteraction" />
+        <Sidebar v-if="userStore.isLoggedIn" @send-to-chat="handleSidebarInteraction" @show-buy-dialog="showBuyDialog"
+            @show-sell-dialog="handleShowSellDialog" />
 
         <!-- 底部输入区域（仅在聊天状态显示） -->
         <div class="input-area" v-if="isChatMode">
@@ -1011,7 +1020,7 @@
                                                 :key="majorCategory" class="sub-sector-group">
                                                 <div class="group-title">
                                                     <span class="group-icon">{{ getMajorSectorIcon(majorCategory)
-                                                    }}</span>
+                                                        }}</span>
                                                     {{ getMajorSectorLabel(majorCategory) }}
                                                 </div>
 
@@ -1168,7 +1177,7 @@
                                         <span class="change-amount">{{ selectedStock.change >= 0 ? '+' : '' }}{{
                                             selectedStock.change }}</span>
                                         <span class="change-percent">({{ selectedStock.changePercent >= 0 ? '+' : ''
-                                        }}{{
+                                            }}{{
                                                 selectedStock.changePercent }}%)</span>
                                     </div>
                                 </div>
@@ -1176,7 +1185,7 @@
                                     <div class="stat-item">
                                         <span class="stat-label">今开</span>
                                         <span class="stat-value">{{ (parseFloat(selectedStock.price) - 2.5).toFixed(2)
-                                        }}</span>
+                                            }}</span>
                                     </div>
                                     <div class="stat-item">
                                         <span class="stat-label">昨收</span>
@@ -1240,7 +1249,7 @@
                         <div class="info-item">
                             <span class="info-label">跌停</span>
                             <span class="info-value down">{{ (parseFloat(selectedStock.price) * 0.9).toFixed(2)
-                            }}</span>
+                                }}</span>
                         </div>
                         <div class="info-item">
                             <span class="info-label">总市值</span>
@@ -2261,6 +2270,18 @@ const setSuggestionAndSend = (suggestion) => {
     }
 };
 
+// 设置建议文本但不发送（用于引导示例）
+const setSuggestionText = (suggestion) => {
+    inputMessage.value = suggestion;
+    // 让输入框获得焦点
+    nextTick(() => {
+        const inputEl = document.querySelector('.ai-input textarea');
+        if (inputEl) {
+            inputEl.focus();
+        }
+    });
+};
+
 // 智能荐股功能
 const handleSmartRecommendation = async () => {
     // 检查用户是否已登录
@@ -2610,7 +2631,15 @@ const handleSidebarInteraction = async (data) => {
 请帮我解读这些回测数据的实际意义。`;
             break;
         default:
-            message = content;
+            // 确保content是字符串类型
+            if (typeof content === 'string') {
+                message = content;
+            } else if (content && typeof content === 'object') {
+                // 如果content是对象，尝试获取合适的字符串属性
+                message = content.name || content.title || content.text || JSON.stringify(content);
+            } else {
+                message = String(content || '请帮我分析一下相关内容');
+            }
     }
 
     // 检查用户是否已登录
@@ -2622,6 +2651,11 @@ const handleSidebarInteraction = async (data) => {
 
     // 切换到聊天模式
     isChatMode.value = true;
+
+    // 确保message是字符串类型
+    if (typeof message !== 'string') {
+        message = String(message || '请帮我分析一下相关内容');
+    }
 
     // 发送消息
     const res = await mockApi.sendMessage(message);
@@ -3135,6 +3169,11 @@ const showBuyDialog = (stockInfo, type = 'buy') => {
     buyDialogVisible.value = true;
 };
 
+// 处理来自侧边栏的卖出事件
+const handleShowSellDialog = (stockInfo) => {
+    showBuyDialog(stockInfo, 'sell');
+};
+
 const confirmBuy = async () => {
     if (!canBuy.value) {
         ElMessage.warning('请检查交易信息');
@@ -3531,7 +3570,51 @@ const showQuantAnalysisDialog = (stock) => {
 .modern-desc {
     font-size: 1.1rem;
     color: #6b7280;
-    margin-bottom: 32px;
+    margin-bottom: 24px;
+    text-align: center;
+    line-height: 1.6;
+}
+
+/* 快捷示例标签 */
+.quick-examples {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    justify-content: center;
+    margin-top: 16px;
+}
+
+.example-tag {
+    display: inline-flex;
+    align-items: center;
+    padding: 6px 12px;
+    background: rgba(59, 130, 246, 0.1);
+    color: #1d4ed8;
+    border: 1px solid rgba(59, 130, 246, 0.2);
+    border-radius: 16px;
+    font-size: 0.875rem;
+    font-weight: 500;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    white-space: nowrap;
+}
+
+.example-tag:hover {
+    background: rgba(59, 130, 246, 0.15);
+    border-color: rgba(59, 130, 246, 0.3);
+    transform: translateY(-1px);
+}
+
+/* 响应式设计 */
+@media (max-width: 768px) {
+    .quick-examples {
+        gap: 6px;
+    }
+
+    .example-tag {
+        font-size: 0.8rem;
+        padding: 5px 10px;
+    }
 }
 
 .chat-history-area {
@@ -3984,14 +4067,24 @@ const showQuantAnalysisDialog = (stock) => {
 
 /* 卖出按钮样式 */
 .sell-stock-btn {
-    background: #dc2626;
-    border-color: #dc2626;
+    display: flex;
+    align-items: center;
+    gap: 2px;
+    font-size: 0.7rem;
+    border-radius: 10px;
+    padding: 3px 6px;
+    transition: all 0.2s ease;
+    background: #ef4444;
+    border-color: #ef4444;
     color: white;
+    white-space: nowrap;
+    flex-shrink: 0;
 }
 
 .sell-stock-btn:hover {
-    background: #b91c1c;
-    border-color: #b91c1c;
+    background: #dc2626;
+    border-color: #dc2626;
+    transform: translateY(-1px);
 }
 
 .stock-reason {
@@ -4015,9 +4108,12 @@ const showQuantAnalysisDialog = (stock) => {
 
 .stock-item-actions {
     display: flex;
-    gap: 8px;
-    flex-wrap: wrap;
+    gap: 4px;
+    flex-wrap: nowrap;
     justify-content: flex-end;
+    align-items: center;
+    padding-top: 12px;
+    border-top: 1px solid #f1f5f9;
 }
 
 /* 付费功能按钮样式 */
@@ -4025,12 +4121,14 @@ const showQuantAnalysisDialog = (stock) => {
 .quant-analysis-btn {
     display: flex;
     align-items: center;
-    gap: 4px;
-    font-size: 0.875rem;
-    border-radius: 16px;
-    padding: 6px 12px;
+    gap: 2px;
+    font-size: 0.7rem;
+    border-radius: 10px;
+    padding: 3px 6px;
     transition: all 0.2s ease;
     position: relative;
+    white-space: nowrap;
+    flex-shrink: 0;
 }
 
 .paid-analysis-btn {
@@ -4062,13 +4160,13 @@ const showQuantAnalysisDialog = (stock) => {
 .price-tag {
     background: #ef4444;
     color: white;
-    font-size: 0.7rem;
+    font-size: 0.55rem;
     font-weight: 600;
-    padding: 1px 4px;
-    border-radius: 4px;
-    margin-left: 4px;
+    padding: 1px 2px;
+    border-radius: 2px;
+    margin-left: 1px;
     line-height: 1;
-    min-width: 20px;
+    min-width: 14px;
     text-align: center;
 }
 
@@ -4096,6 +4194,9 @@ const showQuantAnalysisDialog = (stock) => {
 
     .stock-item-actions {
         justify-content: flex-start;
+        gap: 2px;
+        flex-wrap: nowrap;
+        overflow-x: auto;
     }
 
     .recommend-index {
@@ -4123,11 +4224,13 @@ const showQuantAnalysisDialog = (stock) => {
 .continue-analysis-btn {
     display: flex;
     align-items: center;
-    gap: 4px;
-    font-size: 0.875rem;
-    border-radius: 16px;
-    padding: 6px 12px;
+    gap: 2px;
+    font-size: 0.7rem;
+    border-radius: 10px;
+    padding: 3px 6px;
     transition: all 0.2s ease;
+    white-space: nowrap;
+    flex-shrink: 0;
 }
 
 .add-watchlist-btn {
@@ -4171,11 +4274,13 @@ const showQuantAnalysisDialog = (stock) => {
 .buy-stock-btn-secondary {
     display: flex;
     align-items: center;
-    gap: 4px;
-    font-size: 0.875rem;
-    border-radius: 16px;
-    padding: 6px 12px;
+    gap: 2px;
+    font-size: 0.7rem;
+    border-radius: 10px;
+    padding: 3px 6px;
     transition: all 0.2s ease;
+    white-space: nowrap;
+    flex-shrink: 0;
 }
 
 .buy-stock-btn {

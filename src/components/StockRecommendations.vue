@@ -84,11 +84,22 @@
 </template>
 
 <script setup>
-import { ref } from 'vue';
+import { ref, computed } from 'vue';
 import { ElMessage } from 'element-plus';
 
 // 定义emit
 const emit = defineEmits(['send-to-chat']);
+
+// 更新时间
+const updateTime = computed(() => {
+    const now = new Date();
+    return now.toLocaleString('zh-CN', {
+        month: '2-digit',
+        day: '2-digit',
+        hour: '2-digit',
+        minute: '2-digit'
+    });
+});
 
 const recommendations = ref([
     {

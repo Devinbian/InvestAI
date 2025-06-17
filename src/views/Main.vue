@@ -107,22 +107,15 @@
                 <div class="ai-suggestions">
                     <!-- 快捷操作按钮 -->
                     <div class="suggestion-row">
-                        <el-button class="ai-suggestion-btn"
-                            @click="setSuggestionAndSend('昨日复盘：请帮我进行全面的交易复盘分析，包括：\n\n1. 昨日大盘走势分析（上证指数、深证成指、创业板指等主要指数表现）\n2. 热点板块轮动情况和资金流向分析\n3. 我的持仓股票昨日表现回顾和盈亏分析\n4. 昨日交易决策的得失总结（如有买卖操作）\n5. 市场情绪和技术面变化分析\n6. 今日操作建议和风险提示\n7. 需要关注的重要事件和数据发布\n\n请结合我的投资风格和持仓情况，给出专业的复盘建议。')">
-                            <span class="btn-icon">📝</span>
-                            昨日复盘
+                        <el-button v-for="shortcut in activeShortcuts" :key="shortcut.id" class="ai-suggestion-btn"
+                            @click="handleShortcutClick(shortcut)">
+                            <span class="btn-icon">{{ shortcut.icon }}</span>
+                            {{ shortcut.title }}
                         </el-button>
-                        <el-button class="ai-suggestion-btn" @click="handleSmartRecommendation">
-                            <span class="btn-icon">🎯</span>
-                            智能荐股
-                        </el-button>
-                        <el-button class="ai-suggestion-btn" @click="handleNewsUpdate">
-                            <span class="btn-icon">📰</span>
-                            资讯推送
-                        </el-button>
-                        <el-button class="ai-suggestion-btn" @click="handleAssetAnalysis">
-                            <span class="btn-icon">💰</span>
-                            我的资产
+                        <!-- 自定义按钮 -->
+                        <el-button class="ai-suggestion-btn customize-btn" @click="openCustomizeDialog">
+                            <span class="btn-icon">⚙️</span>
+                            自定义
                         </el-button>
                     </div>
                 </div>
@@ -230,13 +223,13 @@
                                         <div class="asset-amount">
                                             <span class="amount-label">总资产</span>
                                             <span class="amount-value">¥{{ formatCurrency(message.assetData.totalAssets)
-                                                }}</span>
+                                            }}</span>
                                         </div>
                                         <div class="asset-change"
                                             :class="[message.assetData.totalProfitPercent >= 0 ? 'profit' : 'loss']">
                                             <span class="change-icon">{{ message.assetData.totalProfitPercent >= 0 ?
                                                 '📈' : '📉'
-                                                }}</span>
+                                            }}</span>
                                             <span class="change-label">今日盈亏：</span>
                                             <span class="change-text">
                                                 {{ message.assetData.totalProfitPercent >= 0 ? '+' : '' }}¥{{
@@ -262,7 +255,7 @@
                                         <div class="stat-info">
                                             <div class="stat-label">持仓市值</div>
                                             <div class="stat-value">¥{{ formatCurrency(message.assetData.portfolioValue)
-                                                }}
+                                            }}
                                             </div>
                                         </div>
                                     </div>
@@ -323,7 +316,7 @@
                                                         <div class="stock-price-change">
                                                             <span class="current-price">¥{{
                                                                 position.currentPrice.toFixed(2)
-                                                            }}</span>
+                                                                }}</span>
                                                             <span
                                                                 :class="['price-change', position.profitPercent >= 0 ? 'positive' : 'negative']">
                                                                 {{ position.profitPercent >= 0 ? '+' : '' }}¥{{
@@ -337,10 +330,10 @@
                                                             <span class="detail-label">持仓数量：</span>
                                                             <span class="detail-value">{{
                                                                 position.quantity.toLocaleString()
-                                                            }}股</span>
+                                                                }}股</span>
                                                             <span class="detail-label">成本价：</span>
                                                             <span class="detail-value">¥{{ position.avgPrice.toFixed(2)
-                                                            }}</span>
+                                                                }}</span>
                                                         </div>
                                                         <div class="detail-row">
                                                             <span class="detail-label">持仓市值：</span>
@@ -349,7 +342,7 @@
                                                             <span class="detail-label">所属行业：</span>
                                                             <span class="detail-value industry">{{ position.industry ||
                                                                 '未分类'
-                                                            }}</span>
+                                                                }}</span>
                                                         </div>
                                                     </div>
                                                 </div>
@@ -530,7 +523,7 @@
                             <div v-if="message.isPersistent" class="recommendation-toolbar">
                                 <div class="toolbar-left">
                                     <span class="recommendation-time">{{ formatRecommendationTime(message.timestamp)
-                                        }}</span>
+                                    }}</span>
                                 </div>
                                 <div class="toolbar-right">
                                     <el-button size="small" text @click="refreshRecommendation(message)"
@@ -689,22 +682,14 @@
             <!-- 快捷操作栏（聊天模式下） -->
             <div class="chat-shortcuts" v-if="showChatShortcuts">
                 <div class="shortcuts-grid">
-                    <el-button class="chat-shortcut-btn"
-                        @click="setSuggestionAndSend('昨日复盘：请帮我进行全面的交易复盘分析，包括：\n\n1. 昨日大盘走势分析（上证指数、深证成指、创业板指等主要指数表现）\n2. 热点板块轮动情况和资金流向分析\n3. 我的持仓股票昨日表现回顾和盈亏分析\n4. 昨日交易决策的得失总结（如有买卖操作）\n5. 市场情绪和技术面变化分析\n6. 今日操作建议和风险提示\n7. 需要关注的重要事件和数据发布\n\n请结合我的投资风格和持仓情况，给出专业的复盘建议。')">
-                        <span class="btn-icon">📝</span>
-                        <span class="btn-text">复盘</span>
+                    <el-button v-for="shortcut in activeShortcuts" :key="shortcut.id" class="chat-shortcut-btn"
+                        @click="handleShortcutClick(shortcut)">
+                        <span class="btn-icon">{{ shortcut.icon }}</span>
+                        <span class="btn-text">{{ shortcut.shortTitle || shortcut.title }}</span>
                     </el-button>
-                    <el-button class="chat-shortcut-btn" @click="handleSmartRecommendation">
-                        <span class="btn-icon">🎯</span>
-                        <span class="btn-text">荐股</span>
-                    </el-button>
-                    <el-button class="chat-shortcut-btn" @click="handleNewsUpdate">
-                        <span class="btn-icon">📰</span>
-                        <span class="btn-text">资讯</span>
-                    </el-button>
-                    <el-button class="chat-shortcut-btn" @click="handleAssetAnalysis">
-                        <span class="btn-icon">💰</span>
-                        <span class="btn-text">资产</span>
+                    <el-button class="chat-shortcut-btn customize-btn" @click="openCustomizeDialog">
+                        <span class="btn-icon">⚙️</span>
+                        <span class="btn-text">设置</span>
                     </el-button>
                     <el-button class="chat-shortcut-btn close-btn" @click="toggleChatShortcuts">
                         <span class="btn-icon">✕</span>
@@ -1011,9 +996,9 @@
                                 </div>
                                 <div class="stats-section">
                                     <span class="stat-chip">大分类 {{ preferencesForm.sectors.majorCategories.length
-                                    }}/2</span>
+                                        }}/2</span>
                                     <span class="stat-chip">细分 {{ preferencesForm.sectors.subCategories.length
-                                    }}/4</span>
+                                        }}/4</span>
                                 </div>
                             </div>
 
@@ -1225,7 +1210,7 @@
                                         <span class="change-amount">{{ selectedStock.change >= 0 ? '+' : '' }}{{
                                             selectedStock.change }}</span>
                                         <span class="change-percent">({{ selectedStock.changePercent >= 0 ? '+' : ''
-                                            }}{{
+                                        }}{{
                                                 selectedStock.changePercent }}%)</span>
                                     </div>
                                 </div>
@@ -1233,7 +1218,7 @@
                                     <div class="stat-item">
                                         <span class="stat-label">今开</span>
                                         <span class="stat-value">{{ (parseFloat(selectedStock.price) - 2.5).toFixed(2)
-                                            }}</span>
+                                        }}</span>
                                     </div>
                                     <div class="stat-item">
                                         <span class="stat-label">昨收</span>
@@ -1297,7 +1282,7 @@
                         <div class="info-item">
                             <span class="info-label">跌停</span>
                             <span class="info-value down">{{ (parseFloat(selectedStock.price) * 0.9).toFixed(2)
-                                }}</span>
+                            }}</span>
                         </div>
                         <div class="info-item">
                             <span class="info-label">总市值</span>
@@ -1481,6 +1466,104 @@
             </template>
         </el-dialog>
 
+        <!-- 自定义快捷操作对话框 -->
+        <el-dialog v-model="customizeDialogVisible" title="自定义快捷操作" width="600px" class="customize-dialog">
+            <div class="customize-content">
+                <div class="section">
+                    <h4>默认快捷操作</h4>
+                    <div class="shortcuts-list">
+                        <div v-for="shortcut in defaultShortcuts" :key="shortcut.id" class="shortcut-item">
+                            <div class="shortcut-info">
+                                <span class="shortcut-icon">{{ shortcut.icon }}</span>
+                                <div class="shortcut-details">
+                                    <div class="shortcut-title">{{ shortcut.title }}</div>
+                                    <div class="shortcut-desc">{{ shortcut.description }}</div>
+                                </div>
+                            </div>
+                            <el-switch v-model="shortcut.isActive" @change="toggleShortcutActive(shortcut)" />
+                        </div>
+                    </div>
+                </div>
+
+                <div class="section">
+                    <div class="section-header">
+                        <h4>自定义快捷操作</h4>
+                        <el-button type="primary" size="small" @click="addCustomShortcut"
+                            :disabled="customShortcuts.length >= 3">
+                            <span class="btn-icon">➕</span>
+                            添加{{ customShortcuts.length >= 3 ? '(已达上限)' : '' }}
+                        </el-button>
+                    </div>
+                    <div class="shortcuts-list" v-if="customShortcuts.length > 0">
+                        <div v-for="shortcut in customShortcuts" :key="shortcut.id" class="shortcut-item">
+                            <div class="shortcut-info" v-if="!shortcut.isEditing">
+                                <span class="shortcut-icon">{{ shortcut.icon }}</span>
+                                <div class="shortcut-details">
+                                    <div class="shortcut-title">{{ shortcut.title }}</div>
+                                    <div class="shortcut-desc">{{ shortcut.description }}</div>
+                                </div>
+                            </div>
+                            <!-- 编辑模式 -->
+                            <div class="shortcut-edit-form" v-else>
+                                <div class="edit-row">
+                                    <label>图标：</label>
+                                    <el-input v-model="shortcut.icon" maxlength="2" style="width: 80px;" />
+                                </div>
+                                <div class="edit-row">
+                                    <label>标题：</label>
+                                    <el-input v-model="shortcut.title" maxlength="10" style="width: 150px;" />
+                                </div>
+                                <div class="edit-row">
+                                    <label>简称：</label>
+                                    <el-input v-model="shortcut.shortTitle" maxlength="2" placeholder="最多2字"
+                                        style="width: 80px;" />
+                                </div>
+                                <div class="edit-row">
+                                    <label>描述：</label>
+                                    <el-input v-model="shortcut.description" maxlength="50" style="width: 200px;" />
+                                </div>
+                                <div class="edit-row">
+                                    <label>执行内容：</label>
+                                    <el-input v-model="shortcut.prompt" type="textarea" :rows="3" maxlength="500"
+                                        style="width: 100%;" />
+                                </div>
+                            </div>
+                            <div class="shortcut-actions">
+                                <el-switch v-model="shortcut.isActive" @change="saveCustomShortcuts"
+                                    v-if="!shortcut.isEditing" />
+                                <template v-if="!shortcut.isEditing">
+                                    <el-button type="primary" size="small" text @click="startEditShortcut(shortcut)">
+                                        编辑
+                                    </el-button>
+                                    <el-button type="danger" size="small" text
+                                        @click="removeCustomShortcut(shortcut.id)">
+                                        删除
+                                    </el-button>
+                                </template>
+                                <template v-else>
+                                    <el-button type="success" size="small" @click="saveEditShortcut(shortcut)">
+                                        保存
+                                    </el-button>
+                                    <el-button size="small" @click="cancelEditShortcut(shortcut)">
+                                        取消
+                                    </el-button>
+                                </template>
+                            </div>
+                        </div>
+                    </div>
+                    <div v-else class="empty-custom">
+                        <p>暂无自定义快捷操作，点击"添加"创建你的专属快捷操作</p>
+                    </div>
+                </div>
+            </div>
+
+            <template #footer>
+                <div class="dialog-footer">
+                    <el-button @click="customizeDialogVisible = false">关闭</el-button>
+                </div>
+            </template>
+        </el-dialog>
+
         <!-- 引导提示 -->
         <div v-if="showGuideTip" class="guide-tip">
             <div class="guide-content">
@@ -1528,8 +1611,89 @@ const isChatMode = ref(false); // 控制是否进入聊天模式
 const showUserProfile = ref(false); // 控制是否显示个人中心
 const showChatShortcuts = ref(false); // 控制聊天模式下的快捷操作显示
 
+// 快捷操作自定义相关
+const customizeDialogVisible = ref(false);
+
 // 预置问题组轮换
 const currentExampleGroupIndex = ref(0);
+
+// 快捷操作配置 - 改为响应式数据
+const defaultShortcuts = ref([
+    {
+        id: 'smart_review',
+        icon: '🧠',
+        title: '智能复盘',
+        shortTitle: '复盘',
+        description: '智能分析市场表现和投资策略',
+        action: () => setSuggestionAndSend('智能复盘：请帮我进行全面的智能投资复盘分析，包括：\n\n1. 市场整体走势分析（主要指数表现、板块轮动）\n2. 我的投资组合表现分析和风险评估\n3. 基于AI算法的策略优化建议\n4. 市场情绪和技术指标综合分析\n5. 个性化的下一步操作建议\n6. 风险预警和机会识别\n7. 智能资产配置优化方案\n\n请结合我的投资风格和市场大数据，给出专业的智能化复盘建议。'),
+        isDefault: true,
+        isActive: true
+    },
+    {
+        id: 'watchlist',
+        icon: '⭐',
+        title: '自选股',
+        shortTitle: '自选',
+        description: '查看和管理我的自选股票',
+        action: () => handleWatchlistView(),
+        isDefault: true,
+        isActive: true
+    },
+    {
+        id: 'smart_recommendation',
+        icon: '🎯',
+        title: '智能荐股',
+        shortTitle: '荐股',
+        description: '基于AI算法推荐优质股票',
+        action: () => handleSmartRecommendation(),
+        isDefault: true,
+        isActive: true
+    },
+    {
+        id: 'news_update',
+        icon: '📰',
+        title: '资讯推送',
+        shortTitle: '资讯',
+        description: '获取最新市场资讯和重要公告',
+        action: () => handleNewsUpdate(),
+        isDefault: true,
+        isActive: true
+    },
+    {
+        id: 'asset_analysis',
+        icon: '💰',
+        title: '我的资产',
+        shortTitle: '资产',
+        description: '查看投资组合和账户分析',
+        action: () => handleAssetAnalysis(),
+        isDefault: true,
+        isActive: true
+    }
+]);
+
+// 自定义快捷操作
+const customShortcuts = ref(JSON.parse(localStorage.getItem('customShortcuts') || '[]'));
+
+// 当前激活的快捷操作
+const activeShortcuts = computed(() => {
+    const result = [];
+
+    // 添加激活的默认快捷操作
+    const activeDefaultShortcuts = defaultShortcuts.value.filter(s => s.isActive);
+    result.push(...activeDefaultShortcuts);
+
+    // 添加激活的自定义快捷操作
+    const activeCustomShortcuts = customShortcuts.value
+        .filter(s => s.isActive)
+        .map(shortcut => ({
+            ...shortcut,
+            action: () => setSuggestionAndSend(shortcut.prompt)
+        }));
+    result.push(...activeCustomShortcuts);
+
+    // 返回所有激活的快捷操作（最多5个默认 + 3个自定义 = 8个）
+    return result;
+});
 
 // 板块搜索相关
 const sectorSearchQuery = ref('');
@@ -2572,6 +2736,88 @@ const handleAssetAnalysis = async () => {
     await nextTick();
     scrollToBottom();
     ElMessage.success('已为您生成股票账户报告');
+
+    // 使用快捷操作后自动收起
+    if (showChatShortcuts.value) {
+        setTimeout(() => {
+            showChatShortcuts.value = false;
+        }, 300);
+    }
+};
+
+// 自选股查看功能
+const handleWatchlistView = async () => {
+    // 检查用户是否已登录
+    if (!userStore.isLoggedIn) {
+        ElMessage.warning('请先登录后再开始对话');
+        showGuide('login');
+        return;
+    }
+
+    // 切换到聊天模式
+    isChatMode.value = true;
+
+    // 如果用户没有自选股，添加一些示例数据用于演示
+    if (userStore.watchlist.length === 0) {
+        const sampleWatchlist = [
+            { code: '600519', name: '贵州茅台', industry: '食品饮料', addTime: '2024-01-15T09:30:00.000Z' },
+            { code: '000001', name: '平安银行', industry: '银行', addTime: '2024-01-14T10:15:00.000Z' },
+            { code: '300750', name: '宁德时代', industry: '新能源', addTime: '2024-01-13T14:20:00.000Z' },
+            { code: '000858', name: '五粮液', industry: '食品饮料', addTime: '2024-01-12T11:45:00.000Z' },
+            { code: '002415', name: '海康威视', industry: '电子', addTime: '2024-01-11T13:30:00.000Z' }
+        ];
+
+        userStore.watchlist.push(...sampleWatchlist);
+        localStorage.setItem('watchlist', JSON.stringify(userStore.watchlist));
+        ElMessage.info('已为您添加示例自选股数据');
+    }
+
+    // 构建自选股查看消息
+    const watchlistData = userStore.watchlist.map(stock => {
+        const currentPrice = getCurrentStockPrice(stock.code);
+        const yesterdayPrice = currentPrice * (1 - (Math.random() * 0.1 - 0.05)); // 模拟昨日价格
+        const changeAmount = currentPrice - yesterdayPrice;
+        const changePercent = ((changeAmount / yesterdayPrice) * 100).toFixed(2);
+
+        return {
+            ...stock,
+            currentPrice: currentPrice.toFixed(2),
+            changeAmount: changeAmount.toFixed(2),
+            changePercent: parseFloat(changePercent)
+        };
+    });
+
+    const message = `自选股：请分析我的自选股票表现，包括：
+
+**我的自选股列表（${userStore.watchlist.length}只）**
+${watchlistData.map(stock =>
+        `- ${stock.name}(${stock.code})：¥${stock.currentPrice} ${stock.changePercent >= 0 ? '+' : ''}${stock.changePercent}%`
+    ).join('\n')}
+
+请提供以下分析：
+1. 今日表现最佳和最差的股票
+2. 各行业板块的表现情况
+3. 技术面和基本面分析要点
+4. 买入、卖出或继续观察的建议
+5. 风险提示和注意事项
+6. 相关热点和催化因素分析
+
+请结合市场环境和个股基本面，给出专业的投资建议。`;
+
+    const res = await mockApi.sendMessage(message);
+
+    chatHistory.value.push(
+        { role: 'user', content: '自选股：查看我的自选股票分析' },
+        {
+            ...res.data,
+            hasWatchlistInfo: true,
+            watchlistData: watchlistData
+        }
+    );
+
+    await nextTick();
+    scrollToBottom();
+    ElMessage.success('已为您生成自选股分析报告');
 
     // 使用快捷操作后自动收起
     if (showChatShortcuts.value) {
@@ -3700,6 +3946,158 @@ const resetOnboarding = () => {
         ElMessage.info('已取消重置');
     });
 };
+
+// 快捷操作点击处理
+const handleShortcutClick = (shortcut) => {
+    console.log('🚀 点击快捷操作:', shortcut);
+
+    try {
+        if (shortcut.isDefault) {
+            // 默认快捷操作，直接调用action函数
+            if (typeof shortcut.action === 'function') {
+                shortcut.action();
+            } else {
+                console.error('默认快捷操作action不是函数:', shortcut);
+                ElMessage.error('快捷操作配置错误');
+            }
+        } else {
+            // 自定义快捷操作，使用prompt
+            if (shortcut.prompt) {
+                setSuggestionAndSend(shortcut.prompt);
+            } else {
+                console.error('自定义快捷操作缺少prompt:', shortcut);
+                ElMessage.error('自定义快捷操作配置错误');
+            }
+        }
+    } catch (error) {
+        console.error('执行快捷操作失败:', error);
+        ElMessage.error('执行快捷操作时发生错误');
+    }
+};
+
+// 快捷操作自定义相关方法
+const openCustomizeDialog = () => {
+    customizeDialogVisible.value = true;
+};
+
+const saveCustomShortcuts = () => {
+    localStorage.setItem('customShortcuts', JSON.stringify(customShortcuts.value));
+    ElMessage.success('自定义快捷操作已保存');
+};
+
+const addCustomShortcut = () => {
+    // 限制自定义快捷操作数量最多3个
+    if (customShortcuts.value.length >= 3) {
+        ElMessage.warning('最多只能添加3个自定义快捷操作');
+        return;
+    }
+
+    const prompt = '请输入您想要执行的操作内容';
+    const newShortcut = {
+        id: Date.now().toString(),
+        icon: '💡',
+        title: '自定义操作',
+        shortTitle: '自定',
+        description: '请编辑此操作的描述',
+        prompt: prompt,
+        isDefault: false,
+        isActive: true,
+        isEditing: true // 创建后直接进入编辑模式
+    };
+    customShortcuts.value.push(newShortcut);
+    saveCustomShortcuts();
+    ElMessage.success('已添加自定义快捷操作，请完善信息');
+};
+
+const removeCustomShortcut = (id) => {
+    const index = customShortcuts.value.findIndex(s => s.id === id);
+    if (index > -1) {
+        customShortcuts.value.splice(index, 1);
+        saveCustomShortcuts();
+    }
+};
+
+const toggleShortcutActive = (shortcut) => {
+    if (shortcut.isDefault) {
+        // 对于默认快捷操作，el-switch已经更改了isActive值，我们只需要保存状态
+        const states = defaultShortcuts.value.reduce((acc, s) => {
+            acc[s.id] = s.isActive;
+            return acc;
+        }, {});
+        localStorage.setItem('defaultShortcutStates', JSON.stringify(states));
+        ElMessage.success(shortcut.isActive ? '已启用该快捷操作' : '已禁用该快捷操作');
+    } else {
+        // 对于自定义快捷操作，el-switch已经更改了isActive值，我们只需要保存
+        saveCustomShortcuts();
+        ElMessage.success(shortcut.isActive ? '已启用该快捷操作' : '已禁用该快捷操作');
+    }
+};
+
+// 初始化默认快捷操作状态
+const initDefaultShortcutStates = () => {
+    const savedStates = JSON.parse(localStorage.getItem('defaultShortcutStates') || '{}');
+    defaultShortcuts.value.forEach(shortcut => {
+        if (savedStates.hasOwnProperty(shortcut.id)) {
+            shortcut.isActive = savedStates[shortcut.id];
+        }
+    });
+};
+
+// 编辑快捷操作相关方法
+const startEditShortcut = (shortcut) => {
+    // 保存原始数据用于取消编辑
+    shortcut.originalData = {
+        icon: shortcut.icon,
+        title: shortcut.title,
+        shortTitle: shortcut.shortTitle,
+        description: shortcut.description,
+        prompt: shortcut.prompt
+    };
+    shortcut.isEditing = true;
+};
+
+const saveEditShortcut = (shortcut) => {
+    if (!shortcut.title.trim()) {
+        ElMessage.warning('标题不能为空');
+        return;
+    }
+    if (!shortcut.shortTitle || !shortcut.shortTitle.trim()) {
+        ElMessage.warning('简称不能为空');
+        return;
+    }
+    if (shortcut.shortTitle.length > 2) {
+        ElMessage.warning('简称最多2个字符');
+        return;
+    }
+    if (!shortcut.prompt.trim()) {
+        ElMessage.warning('执行内容不能为空');
+        return;
+    }
+
+    // 更新快捷操作信息
+    shortcut.isEditing = false;
+    delete shortcut.originalData;
+    saveCustomShortcuts();
+    ElMessage.success('自定义快捷操作已保存');
+};
+
+const cancelEditShortcut = (shortcut) => {
+    // 恢复原始数据
+    if (shortcut.originalData) {
+        shortcut.icon = shortcut.originalData.icon;
+        shortcut.title = shortcut.originalData.title;
+        shortcut.shortTitle = shortcut.originalData.shortTitle;
+        shortcut.description = shortcut.originalData.description;
+        shortcut.prompt = shortcut.originalData.prompt;
+        delete shortcut.originalData;
+    }
+    shortcut.isEditing = false;
+};
+
+// 组件挂载时初始化
+onMounted(() => {
+    initDefaultShortcutStates();
+});
 </script>
 
 <style scoped>
@@ -9177,6 +9575,169 @@ body {
     .action-btn {
         width: 100%;
     }
+}
+
+/* 自定义快捷操作对话框样式 */
+.customize-dialog .el-dialog__body {
+    padding: 20px;
+}
+
+.customize-content {
+    max-height: 70vh;
+    overflow-y: auto;
+}
+
+.section {
+    margin-bottom: 24px;
+}
+
+.section h4 {
+    font-size: 16px;
+    font-weight: 600;
+    color: #1f2937;
+    margin-bottom: 16px;
+}
+
+.section-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 16px;
+}
+
+.shortcuts-list {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+}
+
+.shortcut-item {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 16px;
+    background: #f8fafc;
+    border: 1px solid #e2e8f0;
+    border-radius: 8px;
+    transition: all 0.2s ease;
+    min-height: 60px;
+}
+
+.shortcut-item:hover {
+    background: #f1f5f9;
+    border-color: #cbd5e1;
+}
+
+.shortcut-info {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    flex: 1;
+}
+
+.shortcut-icon {
+    font-size: 20px;
+    width: 32px;
+    height: 32px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: #fff;
+    border-radius: 6px;
+    border: 1px solid #e2e8f0;
+}
+
+.shortcut-details {
+    flex: 1;
+}
+
+.shortcut-title {
+    font-size: 14px;
+    font-weight: 600;
+    color: #1f2937;
+    margin-bottom: 4px;
+}
+
+.shortcut-desc {
+    font-size: 12px;
+    color: #6b7280;
+    line-height: 1.4;
+}
+
+.shortcut-actions {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin-top: 4px;
+    flex-direction: row;
+    min-width: 120px;
+    justify-content: flex-end;
+}
+
+.shortcut-actions.editing {
+    align-items: flex-start;
+    margin-top: 8px;
+}
+
+/* 编辑表单样式 */
+.shortcut-edit-form {
+    flex: 1;
+    margin-right: 16px;
+}
+
+.edit-row {
+    display: flex;
+    align-items: center;
+    margin-bottom: 12px;
+    gap: 8px;
+}
+
+.edit-row:last-child {
+    margin-bottom: 0;
+}
+
+.edit-row label {
+    font-size: 14px;
+    color: #374151;
+    font-weight: 500;
+    min-width: 80px;
+    text-align: right;
+}
+
+.edit-row:last-child {
+    flex-direction: column;
+    align-items: flex-start;
+}
+
+.edit-row:last-child label {
+    margin-bottom: 4px;
+    text-align: left;
+}
+
+.empty-custom {
+    text-align: center;
+    padding: 40px 20px;
+    color: #6b7280;
+    background: #f8fafc;
+    border: 2px dashed #e2e8f0;
+    border-radius: 8px;
+}
+
+.empty-custom p {
+    margin: 0;
+    font-size: 14px;
+}
+
+.customize-btn {
+    background: linear-gradient(135deg, #6366f1 0%, #8b5cf6 100%);
+    border: none;
+    color: white;
+}
+
+.customize-btn:hover {
+    background: linear-gradient(135deg, #4f46e5 0%, #7c3aed 100%);
+    transform: translateY(-1px);
+    box-shadow: 0 4px 12px rgba(99, 102, 241, 0.3);
 }
 
 /* 版权信息样式 */

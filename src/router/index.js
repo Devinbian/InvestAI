@@ -39,6 +39,11 @@ const router = createRouter({
   routes,
 });
 
+// 添加路由错误处理
+router.onError((error) => {
+  console.error("Router error:", error);
+});
+
 // 路由守卫
 router.beforeEach((to, from, next) => {
   const userStore = useUserStore();

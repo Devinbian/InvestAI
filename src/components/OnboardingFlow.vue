@@ -267,8 +267,141 @@
 
             <div class="step-actions">
                 <el-button @click="goToPreviousStep" class="action-btn secondary">上一步</el-button>
-                <el-button @click="completeOnboarding" type="primary" class="action-btn primary"
-                    :disabled="userAnswers[3].majorCategories.length === 0 || userAnswers[3].subCategories.length === 0">完成设置</el-button>
+                <el-button @click="goToNextStep" type="primary" class="action-btn primary"
+                    :disabled="userAnswers[3].majorCategories.length === 0">下一步</el-button>
+            </div>
+        </div>
+
+        <!-- 第6步：结果展示 -->
+        <div v-if="currentStep === 'result'" class="onboarding-step result-step">
+            <div class="result-header">
+                <div class="result-icon">🎉</div>
+                <h2 class="result-title">投资偏好分析完成</h2>
+                <p class="result-subtitle">根据您的选择，我们为您生成了专属的投资建议</p>
+            </div>
+
+            <div class="result-content">
+                <div class="result-summary">
+                    <div class="summary-card risk-summary">
+                        <div class="summary-header">
+                            <span class="summary-icon">📊</span>
+                            <h3 class="summary-title">投资风险偏好</h3>
+                        </div>
+                        <div class="summary-content">
+                            <div class="risk-level">
+                                <span class="risk-label">{{ getRiskOptionByValue(userAnswers[0])?.title }}</span>
+                                <div class="risk-dots">
+                                    <span v-for="i in 5" :key="i" class="risk-dot"
+                                        :class="{ 'active': i <= getRiskOptionByValue(userAnswers[0])?.riskLevel }"></span>
+                                </div>
+                            </div>
+                            <p class="risk-desc">{{ getRiskOptionByValue(userAnswers[0])?.simpleDesc }}</p>
+                        </div>
+                    </div>
+
+                    <div class="summary-card experience-summary">
+                        <div class="summary-header">
+                            <span class="summary-icon">👤</span>
+                            <h3 class="summary-title">投资经验</h3>
+                        </div>
+                        <div class="summary-content">
+                            <div class="experience-info">
+                                <span class="experience-label">{{ getExperienceOptionByValue(userAnswers[1])?.title
+                                    }}</span>
+                                <span class="experience-icon">{{ getExperienceOptionByValue(userAnswers[1])?.icon
+                                    }}</span>
+                            </div>
+                            <p class="experience-desc">{{ getExperienceOptionByValue(userAnswers[1])?.label }}</p>
+                        </div>
+                    </div>
+
+                    <div class="summary-card traits-summary">
+                        <div class="summary-header">
+                            <span class="summary-icon">🎯</span>
+                            <h3 class="summary-title">个人特征</h3>
+                        </div>
+                        <div class="summary-content">
+                            <div class="traits-list-result">
+                                <div v-for="trait in userTraits" :key="trait.id" class="trait-result-item">
+                                    <span class="trait-name">{{ trait.title }}:</span>
+                                    <div class="trait-value-display">
+                                        <span class="trait-value">{{ userAnswers[2][trait.id] }}分</span>
+                                        <div class="trait-mini-bar">
+                                            <div class="trait-mini-progress"
+                                                :style="{ width: (userAnswers[2][trait.id] / 5) * 100 + '%' }"></div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="summary-card sectors-summary">
+                        <div class="summary-header">
+                            <span class="summary-icon">🏭</span>
+                            <h3 class="summary-title">关注板块</h3>
+                        </div>
+                        <div class="summary-content">
+                            <div class="sectors-result">
+                                <div class="major-sectors-result">
+                                    <span class="sectors-label">主要板块:</span>
+                                    <div class="sectors-tags">
+                                        <span v-for="category in userAnswers[3].majorCategories" :key="category"
+                                            class="sector-tag major">
+                                            {{ getMajorSectorIcon(category) }} {{ getMajorSectorLabel(category) }}
+                                        </span>
+                                    </div>
+                                </div>
+                                <div class="sub-sectors-result" v-if="userAnswers[3].subCategories.length > 0">
+                                    <span class="sectors-label">细分领域:</span>
+                                    <div class="sectors-tags">
+                                        <span v-for="subCategory in userAnswers[3].subCategories" :key="subCategory"
+                                            class="sector-tag sub">
+                                            {{ getSubSectorLabel(subCategory) }}
+                                        </span>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="result-recommendations">
+                    <div class="recommendations-header">
+                        <h3 class="recommendations-title">💡 个性化建议</h3>
+                    </div>
+                    <div class="recommendations-content">
+                        <div class="recommendation-item">
+                            <span class="rec-icon">📈</span>
+                            <div class="rec-content">
+                                <h4 class="rec-title">投资策略建议</h4>
+                                <p class="rec-desc">{{ getInvestmentStrategy() }}</p>
+                            </div>
+                        </div>
+                        <div class="recommendation-item">
+                            <span class="rec-icon">⚖️</span>
+                            <div class="rec-content">
+                                <h4 class="rec-title">资产配置建议</h4>
+                                <p class="rec-desc">{{ getAssetAllocation() }}</p>
+                            </div>
+                        </div>
+                        <div class="recommendation-item">
+                            <span class="rec-icon">🎯</span>
+                            <div class="rec-content">
+                                <h4 class="rec-title">关注重点</h4>
+                                <p class="rec-desc">{{ getFocusPoints() }}</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="result-actions">
+                <el-button @click="goToPreviousStep" class="action-btn secondary">返回修改</el-button>
+                <el-button @click="completeOnboarding" type="primary" size="large"
+                    class="action-btn primary complete-btn">
+                    开始投资之旅
+                </el-button>
             </div>
         </div>
     </div>
@@ -1080,6 +1213,8 @@ const goToPreviousStep = () => {
         currentStep.value = 'demo';
     } else if (currentStep.value === 'briefing') {
         currentStep.value = 'tutorial';
+    } else if (currentStep.value === 'result') {
+        currentStep.value = 'briefing';
     }
 };
 
@@ -1092,6 +1227,8 @@ const goToNextStep = () => {
         currentStep.value = 'tutorial';
     } else if (currentStep.value === 'tutorial') {
         currentStep.value = 'briefing';
+    } else if (currentStep.value === 'briefing') {
+        currentStep.value = 'result';
     }
 };
 
@@ -1145,6 +1282,85 @@ const getMajorSectorLabel = (majorCategory) => {
 
 const getSubSectorsByParent = (parentValue) => {
     return subSectorOptions.filter(option => option.parent === parentValue);
+};
+
+// 结果页面辅助函数
+const getRiskOptionByValue = (value) => {
+    return riskOptions.find(option => option.value === value);
+};
+
+const getExperienceOptionByValue = (value) => {
+    return experienceOptions.find(option => option.value === value);
+};
+
+const getSubSectorLabel = (value) => {
+    const subSector = subSectorOptions.find(option => option.value === value);
+    return subSector ? subSector.label : value;
+};
+
+const getInvestmentStrategy = () => {
+    const riskLevel = getRiskOptionByValue(userAnswers.value[0])?.riskLevel || 3;
+    const experience = userAnswers.value[1];
+
+    if (riskLevel <= 2) {
+        return experience === 'beginner'
+            ? '建议从稳健的大盘蓝筹股开始，如银行、央企等，先学习基础知识，逐步积累经验。'
+            : '可以配置稳健型基金和优质蓝筹股，保持70%稳健+30%成长的组合策略。';
+    } else if (riskLevel <= 3) {
+        return experience === 'beginner'
+            ? '推荐均衡配置策略，50%稳健型资产+50%成长型资产，定期学习和调整。'
+            : '采用核心-卫星策略，核心配置稳健资产，卫星配置成长性较好的行业龙头。';
+    } else {
+        return experience === 'beginner'
+            ? '建议先从模拟交易开始，学习风险管理，再逐步增加成长型资产比例。'
+            : '可以采用更积极的成长策略，关注新兴行业和创新企业，但要做好风险管理。';
+    }
+};
+
+const getAssetAllocation = () => {
+    const riskLevel = getRiskOptionByValue(userAnswers.value[0])?.riskLevel || 3;
+
+    if (riskLevel <= 2) {
+        return '建议配置：60%蓝筹股票，30%债券基金，10%货币基金，重点关注股息收益稳定的公司。';
+    } else if (riskLevel <= 3) {
+        return '建议配置：50%优质股票，30%混合基金，15%债券，5%现金，平衡收益与风险。';
+    } else {
+        return '建议配置：70%成长型股票，20%行业主题基金，10%现金备用，重点关注高成长潜力标的。';
+    }
+};
+
+const getFocusPoints = () => {
+    const majorSectors = userAnswers.value[3].majorCategories;
+    const experience = userAnswers.value[1];
+
+    let focusPoints = '根据您选择的板块，建议重点关注：';
+
+    if (majorSectors.includes('technology')) {
+        focusPoints += '科技行业的创新动态、政策支持和龙头企业发展；';
+    }
+    if (majorSectors.includes('healthcare')) {
+        focusPoints += '医疗健康领域的新药研发、人口老龄化趋势；';
+    }
+    if (majorSectors.includes('finance')) {
+        focusPoints += '金融行业的政策变化、利率环境和银行业绩；';
+    }
+    if (majorSectors.includes('consumer')) {
+        focusPoints += '消费升级趋势、品牌价值和市场占有率；';
+    }
+    if (majorSectors.includes('manufacturing')) {
+        focusPoints += '制造业转型升级、智能制造和产业链优化；';
+    }
+    if (majorSectors.includes('energy')) {
+        focusPoints += '新能源发展、碳中和政策和清洁技术进步；';
+    }
+
+    if (experience === 'beginner') {
+        focusPoints += ' 同时建议多学习基本面分析和行业研究方法。';
+    } else {
+        focusPoints += ' 可以深入研究相关产业链和商业模式创新。';
+    }
+
+    return focusPoints;
 };
 
 const completeOnboarding = () => {
@@ -2785,6 +3001,313 @@ const completeOnboarding = () => {
     text-align: center;
 }
 
+/* 结果展示页面样式 */
+.result-step {
+    padding: 0;
+}
+
+.result-header {
+    text-align: center;
+    padding: 40px 30px 20px;
+    background: linear-gradient(135deg, #f0f9ff 0%, #e0e7ff 100%);
+}
+
+.result-icon {
+    font-size: 4rem;
+    margin-bottom: 20px;
+}
+
+.result-title {
+    font-size: 2.2rem;
+    font-weight: 700;
+    color: #18181b;
+    margin-bottom: 12px;
+}
+
+.result-subtitle {
+    font-size: 1.1rem;
+    color: #6b7280;
+}
+
+.result-content {
+    padding: 30px;
+    max-height: calc(100vh - 280px);
+    overflow-y: auto;
+}
+
+.result-summary {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 20px;
+    margin-bottom: 30px;
+}
+
+.summary-card {
+    background: #fafbfc;
+    border: 1px solid #e5e7eb;
+    border-radius: 16px;
+    padding: 20px;
+    transition: all 0.2s ease;
+}
+
+.summary-card:hover {
+    border-color: #d1d5db;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
+}
+
+.summary-header {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    margin-bottom: 16px;
+}
+
+.summary-icon {
+    font-size: 1.5rem;
+}
+
+.summary-title {
+    font-size: 1.1rem;
+    font-weight: 600;
+    color: #18181b;
+    margin: 0;
+}
+
+.summary-content {
+    color: #4b5563;
+}
+
+/* 风险偏好卡片 */
+.risk-level {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 12px;
+}
+
+.risk-label {
+    font-size: 1.1rem;
+    font-weight: 600;
+    color: #18181b;
+}
+
+.risk-dots {
+    display: flex;
+    gap: 4px;
+}
+
+.risk-desc {
+    font-size: 0.9rem;
+    color: #6b7280;
+    margin: 0;
+}
+
+/* 投资经验卡片 */
+.experience-info {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 12px;
+}
+
+.experience-label {
+    font-size: 1.1rem;
+    font-weight: 600;
+    color: #18181b;
+}
+
+.experience-icon {
+    font-size: 1.5rem;
+}
+
+.experience-desc {
+    font-size: 0.9rem;
+    color: #6b7280;
+    margin: 0;
+}
+
+/* 个人特征卡片 */
+.traits-list-result {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+}
+
+.trait-result-item {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+}
+
+.trait-name {
+    font-size: 0.9rem;
+    color: #4b5563;
+    font-weight: 500;
+}
+
+.trait-value-display {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.trait-value {
+    font-size: 0.9rem;
+    font-weight: 600;
+    color: #18181b;
+    background: #f0f9ff;
+    border: 1px solid #0ea5e9;
+    border-radius: 12px;
+    padding: 2px 8px;
+    min-width: 40px;
+    text-align: center;
+}
+
+.trait-mini-bar {
+    width: 60px;
+    height: 4px;
+    background: #e5e7eb;
+    border-radius: 2px;
+    position: relative;
+}
+
+.trait-mini-progress {
+    height: 100%;
+    background: linear-gradient(90deg, #10b981 0%, #0ea5e9 50%, #8b5cf6 100%);
+    border-radius: 2px;
+    transition: width 0.3s ease;
+}
+
+/* 关注板块卡片 */
+.sectors-result {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+}
+
+.major-sectors-result,
+.sub-sectors-result {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+
+.sectors-label {
+    font-size: 0.9rem;
+    color: #4b5563;
+    font-weight: 500;
+}
+
+.sectors-tags {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+}
+
+.sector-tag {
+    background: #f3f4f6;
+    color: #374151;
+    padding: 4px 10px;
+    border-radius: 12px;
+    font-size: 0.8rem;
+    font-weight: 500;
+    border: 1px solid #e5e7eb;
+}
+
+.sector-tag.major {
+    background: #dbeafe;
+    color: #1e40af;
+    border-color: #93c5fd;
+}
+
+.sector-tag.sub {
+    background: #f0fdf4;
+    color: #166534;
+    border-color: #bbf7d0;
+}
+
+/* 个性化建议 */
+.result-recommendations {
+    background: #ffffff;
+    border: 1px solid #e5e7eb;
+    border-radius: 16px;
+    padding: 24px;
+}
+
+.recommendations-header {
+    margin-bottom: 20px;
+}
+
+.recommendations-title {
+    font-size: 1.3rem;
+    font-weight: 600;
+    color: #18181b;
+    margin: 0;
+}
+
+.recommendations-content {
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+}
+
+.recommendation-item {
+    display: flex;
+    align-items: flex-start;
+    gap: 16px;
+    padding: 16px;
+    background: #f8fafc;
+    border-radius: 12px;
+    border-left: 4px solid #0ea5e9;
+}
+
+.rec-icon {
+    font-size: 1.3rem;
+    flex-shrink: 0;
+    margin-top: 2px;
+}
+
+.rec-content {
+    flex: 1;
+}
+
+.rec-title {
+    font-size: 1rem;
+    font-weight: 600;
+    color: #18181b;
+    margin: 0 0 8px 0;
+}
+
+.rec-desc {
+    font-size: 0.9rem;
+    color: #4b5563;
+    line-height: 1.5;
+    margin: 0;
+}
+
+/* 结果页面操作按钮 */
+.result-actions {
+    padding: 24px 30px 32px;
+    border-top: 1px solid #e5e7eb;
+    background: white;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.complete-btn {
+    padding: 12px 32px;
+    font-size: 1.1rem;
+    border-radius: 12px;
+    background: #18181b !important;
+    border-color: #18181b !important;
+}
+
+.complete-btn:hover {
+    background: #000000 !important;
+    border-color: #000000 !important;
+}
+
 @media (max-width: 768px) {
     .sectors-layout {
         grid-template-columns: 1fr;
@@ -2797,6 +3320,22 @@ const completeOnboarding = () => {
 
     .experience-options-grid {
         grid-template-columns: 1fr;
+    }
+
+    .result-summary {
+        grid-template-columns: 1fr;
+    }
+
+    .result-header {
+        padding: 30px 20px 15px;
+    }
+
+    .result-title {
+        font-size: 1.8rem;
+    }
+
+    .result-content {
+        padding: 20px;
     }
 }
 </style>

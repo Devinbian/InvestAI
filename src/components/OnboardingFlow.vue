@@ -1069,10 +1069,6 @@ const selectRiskOption = (value) => {
 
 const selectExperienceOption = (value) => {
     userAnswers.value[1] = value;
-    // 选择后自动跳转到下一步
-    setTimeout(() => {
-        goToNextStep();
-    }, 300); // 稍微延迟让用户看到选择效果
 };
 
 const goToPreviousStep = () => {
@@ -1315,6 +1311,14 @@ const completeOnboarding = () => {
     font-size: 1.1rem;
     border-radius: 12px;
     margin-bottom: 40px;
+    background: #18181b !important;
+    border-color: #18181b !important;
+    color: white !important;
+}
+
+.start-btn:hover {
+    background: #000000 !important;
+    border-color: #000000 !important;
 }
 
 /* 评估测试样式 */
@@ -1341,7 +1345,7 @@ const completeOnboarding = () => {
 
 .progress-fill {
     height: 100%;
-    background: linear-gradient(90deg, #667eea, #764ba2);
+    background: linear-gradient(90deg, #18181b, #000000);
     border-radius: 4px;
     transition: width 0.3s ease;
 }
@@ -1380,7 +1384,7 @@ const completeOnboarding = () => {
 }
 
 .option-card:hover {
-    border-color: #667eea;
+    border-color: #18181b;
     background: #f7faff;
     transform: translateY(-2px);
 }
@@ -1432,7 +1436,7 @@ const completeOnboarding = () => {
 }
 
 .profile-tag {
-    background: #667eea;
+    background: #18181b;
     color: white;
     padding: 8px 16px;
     border-radius: 20px;
@@ -1469,7 +1473,7 @@ const completeOnboarding = () => {
     padding: 16px;
     background: #f7faff;
     border-radius: 10px;
-    border-left: 4px solid #667eea;
+    border-left: 4px solid #18181b;
 }
 
 .stock-name {
@@ -1484,7 +1488,7 @@ const completeOnboarding = () => {
 
 .stock-weight {
     font-weight: 700;
-    color: #667eea;
+    color: #18181b;
     font-size: 1.1rem;
 }
 
@@ -1583,7 +1587,7 @@ const completeOnboarding = () => {
 }
 
 .task-card:hover {
-    border-color: #667eea;
+    border-color: #18181b;
     background: #f7faff;
 }
 
@@ -1593,7 +1597,7 @@ const completeOnboarding = () => {
 }
 
 .task-card.active {
-    border-color: #667eea;
+    border-color: #18181b;
     background: #f7faff;
 }
 
@@ -1692,7 +1696,7 @@ const completeOnboarding = () => {
     padding: 16px;
     background: #f7faff;
     border-radius: 10px;
-    border-left: 4px solid #667eea;
+    border-left: 4px solid #18181b;
 }
 
 .rec-name {
@@ -1721,7 +1725,7 @@ const completeOnboarding = () => {
 }
 
 .news-tag {
-    background: #667eea;
+    background: #18181b;
     color: white;
     padding: 4px 8px;
     border-radius: 12px;
@@ -1807,10 +1811,10 @@ const completeOnboarding = () => {
 }
 
 .web-option-card:hover {
-    border-color: #667eea;
+    border-color: #18181b;
     background: #f7faff;
     transform: translateY(-2px);
-    box-shadow: 0 4px 20px rgba(102, 126, 234, 0.15);
+    box-shadow: 0 4px 20px rgba(24, 24, 27, 0.15);
 }
 
 .web-option-card .option-icon {
@@ -1840,7 +1844,7 @@ const completeOnboarding = () => {
 
 .web-option-card .option-simple-desc {
     font-size: 0.8rem;
-    color: #667eea;
+    color: #18181b;
     font-weight: 600;
     margin-top: auto;
     flex-shrink: 0;
@@ -2188,8 +2192,8 @@ const completeOnboarding = () => {
 }
 
 .action-btn.primary {
-    background: #667eea;
-    border: 1px solid #667eea;
+    background: #18181b;
+    border: 1px solid #18181b;
     color: white;
 }
 
@@ -2213,15 +2217,15 @@ const completeOnboarding = () => {
 }
 
 .risk-option-card.selected {
-    border-color: #667eea;
+    border-color: #18181b;
     background: #f7faff;
-    box-shadow: 0 4px 20px rgba(102, 126, 234, 0.15);
+    box-shadow: 0 4px 20px rgba(24, 24, 27, 0.15);
 }
 
 .risk-option-card:hover {
-    border-color: #667eea;
+    border-color: #18181b;
     transform: translateY(-2px);
-    box-shadow: 0 4px 20px rgba(102, 126, 234, 0.1);
+    box-shadow: 0 4px 20px rgba(24, 24, 27, 0.1);
 }
 
 .option-header {
@@ -2239,26 +2243,32 @@ const completeOnboarding = () => {
 
 .risk-level-indicator {
     display: flex;
-    gap: 4px;
+    gap: 3px;
+    align-items: center;
 }
 
 .risk-dot {
     width: 8px;
     height: 8px;
     border-radius: 50%;
-    background: #e2e8f0;
-    transition: background 0.3s ease;
+    background: #e5e7eb;
+    transition: all 0.2s ease;
 }
 
 .risk-dot.active {
-    background: #667eea;
+    background: #ef4444;
 }
 
 .simple-desc {
     font-size: 0.9rem;
-    color: #667eea;
+    color: #059669;
     font-weight: 600;
+    background: #f0fdf4;
+    padding: 10px 12px;
+    border-radius: 6px;
     margin-bottom: 12px;
+    border-left: 3px solid #10b981;
+    line-height: 1.3;
 }
 
 .option-metrics {
@@ -2303,7 +2313,7 @@ const completeOnboarding = () => {
     right: 16px;
     width: 24px;
     height: 24px;
-    background: #667eea;
+    background: #18181b;
     color: white;
     border-radius: 50%;
     display: flex;
@@ -2333,15 +2343,15 @@ const completeOnboarding = () => {
 }
 
 .experience-option-card.selected {
-    border-color: #667eea;
+    border-color: #18181b;
     background: #f7faff;
-    box-shadow: 0 4px 20px rgba(102, 126, 234, 0.15);
+    box-shadow: 0 4px 20px rgba(24, 24, 27, 0.15);
 }
 
 .experience-option-card:hover {
-    border-color: #667eea;
+    border-color: #18181b;
     transform: translateY(-2px);
-    box-shadow: 0 4px 20px rgba(102, 126, 234, 0.1);
+    box-shadow: 0 4px 20px rgba(24, 24, 27, 0.1);
 }
 
 .experience-header {
@@ -2364,7 +2374,7 @@ const completeOnboarding = () => {
 
 .experience-label {
     font-size: 1rem;
-    color: #667eea;
+    color: #18181b;
     font-weight: 600;
     margin-bottom: 12px;
 }
@@ -2456,19 +2466,24 @@ const completeOnboarding = () => {
 .trait-current-value {
     font-size: 1.1rem;
     font-weight: 700;
-    color: #667eea;
+    color: #18181b;
+    background: #f0f9ff;
+    border: 1px solid #0ea5e9;
+    border-radius: 20px;
+    padding: 4px 12px;
+    min-width: 50px;
+    text-align: center;
 }
 
 .trait-slider-container {
-    margin-bottom: -10px;
     position: relative;
-    height: 70px;
-    /* 确保有足够高度显示滑块和标签 */
+    margin-bottom: 15px;
+    height: 50px;
 }
 
 .slider-track {
     height: 6px;
-    background: #e2e8f0;
+    background: #e5e7eb;
     border-radius: 3px;
     position: relative;
     margin: 20px 0;
@@ -2476,7 +2491,7 @@ const completeOnboarding = () => {
 
 .slider-progress {
     height: 100%;
-    background: linear-gradient(90deg, #667eea, #764ba2);
+    background: linear-gradient(90deg, #10b981 0%, #0ea5e9 50%, #8b5cf6 100%);
     border-radius: 3px;
     transition: width 0.3s ease;
 }
@@ -2484,70 +2499,68 @@ const completeOnboarding = () => {
 .slider-options {
     display: flex;
     justify-content: space-between;
-    align-items: center;
     position: absolute;
-    top: 30%;
+    top: 0;
     left: 0;
     right: 0;
-    transform: translateY(-50%);
-    /* 精确将滑块球定位到轨道中心 */
+    height: 100%;
 }
 
 .slider-option {
+    position: relative;
+    cursor: pointer;
     display: flex;
     flex-direction: column;
     align-items: center;
-    cursor: pointer;
-    transition: all 0.3s ease;
-    position: relative;
-    padding-bottom: 35px;
-    /* 为标签留出空间 */
-}
-
-.slider-option.active .option-dot {
-    background: #667eea;
-    transform: scale(1.3);
-    border: 2px solid white;
-    box-shadow: 0 2px 8px rgba(102, 126, 234, 0.3);
+    flex: 1;
 }
 
 .option-dot {
-    width: 18px;
-    height: 18px;
+    width: 16px;
+    height: 16px;
+    border: 2px solid #d1d5db;
     border-radius: 50%;
-    background: #cbd5e0;
-    border: 2px solid white;
-    transition: all 0.3s ease;
-    position: relative;
+    background: white;
+    position: absolute;
+    top: -5px;
+    transition: all 0.2s ease;
     z-index: 2;
-    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
 }
 
 .slider-option:hover .option-dot {
-    background: #a0aec0;
+    border-color: #18181b;
     transform: scale(1.1);
+}
+
+.slider-option.active .option-dot {
+    border-color: #18181b;
+    background: #18181b;
+    transform: scale(1.2);
 }
 
 .option-label {
     font-size: 0.75rem;
-    color: #718096;
     font-weight: 600;
-    white-space: nowrap;
-    text-align: center;
+    color: #6b7280;
     position: absolute;
-    bottom: 0;
-    left: 50%;
-    transform: translateX(-50%);
+    top: 20px;
+    white-space: nowrap;
+    transition: color 0.2s ease;
+}
+
+.slider-option.active .option-label {
+    color: #18181b;
 }
 
 .trait-description {
     font-size: 0.85rem;
-    color: #718096;
-    font-style: italic;
-    text-align: center;
-    padding: 12px;
-    background: #f7faff;
+    color: #4b5563;
+    background: #f8fafc;
+    border: 1px solid #e5e7eb;
     border-radius: 8px;
+    padding: 12px;
+    text-align: center;
+    font-style: italic;
 }
 
 /* 板块选择样式 */
@@ -2588,7 +2601,7 @@ const completeOnboarding = () => {
 
 .section-counter {
     font-size: 0.9rem;
-    color: #667eea;
+    color: #18181b;
     font-weight: 600;
 }
 
@@ -2611,7 +2624,7 @@ const completeOnboarding = () => {
 }
 
 .major-sector-option.selected {
-    border-color: #667eea;
+    border-color: #18181b;
     background: #f7faff;
 }
 
@@ -2621,7 +2634,7 @@ const completeOnboarding = () => {
 }
 
 .major-sector-option:hover:not(.disabled) {
-    border-color: #667eea;
+    border-color: #18181b;
     transform: translateY(-1px);
 }
 
@@ -2650,7 +2663,7 @@ const completeOnboarding = () => {
 .sector-check {
     width: 20px;
     height: 20px;
-    background: #667eea;
+    background: #18181b;
     color: white;
     border-radius: 50%;
     display: flex;
@@ -2703,7 +2716,7 @@ const completeOnboarding = () => {
 }
 
 .sub-sector-option.selected {
-    border-color: #667eea;
+    border-color: #18181b;
     background: #f7faff;
 }
 
@@ -2713,7 +2726,7 @@ const completeOnboarding = () => {
 }
 
 .sub-sector-option:hover:not(.disabled) {
-    border-color: #667eea;
+    border-color: #18181b;
 }
 
 .sub-sector-icon {
@@ -2741,14 +2754,14 @@ const completeOnboarding = () => {
 
 .sub-sector-examples {
     font-size: 0.75rem;
-    color: #667eea;
+    color: #18181b;
     font-weight: 500;
 }
 
 .sub-sector-check {
     width: 16px;
     height: 16px;
-    background: #667eea;
+    background: #18181b;
     color: white;
     border-radius: 50%;
     display: flex;
@@ -2768,7 +2781,7 @@ const completeOnboarding = () => {
     background: #f7faff;
     padding: 24px;
     border-radius: 12px;
-    border: 2px dashed #667eea;
+    border: 2px dashed #18181b;
     text-align: center;
 }
 

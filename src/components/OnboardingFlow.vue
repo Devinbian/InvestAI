@@ -28,8 +28,38 @@
             </div>
         </div>
 
-        <!-- 第2步：投资风格选择 (原偏好设置第1步) -->
+        <!-- 第2步：投资经验 (原偏好设置第2步) -->
         <div v-if="currentStep === 'assessment'" class="onboarding-step">
+            <div class="step-header">
+                <h2 class="step-title">投资经验</h2>
+                <p class="step-subtitle">告诉我们您的投资经验，帮助我们推荐合适的投资方案</p>
+            </div>
+
+            <div class="step-content">
+                <div class="experience-options-grid">
+                    <div v-for="option in experienceOptions" :key="option.value" class="experience-option-card"
+                        :class="{ 'selected': userAnswers[0] === option.value }"
+                        @click="selectExperienceOption(option.value, 0)">
+                        <div class="experience-header">
+                            <span class="experience-icon">{{ option.icon }}</span>
+                            <div class="experience-title">{{ option.title }}</div>
+                        </div>
+                        <div class="experience-label">{{ option.label }}</div>
+                        <div class="experience-desc">{{ option.desc }}</div>
+                        <div class="selection-indicator" v-if="userAnswers[0] === option.value">✓</div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="step-actions">
+                <el-button @click="goToPreviousStep" class="action-btn secondary">上一步</el-button>
+                <el-button @click="goToNextStep" type="primary" class="action-btn primary"
+                    :disabled="!userAnswers[0]">下一步</el-button>
+            </div>
+        </div>
+
+        <!-- 第3步：投资风格选择 (原偏好设置第1步) -->
+        <div v-if="currentStep === 'demo'" class="onboarding-step">
             <div class="step-header">
                 <h2 class="step-title">选择投资风格</h2>
                 <p class="step-subtitle">您希望投资收益高一些，还是稳一些？选择最适合您的投资方式</p>
@@ -38,8 +68,8 @@
             <div class="step-content">
                 <div class="risk-options-grid">
                     <div v-for="option in riskOptions" :key="option.value" class="risk-option-card"
-                        :class="{ 'selected': userAnswers[0] === option.value }"
-                        @click="selectRiskOption(option.value)">
+                        :class="{ 'selected': userAnswers[1] === option.value }"
+                        @click="selectRiskOption(option.value, 1)">
                         <div class="option-header">
                             <div class="option-icon">{{ option.icon }}</div>
                             <div class="option-title">{{ option.title }}</div>
@@ -64,36 +94,6 @@
                             <span class="examples-label">📈 投资什么:</span>
                             <span class="examples-text">{{ option.examples }}</span>
                         </div>
-                        <div class="selection-indicator" v-if="userAnswers[0] === option.value">✓</div>
-                    </div>
-                </div>
-            </div>
-
-            <div class="step-actions">
-                <el-button @click="goToPreviousStep" class="action-btn secondary">上一步</el-button>
-                <el-button @click="goToNextStep" type="primary" class="action-btn primary"
-                    :disabled="!userAnswers[0]">下一步</el-button>
-            </div>
-        </div>
-
-        <!-- 第3步：投资经验 (原偏好设置第2步) -->
-        <div v-if="currentStep === 'demo'" class="onboarding-step">
-            <div class="step-header">
-                <h2 class="step-title">投资经验</h2>
-                <p class="step-subtitle">告诉我们您的投资经验，帮助我们推荐合适的投资方案</p>
-            </div>
-
-            <div class="step-content">
-                <div class="experience-options-grid">
-                    <div v-for="option in experienceOptions" :key="option.value" class="experience-option-card"
-                        :class="{ 'selected': userAnswers[1] === option.value }"
-                        @click="selectExperienceOption(option.value)">
-                        <div class="experience-header">
-                            <span class="experience-icon">{{ option.icon }}</span>
-                            <div class="experience-title">{{ option.title }}</div>
-                        </div>
-                        <div class="experience-label">{{ option.label }}</div>
-                        <div class="experience-desc">{{ option.desc }}</div>
                         <div class="selection-indicator" v-if="userAnswers[1] === option.value">✓</div>
                     </div>
                 </div>
@@ -289,13 +289,13 @@
                         </div>
                         <div class="summary-content">
                             <div class="risk-level">
-                                <span class="risk-label">{{ getRiskOptionByValue(userAnswers[0])?.title }}</span>
+                                <span class="risk-label">{{ getRiskOptionByValue(userAnswers[1])?.title }}</span>
                                 <div class="risk-dots">
                                     <span v-for="i in 5" :key="i" class="risk-dot"
-                                        :class="{ 'active': i <= getRiskOptionByValue(userAnswers[0])?.riskLevel }"></span>
+                                        :class="{ 'active': i <= getRiskOptionByValue(userAnswers[1])?.riskLevel }"></span>
                                 </div>
                             </div>
-                            <p class="risk-desc">{{ getRiskOptionByValue(userAnswers[0])?.simpleDesc }}</p>
+                            <p class="risk-desc">{{ getRiskOptionByValue(userAnswers[1])?.simpleDesc }}</p>
                         </div>
                     </div>
 
@@ -306,12 +306,12 @@
                         </div>
                         <div class="summary-content">
                             <div class="experience-info">
-                                <span class="experience-label">{{ getExperienceOptionByValue(userAnswers[1])?.title
+                                <span class="experience-label">{{ getExperienceOptionByValue(userAnswers[0])?.title
                                     }}</span>
-                                <span class="experience-icon">{{ getExperienceOptionByValue(userAnswers[1])?.icon
+                                <span class="experience-icon">{{ getExperienceOptionByValue(userAnswers[0])?.icon
                                     }}</span>
                             </div>
-                            <p class="experience-desc">{{ getExperienceOptionByValue(userAnswers[1])?.label }}</p>
+                            <p class="experience-desc">{{ getExperienceOptionByValue(userAnswers[0])?.label }}</p>
                         </div>
                     </div>
 
@@ -1196,12 +1196,12 @@ onUnmounted(() => {
 });
 
 // 新增的方法函数
-const selectRiskOption = (value) => {
-    userAnswers.value[0] = value;
+const selectRiskOption = (value, index = 1) => {
+    userAnswers.value[index] = value;
 };
 
-const selectExperienceOption = (value) => {
-    userAnswers.value[1] = value;
+const selectExperienceOption = (value, index = 0) => {
+    userAnswers.value[index] = value;
 };
 
 const goToPreviousStep = () => {
@@ -1299,8 +1299,8 @@ const getSubSectorLabel = (value) => {
 };
 
 const getInvestmentStrategy = () => {
-    const riskLevel = getRiskOptionByValue(userAnswers.value[0])?.riskLevel || 3;
-    const experience = userAnswers.value[1];
+    const riskLevel = getRiskOptionByValue(userAnswers.value[1])?.riskLevel || 3;
+    const experience = userAnswers.value[0];
 
     if (riskLevel <= 2) {
         return experience === 'beginner'
@@ -1318,7 +1318,7 @@ const getInvestmentStrategy = () => {
 };
 
 const getAssetAllocation = () => {
-    const riskLevel = getRiskOptionByValue(userAnswers.value[0])?.riskLevel || 3;
+    const riskLevel = getRiskOptionByValue(userAnswers.value[1])?.riskLevel || 3;
 
     if (riskLevel <= 2) {
         return '建议配置：60%蓝筹股票，30%债券基金，10%货币基金，重点关注股息收益稳定的公司。';
@@ -1331,7 +1331,7 @@ const getAssetAllocation = () => {
 
 const getFocusPoints = () => {
     const majorSectors = userAnswers.value[3].majorCategories;
-    const experience = userAnswers.value[1];
+    const experience = userAnswers.value[0];
 
     let focusPoints = '根据您选择的板块，建议重点关注：';
 
@@ -1366,8 +1366,8 @@ const getFocusPoints = () => {
 const completeOnboarding = () => {
     // 保存用户偏好到本地存储
     const userPreferences = {
-        riskLevel: userAnswers.value[0],
-        experience: userAnswers.value[1],
+        riskLevel: userAnswers.value[1],
+        experience: userAnswers.value[0],
         userTraits: userAnswers.value[2],
         sectors: userAnswers.value[3],
         completedAt: new Date().toISOString()

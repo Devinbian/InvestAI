@@ -1,0 +1,116 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>个性化引导测试</title>
+    <style>
+        body {
+            margin: 0;
+            padding: 0;
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+        }
+        .test-container {
+            min-height: 100vh;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+        }
+        .test-card {
+            background: white;
+            border-radius: 20px;
+            padding: 40px;
+            max-width: 600px;
+            text-align: center;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.1);
+        }
+        .test-title {
+            font-size: 2rem;
+            font-weight: 700;
+            color: #1a202c;
+            margin-bottom: 16px;
+        }
+        .test-desc {
+            font-size: 1.1rem;
+            color: #718096;
+            margin-bottom: 30px;
+            line-height: 1.6;
+        }
+        .test-btn {
+            background: #667eea;
+            color: white;
+            border: none;
+            padding: 16px 32px;
+            border-radius: 12px;
+            font-size: 1.1rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+        .test-btn:hover {
+            background: #5a67d8;
+            transform: translateY(-2px);
+        }
+        .test-status {
+            margin-top: 20px;
+            padding: 12px;
+            background: #f7faff;
+            border-radius: 8px;
+            font-size: 0.9rem;
+            color: #4a5568;
+        }
+    </style>
+</head>
+<body>
+    <div class="test-container">
+        <div class="test-card">
+            <h1 class="test-title">🎯 个性化引导测试</h1>
+            <p class="test-desc">
+                点击下方按钮清除本地存储中的引导完成标记，<br>
+                然后访问主应用即可体验新的个性化引导流程。
+            </p>
+            <button class="test-btn" onclick="clearOnboarding()">清除引导标记</button>
+            <div class="test-status" id="status">
+                当前引导状态：<span id="onboarding-status">检测中...</span>
+            </div>
+            <br>
+            <a href="http://localhost:5173" class="test-btn" style="display: inline-block; text-decoration: none; margin-top: 16px;">
+                前往主应用
+            </a>
+        </div>
+    </div>
+
+    <script>
+        function checkOnboardingStatus() {
+            const completed = localStorage.getItem('onboardingCompleted');
+            const statusEl = document.getElementById('onboarding-status');
+            
+            if (completed) {
+                statusEl.textContent = '已完成 ✅';
+                statusEl.style.color = '#48bb78';
+            } else {
+                statusEl.textContent = '未完成 ⏳';
+                statusEl.style.color = '#ed8936';
+            }
+        }
+
+        function clearOnboarding() {
+            localStorage.removeItem('onboardingCompleted');
+            checkOnboardingStatus();
+            
+            // 显示成功消息
+            const statusDiv = document.getElementById('status');
+            statusDiv.innerHTML = `
+                <div style="color: #48bb78; font-weight: 600;">
+                    ✅ 引导标记已清除！现在访问主应用将显示个性化引导流程。
+                </div>
+            `;
+        }
+
+        // 页面加载时检查状态
+        window.addEventListener('load', checkOnboardingStatus);
+    </script>
+</body>
+</html> 

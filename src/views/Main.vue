@@ -1,5 +1,5 @@
 <template>
-    <div class="main-modern">
+    <div class="main-modern" :class="{ 'onboarding-active': showOnboarding }">
         <!-- 顶部导航栏 -->
         <header class="modern-navbar">
             <div class="navbar-left">
@@ -19,6 +19,7 @@
                             <el-dropdown-menu>
                                 <el-dropdown-item command="profile">个人中心</el-dropdown-item>
                                 <el-dropdown-item command="settings">偏好设置</el-dropdown-item>
+                                <el-dropdown-item command="reset-guide">重新引导</el-dropdown-item>
                                 <el-dropdown-item divided command="logout">退出登录</el-dropdown-item>
                             </el-dropdown-menu>
                         </template>
@@ -27,14 +28,19 @@
                 <template v-else>
                     <el-button class="modern-btn" @click="showLoginDialog(false)">登录</el-button>
                     <el-button class="modern-btn" @click="showLoginDialog(true)">注册</el-button>
+                    <el-button class="modern-btn" @click="resetOnboarding" style="color: #667eea;">重新引导</el-button>
                 </template>
             </div>
         </header>
 
         <!-- 主体内容 -->
         <main class="modern-content" :class="{ 'chatting': isChatMode, 'with-sidebar': userStore.isLoggedIn }">
+            <!-- 个性化引导流程 -->
+            <OnboardingFlow v-if="showOnboarding" @complete="onOnboardingComplete" @analyze-stock="handleAnalyzeStock"
+                @execute-action="handleOnboardingAction" />
+
             <!-- 初始状态：标题、描述和输入区域作为一个整体 -->
-            <div class="center-container" v-if="!isChatMode">
+            <div class="center-container" v-else-if="!isChatMode">
                 <div class="welcome-section">
                     <div class="modern-title">👋 您好，我是智投小助</div>
                     <div class="modern-desc">
@@ -201,13 +207,13 @@
                                         <div class="asset-amount">
                                             <span class="amount-label">总资产</span>
                                             <span class="amount-value">¥{{ formatCurrency(message.assetData.totalAssets)
-                                                }}</span>
+                                            }}</span>
                                         </div>
                                         <div class="asset-change"
                                             :class="[message.assetData.totalProfitPercent >= 0 ? 'profit' : 'loss']">
                                             <span class="change-icon">{{ message.assetData.totalProfitPercent >= 0 ?
                                                 '📈' : '📉'
-                                                }}</span>
+                                            }}</span>
                                             <span class="change-label">今日盈亏：</span>
                                             <span class="change-text">
                                                 {{ message.assetData.totalProfitPercent >= 0 ? '+' : '' }}¥{{
@@ -233,7 +239,7 @@
                                         <div class="stat-info">
                                             <div class="stat-label">持仓市值</div>
                                             <div class="stat-value">¥{{ formatCurrency(message.assetData.portfolioValue)
-                                                }}
+                                            }}
                                             </div>
                                         </div>
                                     </div>
@@ -294,7 +300,7 @@
                                                         <div class="stock-price-change">
                                                             <span class="current-price">¥{{
                                                                 position.currentPrice.toFixed(2)
-                                                            }}</span>
+                                                                }}</span>
                                                             <span
                                                                 :class="['price-change', position.profitPercent >= 0 ? 'positive' : 'negative']">
                                                                 {{ position.profitPercent >= 0 ? '+' : '' }}¥{{
@@ -308,10 +314,10 @@
                                                             <span class="detail-label">持仓数量：</span>
                                                             <span class="detail-value">{{
                                                                 position.quantity.toLocaleString()
-                                                            }}股</span>
+                                                                }}股</span>
                                                             <span class="detail-label">成本价：</span>
                                                             <span class="detail-value">¥{{ position.avgPrice.toFixed(2)
-                                                            }}</span>
+                                                                }}</span>
                                                         </div>
                                                         <div class="detail-row">
                                                             <span class="detail-label">持仓市值：</span>
@@ -320,7 +326,7 @@
                                                             <span class="detail-label">所属行业：</span>
                                                             <span class="detail-value industry">{{ position.industry ||
                                                                 '未分类'
-                                                            }}</span>
+                                                                }}</span>
                                                         </div>
                                                     </div>
                                                 </div>
@@ -501,7 +507,7 @@
                             <div v-if="message.isPersistent" class="recommendation-toolbar">
                                 <div class="toolbar-left">
                                     <span class="recommendation-time">{{ formatRecommendationTime(message.timestamp)
-                                        }}</span>
+                                    }}</span>
                                 </div>
                                 <div class="toolbar-right">
                                     <el-button size="small" text @click="refreshRecommendation(message)"
@@ -1020,7 +1026,7 @@
                                                 :key="majorCategory" class="sub-sector-group">
                                                 <div class="group-title">
                                                     <span class="group-icon">{{ getMajorSectorIcon(majorCategory)
-                                                        }}</span>
+                                                    }}</span>
                                                     {{ getMajorSectorLabel(majorCategory) }}
                                                 </div>
 
@@ -1177,7 +1183,7 @@
                                         <span class="change-amount">{{ selectedStock.change >= 0 ? '+' : '' }}{{
                                             selectedStock.change }}</span>
                                         <span class="change-percent">({{ selectedStock.changePercent >= 0 ? '+' : ''
-                                            }}{{
+                                        }}{{
                                                 selectedStock.changePercent }}%)</span>
                                     </div>
                                 </div>
@@ -1185,7 +1191,7 @@
                                     <div class="stat-item">
                                         <span class="stat-label">今开</span>
                                         <span class="stat-value">{{ (parseFloat(selectedStock.price) - 2.5).toFixed(2)
-                                            }}</span>
+                                        }}</span>
                                     </div>
                                     <div class="stat-item">
                                         <span class="stat-label">昨收</span>
@@ -1249,7 +1255,7 @@
                         <div class="info-item">
                             <span class="info-label">跌停</span>
                             <span class="info-value down">{{ (parseFloat(selectedStock.price) * 0.9).toFixed(2)
-                                }}</span>
+                            }}</span>
                         </div>
                         <div class="info-item">
                             <span class="info-label">总市值</span>
@@ -1463,6 +1469,7 @@ import { ElMessage, ElMessageBox } from 'element-plus';
 import { mockApi, wechatLoginApi } from '../api/mock';
 import Sidebar from '../components/Sidebar.vue';
 import UserProfile from '../components/UserProfile.vue';
+import OnboardingFlow from '../components/OnboardingFlow.vue';
 
 const userStore = useUserStore();
 const inputMessage = ref('');
@@ -1471,6 +1478,9 @@ const chatHistoryRef = ref(null);
 const isChatMode = ref(false); // 控制是否进入聊天模式
 const showUserProfile = ref(false); // 控制是否显示个人中心
 const showChatShortcuts = ref(false); // 控制聊天模式下的快捷操作显示
+
+// 个性化引导流程控制
+const showOnboarding = ref(!localStorage.getItem('onboardingCompleted')); // 是否显示引导流程
 
 // 登录相关
 const loginDialogVisible = ref(false);
@@ -2155,6 +2165,9 @@ const handleCommand = (command) => {
             break;
         case 'settings':
             preferencesDialogVisible.value = true;
+            break;
+        case 'reset-guide':
+            resetOnboarding();
             break;
         case 'logout':
             userStore.logout();
@@ -3443,6 +3456,95 @@ const showQuantAnalysisDialog = (stock) => {
         ElMessage.info('已取消量化分析');
     });
 };
+
+// 个性化引导完成处理
+const onOnboardingComplete = (data) => {
+    showOnboarding.value = false;
+
+    if (data && data.preferences) {
+        // 保存用户偏好到store
+        userStore.setUserInfo({
+            ...userStore.userInfo,
+            preferences: data.preferences
+        });
+
+        // 根据用户偏好显示欢迎消息
+        setTimeout(() => {
+            if (data.profile) {
+                chatHistory.value.push({
+                    role: 'assistant',
+                    content: `🎉 欢迎使用智投小助！根据您的投资风格（${data.profile.riskLabel}），我将为您提供个性化的投资建议。\n\n您可以随时问我关于投资的任何问题，我会基于您的偏好为您量身定制答案。`
+                });
+            }
+        }, 500);
+    }
+};
+
+// 处理引导流程中的股票分析
+const handleAnalyzeStock = (stock) => {
+    showOnboarding.value = false;
+    isChatMode.value = true;
+
+    setTimeout(() => {
+        const message = `请详细分析一下${stock.name}(${stock.code})这只股票，包括基本面分析、技术面分析、投资建议和风险提示。`;
+        inputMessage.value = message;
+        sendMessage();
+    }, 300);
+};
+
+// 处理引导流程中的操作执行
+const handleOnboardingAction = async (action) => {
+    const { type, task, suggestion } = action;
+
+    switch (type) {
+        case 'diagnosis':
+            ElMessage.success('AI诊断功能已体验完成！');
+            break;
+        case 'mock-trade':
+            ElMessage.success('模拟交易功能已体验完成！');
+            break;
+        case 'risk-control':
+            ElMessage.success('风控设置功能已体验完成！');
+            break;
+        case 'auto-invest':
+            showOnboarding.value = false;
+            isChatMode.value = true;
+            setTimeout(() => {
+                inputMessage.value = `一键设置：${suggestion}`;
+                sendMessage();
+            }, 300);
+            break;
+        default:
+            console.log('未知操作类型:', type);
+    }
+};
+
+// 重置个性化引导
+const resetOnboarding = () => {
+    ElMessageBox.confirm(
+        '重新开始个性化引导将清除之前的设置，是否继续？',
+        '重置引导',
+        {
+            confirmButtonText: '确定',
+            cancelButtonText: '取消',
+            type: 'warning',
+        }
+    ).then(() => {
+        // 清除本地存储的引导完成标记和用户偏好
+        localStorage.removeItem('onboardingCompleted');
+        localStorage.removeItem('userPreferences');
+
+        // 重置相关状态
+        showOnboarding.value = true;
+        isChatMode.value = false;
+        chatHistory.value = [];
+        inputMessage.value = '';
+
+        ElMessage.success('已重置个性化引导，请重新设置您的投资偏好');
+    }).catch(() => {
+        ElMessage.info('已取消重置');
+    });
+};
 </script>
 
 <style scoped>
@@ -3453,6 +3555,22 @@ const showQuantAnalysisDialog = (stock) => {
     flex-direction: column;
     overflow-x: hidden;
     overflow-y: hidden;
+}
+
+/* 当显示引导组件时允许滚动 */
+.main-modern:has(.onboarding-flow) {
+    overflow-y: auto;
+}
+
+/* 如果浏览器不支持:has，使用类名方式 */
+.main-modern.onboarding-active {
+    overflow-y: auto;
+}
+
+/* 强制body在引导模式下允许滚动 */
+body:has(.onboarding-active),
+body.onboarding-mode {
+    overflow-y: auto !important;
 }
 
 .modern-navbar {
@@ -3534,6 +3652,13 @@ const showQuantAnalysisDialog = (stock) => {
     transition: justify-content 0.3s;
     overflow-y: hidden;
     min-height: 0;
+}
+
+/* 引导模式下的特殊样式 */
+.onboarding-active .modern-content {
+    max-width: 100%;
+    padding: 56px 0 0 0;
+    overflow-y: visible;
 }
 
 .modern-content.chatting {

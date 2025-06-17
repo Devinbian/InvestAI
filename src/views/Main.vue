@@ -209,13 +209,13 @@
                                         <div class="asset-amount">
                                             <span class="amount-label">总资产</span>
                                             <span class="amount-value">¥{{ formatCurrency(message.assetData.totalAssets)
-                                            }}</span>
+                                                }}</span>
                                         </div>
                                         <div class="asset-change"
                                             :class="[message.assetData.totalProfitPercent >= 0 ? 'profit' : 'loss']">
                                             <span class="change-icon">{{ message.assetData.totalProfitPercent >= 0 ?
                                                 '📈' : '📉'
-                                            }}</span>
+                                                }}</span>
                                             <span class="change-label">今日盈亏：</span>
                                             <span class="change-text">
                                                 {{ message.assetData.totalProfitPercent >= 0 ? '+' : '' }}¥{{
@@ -241,7 +241,7 @@
                                         <div class="stat-info">
                                             <div class="stat-label">持仓市值</div>
                                             <div class="stat-value">¥{{ formatCurrency(message.assetData.portfolioValue)
-                                            }}
+                                                }}
                                             </div>
                                         </div>
                                     </div>
@@ -302,7 +302,7 @@
                                                         <div class="stock-price-change">
                                                             <span class="current-price">¥{{
                                                                 position.currentPrice.toFixed(2)
-                                                                }}</span>
+                                                            }}</span>
                                                             <span
                                                                 :class="['price-change', position.profitPercent >= 0 ? 'positive' : 'negative']">
                                                                 {{ position.profitPercent >= 0 ? '+' : '' }}¥{{
@@ -316,10 +316,10 @@
                                                             <span class="detail-label">持仓数量：</span>
                                                             <span class="detail-value">{{
                                                                 position.quantity.toLocaleString()
-                                                                }}股</span>
+                                                            }}股</span>
                                                             <span class="detail-label">成本价：</span>
                                                             <span class="detail-value">¥{{ position.avgPrice.toFixed(2)
-                                                                }}</span>
+                                                            }}</span>
                                                         </div>
                                                         <div class="detail-row">
                                                             <span class="detail-label">持仓市值：</span>
@@ -328,7 +328,7 @@
                                                             <span class="detail-label">所属行业：</span>
                                                             <span class="detail-value industry">{{ position.industry ||
                                                                 '未分类'
-                                                                }}</span>
+                                                            }}</span>
                                                         </div>
                                                     </div>
                                                 </div>
@@ -509,7 +509,7 @@
                             <div v-if="message.isPersistent" class="recommendation-toolbar">
                                 <div class="toolbar-left">
                                     <span class="recommendation-time">{{ formatRecommendationTime(message.timestamp)
-                                    }}</span>
+                                        }}</span>
                                 </div>
                                 <div class="toolbar-right">
                                     <el-button size="small" text @click="refreshRecommendation(message)"
@@ -843,10 +843,36 @@
                 </div>
 
                 <div class="preferences-form-wrapper">
-                    <!-- 步骤1: 风险偏好 -->
+                    <!-- 步骤1: 投资经验 -->
                     <div v-if="currentStep === 0" class="step-content">
                         <h3 class="step-title">{{ preferenceSteps[0].title }}</h3>
                         <p class="step-desc">{{ preferenceSteps[0].desc }}</p>
+
+                        <div class="experience-options">
+                            <div v-for="option in experienceOptions" :key="option.value" class="experience-option"
+                                :class="{ 'selected': preferencesForm.experience === option.value }"
+                                @click="preferencesForm.experience = option.value">
+                                <div class="option-radio">
+                                    <div class="radio-dot"
+                                        :class="{ 'checked': preferencesForm.experience === option.value }">
+                                    </div>
+                                </div>
+                                <div class="experience-content">
+                                    <div class="experience-header">
+                                        <span class="experience-icon">{{ option.icon }}</span>
+                                        <div class="experience-title">{{ option.title }}</div>
+                                    </div>
+                                    <div class="experience-label">{{ option.label }}</div>
+                                    <div class="experience-desc">{{ option.desc }}</div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- 步骤2: 选择投资风格 -->
+                    <div v-if="currentStep === 1" class="step-content">
+                        <h3 class="step-title">{{ preferenceSteps[1].title }}</h3>
+                        <p class="step-desc">{{ preferenceSteps[1].desc }}</p>
 
                         <div class="risk-options">
                             <div v-for="option in riskOptions" :key="option.value" class="risk-option"
@@ -884,32 +910,6 @@
                                         <span class="examples-label">📈 投资什么:</span>
                                         <span class="examples-text">{{ option.examples }}</span>
                                     </div>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-
-                    <!-- 步骤2: 投资经验 -->
-                    <div v-if="currentStep === 1" class="step-content">
-                        <h3 class="step-title">{{ preferenceSteps[1].title }}</h3>
-                        <p class="step-desc">{{ preferenceSteps[1].desc }}</p>
-
-                        <div class="experience-options">
-                            <div v-for="option in experienceOptions" :key="option.value" class="experience-option"
-                                :class="{ 'selected': preferencesForm.experience === option.value }"
-                                @click="preferencesForm.experience = option.value">
-                                <div class="option-radio">
-                                    <div class="radio-dot"
-                                        :class="{ 'checked': preferencesForm.experience === option.value }">
-                                    </div>
-                                </div>
-                                <div class="experience-content">
-                                    <div class="experience-header">
-                                        <span class="experience-icon">{{ option.icon }}</span>
-                                        <div class="experience-title">{{ option.title }}</div>
-                                    </div>
-                                    <div class="experience-label">{{ option.label }}</div>
-                                    <div class="experience-desc">{{ option.desc }}</div>
                                 </div>
                             </div>
                         </div>
@@ -1028,7 +1028,7 @@
                                                 :key="majorCategory" class="sub-sector-group">
                                                 <div class="group-title">
                                                     <span class="group-icon">{{ getMajorSectorIcon(majorCategory)
-                                                    }}</span>
+                                                        }}</span>
                                                     {{ getMajorSectorLabel(majorCategory) }}
                                                 </div>
 
@@ -1185,7 +1185,7 @@
                                         <span class="change-amount">{{ selectedStock.change >= 0 ? '+' : '' }}{{
                                             selectedStock.change }}</span>
                                         <span class="change-percent">({{ selectedStock.changePercent >= 0 ? '+' : ''
-                                        }}{{
+                                            }}{{
                                                 selectedStock.changePercent }}%)</span>
                                     </div>
                                 </div>
@@ -1193,7 +1193,7 @@
                                     <div class="stat-item">
                                         <span class="stat-label">今开</span>
                                         <span class="stat-value">{{ (parseFloat(selectedStock.price) - 2.5).toFixed(2)
-                                        }}</span>
+                                            }}</span>
                                     </div>
                                     <div class="stat-item">
                                         <span class="stat-label">昨收</span>
@@ -1257,7 +1257,7 @@
                         <div class="info-item">
                             <span class="info-label">跌停</span>
                             <span class="info-value down">{{ (parseFloat(selectedStock.price) * 0.9).toFixed(2)
-                            }}</span>
+                                }}</span>
                         </div>
                         <div class="info-item">
                             <span class="info-label">总市值</span>
@@ -1599,12 +1599,12 @@ const preferencesForm = reactive({
 // 步骤配置
 const preferenceSteps = [
     {
-        title: '选择投资风格',
-        desc: '您希望投资收益高一些，还是稳一些？选择最适合您的投资方式'
-    },
-    {
         title: '投资经验',
         desc: '告诉我们您的投资经验，帮助我们推荐合适的投资方案'
+    },
+    {
+        title: '选择投资风格',
+        desc: '您希望投资收益高一些，还是稳一些？选择最适合您的投资方式'
     },
     {
         title: '用户特征',
@@ -2949,10 +2949,10 @@ const previousStep = () => {
 // 检查是否可以进入下一步
 const canProceedToNext = computed(() => {
     switch (currentStep.value) {
-        case 0: // 风险偏好
-            return preferencesForm.riskLevel !== '';
-        case 1: // 投资经验
+        case 0: // 投资经验
             return preferencesForm.experience !== '';
+        case 1: // 风险偏好
+            return preferencesForm.riskLevel !== '';
         case 2: // 用户特征
             return true; // 有默认值，总是可以进入下一步
         case 3: // 关注板块

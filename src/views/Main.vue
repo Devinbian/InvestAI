@@ -3046,7 +3046,11 @@ const continueAnalysis = async (stockInfo, isPaid = false) => {
     const res = await mockApi.sendMessage(message);
     chatHistory.value.push(
         { role: 'user', content: isPaid ? `量化分析 ${stockInfo.name}(${stockInfo.code})` : message },
-        res.data
+        {
+            ...res.data,
+            hasStockInfo: true,
+            stockInfo: stockInfo
+        }
     );
 
     await nextTick();
@@ -3066,7 +3070,11 @@ const performQuantAnalysis = async (stockInfo) => {
     const res = await mockApi.sendMessage(message);
     chatHistory.value.push(
         { role: 'user', content: `AI委托交易 ${stockInfo.name}(${stockInfo.code})` },
-        res.data
+        {
+            ...res.data,
+            hasStockInfo: true,
+            stockInfo: stockInfo
+        }
     );
 
     await nextTick();

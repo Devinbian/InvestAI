@@ -280,19 +280,26 @@ const handleWheel = (event) => {
 
 /* 收起/展开功能样式 */
 .sidebar-container.collapsed {
-    width: 48px;
+    width: 0px;
+    /* PC端收藏时完全隐藏 */
     background: transparent;
     border: none;
     box-shadow: none;
+    overflow: visible;
+    /* 改为visible，确保按钮可见 */
 }
 
 .sidebar-toggle {
-    position: absolute;
-    top: 10px;
-    left: 8px;
+    position: fixed;
+    /* 改为fixed定位 */
+    top: 66px;
+    /* 调整位置 */
+    right: 8px;
+    /* 始终在右侧边缘 */
     width: 32px;
     height: 32px;
-    background: rgba(255, 255, 255, 0.9);
+    background: rgba(255, 255, 255, 0.95);
+    /* 增加背景透明度 */
     border: 1px solid #e5e7eb;
     border-radius: 8px;
     display: flex;
@@ -300,7 +307,8 @@ const handleWheel = (event) => {
     justify-content: center;
     cursor: pointer;
     transition: all 0.3s ease;
-    z-index: 101;
+    z-index: 9999;
+    /* 大幅提高z-index确保可见 */
     box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
 }
 
@@ -319,11 +327,37 @@ const handleWheel = (event) => {
     transform: rotate(180deg);
 }
 
+/* 展开状态下的按钮位置调整 */
+.sidebar-container:not(.collapsed) .sidebar-toggle {
+    right: 528px;
+    /* 展开时按钮在侧边栏左侧 */
+}
+
+/* 收藏状态下按钮的特殊样式 */
+.sidebar-container.collapsed .sidebar-toggle {
+    background: rgba(255, 255, 255, 0.95);
+    border: 1px solid #d1d5db;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+    /* 收藏状态下更明显的阴影 */
+}
+
+.sidebar-container.collapsed .sidebar-toggle:hover {
+    background: #ffffff;
+    border-color: #3b82f6;
+    transform: scale(1.1);
+    box-shadow: 0 6px 16px rgba(59, 130, 246, 0.2);
+}
+
 /* 移动端响应式处理 */
 @media (max-width: 768px) {
     .sidebar-container {
         display: none !important;
         /* 移动端完全隐藏侧边栏 */
+    }
+
+    .sidebar-toggle {
+        display: none !important;
+        /* 移动端也隐藏切换按钮 */
     }
 }
 </style>

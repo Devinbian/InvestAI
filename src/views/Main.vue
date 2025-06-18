@@ -727,7 +727,7 @@
                 <div class="ai-buttons-row">
                     <div class="ai-buttons">
                         <el-button class="ai-func-btn" circle @click="onVoiceClick">
-                            <svg width="20" height="20" viewBox="0 0 24 24" fill="none">
+                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none">
                                 <path d="M12 1a3 3 0 0 0-3 3v8a3 3 0 0 0 6 0V4a3 3 0 0 0-3-3z" stroke="#888"
                                     stroke-width="2" fill="none" />
                                 <path d="M19 10v2a7 7 0 0 1-14 0v-2" stroke="#888" stroke-width="2" fill="none" />
@@ -737,14 +737,14 @@
                         </el-button>
                         <el-button class="ai-func-btn shortcuts-toggle-btn" circle @click="toggleChatShortcuts"
                             v-if="!showChatShortcuts && userStore.isLoggedIn">
-                            <svg width="20" height="20" viewBox="0 0 24 24" fill="none">
+                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none">
                                 <path d="M12 5v14m-7-7h14" stroke="#888" stroke-width="2" stroke-linecap="round"
                                     stroke-linejoin="round" />
                             </svg>
                         </el-button>
                         <el-button class="ai-send-btn" type="primary" circle @click="sendMessage"
                             :disabled="!inputMessage.trim()">
-                            <svg width="20" height="20" viewBox="0 0 24 24" fill="none">
+                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none">
                                 <line x1="22" y1="2" x2="11" y2="13" stroke="white" stroke-width="2" />
                                 <polygon points="22,2 15,22 11,13 2,9 22,2" stroke="white" stroke-width="2"
                                     fill="white" />
@@ -2691,7 +2691,8 @@ body.onboarding-mode {
 
 .modern-content.chatting {
     justify-content: flex-start;
-    padding-top: 88px;
+    padding-top: 72px;
+    /* 减少PC端聊天模式顶部间距 */
     padding-bottom: 0;
     height: calc(100vh - 56px);
     overflow: hidden;
@@ -2992,8 +2993,8 @@ body.onboarding-mode {
     margin: 0 auto;
     padding: 20px 0;
     overflow-y: auto;
-    height: calc(100vh - 56px - 260px);
-    /* 页面高度 - 导航栏高度 - 输入区域高度(增加到240px) */
+    height: calc(100vh - 56px - 200px);
+    /* 页面高度 - 导航栏高度 - 输入区域高度(减少到200px) */
     scrollbar-width: thin;
     /* Firefox */
     scrollbar-color: transparent transparent;
@@ -4207,16 +4208,18 @@ body.onboarding-mode {
     bottom: 0;
     left: 0;
     right: 0;
-    background: rgba(255, 255, 255, 0.95);
-    backdrop-filter: blur(10px);
-    border-top: 1px solid #f0f0f0;
-    padding: 20px 32px 32px 32px;
+    background: transparent;
+    /* 完全透明背景 */
+    border: none;
+    /* 移除所有边框 */
+    padding: 16px 32px 24px 32px;
+    /* 减少padding，让区域更紧凑 */
     display: flex;
     flex-direction: column;
     align-items: center;
     z-index: 50;
     transition: all 0.3s;
-    box-shadow: 0 -4px 20px rgba(0, 0, 0, 0.1);
+    /* 完全无背景无边框设计 */
 }
 
 /* 移除输入区域的right限制，让它保持全宽 */
@@ -4224,30 +4227,49 @@ body.onboarding-mode {
 .new-chat-section {
     width: 100%;
     max-width: 900px;
-    margin-bottom: 16px;
-    display: flex;
-    justify-content: center;
+    margin-bottom: 12px;
+    /* 减少底部间距 */
+    display: flex !important;
+    justify-content: center !important;
+    align-items: center !important;
+    /* 确保内容垂直居中 */
 }
 
 .chat-actions {
-    display: flex;
-    gap: 12px;
-    align-items: center;
+    display: flex !important;
+    gap: 8px;
+    /* 减少按钮间距 */
+    align-items: center !important;
+    flex-wrap: nowrap !important;
+    /* 强制在一行显示，不允许换行 */
+    justify-content: center !important;
+    width: 100% !important;
+    /* 确保容器宽度充足 */
 }
 
 .new-chat-btn {
-    border-radius: 20px;
+    border-radius: 16px;
+    /* 减少圆角 */
     background: #f5f7fa;
     color: #18181b;
     font-weight: 500;
     border: 1px solid #e0e0e0;
     box-shadow: none;
-    padding: 8px 20px;
+    padding: 6px 16px;
+    /* 减少padding */
     transition: all 0.2s;
-    display: flex;
-    align-items: center;
-    gap: 8px;
-    font-size: 0.95rem;
+    display: flex !important;
+    align-items: center !important;
+    gap: 6px;
+    /* 减少图标间距 */
+    font-size: 0.875rem;
+    /* 减小字体 */
+    height: 32px;
+    /* 固定高度 */
+    white-space: nowrap !important;
+    /* 防止文字换行 */
+    flex-shrink: 0 !important;
+    /* 防止按钮被压缩 */
 }
 
 .new-chat-btn:hover {
@@ -4256,18 +4278,28 @@ body.onboarding-mode {
 }
 
 .goto-recommendation-btn {
-    border-radius: 20px;
+    border-radius: 16px;
+    /* 减少圆角 */
     background: #fef3c7;
     color: #92400e;
     font-weight: 500;
     border: 1px solid #fbbf24;
     box-shadow: none;
-    padding: 8px 20px;
+    padding: 6px 16px;
+    /* 减少padding */
     transition: all 0.2s;
-    display: flex;
-    align-items: center;
-    gap: 8px;
-    font-size: 0.95rem;
+    display: flex !important;
+    align-items: center !important;
+    gap: 6px;
+    /* 减少图标间距 */
+    font-size: 0.875rem;
+    /* 减小字体 */
+    height: 32px;
+    /* 固定高度 */
+    white-space: nowrap !important;
+    /* 防止文字换行 */
+    flex-shrink: 0 !important;
+    /* 防止按钮被压缩 */
 }
 
 .goto-recommendation-btn:hover {
@@ -4306,15 +4338,14 @@ body.onboarding-mode {
     min-height: 50px;
     min-width: 60px;
     justify-content: center;
-    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+    /* 移除阴影，实现无浮层设计 */
 }
 
 .chat-shortcut-btn:hover {
     background: #f1f5f9;
     border-color: #cbd5e1;
     color: #1f2937;
-    transform: translateY(-1px);
-    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+    /* 移除悬停阴影和位移效果 */
 }
 
 .chat-shortcut-btn .btn-icon {
@@ -4351,8 +4382,7 @@ body.onboarding-mode {
     background: #f1f5f9 !important;
     border-color: #cbd5e1 !important;
     color: #334155 !important;
-    transform: translateY(-1px) !important;
-    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1) !important;
+    /* 移除悬停阴影和位移效果 */
 }
 
 /* 确保收起按钮的图标和文字颜色正确 */
@@ -4436,9 +4466,12 @@ body.onboarding-mode {
     max-width: 900px;
     margin: 0 auto;
     background: #fff;
-    border-radius: 24px;
-    box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.08);
-    padding: 20px 24px;
+    border-radius: 20px;
+    /* 减少圆角 */
+    box-shadow: 0 4px 16px 0 rgba(0, 0, 0, 0.06);
+    /* 减少阴影 */
+    padding: 16px 20px;
+    /* 减少padding */
     display: flex;
     flex-direction: column;
     align-items: stretch;
@@ -4448,18 +4481,23 @@ body.onboarding-mode {
 
 .ai-input-row {
     background: #f8f9fa;
-    border-radius: 20px;
-    box-shadow: 0 2px 8px 0 rgba(0, 0, 0, 0.04);
-    padding: 16px 20px;
+    border-radius: 16px;
+    /* 减少圆角 */
+    box-shadow: 0 1px 4px 0 rgba(0, 0, 0, 0.03);
+    /* 减少阴影 */
+    padding: 12px 16px;
+    /* 减少padding */
     display: flex;
     flex-direction: column;
-    gap: 12px;
+    gap: 8px;
+    /* 减少间距 */
 }
 
 .ai-buttons-row {
     display: flex;
     justify-content: flex-end;
-    margin-top: 12px;
+    margin-top: 8px;
+    /* 减少上边距 */
 }
 
 .ai-input {
@@ -4481,10 +4519,11 @@ body.onboarding-mode {
 
 .ai-func-btn {
     border-radius: 50%;
-    width: 44px;
-    height: 44px;
-    min-width: 44px;
-    min-height: 44px;
+    width: 36px;
+    height: 36px;
+    min-width: 36px;
+    min-height: 36px;
+    /* 减小按钮尺寸 */
     display: flex;
     align-items: center;
     justify-content: center;
@@ -4502,10 +4541,11 @@ body.onboarding-mode {
 
 .ai-send-btn {
     border-radius: 50%;
-    width: 44px;
-    height: 44px;
-    min-width: 44px;
-    min-height: 44px;
+    width: 36px;
+    height: 36px;
+    min-width: 36px;
+    min-height: 36px;
+    /* 减小发送按钮尺寸 */
     display: flex;
     align-items: center;
     justify-content: center;
@@ -8121,12 +8161,43 @@ body {
     .input-area {
         padding: 12px 16px 16px 16px !important;
         /* 进一步减少padding，节省更多空间 */
+        background: transparent !important;
+        /* 移动端也使用透明背景 */
+        backdrop-filter: none !important;
+        /* 移除模糊效果 */
+        border: none !important;
+        /* 移除所有边框 */
+        box-shadow: none !important;
+        /* 移除所有阴影 */
     }
 
     /* 移动端新聊天按钮区域优化 */
     .new-chat-section {
         margin-bottom: 8px !important;
         /* 进一步减少间距 */
+    }
+
+    /* 移动端按钮布局优化 - 确保一行显示 */
+    .chat-actions {
+        flex-wrap: nowrap !important;
+        /* 移动端强制一行显示 */
+        gap: 6px !important;
+        /* 移动端减少间距 */
+        justify-content: center !important;
+    }
+
+    .new-chat-btn,
+    .goto-recommendation-btn {
+        font-size: 0.8rem !important;
+        /* 移动端字体更小 */
+        padding: 6px 12px !important;
+        /* 移动端按钮更紧凑 */
+        height: 30px !important;
+        /* 移动端按钮高度更小 */
+        white-space: nowrap !important;
+        /* 防止文字换行 */
+        flex-shrink: 0 !important;
+        /* 防止按钮被压缩 */
     }
 
     /* 移动端AI卡片间距优化 */
@@ -8204,6 +8275,14 @@ body {
     .input-area {
         padding: 10px 12px 12px 12px !important;
         /* 超小屏幕最小化padding */
+        background: transparent !important;
+        /* 超小屏幕也使用透明背景 */
+        backdrop-filter: none !important;
+        /* 移除模糊效果 */
+        border: none !important;
+        /* 移除所有边框 */
+        box-shadow: none !important;
+        /* 移除所有阴影 */
     }
 
     /* 超小屏幕AI卡片进一步优化 */

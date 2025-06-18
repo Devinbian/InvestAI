@@ -55,6 +55,17 @@ export const useUserStore = defineStore("user", {
     smartPointsBalance: parseFloat(
       localStorage.getItem("smartPointsBalance") || "0",
     ), // 智点账户余额，默认0
+
+    // 记录中心数据
+    quantAnalysisReports: JSON.parse(
+      localStorage.getItem("quantAnalysisReports") || "[]",
+    ), // 量化分析报告记录
+    smartPointsTransactions: JSON.parse(
+      localStorage.getItem("smartPointsTransactions") || "[]",
+    ), // 智点交易记录
+    aiTradingRecords: JSON.parse(
+      localStorage.getItem("aiTradingRecords") || "[]",
+    ), // AI委托交易记录
   }),
 
   actions: {
@@ -77,12 +88,18 @@ export const useUserStore = defineStore("user", {
       this.portfolio = [];
       this.balance = 100000;
       this.smartPointsBalance = 0;
+      this.quantAnalysisReports = [];
+      this.smartPointsTransactions = [];
+      this.aiTradingRecords = [];
       localStorage.removeItem("token");
       localStorage.removeItem("userInfo");
       localStorage.removeItem("watchlist");
       localStorage.removeItem("portfolio");
       localStorage.removeItem("balance");
       localStorage.removeItem("smartPointsBalance");
+      localStorage.removeItem("quantAnalysisReports");
+      localStorage.removeItem("smartPointsTransactions");
+      localStorage.removeItem("aiTradingRecords");
     },
 
     // 自选股管理
@@ -260,6 +277,17 @@ export const useUserStore = defineStore("user", {
           "smartPointsBalance",
           this.smartPointsBalance.toString(),
         );
+
+        // 记录充值交易
+        this.addSmartPointsTransaction({
+          type: "recharge",
+          amount: smartPointsAmount,
+          description: `现金充值智点`,
+          paymentMethod: "cash",
+          orderId: `RECHARGE_${Date.now()}`,
+          balanceAfter: this.smartPointsBalance,
+        });
+
         return {
           success: true,
           message: `成功购买${smartPointsAmount}智点，花费¥${cashAmount}`,
@@ -270,6 +298,211 @@ export const useUserStore = defineStore("user", {
         success: false,
         message: "股票交易账户余额不足",
       };
+    },
+
+    // 量化分析报告管理
+    addQuantAnalysisReport(report) {
+      const reportData = {
+        id: `REPORT_${Date.now()}`,
+        ...report,
+        createdAt: new Date().toISOString(),
+        fileSize: `${Math.floor(Math.random() * 500 + 100)}KB`,
+      };
+
+      this.quantAnalysisReports.unshift(reportData);
+      localStorage.setItem(
+        "quantAnalysisReports",
+        JSON.stringify(this.quantAnalysisReports),
+      );
+
+      // 记录智点消费
+      if (report.cost > 0) {
+        this.addSmartPointsTransaction({
+          type: "consumption",
+          amount: report.cost,
+          description: `量化分析报告 - ${report.stockName}`,
+          serviceType: "quant-analysis",
+          stockInfo: {
+            name: report.stockName,
+            code: report.stockCode,
+          },
+          balanceAfter: this.smartPointsBalance,
+        });
+      }
+
+      return reportData;
+    },
+
+    deleteQuantAnalysisReport(reportId) {
+      const index = this.quantAnalysisReports.findIndex(
+        (report) => report.id === reportId,
+      );
+      if (index > -1) {
+        this.quantAnalysisReports.splice(index, 1);
+        localStorage.setItem(
+          "quantAnalysisReports",
+          JSON.stringify(this.quantAnalysisReports),
+        );
+        return true;
+      }
+      return false;
+    },
+
+    cleanExpiredReports() {
+      const threeMonthsAgo = new Date();
+      threeMonthsAgo.setMonth(threeMonthsAgo.getMonth() - 3);
+
+      const originalLength = this.quantAnalysisReports.length;
+      this.quantAnalysisReports = this.quantAnalysisReports.filter((report) => {
+        return new Date(report.createdAt) > threeMonthsAgo;
+      });
+
+      const expiredCount = originalLength - this.quantAnalysisReports.length;
+      if (expiredCount > 0) {
+        localStorage.setItem(
+          "quantAnalysisReports",
+          JSON.stringify(this.quantAnalysisReports),
+        );
+      }
+
+      return expiredCount;
+    },
+
+    // 智点交易记录管理
+    addSmartPointsTransaction(transaction) {
+      const transactionData = {
+        id: `TRANS_${Date.now()}`,
+        ...transaction,
+        createdAt: new Date().toISOString(),
+      };
+
+      this.smartPointsTransactions.unshift(transactionData);
+      localStorage.setItem(
+        "smartPointsTransactions",
+        JSON.stringify(this.smartPointsTransactions),
+      );
+
+      return transactionData;
+    },
+
+    // AI委托交易记录管理
+    addAITradingRecord(trade) {
+      const tradeData = {
+        id: `TRADE_${Date.now()}`,
+        ...trade,
+        createdAt: new Date().toISOString(),
+        status: trade.status || "pending",
+      };
+
+      this.aiTradingRecords.unshift(tradeData);
+      localStorage.setItem(
+        "aiTradingRecords",
+        JSON.stringify(this.aiTradingRecords),
+      );
+
+      return tradeData;
+    },
+
+    updateAITradingRecord(tradeId, updates) {
+      const index = this.aiTradingRecords.findIndex(
+        (trade) => trade.id === tradeId,
+      );
+      if (index > -1) {
+        this.aiTradingRecords[index] = {
+          ...this.aiTradingRecords[index],
+          ...updates,
+        };
+        localStorage.setItem(
+          "aiTradingRecords",
+          JSON.stringify(this.aiTradingRecords),
+        );
+        return true;
+      }
+      return false;
+    },
+
+    cancelAITradingOrder(tradeId) {
+      return this.updateAITradingRecord(tradeId, {
+        status: "cancelled",
+        cancelledAt: new Date().toISOString(),
+      });
+    },
+
+    // 模拟生成一些测试数据
+    generateMockRecords() {
+      // 生成量化分析报告测试数据
+      const mockReports = [
+        {
+          title: "比亚迪(002594)深度量化分析报告",
+          stockName: "比亚迪",
+          stockCode: "002594",
+          type: "quant-analysis",
+          cost: 1.0,
+          summary:
+            "基于技术分析和基本面分析，该股票呈现上升趋势，建议适量买入。",
+          content: "详细的量化分析内容...",
+          createdAt: new Date(
+            Date.now() - 2 * 24 * 60 * 60 * 1000,
+          ).toISOString(),
+        },
+        {
+          title: "贵州茅台(600519)AI交易策略报告",
+          stockName: "贵州茅台",
+          stockCode: "600519",
+          type: "ai-trading",
+          cost: 2.0,
+          summary: "AI模型预测短期内可能出现调整，建议谨慎操作。",
+          content: "AI交易策略详细分析...",
+          createdAt: new Date(
+            Date.now() - 5 * 24 * 60 * 60 * 1000,
+          ).toISOString(),
+        },
+      ];
+
+      mockReports.forEach((report) => this.addQuantAnalysisReport(report));
+
+      // 生成智点交易记录测试数据
+      const mockTransactions = [
+        {
+          type: "recharge",
+          amount: 10.0,
+          description: "支付宝充值智点",
+          paymentMethod: "alipay",
+          orderId: "ALIPAY_20241201001",
+          balanceAfter: 10.0,
+          createdAt: new Date(
+            Date.now() - 7 * 24 * 60 * 60 * 1000,
+          ).toISOString(),
+        },
+      ];
+
+      mockTransactions.forEach((trans) =>
+        this.addSmartPointsTransaction(trans),
+      );
+
+      // 生成AI委托交易记录测试数据
+      const mockTrades = [
+        {
+          stockInfo: { name: "平安银行", code: "000001" },
+          type: "buy",
+          status: "completed",
+          quantity: 1000,
+          expectedPrice: 12.2,
+          executedPrice: 12.25,
+          totalAmount: 12250,
+          fee: 5.0,
+          profit: 2.5,
+          analysis: "基于AI算法分析，该股票具有较好的投资价值，建议买入。",
+          executedAt: new Date(
+            Date.now() - 3 * 24 * 60 * 60 * 1000,
+          ).toISOString(),
+          createdAt: new Date(
+            Date.now() - 4 * 24 * 60 * 60 * 1000,
+          ).toISOString(),
+        },
+      ];
+
+      mockTrades.forEach((trade) => this.addAITradingRecord(trade));
     },
   },
 });

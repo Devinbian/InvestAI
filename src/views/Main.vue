@@ -19,6 +19,7 @@
                             <el-dropdown-menu>
                                 <el-dropdown-item command="profile">个人中心</el-dropdown-item>
                                 <el-dropdown-item command="settings">偏好设置</el-dropdown-item>
+                                <el-dropdown-item command="records">记录中心</el-dropdown-item>
                                 <el-dropdown-item command="reset-guide">重新引导</el-dropdown-item>
                                 <el-dropdown-item divided command="logout">退出登录</el-dropdown-item>
                             </el-dropdown-menu>
@@ -244,13 +245,13 @@
                                         <div class="asset-amount">
                                             <span class="amount-label">总资产</span>
                                             <span class="amount-value">¥{{ formatCurrency(message.assetData.totalAssets)
-                                            }}</span>
+                                                }}</span>
                                         </div>
                                         <div class="asset-change"
                                             :class="[message.assetData.totalProfitPercent >= 0 ? 'profit' : 'loss']">
                                             <span class="change-icon">{{ message.assetData.totalProfitPercent >= 0 ?
                                                 '📈' : '📉'
-                                            }}</span>
+                                                }}</span>
                                             <span class="change-label">今日盈亏：</span>
                                             <span class="change-text">
                                                 {{ message.assetData.totalProfitPercent >= 0 ? '+' : '' }}¥{{
@@ -276,7 +277,7 @@
                                         <div class="stat-info">
                                             <div class="stat-label">持仓市值</div>
                                             <div class="stat-value">¥{{ formatCurrency(message.assetData.portfolioValue)
-                                            }}
+                                                }}
                                             </div>
                                         </div>
                                     </div>
@@ -337,7 +338,7 @@
                                                         <div class="stock-price-change">
                                                             <span class="current-price">¥{{
                                                                 position.currentPrice.toFixed(2)
-                                                            }}</span>
+                                                                }}</span>
                                                             <span
                                                                 :class="['price-change', position.profitPercent >= 0 ? 'positive' : 'negative']">
                                                                 {{ position.profitPercent >= 0 ? '+' : '' }}¥{{
@@ -351,10 +352,10 @@
                                                             <span class="detail-label">持仓数量：</span>
                                                             <span class="detail-value">{{
                                                                 position.quantity.toLocaleString()
-                                                            }}股</span>
+                                                                }}股</span>
                                                             <span class="detail-label">成本价：</span>
                                                             <span class="detail-value">¥{{ position.avgPrice.toFixed(2)
-                                                            }}</span>
+                                                                }}</span>
                                                         </div>
                                                         <div class="detail-row">
                                                             <span class="detail-label">持仓市值：</span>
@@ -363,7 +364,7 @@
                                                             <span class="detail-label">所属行业：</span>
                                                             <span class="detail-value industry">{{ position.industry ||
                                                                 '未分类'
-                                                            }}</span>
+                                                                }}</span>
                                                         </div>
                                                     </div>
                                                 </div>
@@ -556,7 +557,7 @@
                             <div v-if="message.isPersistent" class="recommendation-toolbar">
                                 <div class="toolbar-left">
                                     <span class="recommendation-time">{{ formatRecommendationTime(message.timestamp)
-                                    }}</span>
+                                        }}</span>
                                 </div>
                                 <div class="toolbar-right">
                                     <el-button size="small" text @click="refreshRecommendation(message)"
@@ -837,7 +838,7 @@
                 </div>
                 <div class="guide-actions">
                     <el-button type="primary" size="small" @click="handleGuideAction">{{ guideActionText
-                        }}</el-button>
+                    }}</el-button>
                     <el-button size="small" @click="dismissGuide">稍后</el-button>
                 </div>
             </div>
@@ -845,6 +846,9 @@
 
         <!-- 个人中心 -->
         <UserProfile v-if="showUserProfile" @close="closeUserProfile" />
+
+        <!-- 记录中心 -->
+        <RecordsCenter v-if="showRecordsCenter" @close="closeRecordsCenter" />
 
         <!-- 版权信息 -->
         <div class="copyright-footer" v-show="!isChatMode || isMobileView">
@@ -864,6 +868,7 @@ import { ElMessage, ElMessageBox } from 'element-plus';
 import { mockApi, wechatLoginApi } from '../api/mock';
 import Sidebar from '../components/Sidebar.vue';
 import UserProfile from '../components/UserProfile.vue';
+import RecordsCenter from '../components/RecordsCenter.vue';
 import OnboardingFlow from '../components/OnboardingFlow.vue';
 import LoginDialog from '../components/LoginDialog.vue';
 import PasswordRecoveryDialog from '../components/PasswordRecoveryDialog.vue';
@@ -880,6 +885,7 @@ const chatHistory = ref([]);
 const chatHistoryRef = ref(null);
 const isChatMode = ref(false); // 控制是否进入聊天模式
 const showUserProfile = ref(false); // 控制是否显示个人中心
+const showRecordsCenter = ref(false); // 控制是否显示记录中心
 const showChatShortcuts = ref(false); // 控制聊天模式下的快捷操作显示
 const isMobileView = ref(false); // 检测是否为移动端视图
 
@@ -1504,6 +1510,9 @@ const handleCommand = (command) => {
             break;
         case 'settings':
             preferencesDialogVisible.value = true;
+            break;
+        case 'records':
+            showRecordsCenter.value = true;
             break;
         case 'reset-guide':
             resetOnboarding();
@@ -2387,6 +2396,11 @@ onMounted(() => {
         }
     }
 
+    // 初始化测试数据（仅在开发环境）
+    if (userStore.isLoggedIn && userStore.quantAnalysisReports.length === 0) {
+        userStore.generateMockRecords();
+    }
+
     // 添加窗口大小变化监听
     window.addEventListener('resize', handleResize);
 
@@ -2416,6 +2430,10 @@ onUnmounted(() => {
 
 const closeUserProfile = () => {
     showUserProfile.value = false;
+};
+
+const closeRecordsCenter = () => {
+    showRecordsCenter.value = false;
 };
 
 // 滚动到最新的荐股列表
@@ -5474,7 +5492,7 @@ body {
     background: transparent !important;
     border: none !important;
     box-shadow: none !important;
-    font-size: 1.1rem !important;
+    font-size: 1rem !important;
     resize: none !important;
     padding: 0 !important;
 }
@@ -5488,7 +5506,7 @@ body {
 
 :deep(.el-input__inner) {
     background: transparent !important;
-    font-size: 1.1rem;
+    font-size: 1rem;
 }
 
 :deep(.el-dialog) {
@@ -8452,7 +8470,7 @@ body {
 /* 版权信息样式 */
 .copyright-footer {
     margin-top: 60px;
-    padding: 20px 0;
+    padding: 10px 0;
     border-top: 1px solid #e5e7eb;
     background: #f9fafb;
 }
@@ -8466,7 +8484,7 @@ body {
 
 .copyright-content p {
     margin: 0;
-    font-size: 14px;
+    font-size: 12px;
     color: #6b7280;
     line-height: 1.5;
 }

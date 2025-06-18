@@ -1,7 +1,7 @@
 <template>
     <div class="quant-analysis">
         <div class="quant-header">
-            <h2>量化分析中心</h2>
+            <h2>AI委托交易中心</h2>
             <p>基于AI的量化交易策略分析与回测</p>
         </div>
 

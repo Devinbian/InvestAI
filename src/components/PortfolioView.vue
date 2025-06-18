@@ -141,7 +141,7 @@
                                 <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"
                                     stroke="currentColor" stroke-width="2" />
                             </svg>
-                            深度分析
+                            量化分析
                             <span class="price-tag">¥1</span>
                         </el-button>
                         <el-button size="small" @click.stop="showQuantAnalysisDialog(position)"
@@ -150,7 +150,7 @@
                                 <path d="M3 3v18h18M7 16l4-4 4 4 4-4" stroke="currentColor" stroke-width="2"
                                     fill="none" />
                             </svg>
-                            量化分析
+                            AI委托交易
                             <span class="price-tag">¥1</span>
                         </el-button>
                     </div>
@@ -274,7 +274,7 @@ const showPaidAnalysisDialog = (position) => {
     }
 
     ElMessageBox.confirm(
-        `深度分析 ${position.name}(${position.code}) 需要支付 ¥1，是否继续？`,
+        `量化分析 ${position.name}(${position.code}) 需要支付 ¥1，是否继续？`,
         '付费服务确认',
         {
             confirmButtonText: '确认支付',
@@ -284,11 +284,11 @@ const showPaidAnalysisDialog = (position) => {
     ).then(() => {
         // 扣费
         if (userStore.deductBalance(1)) {
-            ElMessage.success('支付成功，正在生成深度分析...');
+            ElMessage.success('支付成功，正在生成量化分析...');
             emit('send-to-chat', {
                 type: 'paid-analysis',
                 content: position,
-                title: `深度分析${position.name}(${position.code})`
+                title: `量化分析${position.name}(${position.code})`
             });
         } else {
             ElMessage.error('支付失败，余额不足');
@@ -306,7 +306,7 @@ const showQuantAnalysisDialog = (position) => {
     }
 
     ElMessageBox.confirm(
-        `量化分析 ${position.name}(${position.code}) 需要支付 ¥1，是否继续？`,
+        `AI委托交易 ${position.name}(${position.code}) 需要支付 ¥1，是否继续？`,
         '付费服务确认',
         {
             confirmButtonText: '确认支付',
@@ -316,11 +316,11 @@ const showQuantAnalysisDialog = (position) => {
     ).then(() => {
         // 扣费
         if (userStore.deductBalance(1)) {
-            ElMessage.success('支付成功，正在生成量化分析...');
+            ElMessage.success('支付成功，正在生成AI委托交易...');
             emit('send-to-chat', {
                 type: 'quant-analysis',
                 content: position,
-                title: `量化分析${position.name}(${position.code})`
+                title: `AI委托交易${position.name}(${position.code})`
             });
         } else {
             ElMessage.error('支付失败，余额不足');

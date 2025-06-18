@@ -89,7 +89,7 @@
                                 <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"
                                     stroke="currentColor" stroke-width="2" />
                             </svg>
-                            深度分析
+                            量化分析
                             <span class="price-tag">¥1</span>
                         </el-button>
                         <el-button size="small" @click.stop="showQuantAnalysisDialog(stock)" class="quant-analysis-btn">
@@ -97,7 +97,7 @@
                                 <path d="M3 3v18h18M7 16l4-4 4 4 4-4" stroke="currentColor" stroke-width="2"
                                     fill="none" />
                             </svg>
-                            量化分析
+                            AI委托交易
                             <span class="price-tag">¥1</span>
                         </el-button>
 
@@ -207,41 +207,8 @@ const showBuyDialog = (stock) => {
     emit('show-buy-dialog', stock);
 };
 
-// 付费深度分析
-const showPaidAnalysisDialog = (stock) => {
-    // 检查余额是否足够
-    if (userStore.balance < 1) {
-        ElMessage.warning('余额不足，请先充值');
-        return;
-    }
-
-    ElMessageBox.confirm(
-        `深度分析 ${stock.name}(${stock.code}) 需要支付 ¥1，是否继续？`,
-        '付费服务确认',
-        {
-            confirmButtonText: '确认支付',
-            cancelButtonText: '取消',
-            type: 'info',
-        }
-    ).then(() => {
-        // 扣费
-        if (userStore.deductBalance(1)) {
-            ElMessage.success('支付成功，正在生成深度分析...');
-            emit('send-to-chat', {
-                type: 'paid-analysis',
-                content: stock,
-                title: `深度分析${stock.name}(${stock.code})`
-            });
-        } else {
-            ElMessage.error('支付失败，余额不足');
-        }
-    }).catch(() => {
-        // 用户取消
-    });
-};
-
 // 付费量化分析
-const showQuantAnalysisDialog = (stock) => {
+const showPaidAnalysisDialog = (stock) => {
     // 检查余额是否足够
     if (userStore.balance < 1) {
         ElMessage.warning('余额不足，请先充值');
@@ -261,9 +228,42 @@ const showQuantAnalysisDialog = (stock) => {
         if (userStore.deductBalance(1)) {
             ElMessage.success('支付成功，正在生成量化分析...');
             emit('send-to-chat', {
-                type: 'quant-analysis',
+                type: 'paid-analysis',
                 content: stock,
                 title: `量化分析${stock.name}(${stock.code})`
+            });
+        } else {
+            ElMessage.error('支付失败，余额不足');
+        }
+    }).catch(() => {
+        // 用户取消
+    });
+};
+
+// 付费AI委托交易
+const showQuantAnalysisDialog = (stock) => {
+    // 检查余额是否足够
+    if (userStore.balance < 1) {
+        ElMessage.warning('余额不足，请先充值');
+        return;
+    }
+
+    ElMessageBox.confirm(
+        `AI委托交易 ${stock.name}(${stock.code}) 需要支付 ¥1，是否继续？`,
+        '付费服务确认',
+        {
+            confirmButtonText: '确认支付',
+            cancelButtonText: '取消',
+            type: 'info',
+        }
+    ).then(() => {
+        // 扣费
+        if (userStore.deductBalance(1)) {
+            ElMessage.success('支付成功，正在生成AI委托交易...');
+            emit('send-to-chat', {
+                type: 'quant-analysis',
+                content: stock,
+                title: `AI委托交易${stock.name}(${stock.code})`
             });
         } else {
             ElMessage.error('支付失败，余额不足');

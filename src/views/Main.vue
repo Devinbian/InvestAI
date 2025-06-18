@@ -125,7 +125,7 @@
             <div class="chat-history-area" v-if="isChatMode && chatHistory.length" ref="chatHistoryRef">
                 <div v-for="(message, idx) in chatHistory" :key="idx" :class="['chat-message', message.role]">
                     <div class="chat-message-content">
-                        <div class="message-text">{{ message.content }}</div>
+                        <div v-if="message.content" class="message-text">{{ message.content }}</div>
 
                         <!-- 单只股票操作按钮 -->
                         <div v-if="message.hasStockInfo && message.stockInfo" class="stock-actions">
@@ -159,25 +159,25 @@
                                 已加自选
                             </el-button>
 
-                            <!-- 深度分析按钮（付费） -->
+                            <!-- 量化分析按钮（付费） -->
                             <el-button v-if="!message.isBuyMode" size="small"
                                 @click="showPaidAnalysisDialog(message.stockInfo)" class="paid-analysis-btn">
                                 <svg width="14" height="14" viewBox="0 0 24 24" fill="none">
                                     <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"
                                         stroke="currentColor" stroke-width="2" />
                                 </svg>
-                                深度分析
+                                量化分析
                                 <span class="price-tag">¥1</span>
                             </el-button>
 
-                            <!-- 量化分析按钮（付费） -->
+                            <!-- AI委托交易按钮（付费） -->
                             <el-button v-if="!message.isBuyMode" size="small"
                                 @click="showQuantAnalysisDialog(message.stockInfo)" class="quant-analysis-btn">
                                 <svg width="14" height="14" viewBox="0 0 24 24" fill="none">
                                     <path d="M3 3v18h18M7 16l4-4 4 4 4-4" stroke="currentColor" stroke-width="2"
                                         fill="none" />
                                 </svg>
-                                量化分析
+                                AI委托交易
                                 <span class="price-tag">¥1</span>
                             </el-button>
 
@@ -199,20 +199,6 @@
                                 <div class="account-title-section">
                                     <h3 class="account-title">📊 我的股票账户</h3>
                                     <div class="account-time">{{ formatRecommendationTime(message.timestamp) }}</div>
-                                </div>
-                                <div class="account-actions">
-                                    <el-button size="small" @click="requestAssetOptimization(message.assetData)"
-                                        class="action-btn primary">
-                                        💡 优化建议
-                                    </el-button>
-                                    <el-button size="small" @click="requestRiskAnalysis(message.assetData)"
-                                        class="action-btn warning">
-                                        ⚠️ 风险评估
-                                    </el-button>
-                                    <el-button size="small" @click="refreshAssetData(message)"
-                                        class="action-btn secondary">
-                                        🔄 刷新
-                                    </el-button>
                                 </div>
                             </div>
 
@@ -370,7 +356,7 @@
                                                         加仓
                                                     </el-button>
 
-                                                    <!-- 深度分析按钮（付费） -->
+                                                    <!-- 量化分析按钮（付费） -->
                                                     <el-button size="small" @click="showPaidAnalysisDialog(position)"
                                                         class="paid-analysis-btn">
                                                         <svg width="11" height="11" viewBox="0 0 24 24" fill="none">
@@ -378,18 +364,18 @@
                                                                 d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"
                                                                 stroke="currentColor" stroke-width="2" />
                                                         </svg>
-                                                        深度分析
+                                                        量化分析
                                                         <span class="price-tag">¥1</span>
                                                     </el-button>
 
-                                                    <!-- 量化分析按钮（付费） -->
+                                                    <!-- AI委托交易按钮（付费） -->
                                                     <el-button size="small" @click="showQuantAnalysisDialog(position)"
                                                         class="quant-analysis-btn">
                                                         <svg width="11" height="11" viewBox="0 0 24 24" fill="none">
                                                             <path d="M3 3v18h18M7 16l4-4 4 4 4-4" stroke="currentColor"
                                                                 stroke-width="2" fill="none" />
                                                         </svg>
-                                                        量化分析
+                                                        AI委托交易
                                                         <span class="price-tag">¥1</span>
                                                     </el-button>
                                                 </div>
@@ -466,7 +452,7 @@
                                                         移除关注
                                                     </el-button>
 
-                                                    <!-- 深度分析按钮（付费） -->
+                                                    <!-- 量化分析按钮（付费） -->
                                                     <el-button size="small" @click="showPaidAnalysisDialog(stock)"
                                                         class="paid-analysis-btn">
                                                         <svg width="10" height="10" viewBox="0 0 24 24" fill="none">
@@ -474,18 +460,18 @@
                                                                 d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"
                                                                 stroke="currentColor" stroke-width="2" />
                                                         </svg>
-                                                        深度分析
+                                                        量化分析
                                                         <span class="price-tag">¥1</span>
                                                     </el-button>
 
-                                                    <!-- 量化分析按钮（付费） -->
+                                                    <!-- AI委托交易按钮（付费） -->
                                                     <el-button size="small" @click="showQuantAnalysisDialog(stock)"
                                                         class="quant-analysis-btn">
                                                         <svg width="10" height="10" viewBox="0 0 24 24" fill="none">
                                                             <path d="M3 3v18h18M7 16l4-4 4 4 4-4" stroke="currentColor"
                                                                 stroke-width="2" fill="none" />
                                                         </svg>
-                                                        量化分析
+                                                        AI委托交易
                                                         <span class="price-tag">¥1</span>
                                                     </el-button>
 
@@ -612,25 +598,25 @@
                                         已加自选
                                     </el-button>
 
-                                    <!-- 深度分析按钮（付费） -->
+                                    <!-- 量化分析按钮（付费） -->
                                     <el-button size="small" @click="showPaidAnalysisDialog(stock)"
                                         class="paid-analysis-btn">
                                         <svg width="14" height="14" viewBox="0 0 24 24" fill="none">
                                             <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"
                                                 stroke="currentColor" stroke-width="2" />
                                         </svg>
-                                        深度分析
+                                        量化分析
                                         <span class="price-tag">¥1</span>
                                     </el-button>
 
-                                    <!-- 量化分析按钮（付费） -->
+                                    <!-- AI委托交易按钮（付费） -->
                                     <el-button size="small" @click="showQuantAnalysisDialog(stock)"
                                         class="quant-analysis-btn">
                                         <svg width="14" height="14" viewBox="0 0 24 24" fill="none">
                                             <path d="M3 3v18h18M7 16l4-4 4 4 4-4" stroke="currentColor" stroke-width="2"
                                                 fill="none" />
                                         </svg>
-                                        量化分析
+                                        AI委托交易
                                         <span class="price-tag">¥1</span>
                                     </el-button>
 
@@ -1467,99 +1453,150 @@
         </el-dialog>
 
         <!-- 自定义快捷操作对话框 -->
-        <el-dialog v-model="customizeDialogVisible" title="自定义快捷操作" width="600px" class="customize-dialog">
+        <el-dialog v-model="customizeDialogVisible" title="自定义快捷操作" width="700px" class="customize-dialog">
             <div class="customize-content">
+                <!-- 默认快捷操作 -->
                 <div class="section">
-                    <h4>默认快捷操作</h4>
-                    <div class="shortcuts-list">
-                        <div v-for="shortcut in defaultShortcuts" :key="shortcut.id" class="shortcut-item">
-                            <div class="shortcut-info">
-                                <span class="shortcut-icon">{{ shortcut.icon }}</span>
-                                <div class="shortcut-details">
-                                    <div class="shortcut-title">{{ shortcut.title }}</div>
-                                    <div class="shortcut-desc">{{ shortcut.description }}</div>
+                    <div class="section-title">
+                        <h4>默认快捷操作</h4>
+                        <span class="section-subtitle">开启或关闭系统预设的快捷操作</span>
+                    </div>
+                    <div class="shortcuts-grid">
+                        <div v-for="shortcut in defaultShortcuts" :key="shortcut.id"
+                            :class="['shortcut-card', { 'active': shortcut.isActive }]">
+                            <div class="card-header">
+                                <div class="icon-wrapper">
+                                    <span class="shortcut-icon">{{ shortcut.icon }}</span>
                                 </div>
+                                <el-switch v-model="shortcut.isActive" @change="toggleShortcutActive(shortcut)"
+                                    class="shortcut-switch" />
                             </div>
-                            <el-switch v-model="shortcut.isActive" @change="toggleShortcutActive(shortcut)" />
+                            <div class="card-content">
+                                <div class="shortcut-title">{{ shortcut.title }}</div>
+                                <div class="shortcut-desc">{{ shortcut.description }}</div>
+                            </div>
                         </div>
                     </div>
                 </div>
 
+                <!-- 自定义快捷操作 -->
                 <div class="section">
                     <div class="section-header">
-                        <h4>自定义快捷操作</h4>
-                        <el-button type="primary" size="small" @click="addCustomShortcut"
-                            :disabled="customShortcuts.length >= 3">
-                            <span class="btn-icon">➕</span>
-                            添加{{ customShortcuts.length >= 3 ? '(已达上限)' : '' }}
+                        <div class="section-title">
+                            <h4>自定义快捷操作</h4>
+                            <span class="section-subtitle">创建专属于您的快捷操作（最多3个）</span>
+                        </div>
+                        <el-button type="primary" @click="addCustomShortcut" :disabled="customShortcuts.length >= 3"
+                            class="add-shortcut-btn">
+                            <el-icon>
+                                <Plus />
+                            </el-icon>
+                            添加自定义操作
                         </el-button>
                     </div>
-                    <div class="shortcuts-list" v-if="customShortcuts.length > 0">
-                        <div v-for="shortcut in customShortcuts" :key="shortcut.id" class="shortcut-item">
-                            <div class="shortcut-info" v-if="!shortcut.isEditing">
-                                <span class="shortcut-icon">{{ shortcut.icon }}</span>
-                                <div class="shortcut-details">
-                                    <div class="shortcut-title">{{ shortcut.title }}</div>
-                                    <div class="shortcut-desc">{{ shortcut.description }}</div>
+
+                    <!-- 自定义快捷操作列表 -->
+                    <div class="custom-shortcuts-list" v-if="customShortcuts.length > 0">
+                        <div v-for="shortcut in customShortcuts" :key="shortcut.id"
+                            :class="['custom-shortcut-item', { 'editing': shortcut.isEditing }]">
+
+                            <!-- 显示模式 -->
+                            <div class="shortcut-display" v-if="!shortcut.isEditing">
+                                <div class="display-left">
+                                    <div class="icon-wrapper">
+                                        <span class="shortcut-icon">{{ shortcut.icon }}</span>
+                                    </div>
+                                    <div class="shortcut-details">
+                                        <div class="shortcut-title">{{ shortcut.title }}</div>
+                                        <div class="shortcut-desc">{{ shortcut.description }}</div>
+                                    </div>
+                                </div>
+                                <div class="display-right">
+                                    <el-switch v-model="shortcut.isActive" @change="saveCustomShortcuts" />
+                                    <div class="action-buttons">
+                                        <el-button type="primary" link @click="startEditShortcut(shortcut)">
+                                            <el-icon>
+                                                <Edit />
+                                            </el-icon>
+                                        </el-button>
+                                        <el-button type="danger" link @click="removeCustomShortcut(shortcut.id)">
+                                            <el-icon>
+                                                <Delete />
+                                            </el-icon>
+                                        </el-button>
+                                    </div>
                                 </div>
                             </div>
+
                             <!-- 编辑模式 -->
-                            <div class="shortcut-edit-form" v-else>
-                                <div class="edit-row">
-                                    <label>图标：</label>
-                                    <el-input v-model="shortcut.icon" maxlength="2" style="width: 80px;" />
+                            <div class="shortcut-edit" v-else>
+                                <div class="edit-form">
+                                    <!-- 图标选择 -->
+                                    <div class="form-group">
+                                        <label class="form-label">选择图标</label>
+                                        <div class="icon-selector">
+                                            <div class="current-icon">
+                                                <span class="selected-icon">{{ shortcut.icon }}</span>
+                                            </div>
+                                            <div class="icon-options">
+                                                <div v-for="icon in availableIcons" :key="icon"
+                                                    :class="['icon-option', { 'selected': shortcut.icon === icon }]"
+                                                    @click="selectIcon(shortcut, icon)">
+                                                    <span>{{ icon }}</span>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                    <!-- 基本信息 -->
+                                    <div class="form-row">
+                                        <div class="form-group">
+                                            <label class="form-label">操作标题</label>
+                                            <el-input v-model="shortcut.title" maxlength="10" placeholder="如：股票分析"
+                                                show-word-limit />
+                                        </div>
+                                        <div class="form-group">
+                                            <label class="form-label">简称</label>
+                                            <el-input v-model="shortcut.shortTitle" maxlength="2" placeholder="如：分析"
+                                                style="width: 100px;" />
+                                        </div>
+                                    </div>
+
+                                    <div class="form-group">
+                                        <label class="form-label">操作描述</label>
+                                        <el-input v-model="shortcut.description" maxlength="50"
+                                            placeholder="简单描述这个操作的用途" show-word-limit />
+                                    </div>
+
+                                    <div class="form-group">
+                                        <label class="form-label">执行内容</label>
+                                        <el-input v-model="shortcut.prompt" type="textarea" :rows="4" maxlength="500"
+                                            placeholder="请输入您希望AI执行的具体操作内容，例如：请帮我分析一下当前市场的热点板块..." show-word-limit />
+                                    </div>
                                 </div>
-                                <div class="edit-row">
-                                    <label>标题：</label>
-                                    <el-input v-model="shortcut.title" maxlength="10" style="width: 150px;" />
+
+                                <div class="edit-actions">
+                                    <el-button @click="cancelEditShortcut(shortcut)">取消</el-button>
+                                    <el-button type="primary" @click="saveEditShortcut(shortcut)">保存</el-button>
                                 </div>
-                                <div class="edit-row">
-                                    <label>简称：</label>
-                                    <el-input v-model="shortcut.shortTitle" maxlength="2" placeholder="最多2字"
-                                        style="width: 80px;" />
-                                </div>
-                                <div class="edit-row">
-                                    <label>描述：</label>
-                                    <el-input v-model="shortcut.description" maxlength="50" style="width: 200px;" />
-                                </div>
-                                <div class="edit-row">
-                                    <label>执行内容：</label>
-                                    <el-input v-model="shortcut.prompt" type="textarea" :rows="3" maxlength="500"
-                                        style="width: 100%;" />
-                                </div>
-                            </div>
-                            <div class="shortcut-actions">
-                                <el-switch v-model="shortcut.isActive" @change="saveCustomShortcuts"
-                                    v-if="!shortcut.isEditing" />
-                                <template v-if="!shortcut.isEditing">
-                                    <el-button type="primary" size="small" text @click="startEditShortcut(shortcut)">
-                                        编辑
-                                    </el-button>
-                                    <el-button type="danger" size="small" text
-                                        @click="removeCustomShortcut(shortcut.id)">
-                                        删除
-                                    </el-button>
-                                </template>
-                                <template v-else>
-                                    <el-button type="success" size="small" @click="saveEditShortcut(shortcut)">
-                                        保存
-                                    </el-button>
-                                    <el-button size="small" @click="cancelEditShortcut(shortcut)">
-                                        取消
-                                    </el-button>
-                                </template>
                             </div>
                         </div>
                     </div>
+
+                    <!-- 空状态 -->
                     <div v-else class="empty-custom">
-                        <p>暂无自定义快捷操作，点击"添加"创建你的专属快捷操作</p>
+                        <div class="empty-icon">📝</div>
+                        <div class="empty-text">
+                            <h5>还没有自定义快捷操作</h5>
+                            <p>点击上方"添加自定义操作"按钮，创建专属于您的快捷操作</p>
+                        </div>
                     </div>
                 </div>
             </div>
 
             <template #footer>
                 <div class="dialog-footer">
-                    <el-button @click="customizeDialogVisible = false">关闭</el-button>
+                    <el-button @click="customizeDialogVisible = false" size="large">关闭</el-button>
                 </div>
             </template>
         </el-dialog>
@@ -1596,7 +1633,7 @@
 <script setup>
 import { ref, reactive, onMounted, onUnmounted, nextTick, watch, computed } from 'vue';
 import { useUserStore } from '../store/user';
-import { User, Lock, ArrowDown } from '@element-plus/icons-vue';
+import { User, Lock, ArrowDown, Plus, Edit, Delete } from '@element-plus/icons-vue';
 import { ElMessage, ElMessageBox } from 'element-plus';
 import { mockApi, wechatLoginApi } from '../api/mock';
 import Sidebar from '../components/Sidebar.vue';
@@ -1673,6 +1710,17 @@ const defaultShortcuts = ref([
 
 // 自定义快捷操作
 const customShortcuts = ref(JSON.parse(localStorage.getItem('customShortcuts') || '[]'));
+
+// 可选图标列表
+const availableIcons = ref([
+    '💡', '🚀', '📊', '💰', '🎯', '⭐', '🔥', '📈', '💎', '🏆',
+    '🎨', '⚡', '🌟', '🎪', '🎭', '🎪', '🎨', '🎯', '🎲', '🎮',
+    '📱', '💻', '📺', '⌚', '📷', '🎥', '🎧', '🎤', '🎸', '🎹',
+    '🏠', '🏢', '🏭', '🏪', '🏫', '🏥', '🏦', '🏨', '🏩', '🏰',
+    '🚗', '🚕', '🚙', '🚌', '🚎', '🏎️', '🚓', '🚑', '🚒', '🚐',
+    '✈️', '🚁', '🚂', '🚄', '🚅', '🚆', '🚇', '🚈', '🚉', '🚊',
+    '🌍', '🌎', '🌏', '🌐', '🗺️', '🗾', '🌋', '🗻', '🏔️', '⛰️'
+]);
 
 // 当前激活的快捷操作
 const activeShortcuts = computed(() => {
@@ -2710,7 +2758,7 @@ const handleAssetAnalysis = async () => {
     // 创建资产分析消息对象
     const assetAnalysisMessage = {
         role: 'assistant',
-        content: '📊 我的股票账户',
+        content: '',
         hasAssetInfo: true,
         assetData: {
             totalAssets: totalAssets.toFixed(2),
@@ -2851,84 +2899,11 @@ const formatCurrency = (amount) => {
     return num.toFixed(2);
 };
 
-// 资产优化建议
-const requestAssetOptimization = async (assetData) => {
-    const message = `请基于我的资产配置情况，提供专业的投资组合优化建议：
 
-**当前资产状况**
-- 总资产：¥${assetData.totalAssets}
-- 可用余额：¥${assetData.balance}
-- 总盈亏：${assetData.totalProfitPercent >= 0 ? '+' : ''}${assetData.totalProfitPercent}%
-- 持仓股票：${assetData.portfolioCount}只
 
-**持仓分析**
-${assetData.portfolioData.map(position =>
-        `- ${position.name}(${position.code})：持仓${position.quantity}股，盈亏${position.profitPercent >= 0 ? '+' : ''}${position.profitPercent}%`
-    ).join('\n')}
 
-请从以下角度提供优化建议：
-1. 资产配置合理性分析
-2. 行业分散化建议
-3. 风险控制优化
-4. 仓位调整建议
-5. 新增投资机会
-6. 止盈止损策略`;
 
-    const res = await mockApi.sendMessage(message);
-    chatHistory.value.push(
-        { role: 'user', content: '资产优化建议：请分析我的投资组合并提供优化方案' },
-        res.data
-    );
 
-    await nextTick();
-    scrollToBottom();
-    ElMessage.success('正在为您生成资产优化建议');
-};
-
-// 风险评估
-const requestRiskAnalysis = async (assetData) => {
-    const message = `请对我的投资组合进行全面的风险评估：
-
-**资产概况**
-- 总资产：¥${assetData.totalAssets}
-- 持仓股票：${assetData.portfolioCount}只
-- 总盈亏：${assetData.totalProfitPercent >= 0 ? '+' : ''}${assetData.totalProfitPercent}%
-
-**持仓详情**
-${assetData.portfolioData.map(position =>
-        `- ${position.name}(${position.code})：市值¥${position.marketValue.toFixed(2)}，占比${((position.marketValue / parseFloat(assetData.totalAssets)) * 100).toFixed(1)}%`
-    ).join('\n')}
-
-请从以下维度进行风险评估：
-1. 集中度风险分析
-2. 行业分布风险
-3. 市场风险敞口
-4. 流动性风险评估
-5. 波动率风险分析
-6. 风险控制建议
-7. 应急处置方案`;
-
-    const res = await mockApi.sendMessage(message);
-    chatHistory.value.push(
-        { role: 'user', content: '风险评估：请分析我的投资组合风险状况' },
-        res.data
-    );
-
-    await nextTick();
-    scrollToBottom();
-    ElMessage.success('正在为您进行风险评估分析');
-};
-
-// 刷新资产数据
-const refreshAssetData = async (message) => {
-    ElMessage.info('正在刷新资产数据...');
-
-    // 重新生成资产分析
-    setTimeout(() => {
-        handleAssetAnalysis();
-        ElMessage.success('资产数据已更新');
-    }, 1000);
-};
 
 // 处理来自侧边栏的交互
 const handleSidebarInteraction = async (data) => {
@@ -3057,7 +3032,7 @@ const removeFromWatchlist = (stockCode) => {
 const continueAnalysis = async (stockInfo, isPaid = false) => {
     let message;
     if (isPaid) {
-        message = `【付费深度分析】请对${stockInfo.name}(${stockInfo.code})进行全面深度分析，包括：
+        message = `【付费量化分析】请对${stockInfo.name}(${stockInfo.code})进行全面量化分析，包括：
 1. 详细的基本面分析（财务指标、盈利能力、成长性）
 2. 技术面分析（K线形态、技术指标、支撑阻力位）
 3. 行业对比分析（同行业竞争优势、市场地位）
@@ -3070,7 +3045,7 @@ const continueAnalysis = async (stockInfo, isPaid = false) => {
 
     const res = await mockApi.sendMessage(message);
     chatHistory.value.push(
-        { role: 'user', content: isPaid ? `深度分析 ${stockInfo.name}(${stockInfo.code})` : message },
+        { role: 'user', content: isPaid ? `量化分析 ${stockInfo.name}(${stockInfo.code})` : message },
         res.data
     );
 
@@ -3078,19 +3053,19 @@ const continueAnalysis = async (stockInfo, isPaid = false) => {
     scrollToBottom();
 };
 
-// 量化分析方法
+// AI委托交易方法
 const performQuantAnalysis = async (stockInfo) => {
-    const message = `【付费量化分析】请对${stockInfo.name}(${stockInfo.code})进行专业量化分析，包括：
+    const message = `【付费AI委托交易】请对${stockInfo.name}(${stockInfo.code})进行专业AI委托交易分析，包括：
 1. 技术指标分析（MACD、RSI、布林带、KDJ等）
 2. 量化选股因子评分（价值因子、成长因子、质量因子）
 3. 风险评估模型（波动率、最大回撤、夏普比率）
 4. 量化交易信号（买入卖出信号、信号强度）
 5. 回测数据分析（历史表现、胜率统计）
-6. 量化投资策略建议（策略类型、参数设置、风控措施）`;
+6. AI委托交易策略建议（策略类型、参数设置、风控措施）`;
 
     const res = await mockApi.sendMessage(message);
     chatHistory.value.push(
-        { role: 'user', content: `量化分析 ${stockInfo.name}(${stockInfo.code})` },
+        { role: 'user', content: `AI委托交易 ${stockInfo.name}(${stockInfo.code})` },
         res.data
     );
 
@@ -3797,37 +3772,8 @@ const getRecommendLevelClass = (level) => {
     }
 };
 
-// 付费深度分析
-const showPaidAnalysisDialog = (stock) => {
-    ElMessageBox.confirm(
-        `深度分析 ${stock.name}(${stock.code}) 需要支付 ¥1，是否继续？`,
-        '付费服务确认',
-        {
-            confirmButtonText: '确认支付',
-            cancelButtonText: '取消',
-            type: 'warning',
-            customClass: 'paid-service-dialog'
-        }
-    ).then(() => {
-        // 检查余额
-        if (userStore.balance < 1) {
-            ElMessage.error('余额不足，请先充值');
-            return;
-        }
-
-        // 扣费并执行分析
-        userStore.deductBalance(1);
-        ElMessage.success('支付成功，正在生成深度分析报告...');
-
-        // 执行深度分析
-        continueAnalysis(stock, true);
-    }).catch(() => {
-        ElMessage.info('已取消付费分析');
-    });
-};
-
 // 付费量化分析
-const showQuantAnalysisDialog = (stock) => {
+const showPaidAnalysisDialog = (stock) => {
     ElMessageBox.confirm(
         `量化分析 ${stock.name}(${stock.code}) 需要支付 ¥1，是否继续？`,
         '付费服务确认',
@@ -3844,14 +3790,43 @@ const showQuantAnalysisDialog = (stock) => {
             return;
         }
 
-        // 扣费并执行量化分析
+        // 扣费并执行分析
         userStore.deductBalance(1);
         ElMessage.success('支付成功，正在生成量化分析报告...');
 
         // 执行量化分析
+        continueAnalysis(stock, true);
+    }).catch(() => {
+        ElMessage.info('已取消付费分析');
+    });
+};
+
+// 付费AI委托交易
+const showQuantAnalysisDialog = (stock) => {
+    ElMessageBox.confirm(
+        `AI委托交易 ${stock.name}(${stock.code}) 需要支付 ¥1，是否继续？`,
+        '付费服务确认',
+        {
+            confirmButtonText: '确认支付',
+            cancelButtonText: '取消',
+            type: 'warning',
+            customClass: 'paid-service-dialog'
+        }
+    ).then(() => {
+        // 检查余额
+        if (userStore.balance < 1) {
+            ElMessage.error('余额不足，请先充值');
+            return;
+        }
+
+        // 扣费并执行AI委托交易
+        userStore.deductBalance(1);
+        ElMessage.success('支付成功，正在生成AI委托交易报告...');
+
+        // 执行AI委托交易
         performQuantAnalysis(stock);
     }).catch(() => {
-        ElMessage.info('已取消量化分析');
+        ElMessage.info('已取消AI委托交易');
     });
 };
 
@@ -4092,6 +4067,11 @@ const cancelEditShortcut = (shortcut) => {
         delete shortcut.originalData;
     }
     shortcut.isEditing = false;
+};
+
+// 选择图标
+const selectIcon = (shortcut, icon) => {
+    shortcut.icon = icon;
 };
 
 // 组件挂载时初始化
@@ -5110,50 +5090,7 @@ body.onboarding-mode {
     color: #64748b;
 }
 
-.account-actions {
-    display: flex;
-    gap: 12px;
-    flex-wrap: wrap;
-}
 
-.action-btn {
-    border-radius: 20px;
-    padding: 8px 16px;
-    font-size: 0.875rem;
-    font-weight: 500;
-    border: none;
-    transition: all 0.2s ease;
-}
-
-.action-btn.primary {
-    background: #3b82f6;
-    color: white;
-}
-
-.action-btn.primary:hover {
-    background: #2563eb;
-    transform: translateY(-1px);
-}
-
-.action-btn.warning {
-    background: #f59e0b;
-    color: white;
-}
-
-.action-btn.warning:hover {
-    background: #d97706;
-    transform: translateY(-1px);
-}
-
-.action-btn.secondary {
-    background: #6b7280;
-    color: white;
-}
-
-.action-btn.secondary:hover {
-    background: #4b5563;
-    transform: translateY(-1px);
-}
 
 /* 账户总览 */
 .account-overview {
@@ -9498,14 +9435,7 @@ body {
         gap: 16px;
     }
 
-    .account-actions {
-        justify-content: center;
-    }
 
-    .action-btn {
-        flex: 1;
-        min-width: 0;
-    }
 
     .overview-stats {
         grid-template-columns: repeat(2, 1fr);
@@ -9568,18 +9498,36 @@ body {
         grid-template-columns: 1fr;
     }
 
-    .account-actions {
-        flex-direction: column;
-    }
 
-    .action-btn {
-        width: 100%;
-    }
 }
 
 /* 自定义快捷操作对话框样式 */
+.customize-dialog {
+    border-radius: 16px;
+    overflow: hidden;
+}
+
+.customize-dialog .el-dialog__header {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    color: white;
+    padding: 20px 24px;
+    margin: 0;
+}
+
+.customize-dialog .el-dialog__title {
+    color: white;
+    font-weight: 600;
+    font-size: 18px;
+}
+
+.customize-dialog .el-dialog__headerbtn .el-dialog__close {
+    color: white;
+    font-size: 20px;
+}
+
 .customize-dialog .el-dialog__body {
-    padding: 20px;
+    padding: 24px;
+    background: #fafbfc;
 }
 
 .customize-content {
@@ -9587,145 +9535,367 @@ body {
     overflow-y: auto;
 }
 
+/* 区域样式 */
 .section {
-    margin-bottom: 24px;
+    margin-bottom: 32px;
+    background: white;
+    border-radius: 12px;
+    padding: 20px;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04);
 }
 
-.section h4 {
-    font-size: 16px;
+.section:last-child {
+    margin-bottom: 0;
+}
+
+.section-title h4 {
+    font-size: 18px;
     font-weight: 600;
     color: #1f2937;
-    margin-bottom: 16px;
+    margin: 0 0 4px 0;
+}
+
+.section-subtitle {
+    font-size: 14px;
+    color: #6b7280;
+    margin-bottom: 20px;
+    display: block;
 }
 
 .section-header {
     display: flex;
     justify-content: space-between;
-    align-items: center;
-    margin-bottom: 16px;
+    align-items: flex-start;
+    margin-bottom: 20px;
 }
 
-.shortcuts-list {
-    display: flex;
-    flex-direction: column;
-    gap: 12px;
+/* 默认快捷操作网格 */
+.shortcuts-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+    gap: 16px;
 }
 
-.shortcut-item {
+.shortcut-card {
+    background: #f8fafc;
+    border: 2px solid #e2e8f0;
+    border-radius: 12px;
+    padding: 16px;
+    transition: all 0.3s ease;
+    cursor: pointer;
+}
+
+.shortcut-card:hover {
+    background: #f1f5f9;
+    border-color: #cbd5e1;
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+}
+
+.shortcut-card.active {
+    border-color: #3b82f6;
+    background: #eff6ff;
+}
+
+.shortcut-card.active .card-header .icon-wrapper {
+    background: #3b82f6;
+    color: white;
+}
+
+.card-header {
     display: flex;
     justify-content: space-between;
     align-items: center;
-    padding: 16px;
-    background: #f8fafc;
-    border: 1px solid #e2e8f0;
-    border-radius: 8px;
-    transition: all 0.2s ease;
-    min-height: 60px;
+    margin-bottom: 12px;
 }
 
-.shortcut-item:hover {
-    background: #f1f5f9;
-    border-color: #cbd5e1;
-}
-
-.shortcut-info {
+.icon-wrapper {
+    width: 40px;
+    height: 40px;
+    background: #fff;
+    border-radius: 10px;
     display: flex;
     align-items: center;
-    gap: 12px;
-    flex: 1;
+    justify-content: center;
+    border: 1px solid #e2e8f0;
+    transition: all 0.3s ease;
 }
 
 .shortcut-icon {
     font-size: 20px;
-    width: 32px;
-    height: 32px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    background: #fff;
-    border-radius: 6px;
-    border: 1px solid #e2e8f0;
 }
 
-.shortcut-details {
-    flex: 1;
+.shortcut-switch {
+    --el-switch-on-color: #3b82f6;
 }
 
-.shortcut-title {
-    font-size: 14px;
+.card-content .shortcut-title {
+    font-size: 16px;
     font-weight: 600;
     color: #1f2937;
     margin-bottom: 4px;
 }
 
-.shortcut-desc {
-    font-size: 12px;
-    color: #6b7280;
-    line-height: 1.4;
-}
-
-.shortcut-actions {
-    display: flex;
-    align-items: center;
-    gap: 8px;
-    margin-top: 4px;
-    flex-direction: row;
-    min-width: 120px;
-    justify-content: flex-end;
-}
-
-.shortcut-actions.editing {
-    align-items: flex-start;
-    margin-top: 8px;
-}
-
-/* 编辑表单样式 */
-.shortcut-edit-form {
-    flex: 1;
-    margin-right: 16px;
-}
-
-.edit-row {
-    display: flex;
-    align-items: center;
-    margin-bottom: 12px;
-    gap: 8px;
-}
-
-.edit-row:last-child {
-    margin-bottom: 0;
-}
-
-.edit-row label {
+.card-content .shortcut-desc {
     font-size: 14px;
-    color: #374151;
+    color: #6b7280;
+    line-height: 1.5;
+}
+
+/* 添加按钮 */
+.add-shortcut-btn {
+    background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+    border: none;
+    padding: 10px 20px;
+    border-radius: 8px;
     font-weight: 500;
-    min-width: 80px;
-    text-align: right;
+    transition: all 0.3s ease;
 }
 
-.edit-row:last-child {
+.add-shortcut-btn:hover {
+    background: linear-gradient(135deg, #059669 0%, #047857 100%);
+    transform: translateY(-1px);
+    box-shadow: 0 4px 12px rgba(16, 185, 129, 0.3);
+}
+
+.add-shortcut-btn:disabled {
+    background: #d1d5db;
+    color: #9ca3af;
+    transform: none;
+    box-shadow: none;
+}
+
+/* 自定义快捷操作列表 */
+.custom-shortcuts-list {
+    display: flex;
     flex-direction: column;
-    align-items: flex-start;
+    gap: 16px;
 }
 
-.edit-row:last-child label {
+.custom-shortcut-item {
+    background: #f8fafc;
+    border: 1px solid #e2e8f0;
+    border-radius: 12px;
+    padding: 20px;
+    transition: all 0.3s ease;
+}
+
+.custom-shortcut-item:hover {
+    background: #f1f5f9;
+    border-color: #cbd5e1;
+}
+
+.custom-shortcut-item.editing {
+    border-color: #3b82f6;
+    background: #eff6ff;
+}
+
+/* 显示模式 */
+.shortcut-display {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.display-left {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    flex: 1;
+}
+
+.display-right {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+}
+
+.action-buttons {
+    display: flex;
+    gap: 4px;
+}
+
+.shortcut-details .shortcut-title {
+    font-size: 16px;
+    font-weight: 600;
+    color: #1f2937;
     margin-bottom: 4px;
-    text-align: left;
 }
 
+.shortcut-details .shortcut-desc {
+    font-size: 14px;
+    color: #6b7280;
+    line-height: 1.5;
+}
+
+/* 编辑模式 */
+.shortcut-edit {
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+}
+
+.edit-form {
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+}
+
+.form-group {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+
+.form-row {
+    display: grid;
+    grid-template-columns: 1fr 120px;
+    gap: 16px;
+}
+
+.form-label {
+    font-size: 14px;
+    font-weight: 500;
+    color: #374151;
+}
+
+/* 图标选择器 */
+.icon-selector {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+}
+
+.current-icon {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.selected-icon {
+    width: 40px;
+    height: 40px;
+    background: #3b82f6;
+    color: white;
+    border-radius: 8px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 20px;
+}
+
+.icon-options {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(40px, 1fr));
+    gap: 8px;
+    max-height: 160px;
+    overflow-y: auto;
+    padding: 8px;
+    background: #f8fafc;
+    border-radius: 8px;
+    border: 1px solid #e2e8f0;
+}
+
+.icon-option {
+    width: 40px;
+    height: 40px;
+    background: white;
+    border: 1px solid #e2e8f0;
+    border-radius: 6px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    font-size: 18px;
+}
+
+.icon-option:hover {
+    background: #f1f5f9;
+    border-color: #cbd5e1;
+    transform: scale(1.05);
+}
+
+.icon-option.selected {
+    background: #3b82f6;
+    color: white;
+    border-color: #3b82f6;
+}
+
+/* 编辑操作按钮 */
+.edit-actions {
+    display: flex;
+    justify-content: flex-end;
+    gap: 12px;
+    padding-top: 16px;
+    border-top: 1px solid #e2e8f0;
+}
+
+/* 空状态 */
 .empty-custom {
     text-align: center;
-    padding: 40px 20px;
-    color: #6b7280;
+    padding: 60px 20px;
     background: #f8fafc;
     border: 2px dashed #e2e8f0;
-    border-radius: 8px;
+    border-radius: 12px;
 }
 
-.empty-custom p {
-    margin: 0;
+.empty-icon {
+    font-size: 48px;
+    margin-bottom: 16px;
+}
+
+.empty-text h5 {
+    font-size: 18px;
+    font-weight: 600;
+    color: #374151;
+    margin: 0 0 8px 0;
+}
+
+.empty-text p {
     font-size: 14px;
+    color: #6b7280;
+    margin: 0;
+    line-height: 1.5;
+}
+
+/* 对话框底部 */
+.dialog-footer {
+    text-align: center;
+    padding: 16px 0;
+}
+
+/* 响应式设计 */
+@media (max-width: 768px) {
+    .shortcuts-grid {
+        grid-template-columns: 1fr;
+    }
+
+    .form-row {
+        grid-template-columns: 1fr;
+    }
+
+    .section-header {
+        flex-direction: column;
+        align-items: stretch;
+        gap: 16px;
+    }
+
+    .display-left {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 12px;
+    }
+
+    .shortcut-display {
+        flex-direction: column;
+        align-items: stretch;
+        gap: 16px;
+    }
+
+    .display-right {
+        justify-content: space-between;
+    }
 }
 
 .customize-btn {

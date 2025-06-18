@@ -112,11 +112,10 @@
                             <span class="btn-icon">{{ shortcut.icon }}</span>
                             {{ shortcut.title }}
                         </el-button>
-                        <!-- 自定义按钮 -->
-                        <el-button class="ai-suggestion-btn customize-btn" @click="openCustomizeDialog">
-                            <span class="btn-icon">⚙️</span>
-                            自定义
-                        </el-button>
+                        <!-- 自定义按钮 - 低调样式 -->
+                        <button class="customize-btn-inline" @click="openCustomizeDialog" title="自定义快捷操作">
+                            <span class="customize-icon">⚙️</span>
+                        </button>
                     </div>
                 </div>
             </div>
@@ -673,7 +672,7 @@
                         <span class="btn-icon">{{ shortcut.icon }}</span>
                         <span class="btn-text">{{ shortcut.shortTitle || shortcut.title }}</span>
                     </el-button>
-                    <el-button class="chat-shortcut-btn customize-btn" @click="openCustomizeDialog">
+                    <el-button class="chat-shortcut-btn customize-btn-chat" @click="openCustomizeDialog">
                         <span class="btn-icon">⚙️</span>
                         <span class="btn-text">设置</span>
                     </el-button>
@@ -728,868 +727,19 @@
             @recovery-success="handleRecoverySuccess" />
 
         <!-- 投资偏好设置对话框 -->
+        <InvestmentPreferencesDialog v-model="preferencesDialogVisible"
+            @preferences-completed="handlePreferencesCompleted" @preferences-skipped="handlePreferencesSkipped" />
 
-
-        <!-- 投资偏好设置对话框 -->
-        <el-dialog v-model="preferencesDialogVisible" :show-close="false" :close-on-click-modal="false"
-            :lock-scroll="false" width="1200px" class="preferences-dialog">
-            <template #header>
-                <div></div>
-            </template>
-
-            <div class="preferences-container">
-                <div class="preferences-header">
-                    <div class="preferences-logo">
-                        <img src="/logo.png" alt="InvestAI Logo" class="logo-image" />
-                    </div>
-                    <h1 class="preferences-title">完善投资偏好</h1>
-                    <p class="preferences-subtitle">帮助我们为您提供更精准的投资建议</p>
-
-                    <!-- 步骤指示器 -->
-                    <div class="step-indicator">
-                        <div v-for="(step, index) in preferenceSteps" :key="index" class="step-dot" :class="{
-                            'active': index === currentStep,
-                            'completed': index < currentStep
-                        }">
-                            <span v-if="index < currentStep">✓</span>
-                            <span v-else>{{ index + 1 }}</span>
-                        </div>
-                    </div>
-                </div>
-
-                <div class="preferences-form-wrapper">
-                    <!-- 步骤1: 投资经验 -->
-                    <div v-if="currentStep === 0" class="step-content">
-                        <h3 class="step-title">{{ preferenceSteps[0].title }}</h3>
-                        <p class="step-desc">{{ preferenceSteps[0].desc }}</p>
-
-                        <div class="experience-options">
-                            <div v-for="option in experienceOptions" :key="option.value" class="experience-option"
-                                :class="{ 'selected': preferencesForm.experience === option.value }"
-                                @click="preferencesForm.experience = option.value">
-                                <div class="option-radio">
-                                    <div class="radio-dot"
-                                        :class="{ 'checked': preferencesForm.experience === option.value }">
-                                    </div>
-                                </div>
-                                <div class="experience-content">
-                                    <div class="experience-header">
-                                        <span class="experience-icon">{{ option.icon }}</span>
-                                        <div class="experience-title">{{ option.title }}</div>
-                                    </div>
-                                    <div class="experience-label">{{ option.label }}</div>
-                                    <div class="experience-desc">{{ option.desc }}</div>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-
-                    <!-- 步骤2: 选择投资风格 -->
-                    <div v-if="currentStep === 1" class="step-content">
-                        <h3 class="step-title">{{ preferenceSteps[1].title }}</h3>
-                        <p class="step-desc">{{ preferenceSteps[1].desc }}</p>
-
-                        <div class="risk-options">
-                            <div v-for="option in riskOptions" :key="option.value" class="risk-option"
-                                :class="{ 'selected': preferencesForm.riskLevel === option.value }"
-                                @click="preferencesForm.riskLevel = option.value">
-                                <div class="option-radio">
-                                    <div class="radio-dot"
-                                        :class="{ 'checked': preferencesForm.riskLevel === option.value }">
-                                    </div>
-                                </div>
-                                <div class="option-content">
-                                    <div class="option-header">
-                                        <div class="option-title">
-                                            <span class="option-icon">{{ option.icon }}</span>
-                                            {{ option.title }}
-                                        </div>
-                                        <div class="risk-level-indicator">
-                                            <span v-for="i in 5" :key="i" class="risk-dot"
-                                                :class="{ 'active': i <= option.riskLevel }"></span>
-                                        </div>
-                                    </div>
-                                    <div class="option-desc">{{ option.desc }}</div>
-                                    <div class="simple-desc">{{ option.simpleDesc }}</div>
-                                    <div class="option-metrics">
-                                        <div class="metric-item">
-                                            <span class="metric-label">💰 可能收益:</span>
-                                            <span class="metric-value return">{{ option.expectedReturn }}</span>
-                                        </div>
-                                        <div class="metric-item">
-                                            <span class="metric-label">⚠️ 可能亏损:</span>
-                                            <span class="metric-value loss">{{ option.maxLoss }}</span>
-                                        </div>
-                                    </div>
-                                    <div class="option-examples">
-                                        <span class="examples-label">📈 投资什么:</span>
-                                        <span class="examples-text">{{ option.examples }}</span>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-
-                    <!-- 步骤3: 用户特征 -->
-                    <div v-if="currentStep === 2" class="step-content">
-                        <h3 class="step-title">{{ preferenceSteps[2].title }}</h3>
-                        <p class="step-desc">{{ preferenceSteps[2].desc }}</p>
-
-                        <div class="traits-container">
-                            <div class="traits-hint">
-                                <div class="hint-icon">💡</div>
-                                <div class="hint-text">
-                                    <strong>新手提示：</strong>如果不确定如何选择，我们已为您设置了适合新手的默认选项，您可以直接使用或根据个人情况调整
-                                </div>
-                            </div>
-
-                            <div class="traits-list">
-                                <div v-for="trait in userTraits" :key="trait.id" class="trait-item-compact">
-                                    <div class="trait-header-compact">
-                                        <div class="trait-left">
-                                            <span class="trait-icon">{{ trait.icon }}</span>
-                                            <div class="trait-info">
-                                                <div class="trait-title">{{ trait.title }}</div>
-                                                <div class="trait-desc">{{ trait.desc }}</div>
-                                            </div>
-                                        </div>
-                                        <div class="trait-current-value">
-                                            {{ preferencesForm.userTraits[trait.id] }}分
-                                        </div>
-                                    </div>
-
-                                    <div class="trait-slider-container">
-                                        <div class="slider-track">
-                                            <div class="slider-progress"
-                                                :style="{ width: (preferencesForm.userTraits[trait.id] / 5) * 100 + '%' }">
-                                            </div>
-                                        </div>
-                                        <div class="slider-options">
-                                            <div v-for="option in trait.options" :key="option.value"
-                                                class="slider-option"
-                                                :class="{ 'active': preferencesForm.userTraits[trait.id] === option.value }"
-                                                @click="preferencesForm.userTraits[trait.id] = option.value"
-                                                :title="option.desc">
-                                                <div class="option-dot"></div>
-                                                <div class="option-label">{{ option.value }}</div>
-                                            </div>
-                                        </div>
-                                    </div>
-
-                                    <div class="trait-description">
-                                        {{ getCurrentTraitDescription(trait.id) }}
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-
-                    <!-- 步骤4: 关注板块 -->
-                    <div v-if="currentStep === 3" class="step-content">
-                        <h3 class="step-title">{{ preferenceSteps[3].title }}</h3>
-                        <p class="step-desc">{{ preferenceSteps[3].desc }}</p>
-
-                        <div class="sectors-container-compact">
-                            <!-- 顶部搜索和统计 -->
-                            <div class="sectors-header">
-                                <div class="search-section">
-                                    <el-input v-model="sectorSearchQuery" placeholder="搜索行业..." class="compact-search"
-                                        clearable @input="handleSectorSearch">
-                                        <template #prefix>
-                                            <svg width="14" height="14" viewBox="0 0 24 24" fill="none">
-                                                <path d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"
-                                                    stroke="currentColor" stroke-width="2" fill="none" />
-                                            </svg>
-                                        </template>
-                                    </el-input>
-                                </div>
-                                <div class="stats-section">
-                                    <span class="stat-chip">大分类 {{ preferencesForm.sectors.majorCategories.length
-                                    }}/2</span>
-                                    <span class="stat-chip">细分 {{ preferencesForm.sectors.subCategories.length
-                                    }}/4</span>
-                                </div>
-                            </div>
-
-                            <!-- 左右分栏内容 -->
-                            <div class="sectors-content">
-                                <!-- 搜索结果模式 -->
-                                <div v-if="sectorSearchQuery && filteredSubSectors.length > 0" class="search-mode">
-                                    <div class="search-header">🔍 找到 {{ filteredSubSectors.length }} 个匹配行业</div>
-                                    <div class="search-grid">
-                                        <div v-for="sector in filteredSubSectors" :key="sector.value"
-                                            class="sector-card" :class="{
-                                                'selected': preferencesForm.sectors.subCategories.includes(sector.value),
-                                                'disabled': !preferencesForm.sectors.subCategories.includes(sector.value) && preferencesForm.sectors.subCategories.length >= 4
-                                            }" @click="toggleSubSectorFromSearch(sector)">
-                                            <div class="card-icon">{{ sector.icon }}</div>
-                                            <div class="card-content">
-                                                <div class="card-title" v-html="highlightSearchTerm(sector.label)">
-                                                </div>
-                                                <div class="card-desc" v-html="highlightSearchTerm(sector.desc)"></div>
-                                                <div class="card-parent">{{ getMajorSectorLabel(sector.parent) }}</div>
-                                            </div>
-                                            <div class="card-check"
-                                                v-if="preferencesForm.sectors.subCategories.includes(sector.value)">✓
-                                            </div>
-                                        </div>
-                                    </div>
-                                </div>
-
-                                <!-- 无搜索结果 -->
-                                <div v-else-if="sectorSearchQuery && filteredSubSectors.length === 0"
-                                    class="no-results">
-                                    <div class="no-results-content">
-                                        <div class="no-results-icon">🔍</div>
-                                        <div class="no-results-text">未找到匹配的行业</div>
-                                    </div>
-                                </div>
-
-                                <!-- 正常模式：左右分栏 -->
-                                <div v-else class="normal-layout">
-                                    <!-- 左侧：大分类 -->
-                                    <div class="left-section">
-                                        <div class="section-title">📊 选择大分类 (最多2个)</div>
-                                        <div class="major-grid">
-                                            <div v-for="major in majorSectorOptions" :key="major.value"
-                                                class="major-card" :class="{
-                                                    'selected': preferencesForm.sectors.majorCategories.includes(major.value),
-                                                    'disabled': !preferencesForm.sectors.majorCategories.includes(major.value) && preferencesForm.sectors.majorCategories.length >= 2
-                                                }" @click="toggleMajorSector(major.value)">
-                                                <div class="major-icon" :style="{ color: major.color }">{{ major.icon }}
-                                                </div>
-                                                <div class="major-name">{{ major.label }}</div>
-                                                <div class="major-check"
-                                                    v-if="preferencesForm.sectors.majorCategories.includes(major.value)">
-                                                    ✓</div>
-                                            </div>
-                                        </div>
-                                    </div>
-
-                                    <!-- 右侧：细分行业 -->
-                                    <div class="right-section">
-                                        <div v-if="preferencesForm.sectors.majorCategories.length > 0">
-                                            <div class="section-title">🎯 选择细分行业 (3-4个)</div>
-                                            <div class="sub-grid">
-                                                <div v-for="majorCategory in preferencesForm.sectors.majorCategories"
-                                                    :key="majorCategory" class="sub-group">
-                                                    <div class="group-header">{{ getMajorSectorIcon(majorCategory) }} {{
-                                                        getMajorSectorLabel(majorCategory) }}</div>
-                                                    <div class="sub-cards">
-                                                        <div v-for="sub in getSubSectorsByParent(majorCategory)"
-                                                            :key="sub.value" class="sub-card" :class="{
-                                                                'selected': preferencesForm.sectors.subCategories.includes(sub.value),
-                                                                'disabled': !preferencesForm.sectors.subCategories.includes(sub.value) && preferencesForm.sectors.subCategories.length >= 4
-                                                            }" @click="toggleSubSector(sub.value)">
-                                                            <div class="sub-icon">{{ sub.icon }}</div>
-                                                            <div class="sub-name">{{ sub.label }}</div>
-                                                            <div class="sub-check"
-                                                                v-if="preferencesForm.sectors.subCategories.includes(sub.value)">
-                                                                ✓</div>
-                                                        </div>
-                                                    </div>
-                                                </div>
-                                            </div>
-                                        </div>
-                                        <div v-else class="selection-hint">
-                                            <div class="hint-icon">💡</div>
-                                            <div class="hint-text">请先在左侧选择大分类</div>
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-
-                    <!-- 导航按钮 -->
-                    <div class="preferences-actions">
-                        <el-button v-if="currentStep > 0" class="preferences-back-btn" @click="previousStep">
-                            上一步
-                        </el-button>
-
-                        <el-button v-if="currentStep < preferenceSteps.length - 1" class="preferences-next-btn"
-                            type="primary" @click="nextStep" :disabled="!canProceedToNext">
-                            下一步
-                        </el-button>
-
-                        <el-button v-if="currentStep === preferenceSteps.length - 1" class="preferences-submit-btn"
-                            type="primary" @click="handlePreferencesSubmit" :loading="preferencesLoading">
-                            完成设置
-                        </el-button>
-
-                        <el-button class="preferences-skip-btn" @click="skipPreferences">
-                            跳过
-                        </el-button>
-                    </div>
-                </div>
-            </div>
-        </el-dialog>
-
-        <!-- 购买股票对话框 -->
-        <el-dialog v-model="buyDialogVisible" title="" width="800px" class="buy-dialog" :show-close="false">
-            <div class="trading-interface" v-if="selectedStock">
-                <!-- 股票信息头部 -->
-                <div class="stock-header-section">
-                    <!-- 头部主要内容 -->
-                    <div class="header-main-content">
-                        <!-- 左侧：股票基本信息 -->
-                        <div class="stock-basic-info">
-                            <div class="stock-title-row">
-                                <div class="stock-name-group">
-                                    <h2 class="buy-dialog-stock-name">{{ selectedStock.name }}</h2>
-                                    <span class="buy-dialog-stock-code">{{ selectedStock.code }}</span>
-                                </div>
-                                <div class="stock-tags">
-                                    <span class="tag-item">A股</span>
-                                    <span class="tag-item">主板</span>
-                                </div>
-                            </div>
-
-                            <div class="stock-price-row">
-                                <div class="price-main">
-                                    <span class="buy-dialog-current-price">¥{{ selectedStock.price }}</span>
-                                    <div :class="['price-change-group', selectedStock.change >= 0 ? 'up' : 'down']">
-                                        <span class="change-amount">{{ selectedStock.change >= 0 ? '+' : '' }}{{
-                                            selectedStock.change }}</span>
-                                        <span class="change-percent">({{ selectedStock.changePercent >= 0 ? '+' : ''
-                                        }}{{
-                                                selectedStock.changePercent }}%)</span>
-                                    </div>
-                                </div>
-                                <div class="price-stats">
-                                    <div class="stat-item">
-                                        <span class="stat-label">今开</span>
-                                        <span class="stat-value">{{ (parseFloat(selectedStock.price) - 2.5).toFixed(2)
-                                        }}</span>
-                                    </div>
-                                    <div class="stat-item">
-                                        <span class="stat-label">昨收</span>
-                                        <span class="stat-value">{{ (parseFloat(selectedStock.price) -
-                                            parseFloat(selectedStock.change)).toFixed(2) }}</span>
-                                    </div>
-                                    <div class="stat-item">
-                                        <span class="stat-label">成交量</span>
-                                        <span class="stat-value">1.2万手</span>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-
-                        <!-- 右侧：操作区域 -->
-                        <div class="header-actions">
-                            <div class="market-status-card">
-                                <div class="status-indicator">
-                                    <span class="status-dot"></span>
-                                    <span class="status-text">交易中</span>
-                                </div>
-                                <div class="trading-time">09:30-15:00</div>
-                            </div>
-
-                            <div class="action-buttons">
-                                <!-- 自选股按钮 -->
-                                <el-button v-if="!userStore.isInWatchlist(selectedStock.code)"
-                                    class="action-btn favorite-btn" size="small" @click="addToWatchlist(selectedStock)">
-                                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none">
-                                        <path
-                                            d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z"
-                                            stroke="currentColor" stroke-width="2" fill="none" />
-                                    </svg>
-                                    加入自选
-                                </el-button>
-                                <el-button v-else class="action-btn favorite-btn favorited" size="small"
-                                    @click="removeFromWatchlist(selectedStock.code)">
-                                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none">
-                                        <path
-                                            d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z"
-                                            fill="currentColor" />
-                                    </svg>
-                                    已加自选
-                                </el-button>
-                                <el-button class="close-btn" circle @click="buyDialogVisible = false">
-                                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none">
-                                        <path d="M18 6L6 18M6 6l12 12" stroke="currentColor" stroke-width="2"
-                                            stroke-linecap="round" />
-                                    </svg>
-                                </el-button>
-                            </div>
-                        </div>
-                    </div>
-
-                    <!-- 底部：快速信息栏 -->
-                    <div class="header-info-bar">
-                        <div class="info-item">
-                            <span class="info-label">涨停</span>
-                            <span class="info-value up">{{ (parseFloat(selectedStock.price) * 1.1).toFixed(2) }}</span>
-                        </div>
-                        <div class="info-item">
-                            <span class="info-label">跌停</span>
-                            <span class="info-value down">{{ (parseFloat(selectedStock.price) * 0.9).toFixed(2)
-                            }}</span>
-                        </div>
-                        <div class="info-item">
-                            <span class="info-label">总市值</span>
-                            <span class="info-value">1,234.56亿</span>
-                        </div>
-                        <div class="info-item">
-                            <span class="info-label">流通市值</span>
-                            <span class="info-value">987.65亿</span>
-                        </div>
-                        <div class="info-item">
-                            <span class="info-label">市盈率</span>
-                            <span class="info-value">15.6</span>
-                        </div>
-                        <div class="info-item">
-                            <span class="info-label">市净率</span>
-                            <span class="info-value">2.3</span>
-                        </div>
-                    </div>
-                </div>
-
-                <!-- 五档行情 -->
-                <!-- 主要内容区域 - 左右布局 -->
-                <div class="trading-main-content">
-                    <!-- 左侧：交易面板 -->
-                    <div class="left-panel">
-                        <div class="trading-panel">
-                            <div class="panel-tabs">
-                                <div class="tab-item active">{{ tradeType === 'sell' ? '卖出' : '买入' }}</div>
-                                <div class="tab-item disabled">{{ tradeType === 'sell' ? '买入' : '卖出' }}</div>
-                                <div class="tab-item disabled">撤单</div>
-                                <div class="tab-item disabled">持仓</div>
-                                <div class="tab-item disabled">查询</div>
-                            </div>
-
-                            <div class="trading-form">
-                                <!-- 限价委托选择 -->
-                                <div class="order-type-section">
-                                    <el-select v-model="buyForm.orderType" class="order-type-select">
-                                        <el-option label="限价委托" value="limit" />
-                                        <el-option label="市价委托" value="market" />
-                                    </el-select>
-                                </div>
-
-                                <!-- 价格输入 -->
-                                <div class="price-section">
-                                    <div class="input-row">
-                                        <span class="input-label">委托价格</span>
-                                        <div class="price-input-group">
-                                            <el-input v-model="buyForm.price" class="price-input"
-                                                :disabled="buyForm.orderType === 'market'" placeholder="185.50" />
-                                            <div class="price-controls">
-                                                <el-button size="small" class="price-btn"
-                                                    @click="adjustPrice(0.01)">+</el-button>
-                                                <el-button size="small" class="price-btn"
-                                                    @click="adjustPrice(-0.01)">-</el-button>
-                                            </div>
-                                        </div>
-                                    </div>
-                                </div>
-
-                                <!-- 数量输入 -->
-                                <div class="quantity-section">
-                                    <div class="input-row">
-                                        <span class="input-label">委托数量</span>
-                                        <div class="quantity-input-group">
-                                            <el-input-number v-model="buyForm.quantity" :min="100" :step="100"
-                                                :max="maxBuyQuantity" controls-position="right"
-                                                class="quantity-input" />
-                                        </div>
-                                    </div>
-
-                                    <!-- 快捷数量选择 -->
-                                    <div class="quantity-shortcuts">
-                                        <el-button size="small" @click="setQuantityByPercent(100)">{{ tradeType ===
-                                            'sell' ?
-                                            '全部' : '全仓' }}</el-button>
-                                        <el-button size="small" @click="setQuantityByPercent(50)">1/2</el-button>
-                                        <el-button size="small" @click="setQuantityByPercent(33)">1/3</el-button>
-                                        <el-button size="small" @click="setQuantityByPercent(25)">1/4</el-button>
-                                    </div>
-                                </div>
-
-                                <!-- 可买/可卖信息 -->
-                                <div class="available-info">
-                                    <div class="info-row">
-                                        <span class="label">{{ tradeType === 'sell' ? '可卖---' : '可买---' }}</span>
-                                        <span class="value">{{ tradeType === 'sell' ? availableSellQuantity :
-                                            availableBuyQuantity }}股</span>
-                                    </div>
-                                </div>
-
-                                <!-- 交易预览 -->
-                                <div class="trade-summary">
-                                    <div class="summary-row">
-                                        <span class="label">委托金额</span>
-                                        <span class="value">{{ estimatedAmount.toFixed(2) }}</span>
-                                    </div>
-                                </div>
-
-                                <!-- 买入按钮 -->
-                                <div class="action-section">
-                                    <el-button class="buy-action-btn" type="danger" size="large" @click="confirmBuy"
-                                        :loading="buyLoading" :disabled="!canBuy">
-                                        {{ tradeType === 'sell' ? '委托卖出' : '委托买入' }}
-                                    </el-button>
-                                </div>
-
-                                <!-- 账户信息 -->
-                                <div class="account-info-section">
-                                    <div class="account-row">
-                                        <span class="label">资金余额</span>
-                                        <span class="value">{{ userStore.balance.toFixed(2) }}</span>
-                                    </div>
-                                    <div class="account-row" v-if="currentPosition">
-                                        <span class="label">持仓数量</span>
-                                        <span class="value">{{ currentPosition.quantity }}</span>
-                                    </div>
-                                    <div class="account-row" v-if="currentPosition">
-                                        <span class="label">可卖数量</span>
-                                        <span class="value">{{ currentPosition.quantity }}</span>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-
-                    <!-- 右侧：五档行情 -->
-                    <div class="right-panel">
-                        <div class="market-depth">
-                            <div class="depth-header">
-                                <span>五档行情</span>
-                                <span class="refresh-time">{{ getCurrentTime() }}</span>
-                            </div>
-                            <div class="depth-content">
-                                <div class="depth-table">
-                                    <div class="table-header">
-                                        <span class="col-label">档位</span>
-                                        <span class="col-price">价格</span>
-                                        <span class="col-volume">数量</span>
-                                    </div>
-
-                                    <!-- 卖盘 -->
-                                    <div class="sell-orders">
-                                        <div v-for="(order, index) in sellOrders" :key="index" class="order-row sell">
-                                            <span class="order-label">卖{{ 5 - index }}</span>
-                                            <span class="order-price">{{ order.price }}</span>
-                                            <span class="order-volume">{{ order.volume }}</span>
-                                        </div>
-                                    </div>
-
-                                    <!-- 当前价格 -->
-                                    <div class="current-price-row">
-                                        <span class="current-label">现价</span>
-                                        <span :class="['current-value', selectedStock.change >= 0 ? 'up' : 'down']">
-                                            {{ selectedStock.price }}
-                                        </span>
-                                        <span class="current-change">
-                                            {{ selectedStock.change >= 0 ? '+' : '' }}{{ selectedStock.changePercent }}%
-                                        </span>
-                                    </div>
-
-                                    <!-- 买盘 -->
-                                    <div class="buy-orders">
-                                        <div v-for="(order, index) in buyOrders" :key="index" class="order-row buy">
-                                            <span class="order-label">买{{ index + 1 }}</span>
-                                            <span class="order-price">{{ order.price }}</span>
-                                            <span class="order-volume">{{ order.volume }}</span>
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </div>
-
-            <template #footer>
-                <div class="trading-footer">
-                    <el-button class="cancel-btn" @click="buyDialogVisible = false">取消</el-button>
-                </div>
-            </template>
-        </el-dialog>
+        <!-- 股票交易对话框 -->
+        <StockTradingDialog v-model="buyDialogVisible" :stock="selectedStock" :trade-type="tradeType"
+            @trade-completed="handleTradeCompleted" @watchlist-changed="handleWatchlistChanged" />
 
         <!-- AI委托交易设置对话框 -->
-        <el-dialog v-model="showAITradingDialog" title="AI委托交易设置" width="750px" class="ai-trading-dialog">
-            <div v-if="selectedStockForAITrading" class="ai-trading-content">
-                <!-- 股票信息头部 -->
-                <div class="stock-header">
-                    <div class="stock-info">
-                        <h3>{{ selectedStockForAITrading.name }}</h3>
-                        <span class="stock-code">{{ selectedStockForAITrading.code }}</span>
-                        <span class="current-price">¥{{ selectedStockForAITrading.price ||
-                            selectedStockForAITrading.currentPrice }}</span>
-                    </div>
-                    <div class="service-cost">
-                        <span class="cost-label">服务费用</span>
-                        <span class="cost-amount">¥1</span>
-                    </div>
-                </div>
-
-                <!-- 交易设置表单 -->
-                <el-form :model="aiTradingForm" class="ai-trading-form simple">
-                    <!-- 基本交易参数 -->
-                    <div class="form-section compact">
-                        <h4 class="section-title">交易设置</h4>
-                        <div class="simple-grid">
-                            <div class="param-item">
-                                <label class="param-label">交易方向</label>
-                                <el-select v-model="aiTradingForm.action" class="param-input">
-                                    <el-option label="买入" value="buy" />
-                                    <el-option label="卖出" value="sell" />
-                                </el-select>
-                            </div>
-                            <div class="param-item">
-                                <label class="param-label">交易数量</label>
-                                <el-input-number v-model="aiTradingForm.quantity" :min="100" :step="100"
-                                    class="param-input" controls-position="right" />
-                            </div>
-                        </div>
-                    </div>
-
-                    <!-- 风控设置 -->
-                    <div class="form-section compact">
-                        <h4 class="section-title">风控设置</h4>
-
-                        <div class="risk-controls">
-                            <div class="risk-item">
-                                <el-checkbox v-model="aiTradingForm.enableStopLoss" class="risk-checkbox">
-                                    止损保护
-                                </el-checkbox>
-                                <div v-if="aiTradingForm.enableStopLoss" class="risk-input">
-                                    <el-input-number v-model="aiTradingForm.stopLossPercentage" :min="1" :max="20"
-                                        class="risk-number" controls-position="right" />
-                                    <span class="risk-unit">%</span>
-                                </div>
-                            </div>
-
-                            <div class="risk-item">
-                                <el-checkbox v-model="aiTradingForm.enableTakeProfit" class="risk-checkbox">
-                                    止盈目标
-                                </el-checkbox>
-                                <div v-if="aiTradingForm.enableTakeProfit" class="risk-input">
-                                    <el-input-number v-model="aiTradingForm.takeProfitPercentage" :min="1" :max="50"
-                                        class="risk-number" controls-position="right" />
-                                    <span class="risk-unit">%</span>
-                                </div>
-                            </div>
-                        </div>
-
-                        <!-- AI策略预览 -->
-                        <div class="strategy-preview">
-                            <div class="strategy-info">
-                                <span class="strategy-label">AI策略：</span>
-                                <span class="strategy-value">{{ getStrategyText(aiTradingForm.strategy) }}</span>
-                                <span class="strategy-risk">({{ getRiskLevelText(aiTradingForm.riskLevel) }})</span>
-                            </div>
-                            <div class="strategy-desc">
-                                根据您的投资偏好自动配置，AI将24小时智能监控并执行最佳交易时机
-                            </div>
-                        </div>
-                    </div>
-
-                    <!-- 高级设置（可折叠） -->
-                    <div class="form-section compact" v-if="aiTradingForm.showAdvanced">
-                        <h4 class="section-title">高级设置</h4>
-
-                        <div class="advanced-simple">
-                            <div class="advanced-row">
-                                <label class="param-label">委托类型</label>
-                                <el-select v-model="aiTradingForm.orderType" class="param-input-small">
-                                    <el-option label="限价单" value="limit" />
-                                    <el-option label="市价单" value="market" />
-                                </el-select>
-                            </div>
-
-                            <div class="advanced-row">
-                                <label class="param-label">委托时效</label>
-                                <el-select v-model="aiTradingForm.timeInForce" class="param-input-small">
-                                    <el-option label="好价成交" value="GTC" />
-                                    <el-option label="当日有效" value="DAY" />
-                                </el-select>
-                            </div>
-
-                            <div class="advanced-row">
-                                <label class="param-label">最大亏损</label>
-                                <div class="input-with-unit-small">
-                                    <el-input-number v-model="aiTradingForm.maxLossAmount" :min="100"
-                                        class="param-input-small" controls-position="right" />
-                                    <span class="input-unit">元</span>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-
-                    <!-- 高级设置切换 -->
-                    <div class="advanced-toggle">
-                        <el-button link @click="aiTradingForm.showAdvanced = !aiTradingForm.showAdvanced">
-                            {{ aiTradingForm.showAdvanced ? '收起高级设置' : '展开高级设置' }}
-                            <el-icon>
-                                <ArrowDown v-if="!aiTradingForm.showAdvanced" />
-                                <ArrowUp v-else />
-                            </el-icon>
-                        </el-button>
-                    </div>
-                </el-form>
-            </div>
-
-            <template #footer>
-                <div class="dialog-footer">
-                    <el-button @click="showAITradingDialog = false">取消</el-button>
-                    <el-button type="primary" @click="confirmAITrading" :loading="false">
-                        确认委托 (¥1)
-                    </el-button>
-                </div>
-            </template>
-        </el-dialog>
+        <AITradingDialog v-model="showAITradingDialog" :stock="selectedStockForAITrading"
+            @ai-trading-confirmed="handleAITradingConfirmed" />
 
         <!-- 自定义快捷操作对话框 -->
-        <el-dialog v-model="customizeDialogVisible" title="自定义快捷操作" width="700px" class="customize-dialog">
-            <div class="customize-content">
-                <!-- 默认快捷操作 -->
-                <div class="section">
-                    <div class="section-title">
-                        <h4>默认快捷操作</h4>
-                        <span class="section-subtitle">开启或关闭系统预设的快捷操作</span>
-                    </div>
-                    <div class="shortcuts-grid">
-                        <div v-for="shortcut in defaultShortcuts" :key="shortcut.id"
-                            :class="['shortcut-card', { 'active': shortcut.isActive }]">
-                            <div class="card-header">
-                                <div class="icon-wrapper">
-                                    <span class="shortcut-icon">{{ shortcut.icon }}</span>
-                                </div>
-                                <el-switch v-model="shortcut.isActive" @change="toggleShortcutActive(shortcut)"
-                                    class="shortcut-switch" />
-                            </div>
-                            <div class="card-content">
-                                <div class="shortcut-title">{{ shortcut.title }}</div>
-                                <div class="shortcut-desc">{{ shortcut.description }}</div>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-
-                <!-- 自定义快捷操作 -->
-                <div class="section">
-                    <div class="section-header">
-                        <div class="section-title">
-                            <h4>自定义快捷操作</h4>
-                            <span class="section-subtitle">创建专属于您的快捷操作（最多3个）</span>
-                        </div>
-                        <el-button type="primary" @click="addCustomShortcut" :disabled="customShortcuts.length >= 3"
-                            class="add-shortcut-btn">
-                            <el-icon>
-                                <Plus />
-                            </el-icon>
-                            添加自定义操作
-                        </el-button>
-                    </div>
-
-                    <!-- 自定义快捷操作列表 -->
-                    <div class="custom-shortcuts-list" v-if="customShortcuts.length > 0">
-                        <div v-for="shortcut in customShortcuts" :key="shortcut.id"
-                            :class="['custom-shortcut-item', { 'editing': shortcut.isEditing }]">
-
-                            <!-- 显示模式 -->
-                            <div class="shortcut-display" v-if="!shortcut.isEditing">
-                                <div class="display-left">
-                                    <div class="icon-wrapper">
-                                        <span class="shortcut-icon">{{ shortcut.icon }}</span>
-                                    </div>
-                                    <div class="shortcut-details">
-                                        <div class="shortcut-title">{{ shortcut.title }}</div>
-                                        <div class="shortcut-desc">{{ shortcut.description }}</div>
-                                    </div>
-                                </div>
-                                <div class="display-right">
-                                    <el-switch v-model="shortcut.isActive" @change="saveCustomShortcuts" />
-                                    <div class="action-buttons">
-                                        <el-button type="primary" link @click="startEditShortcut(shortcut)">
-                                            <el-icon>
-                                                <Edit />
-                                            </el-icon>
-                                        </el-button>
-                                        <el-button type="danger" link @click="removeCustomShortcut(shortcut.id)">
-                                            <el-icon>
-                                                <Delete />
-                                            </el-icon>
-                                        </el-button>
-                                    </div>
-                                </div>
-                            </div>
-
-                            <!-- 编辑模式 -->
-                            <div class="shortcut-edit" v-else>
-                                <div class="edit-form">
-                                    <!-- 图标选择 -->
-                                    <div class="form-group">
-                                        <label class="form-label">选择图标</label>
-                                        <div class="icon-selector">
-                                            <div class="current-icon">
-                                                <span class="selected-icon">{{ shortcut.icon }}</span>
-                                            </div>
-                                            <div class="icon-options">
-                                                <div v-for="icon in availableIcons" :key="icon"
-                                                    :class="['icon-option', { 'selected': shortcut.icon === icon }]"
-                                                    @click="selectIcon(shortcut, icon)">
-                                                    <span>{{ icon }}</span>
-                                                </div>
-                                            </div>
-                                        </div>
-                                    </div>
-
-                                    <!-- 基本信息 -->
-                                    <div class="form-row">
-                                        <div class="form-group">
-                                            <label class="form-label">操作标题</label>
-                                            <el-input v-model="shortcut.title" maxlength="10" placeholder="如：股票分析"
-                                                show-word-limit />
-                                        </div>
-                                        <div class="form-group">
-                                            <label class="form-label">简称</label>
-                                            <el-input v-model="shortcut.shortTitle" maxlength="2" placeholder="如：分析"
-                                                style="width: 100px;" />
-                                        </div>
-                                    </div>
-
-                                    <div class="form-group">
-                                        <label class="form-label">操作描述</label>
-                                        <el-input v-model="shortcut.description" maxlength="50"
-                                            placeholder="简单描述这个操作的用途" show-word-limit />
-                                    </div>
-
-                                    <div class="form-group">
-                                        <label class="form-label">执行内容</label>
-                                        <el-input v-model="shortcut.prompt" type="textarea" :rows="4" maxlength="500"
-                                            placeholder="请输入您希望AI执行的具体操作内容，例如：请帮我分析一下当前市场的热点板块..." show-word-limit />
-                                    </div>
-                                </div>
-
-                                <div class="edit-actions">
-                                    <el-button @click="cancelEditShortcut(shortcut)">取消</el-button>
-                                    <el-button type="primary" @click="saveEditShortcut(shortcut)">保存</el-button>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-
-                    <!-- 空状态 -->
-                    <div v-else class="empty-custom">
-                        <div class="empty-icon">📝</div>
-                        <div class="empty-text">
-                            <h5>还没有自定义快捷操作</h5>
-                            <p>点击上方"添加自定义操作"按钮，创建专属于您的快捷操作</p>
-                        </div>
-                    </div>
-                </div>
-            </div>
-
-            <template #footer>
-                <div class="dialog-footer">
-                    <el-button @click="customizeDialogVisible = false" size="large">关闭</el-button>
-                </div>
-            </template>
-        </el-dialog>
+        <CustomizeShortcutsDialog v-model="customizeDialogVisible" @shortcuts-updated="handleShortcutsUpdated" />
 
         <!-- 引导提示 -->
         <div v-if="showGuideTip" class="guide-tip">
@@ -1631,6 +781,10 @@ import UserProfile from '../components/UserProfile.vue';
 import OnboardingFlow from '../components/OnboardingFlow.vue';
 import LoginDialog from '../components/LoginDialog.vue';
 import PasswordRecoveryDialog from '../components/PasswordRecoveryDialog.vue';
+import InvestmentPreferencesDialog from '../components/InvestmentPreferencesDialog.vue';
+import StockTradingDialog from '../components/StockTradingDialog.vue';
+import AITradingDialog from '../components/AITradingDialog.vue';
+import CustomizeShortcutsDialog from '../components/CustomizeShortcutsDialog.vue';
 
 const userStore = useUserStore();
 const inputMessage = ref('');
@@ -1700,44 +854,43 @@ const defaultShortcuts = ref([
     }
 ]);
 
-// 自定义快捷操作
-const customShortcuts = ref(JSON.parse(localStorage.getItem('customShortcuts') || '[]'));
-
-// 可选图标列表
-const availableIcons = ref([
-    '💡', '🚀', '📊', '💰', '🎯', '⭐', '🔥', '📈', '💎', '🏆',
-    '🎨', '⚡', '🌟', '🎪', '🎭', '🎪', '🎨', '🎯', '🎲', '🎮',
-    '📱', '💻', '📺', '⌚', '📷', '🎥', '🎧', '🎤', '🎸', '🎹',
-    '🏠', '🏢', '🏭', '🏪', '🏫', '🏥', '🏦', '🏨', '🏩', '🏰',
-    '🚗', '🚕', '🚙', '🚌', '🚎', '🏎️', '🚓', '🚑', '🚒', '🚐',
-    '✈️', '🚁', '🚂', '🚄', '🚅', '🚆', '🚇', '🚈', '🚉', '🚊',
-    '🌍', '🌎', '🌏', '🌐', '🗺️', '🗾', '🌋', '🗻', '🏔️', '⛰️'
-]);
-
 // 当前激活的快捷操作
-const activeShortcuts = computed(() => {
+const activeShortcuts = ref([]);
+
+// 初始化快捷操作
+const initializeShortcuts = () => {
     const result = [];
 
+    // 加载默认快捷操作状态
+    const savedStates = localStorage.getItem('defaultShortcutStates');
+    const states = savedStates ? JSON.parse(savedStates) : {};
+
     // 添加激活的默认快捷操作
-    const activeDefaultShortcuts = defaultShortcuts.value.filter(s => s.isActive);
+    const activeDefaultShortcuts = defaultShortcuts.value.filter(s => {
+        if (states.hasOwnProperty(s.id)) {
+            s.isActive = states[s.id];
+        }
+        return s.isActive;
+    });
     result.push(...activeDefaultShortcuts);
 
     // 添加激活的自定义快捷操作
-    const activeCustomShortcuts = customShortcuts.value
-        .filter(s => s.isActive)
-        .map(shortcut => ({
-            ...shortcut,
-            action: () => setSuggestionAndSend(shortcut.prompt)
-        }));
-    result.push(...activeCustomShortcuts);
+    const savedCustomShortcuts = localStorage.getItem('customShortcuts');
+    if (savedCustomShortcuts) {
+        const customShortcuts = JSON.parse(savedCustomShortcuts);
+        const activeCustomShortcuts = customShortcuts
+            .filter(s => s.isActive)
+            .map(shortcut => ({
+                ...shortcut,
+                action: () => setSuggestionAndSend(shortcut.prompt)
+            }));
+        result.push(...activeCustomShortcuts);
+    }
 
-    // 返回所有激活的快捷操作（最多5个默认 + 3个自定义 = 8个）
-    return result;
-});
+    activeShortcuts.value = result;
+};
 
-// 板块搜索相关
-const sectorSearchQuery = ref('');
-const filteredSubSectors = ref([]);
+
 const exampleGroups = [
     [
         '我刚开始投资，应该从哪里入手？',
@@ -1789,23 +942,6 @@ const recoveryDialogVisible = ref(false);
 const preferencesDialogVisible = ref(false);
 const preferencesFormRef = ref(null);
 const preferencesLoading = ref(false);
-const currentStep = ref(0);
-const preferencesForm = reactive({
-    riskLevel: '',
-    experience: '',
-    userTraits: {
-        risk_tolerance: 3,
-        active_participation: 3,
-        learning_willingness: 3,
-        strategy_dependency: 2,
-        trading_frequency: 2,
-        innovation_trial: 3
-    },
-    sectors: {
-        majorCategories: [], // 大分类，最多选择2个
-        subCategories: []    // 小分类，可选择3-4个
-    }
-});
 
 // 步骤配置
 const preferenceSteps = [
@@ -2223,129 +1359,10 @@ const buyForm = reactive({
 // AI委托交易相关
 const showAITradingDialog = ref(false);
 const selectedStockForAITrading = ref(null);
-const aiTradingForm = reactive({
-    // 核心参数（用户必须设置）
-    action: 'buy', // buy, sell
-    quantity: 100,
-
-    // 风控参数（简化，只保留最重要的）
-    enableStopLoss: true,
-    stopLossPercentage: 5, // 止损百分比
-    enableTakeProfit: true,
-    takeProfitPercentage: 10, // 止盈百分比
-
-    // 高级选项（默认折叠，从用户偏好获取）
-    showAdvanced: false,
-    orderType: 'limit', // 从用户偏好获取
-    timeInForce: 'GTC', // 从用户偏好获取
-    maxLossAmount: 1000, // 从用户偏好和余额计算
-    strategy: 'balanced', // 从用户偏好获取
-    riskLevel: 'medium' // 从用户偏好获取
-});
-
-// 从用户偏好初始化AI交易参数
-const initAITradingFromPreferences = () => {
-    const preferences = userStore.userInfo?.preferences;
-    if (preferences) {
-        // 根据用户风险偏好设置默认参数
-        switch (preferences.riskLevel) {
-            case 'conservative':
-                aiTradingForm.stopLossPercentage = 3;
-                aiTradingForm.takeProfitPercentage = 6;
-                aiTradingForm.strategy = 'conservative';
-                aiTradingForm.riskLevel = 'low';
-                aiTradingForm.maxLossAmount = Math.min(500, userStore.balance * 0.05);
-                break;
-            case 'moderate':
-                aiTradingForm.stopLossPercentage = 5;
-                aiTradingForm.takeProfitPercentage = 10;
-                aiTradingForm.strategy = 'balanced';
-                aiTradingForm.riskLevel = 'medium';
-                aiTradingForm.maxLossAmount = Math.min(1000, userStore.balance * 0.1);
-                break;
-            case 'aggressive':
-                aiTradingForm.stopLossPercentage = 8;
-                aiTradingForm.takeProfitPercentage = 15;
-                aiTradingForm.strategy = 'aggressive';
-                aiTradingForm.riskLevel = 'high';
-                aiTradingForm.maxLossAmount = Math.min(2000, userStore.balance * 0.15);
-                break;
-        }
-
-        // 根据用户经验设置委托类型
-        aiTradingForm.orderType = preferences.experience === 'beginner' ? 'market' : 'limit';
-    }
-};
 
 
 
-// 五档行情数据
-const sellOrders = ref([]);
-const buyOrders = ref([]);
 
-// 生成五档行情数据
-const generateMarketDepth = (basePrice) => {
-    const price = parseFloat(basePrice);
-    sellOrders.value = [];
-    buyOrders.value = [];
-
-    // 生成卖盘（卖5到卖1）
-    for (let i = 0; i < 5; i++) {
-        sellOrders.value.push({
-            price: (price + (i + 1) * 0.01).toFixed(2),
-            volume: Math.floor(Math.random() * 500 + 100)
-        });
-    }
-
-    // 生成买盘（买1到买5）
-    for (let i = 0; i < 5; i++) {
-        buyOrders.value.push({
-            price: (price - (i + 1) * 0.01).toFixed(2),
-            volume: Math.floor(Math.random() * 500 + 100)
-        });
-    }
-};
-
-// 获取当前时间
-const getCurrentTime = () => {
-    const now = new Date();
-    return now.toLocaleTimeString('zh-CN', {
-        hour: '2-digit',
-        minute: '2-digit',
-        second: '2-digit'
-    });
-};
-
-// 调整价格
-const adjustPrice = (delta) => {
-    const currentPrice = parseFloat(buyForm.price) || 0;
-    const newPrice = Math.max(0.01, currentPrice + delta);
-    buyForm.price = newPrice.toFixed(2);
-};
-
-// 按比例设置购买/卖出数量
-const setQuantityByPercent = (percent) => {
-    if (!selectedStock.value) return;
-
-    if (tradeType.value === 'sell') {
-        // 卖出时基于持仓数量计算
-        const position = userStore.getPosition(selectedStock.value.code);
-        const maxQuantity = position ? position.quantity : 0;
-        const targetQuantity = Math.floor(maxQuantity * (percent / 100) / 100) * 100;
-        buyForm.quantity = Math.max(100, targetQuantity);
-    } else {
-        // 买入时基于可用资金计算
-        const price = buyForm.orderType === 'market'
-            ? parseFloat(selectedStock.value.price)
-            : parseFloat(buyForm.price) || parseFloat(selectedStock.value.price);
-
-        const availableFunds = userStore.balance;
-        const maxQuantity = Math.floor(availableFunds / price / 100) * 100; // 向下取整到100的倍数
-
-        const targetQuantity = Math.floor(maxQuantity * (percent / 100) / 100) * 100;
-        buyForm.quantity = Math.max(100, targetQuantity);
-    }
-};
 
 const showLogin = (isRegister) => {
     isRegisterMode.value = isRegister;
@@ -2998,184 +2015,38 @@ const performQuantAnalysis = async (stockInfo) => {
 
 
 
-// 投资偏好相关方法
-const handlePreferencesSubmit = async () => {
-    preferencesLoading.value = true;
 
-    // 模拟保存投资偏好
+
+
+
+// 投资偏好组件事件处理
+const handlePreferencesCompleted = (preferences) => {
+    // 显示欢迎消息
     setTimeout(() => {
-        const preferences = {
-            riskLevel: preferencesForm.riskLevel,
-            experience: preferencesForm.experience,
-            userTraits: preferencesForm.userTraits,
-            sectors: preferencesForm.sectors,
-            completedAt: new Date().toISOString()
-        };
-
-        // 保存到用户信息中
-        const currentUser = userStore.userInfo;
-        userStore.setUserInfo({
-            ...currentUser,
-            preferences
+        chatHistory.value.push({
+            role: 'assistant',
+            content: `欢迎使用智投小助！根据您的投资偏好（${getRiskLevelText(preferences.riskLevel)}），我将为您提供个性化的投资建议。您可以问我任何关于投资的问题。`
         });
-
-        // 标记引导已完成
-        localStorage.setItem('onboardingCompleted', 'true');
-
-        ElMessage.success('投资偏好设置完成！');
-        preferencesDialogVisible.value = false;
-        preferencesLoading.value = false;
-
-        // 显示欢迎消息
-        setTimeout(() => {
-            chatHistory.value.push({
-                role: 'assistant',
-                content: `欢迎使用智投小助！根据您的投资偏好（${getRiskLevelText(preferences.riskLevel)}），我将为您提供个性化的投资建议。您可以问我任何关于投资的问题。`
-            });
-        }, 500);
-    }, 1000);
+        nextTick(() => {
+            scrollToBottom();
+        });
+    }, 500);
 };
 
-const skipPreferences = () => {
-    preferencesDialogVisible.value = false;
-    currentStep.value = 0;
-    ElMessage.info('您可以稍后在设置中完善投资偏好');
+const handlePreferencesSkipped = () => {
+    // 跳过时的处理逻辑
+    console.log('用户跳过了投资偏好设置');
 };
 
-// 步骤导航方法
-const nextStep = () => {
-    if (canProceedToNext.value && currentStep.value < preferenceSteps.length - 1) {
-        currentStep.value++;
-    }
+// 股票交易组件事件处理
+const handleTradeCompleted = (tradeData) => {
+    console.log('交易完成:', tradeData);
+    // 可以在这里添加交易完成后的逻辑，如更新界面、发送通知等
 };
 
-const previousStep = () => {
-    if (currentStep.value > 0) {
-        currentStep.value--;
-    }
-};
-
-// 检查是否可以进入下一步
-const canProceedToNext = computed(() => {
-    switch (currentStep.value) {
-        case 0: // 投资经验
-            return preferencesForm.experience !== '';
-        case 1: // 风险偏好
-            return preferencesForm.riskLevel !== '';
-        case 2: // 用户特征
-            return true; // 有默认值，总是可以进入下一步
-        case 3: // 关注板块
-            return preferencesForm.sectors.majorCategories.length > 0 &&
-                preferencesForm.sectors.subCategories.length >= 3;
-        default:
-            return false;
-    }
-});
-
-// 用户特征相关方法
-const resetUserTraitsToDefault = () => {
-    userTraits.forEach(trait => {
-        preferencesForm.userTraits[trait.id] = trait.defaultValue;
-    });
-};
-
-const getCurrentTraitDescription = (traitId) => {
-    const trait = userTraits.find(t => t.id === traitId);
-    if (!trait) return '';
-
-    const currentValue = preferencesForm.userTraits[traitId];
-    const option = trait.options.find(opt => opt.value === currentValue);
-    return option ? option.desc : '';
-};
-
-// 大分类选择逻辑
-const toggleMajorSector = (value) => {
-    const index = preferencesForm.sectors.majorCategories.indexOf(value);
-    if (index > -1) {
-        // 取消选择大分类时，同时移除该分类下的所有小分类
-        preferencesForm.sectors.majorCategories.splice(index, 1);
-        const subSectorsToRemove = subSectorOptions
-            .filter(sub => sub.parent === value)
-            .map(sub => sub.value);
-        preferencesForm.sectors.subCategories = preferencesForm.sectors.subCategories
-            .filter(sub => !subSectorsToRemove.includes(sub));
-    } else {
-        // 检查是否已达到最大选择数量
-        if (preferencesForm.sectors.majorCategories.length < 2) {
-            preferencesForm.sectors.majorCategories.push(value);
-        }
-    }
-};
-
-// 小分类选择逻辑
-const toggleSubSector = (value) => {
-    const index = preferencesForm.sectors.subCategories.indexOf(value);
-    if (index > -1) {
-        preferencesForm.sectors.subCategories.splice(index, 1);
-    } else {
-        // 检查是否已达到最大选择数量
-        if (preferencesForm.sectors.subCategories.length < 4) {
-            preferencesForm.sectors.subCategories.push(value);
-        }
-    }
-};
-
-// 获取大分类的图标
-const getMajorSectorIcon = (value) => {
-    const sector = majorSectorOptions.find(s => s.value === value);
-    return sector ? sector.icon : '';
-};
-
-// 获取大分类的标签
-const getMajorSectorLabel = (value) => {
-    const sector = majorSectorOptions.find(s => s.value === value);
-    return sector ? sector.label : '';
-};
-
-// 根据父分类获取小分类
-const getSubSectorsByParent = (parentValue) => {
-    return subSectorOptions.filter(sub => sub.parent === parentValue);
-};
-
-// 板块搜索功能
-const handleSectorSearch = () => {
-    if (!sectorSearchQuery.value.trim()) {
-        filteredSubSectors.value = [];
-        return;
-    }
-
-    const query = sectorSearchQuery.value.toLowerCase().trim();
-    filteredSubSectors.value = subSectorOptions.filter(sector => {
-        return sector.label.toLowerCase().includes(query) ||
-            sector.desc.toLowerCase().includes(query) ||
-            sector.examples.toLowerCase().includes(query);
-    });
-};
-
-// 高亮搜索关键词
-const highlightSearchTerm = (text) => {
-    if (!sectorSearchQuery.value.trim()) return text;
-
-    const query = sectorSearchQuery.value.trim();
-    const regex = new RegExp(`(${query})`, 'gi');
-    return text.replace(regex, '<mark class="search-highlight">$1</mark>');
-};
-
-// 从搜索结果中选择板块
-const toggleSubSectorFromSearch = (subOption) => {
-    // 首先确保相应的大分类已选中
-    if (!preferencesForm.sectors.majorCategories.includes(subOption.parent)) {
-        // 如果大分类未选择且还可以选择，自动添加大分类
-        if (preferencesForm.sectors.majorCategories.length < 2) {
-            preferencesForm.sectors.majorCategories.push(subOption.parent);
-        } else {
-            ElMessage.warning('请先移除一个大分类，再选择此细分行业');
-            return;
-        }
-    }
-
-    // 然后切换细分行业
-    toggleSubSector(subOption.value);
+const handleWatchlistChanged = (data) => {
+    console.log('自选股变化:', data);
+    // 自选股变化时的处理逻辑
 };
 
 const getRiskLevelText = (level) => {
@@ -3240,93 +2111,7 @@ const dismissGuide = () => {
     showGuideTip.value = false;
 };
 
-// 购买相关计算属性
-const currentPosition = computed(() => {
-    if (!selectedStock.value) return null;
-    return userStore.getPosition(selectedStock.value.code);
-});
 
-const maxBuyQuantity = computed(() => {
-    if (!selectedStock.value) return 100; // 至少返回100，避免min > max错误
-
-    if (tradeType.value === 'sell') {
-        // 卖出模式：最大数量为持仓数量
-        const position = userStore.getPosition(selectedStock.value.code);
-        return position ? position.quantity : 100;
-    } else {
-        // 买入模式：基于资金计算最大购买数量
-        const price = parseFloat(selectedStock.value.price);
-        const maxShares = Math.floor(userStore.balance / price / 100) * 100; // 按100股整数倍
-        return Math.max(100, maxShares); // 至少返回100股
-    }
-});
-
-// 可买数量显示
-const availableBuyQuantity = computed(() => {
-    if (!selectedStock.value) return 0;
-    const price = buyForm.orderType === 'market'
-        ? parseFloat(selectedStock.value.price)
-        : parseFloat(buyForm.price) || parseFloat(selectedStock.value.price);
-    const maxShares = Math.floor(userStore.balance / price / 100) * 100;
-    return Math.max(0, maxShares);
-});
-
-// 可卖数量显示
-const availableSellQuantity = computed(() => {
-    if (!selectedStock.value) return 0;
-    const position = userStore.getPosition(selectedStock.value.code);
-    return position ? position.quantity : 0;
-});
-
-// 预计成交金额
-const estimatedAmount = computed(() => {
-    if (!selectedStock.value || !buyForm.quantity) return 0;
-    const price = buyForm.orderType === 'market'
-        ? parseFloat(selectedStock.value.price)
-        : parseFloat(buyForm.price) || parseFloat(selectedStock.value.price);
-    return buyForm.quantity * price;
-});
-
-// 手续费计算
-const tradingFee = computed(() => {
-    const amount = estimatedAmount.value;
-    const commissionRate = 0.0003; // 万分之3
-    const minCommission = 5; // 最低5元
-    const stampTax = amount * 0.001; // 印花税千分之1（卖出时收取，买入不收）
-    const transferFee = amount * 0.00002; // 过户费万分之0.2
-
-    const commission = Math.max(amount * commissionRate, minCommission);
-
-    if (tradeType.value === 'sell') {
-        // 卖出时收取印花税
-        return commission + transferFee + stampTax;
-    } else {
-        // 买入时不收印花税
-        return commission + transferFee;
-    }
-});
-
-// 总成本
-const totalCost = computed(() => {
-    return estimatedAmount.value + tradingFee.value;
-});
-
-const canBuy = computed(() => {
-    if (tradeType.value === 'sell') {
-        // 卖出验证
-        return buyForm.quantity >= 100 &&
-            buyForm.quantity % 100 === 0 && // 必须是100的整数倍
-            buyForm.quantity <= availableSellQuantity.value &&
-            (buyForm.orderType === 'market' || (buyForm.price && parseFloat(buyForm.price) > 0));
-    } else {
-        // 买入验证
-        return buyForm.quantity >= 100 &&
-            buyForm.quantity % 100 === 0 && // 必须是100的整数倍
-            totalCost.value <= userStore.balance &&
-            buyForm.quantity <= maxBuyQuantity.value &&
-            (buyForm.orderType === 'market' || (buyForm.price && parseFloat(buyForm.price) > 0));
-    }
-});
 
 // 检查聊天历史中是否有荐股列表
 const hasRecommendationInHistory = computed(() => {
@@ -3341,23 +2126,6 @@ const hasRecommendationInHistory = computed(() => {
 const showBuyDialog = (stockInfo, type = 'buy') => {
     selectedStock.value = stockInfo;
     tradeType.value = type;
-
-    if (type === 'sell') {
-        // 卖出操作：设置默认数量为100股或持仓数量的较小值
-        const position = userStore.getPosition(stockInfo.code);
-        buyForm.quantity = position ? Math.min(100, position.quantity) : 100;
-        buyForm.price = stockInfo.currentPrice || stockInfo.price; // 使用当前价格
-    } else {
-        // 买入操作：设置默认数量
-        buyForm.quantity = 100;
-        buyForm.price = stockInfo.price; // 设置默认价格为当前价格
-    }
-
-    buyForm.orderType = 'limit'; // 默认限价单
-
-    // 生成五档行情数据
-    generateMarketDepth(stockInfo.currentPrice || stockInfo.price);
-
     buyDialogVisible.value = true;
 };
 
@@ -3366,74 +2134,7 @@ const handleShowSellDialog = (stockInfo) => {
     showBuyDialog(stockInfo, 'sell');
 };
 
-const confirmBuy = async () => {
-    if (!canBuy.value) {
-        ElMessage.warning('请检查交易信息');
-        return;
-    }
 
-    buyLoading.value = true;
-
-    // 模拟交易延迟
-    setTimeout(() => {
-        const actualPrice = buyForm.orderType === 'market'
-            ? parseFloat(selectedStock.value.currentPrice || selectedStock.value.price)
-            : parseFloat(buyForm.price);
-
-        let result;
-        if (tradeType.value === 'sell') {
-            // 卖出操作
-            result = userStore.sellStock(
-                selectedStock.value.code,
-                buyForm.quantity,
-                actualPrice
-            );
-        } else {
-            // 买入操作
-            result = userStore.buyStock(
-                selectedStock.value,
-                buyForm.quantity,
-                actualPrice
-            );
-        }
-
-        if (result.success) {
-            ElMessage.success(result.message);
-            buyDialogVisible.value = false;
-
-            // 发送交易成功的消息到聊天
-            const orderTypeText = buyForm.orderType === 'market' ? '市价' : '限价';
-            const tradeTypeText = tradeType.value === 'sell' ? '卖出' : '买入';
-            const successMessage = `✅ 交易成功！
-            
-📊 **交易详情**
-• 股票：${selectedStock.value.name} (${selectedStock.value.code})
-• 类型：${orderTypeText}${tradeTypeText}
-• 数量：${buyForm.quantity}股
-• 成交价：¥${actualPrice.toFixed(2)}
-• 成交金额：¥${estimatedAmount.value.toFixed(2)}
-• 手续费：¥${tradingFee.value.toFixed(2)}
-• ${tradeType.value === 'sell' ? '实收金额' : '总计'}：¥${tradeType.value === 'sell' ? (estimatedAmount.value - tradingFee.value).toFixed(2) : totalCost.value.toFixed(2)}
-
-💰 **账户信息**
-• 当前余额：¥${userStore.balance.toFixed(2)}
-• 持仓数量：${userStore.getPosition(selectedStock.value.code)?.quantity || 0}股`;
-
-            chatHistory.value.push({
-                role: 'assistant',
-                content: successMessage
-            });
-
-            nextTick(() => {
-                scrollToBottom();
-            });
-        } else {
-            ElMessage.error(result.message);
-        }
-
-        buyLoading.value = false;
-    }, 1500);
-};
 
 // 检查用户状态并显示相应引导
 const checkUserStatus = () => {
@@ -3609,121 +2310,23 @@ const showPaidAnalysisDialog = (stock) => {
 
 // 付费AI委托交易
 const showQuantAnalysisDialog = (stock) => {
-    // 初始化AI交易参数（从用户偏好获取）
-    initAITradingFromPreferences();
-
     // 显示AI委托交易设置对话框
     showAITradingDialog.value = true;
     selectedStockForAITrading.value = stock;
 };
 
-// 确认AI委托交易
-const confirmAITrading = async () => {
-    // 检查余额
-    if (userStore.balance < 1) {
-        ElMessage.error('余额不足，请先充值');
-        return;
-    }
-
-    // 表单验证
-    if (!selectedStockForAITrading.value) {
-        ElMessage.error('股票信息错误');
-        return;
-    }
-
-    if (aiTradingForm.quantity < 100 || aiTradingForm.quantity % 100 !== 0) {
-        ElMessage.error('交易数量必须是100的整数倍');
-        return;
-    }
-
-    // 构建AI委托交易参数
-    const tradingParams = {
-        stock: selectedStockForAITrading.value,
-        action: aiTradingForm.action,
-        quantity: aiTradingForm.quantity,
-        orderType: aiTradingForm.orderType,
-        timeInForce: aiTradingForm.timeInForce,
-        validUntil: aiTradingForm.validUntil,
-
-        // 止损止盈设置
-        stopLoss: aiTradingForm.enableStopLoss ? {
-            type: aiTradingForm.stopLossType,
-            percentage: aiTradingForm.stopLossPercentage,
-            price: aiTradingForm.stopLossPrice
-        } : null,
-
-        takeProfit: aiTradingForm.enableTakeProfit ? {
-            type: aiTradingForm.takeProfitType,
-            percentage: aiTradingForm.takeProfitPercentage,
-            price: aiTradingForm.takeProfitPrice
-        } : null,
-
-        trailingStop: aiTradingForm.enableTrailingStop ? {
-            amount: aiTradingForm.trailingStopAmount
-        } : null,
-
-        // 风控参数
-        riskControl: {
-            maxLossAmount: aiTradingForm.maxLossAmount,
-            maxPositionSize: aiTradingForm.maxPositionSize
-        },
-
-        // AI策略
-        aiStrategy: {
-            strategy: aiTradingForm.strategy,
-            riskLevel: aiTradingForm.riskLevel
-        },
-
-        // 监控设置
-        monitoring: {
-            priceAlert: aiTradingForm.priceAlert,
-            volumeAlert: aiTradingForm.volumeAlert,
-            newsAlert: aiTradingForm.newsAlert
-        }
-    };
+// 处理AI委托交易确认事件
+const handleAITradingConfirmed = async (data) => {
+    const { stock, tradingParams, message } = data;
 
     try {
-        // 扣费
-        userStore.deductBalance(1);
-        ElMessage.success('支付成功，正在设置AI委托交易...');
-
-        // 关闭对话框
-        showAITradingDialog.value = false;
-
-        // 生成AI委托交易报告
-        const message = `【AI委托交易设置完成】已为${selectedStockForAITrading.value.name}(${selectedStockForAITrading.value.code})设置智能委托交易：
-
-🎯 **交易参数**
-• 交易方向：${aiTradingForm.action === 'buy' ? '买入' : '卖出'}
-• 交易数量：${aiTradingForm.quantity}股
-• 委托类型：${aiTradingForm.orderType === 'limit' ? '限价单' : '市价单'}
-• 委托时效：${getTimeInForceText(aiTradingForm.timeInForce)}
-
-🛡️ **风控设置**
-${aiTradingForm.enableStopLoss ? `• 止损：${aiTradingForm.stopLossType === 'percentage' ? aiTradingForm.stopLossPercentage + '%' : '¥' + aiTradingForm.stopLossPrice}` : ''}
-${aiTradingForm.enableTakeProfit ? `• 止盈：${aiTradingForm.takeProfitType === 'percentage' ? aiTradingForm.takeProfitPercentage + '%' : '¥' + aiTradingForm.takeProfitPrice}` : ''}
-${aiTradingForm.enableTrailingStop ? `• 追踪止损：¥${aiTradingForm.trailingStopAmount}` : ''}
-• 最大亏损：¥${aiTradingForm.maxLossAmount}
-• 最大仓位：${aiTradingForm.maxPositionSize}%
-
-🤖 **AI策略**
-• 交易策略：${getStrategyText(aiTradingForm.strategy)}
-• 风险等级：${getRiskLevelText(aiTradingForm.riskLevel)}
-
-📊 **监控预警**
-${aiTradingForm.priceAlert ? '• ✅ 价格预警已启用' : ''}
-${aiTradingForm.volumeAlert ? '• ✅ 成交量预警已启用' : ''}
-${aiTradingForm.newsAlert ? '• ✅ 新闻预警已启用' : ''}
-
-AI将根据您的设置参数，24小时智能监控市场，在最佳时机自动执行交易，并及时发送预警通知。`;
-
         const res = await mockApi.sendMessage(message);
         chatHistory.value.push(
-            { role: 'user', content: `AI委托交易设置 ${selectedStockForAITrading.value.name}(${selectedStockForAITrading.value.code})` },
+            { role: 'user', content: `AI委托交易设置 ${stock.name}(${stock.code})` },
             {
                 ...res.data,
                 hasStockInfo: true,
-                stockInfo: selectedStockForAITrading.value,
+                stockInfo: stock,
                 isAITradingReport: true,
                 tradingParams: tradingParams
             }
@@ -3732,21 +2335,12 @@ AI将根据您的设置参数，24小时智能监控市场，在最佳时机自�
         await nextTick();
         scrollToBottom();
 
+        // 切换到聊天模式
+        isChatMode.value = true;
     } catch (error) {
         ElMessage.error('设置失败，请稍后重试');
         console.error('AI委托交易设置失败:', error);
     }
-};
-
-// 获取委托时效文本
-const getTimeInForceText = (timeInForce) => {
-    const timeInForceMap = {
-        'GTC': '好价成交',
-        'DAY': '当日有效',
-        'IOC': '立即成交或取消',
-        'GTD': '指定日期'
-    };
-    return timeInForceMap[timeInForce] || timeInForce;
 };
 
 
@@ -3876,128 +2470,15 @@ const openCustomizeDialog = () => {
     customizeDialogVisible.value = true;
 };
 
-const saveCustomShortcuts = () => {
-    localStorage.setItem('customShortcuts', JSON.stringify(customShortcuts.value));
-    ElMessage.success('自定义快捷操作已保存');
-};
-
-const addCustomShortcut = () => {
-    // 限制自定义快捷操作数量最多3个
-    if (customShortcuts.value.length >= 3) {
-        ElMessage.warning('最多只能添加3个自定义快捷操作');
-        return;
-    }
-
-    const prompt = '请输入您想要执行的操作内容';
-    const newShortcut = {
-        id: Date.now().toString(),
-        icon: '💡',
-        title: '自定义操作',
-        shortTitle: '自定',
-        description: '请编辑此操作的描述',
-        prompt: prompt,
-        isDefault: false,
-        isActive: true,
-        isEditing: true // 创建后直接进入编辑模式
-    };
-    customShortcuts.value.push(newShortcut);
-    saveCustomShortcuts();
-    ElMessage.success('已添加自定义快捷操作，请完善信息');
-};
-
-const removeCustomShortcut = (id) => {
-    const index = customShortcuts.value.findIndex(s => s.id === id);
-    if (index > -1) {
-        customShortcuts.value.splice(index, 1);
-        saveCustomShortcuts();
-    }
-};
-
-const toggleShortcutActive = (shortcut) => {
-    if (shortcut.isDefault) {
-        // 对于默认快捷操作，el-switch已经更改了isActive值，我们只需要保存状态
-        const states = defaultShortcuts.value.reduce((acc, s) => {
-            acc[s.id] = s.isActive;
-            return acc;
-        }, {});
-        localStorage.setItem('defaultShortcutStates', JSON.stringify(states));
-        ElMessage.success(shortcut.isActive ? '已启用该快捷操作' : '已禁用该快捷操作');
-    } else {
-        // 对于自定义快捷操作，el-switch已经更改了isActive值，我们只需要保存
-        saveCustomShortcuts();
-        ElMessage.success(shortcut.isActive ? '已启用该快捷操作' : '已禁用该快捷操作');
-    }
-};
-
-// 初始化默认快捷操作状态
-const initDefaultShortcutStates = () => {
-    const savedStates = JSON.parse(localStorage.getItem('defaultShortcutStates') || '{}');
-    defaultShortcuts.value.forEach(shortcut => {
-        if (savedStates.hasOwnProperty(shortcut.id)) {
-            shortcut.isActive = savedStates[shortcut.id];
-        }
-    });
-};
-
-// 编辑快捷操作相关方法
-const startEditShortcut = (shortcut) => {
-    // 保存原始数据用于取消编辑
-    shortcut.originalData = {
-        icon: shortcut.icon,
-        title: shortcut.title,
-        shortTitle: shortcut.shortTitle,
-        description: shortcut.description,
-        prompt: shortcut.prompt
-    };
-    shortcut.isEditing = true;
-};
-
-const saveEditShortcut = (shortcut) => {
-    if (!shortcut.title.trim()) {
-        ElMessage.warning('标题不能为空');
-        return;
-    }
-    if (!shortcut.shortTitle || !shortcut.shortTitle.trim()) {
-        ElMessage.warning('简称不能为空');
-        return;
-    }
-    if (shortcut.shortTitle.length > 2) {
-        ElMessage.warning('简称最多2个字符');
-        return;
-    }
-    if (!shortcut.prompt.trim()) {
-        ElMessage.warning('执行内容不能为空');
-        return;
-    }
-
-    // 更新快捷操作信息
-    shortcut.isEditing = false;
-    delete shortcut.originalData;
-    saveCustomShortcuts();
-    ElMessage.success('自定义快捷操作已保存');
-};
-
-const cancelEditShortcut = (shortcut) => {
-    // 恢复原始数据
-    if (shortcut.originalData) {
-        shortcut.icon = shortcut.originalData.icon;
-        shortcut.title = shortcut.originalData.title;
-        shortcut.shortTitle = shortcut.originalData.shortTitle;
-        shortcut.description = shortcut.originalData.description;
-        shortcut.prompt = shortcut.originalData.prompt;
-        delete shortcut.originalData;
-    }
-    shortcut.isEditing = false;
-};
-
-// 选择图标
-const selectIcon = (shortcut, icon) => {
-    shortcut.icon = icon;
+// 处理快捷操作更新事件
+const handleShortcutsUpdated = () => {
+    // 重新初始化快捷操作
+    initializeShortcuts();
 };
 
 // 组件挂载时初始化
 onMounted(() => {
-    initDefaultShortcutStates();
+    initializeShortcuts();
 });
 </script>
 
@@ -5850,6 +4331,52 @@ body.onboarding-mode {
     font-size: 1rem;
     display: inline-block;
     filter: drop-shadow(0 1px 2px rgba(0, 0, 0, 0.1));
+}
+
+/* 低调的自定义按钮样式 - 内联版本 */
+.customize-btn-inline {
+    border: none;
+    background: rgba(156, 163, 175, 0.1);
+    border-radius: 50%;
+    width: 36px;
+    height: 36px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    opacity: 0.8;
+    margin-left: 8px;
+}
+
+.customize-btn-inline:hover {
+    background: rgba(156, 163, 175, 0.2);
+    opacity: 1;
+    transform: scale(1.05);
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+}
+
+.customize-icon {
+    font-size: 14px;
+    color: #6b7280;
+    transition: color 0.2s ease;
+}
+
+.customize-btn-inline:hover .customize-icon {
+    color: #374151;
+}
+
+/* 聊天模式下的自定义按钮样式调整 */
+.chat-shortcut-btn.customize-btn-chat {
+    background: rgba(156, 163, 175, 0.1);
+    border-color: rgba(156, 163, 175, 0.3);
+    color: #6b7280;
+}
+
+.chat-shortcut-btn.customize-btn-chat:hover {
+    background: rgba(156, 163, 175, 0.2);
+    border-color: rgba(156, 163, 175, 0.5);
+    color: #374151;
 }
 
 @keyframes pulse-glow {
@@ -7725,97 +6252,11 @@ body {
     }
 }
 
-/* 购买对话框样式 */
-:deep(.buy-dialog) {
-    border-radius: 16px;
-    overflow: hidden;
-    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.12);
-}
 
-:deep(.buy-dialog .el-dialog__body) {
-    padding: 0;
-}
 
-:deep(.buy-dialog .el-dialog__footer) {
-    padding: 0;
-}
 
-.trading-interface {
-    background: #f8f9fa;
-    min-height: 600px;
-}
 
-/* 股票信息头部 */
-.stock-header-section {
-    background: linear-gradient(135deg, #1e293b 0%, #334155 50%, #475569 100%);
-    color: white;
-    position: relative;
-    overflow: hidden;
-}
 
-.stock-header-section::before {
-    content: '';
-    position: absolute;
-    top: 0;
-    left: 0;
-    right: 0;
-    bottom: 0;
-    background:
-        radial-gradient(circle at 20% 50%, rgba(59, 130, 246, 0.15) 0%, transparent 50%),
-        radial-gradient(circle at 80% 20%, rgba(139, 92, 246, 0.15) 0%, transparent 50%),
-        linear-gradient(45deg, transparent 30%, rgba(255, 255, 255, 0.02) 50%, transparent 70%);
-}
-
-/* 头部主要内容 */
-.header-main-content {
-    display: flex;
-    justify-content: space-between;
-    align-items: flex-start;
-    padding: 24px 28px 20px;
-    position: relative;
-    z-index: 1;
-}
-
-/* 股票基本信息 */
-.stock-basic-info {
-    flex: 1;
-}
-
-.stock-title-row {
-    display: flex;
-    justify-content: space-between;
-    align-items: flex-start;
-    margin-bottom: 16px;
-}
-
-.stock-name-group {
-    display: flex;
-    align-items: center;
-    gap: 12px;
-}
-
-/* 购买窗口专用样式 */
-.buy-dialog-stock-name {
-    font-size: 24px;
-    font-weight: 700;
-    margin: 0;
-    color: #ffffff;
-    text-shadow: 0 1px 3px rgba(0, 0, 0, 0.3);
-    letter-spacing: -0.3px;
-}
-
-.buy-dialog-stock-code {
-    font-size: 13px;
-    background: rgba(255, 255, 255, 0.25);
-    color: #ffffff;
-    padding: 6px 12px;
-    border-radius: 16px;
-    font-weight: 600;
-    backdrop-filter: blur(10px);
-    border: 1px solid rgba(255, 255, 255, 0.35);
-    letter-spacing: 0.5px;
-    text-shadow: 0 1px 2px rgba(0, 0, 0, 0.2);
-}
 
 .stock-tags {
     display: flex;
@@ -8915,426 +7356,14 @@ body {
     .overview-stats {
         grid-template-columns: 1fr;
     }
-
-
-}
-
-/* 自定义快捷操作对话框样式 */
-.customize-dialog {
-    border-radius: 16px;
-    overflow: hidden;
-}
-
-.customize-dialog .el-dialog__header {
-    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-    color: white;
-    padding: 20px 24px;
-    margin: 0;
-}
-
-.customize-dialog .el-dialog__title {
-    color: white;
-    font-weight: 600;
-    font-size: 18px;
-}
-
-.customize-dialog .el-dialog__headerbtn .el-dialog__close {
-    color: white;
-    font-size: 20px;
-}
-
-.customize-dialog .el-dialog__body {
-    padding: 24px;
-    background: #fafbfc;
-}
-
-.customize-content {
-    max-height: 70vh;
-    overflow-y: auto;
-}
-
-/* 区域样式 */
-.section {
-    margin-bottom: 32px;
-    background: white;
-    border-radius: 12px;
-    padding: 20px;
-    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04);
-}
-
-.section:last-child {
-    margin-bottom: 0;
-}
-
-.section-title h4 {
-    font-size: 18px;
-    font-weight: 600;
-    color: #1f2937;
-    margin: 0 0 4px 0;
-}
-
-.section-subtitle {
-    font-size: 14px;
-    color: #6b7280;
-    margin-bottom: 20px;
-    display: block;
-}
-
-.section-header {
-    display: flex;
-    justify-content: space-between;
-    align-items: flex-start;
-    margin-bottom: 20px;
-}
-
-/* 默认快捷操作网格 */
-.shortcuts-grid {
-    display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
-    gap: 16px;
-}
-
-.shortcut-card {
-    background: #f8fafc;
-    border: 2px solid #e2e8f0;
-    border-radius: 12px;
-    padding: 16px;
-    transition: all 0.3s ease;
-    cursor: pointer;
-}
-
-.shortcut-card:hover {
-    background: #f1f5f9;
-    border-color: #cbd5e1;
-    transform: translateY(-2px);
-    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
-}
-
-.shortcut-card.active {
-    border-color: #3b82f6;
-    background: #eff6ff;
-}
-
-.shortcut-card.active .card-header .icon-wrapper {
-    background: #3b82f6;
-    color: white;
-}
-
-.card-header {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    margin-bottom: 12px;
-}
-
-.icon-wrapper {
-    width: 40px;
-    height: 40px;
-    background: #fff;
-    border-radius: 10px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    border: 1px solid #e2e8f0;
-    transition: all 0.3s ease;
-}
-
-.shortcut-icon {
-    font-size: 20px;
-}
-
-.shortcut-switch {
-    --el-switch-on-color: #3b82f6;
-}
-
-.card-content .shortcut-title {
-    font-size: 16px;
-    font-weight: 600;
-    color: #1f2937;
-    margin-bottom: 4px;
-}
-
-.card-content .shortcut-desc {
-    font-size: 14px;
-    color: #6b7280;
-    line-height: 1.5;
-}
-
-/* 添加按钮 */
-.add-shortcut-btn {
-    background: linear-gradient(135deg, #10b981 0%, #059669 100%);
-    border: none;
-    padding: 10px 20px;
-    border-radius: 8px;
-    font-weight: 500;
-    transition: all 0.3s ease;
-}
-
-.add-shortcut-btn:hover {
-    background: linear-gradient(135deg, #059669 0%, #047857 100%);
-    transform: translateY(-1px);
-    box-shadow: 0 4px 12px rgba(16, 185, 129, 0.3);
-}
-
-.add-shortcut-btn:disabled {
-    background: #d1d5db;
-    color: #9ca3af;
-    transform: none;
-    box-shadow: none;
-}
-
-/* 自定义快捷操作列表 */
-.custom-shortcuts-list {
-    display: flex;
-    flex-direction: column;
-    gap: 16px;
-}
-
-.custom-shortcut-item {
-    background: #f8fafc;
-    border: 1px solid #e2e8f0;
-    border-radius: 12px;
-    padding: 20px;
-    transition: all 0.3s ease;
-}
-
-.custom-shortcut-item:hover {
-    background: #f1f5f9;
-    border-color: #cbd5e1;
-}
-
-.custom-shortcut-item.editing {
-    border-color: #3b82f6;
-    background: #eff6ff;
-}
-
-/* 显示模式 */
-.shortcut-display {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-}
-
-.display-left {
-    display: flex;
-    align-items: center;
-    gap: 16px;
-    flex: 1;
-}
-
-.display-right {
-    display: flex;
-    align-items: center;
-    gap: 12px;
-}
-
-.action-buttons {
-    display: flex;
-    gap: 4px;
-}
-
-.shortcut-details .shortcut-title {
-    font-size: 16px;
-    font-weight: 600;
-    color: #1f2937;
-    margin-bottom: 4px;
-}
-
-.shortcut-details .shortcut-desc {
-    font-size: 14px;
-    color: #6b7280;
-    line-height: 1.5;
-}
-
-/* 编辑模式 */
-.shortcut-edit {
-    display: flex;
-    flex-direction: column;
-    gap: 20px;
-}
-
-.edit-form {
-    display: flex;
-    flex-direction: column;
-    gap: 16px;
-}
-
-.form-group {
-    display: flex;
-    flex-direction: column;
-    gap: 8px;
-}
-
-.form-row {
-    display: grid;
-    grid-template-columns: 1fr 120px;
-    gap: 16px;
-}
-
-.form-label {
-    font-size: 14px;
-    font-weight: 500;
-    color: #374151;
-}
-
-/* 图标选择器 */
-.icon-selector {
-    display: flex;
-    flex-direction: column;
-    gap: 12px;
-}
-
-.current-icon {
-    display: flex;
-    align-items: center;
-    gap: 8px;
-}
-
-.selected-icon {
-    width: 40px;
-    height: 40px;
-    background: #3b82f6;
-    color: white;
-    border-radius: 8px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    font-size: 20px;
-}
-
-.icon-options {
-    display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(40px, 1fr));
-    gap: 8px;
-    max-height: 160px;
-    overflow-y: auto;
-    padding: 8px;
-    background: #f8fafc;
-    border-radius: 8px;
-    border: 1px solid #e2e8f0;
-}
-
-.icon-option {
-    width: 40px;
-    height: 40px;
-    background: white;
-    border: 1px solid #e2e8f0;
-    border-radius: 6px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    cursor: pointer;
-    transition: all 0.2s ease;
-    font-size: 18px;
-}
-
-.icon-option:hover {
-    background: #f1f5f9;
-    border-color: #cbd5e1;
-    transform: scale(1.05);
-}
-
-.icon-option.selected {
-    background: #3b82f6;
-    color: white;
-    border-color: #3b82f6;
-}
-
-/* 编辑操作按钮 */
-.edit-actions {
-    display: flex;
-    justify-content: flex-end;
-    gap: 12px;
-    padding-top: 16px;
-    border-top: 1px solid #e2e8f0;
-}
-
-/* 空状态 */
-.empty-custom {
-    text-align: center;
-    padding: 60px 20px;
-    background: #f8fafc;
-    border: 2px dashed #e2e8f0;
-    border-radius: 12px;
-}
-
-.empty-icon {
-    font-size: 48px;
-    margin-bottom: 16px;
-}
-
-.empty-text h5 {
-    font-size: 18px;
-    font-weight: 600;
-    color: #374151;
-    margin: 0 0 8px 0;
-}
-
-.empty-text p {
-    font-size: 14px;
-    color: #6b7280;
-    margin: 0;
-    line-height: 1.5;
-}
-
-/* 对话框底部 */
-.dialog-footer {
-    text-align: center;
-    padding: 16px 0;
-}
-
-/* 响应式设计 */
-@media (max-width: 768px) {
-    .shortcuts-grid {
-        grid-template-columns: 1fr;
-    }
-
-    .form-row {
-        grid-template-columns: 1fr;
-    }
-
-    .section-header {
-        flex-direction: column;
-        align-items: stretch;
-        gap: 16px;
-    }
-
-    .display-left {
-        flex-direction: column;
-        align-items: flex-start;
-        gap: 12px;
-    }
-
-    .shortcut-display {
-        flex-direction: column;
-        align-items: stretch;
-        gap: 16px;
-    }
-
-    .display-right {
-        justify-content: space-between;
-    }
-}
-
-.customize-btn {
-    background: linear-gradient(135deg, #6366f1 0%, #8b5cf6 100%);
-    border: none;
-    color: white;
-}
-
-.customize-btn:hover {
-    background: linear-gradient(135deg, #4f46e5 0%, #7c3aed 100%);
-    transform: translateY(-1px);
-    box-shadow: 0 4px 12px rgba(99, 102, 241, 0.3);
 }
 
 /* 版权信息样式 */
 .copyright-footer {
     margin-top: 60px;
     padding: 20px 0;
-    background: linear-gradient(135deg, rgba(248, 250, 252, 0.9) 0%, rgba(241, 245, 249, 0.9) 100%);
-    border-top: 1px solid rgba(226, 232, 240, 0.6);
-    backdrop-filter: blur(8px);
+    border-top: 1px solid #e5e7eb;
+    background: #f9fafb;
 }
 
 .copyright-content {
@@ -9347,12 +7376,10 @@ body {
 .copyright-content p {
     margin: 0;
     font-size: 14px;
-    color: #64748b;
-    font-weight: 400;
-    letter-spacing: 0.5px;
+    color: #6b7280;
+    line-height: 1.5;
 }
 
-/* 响应式版权信息 */
 @media (max-width: 768px) {
     .copyright-footer {
         margin-top: 40px;
@@ -9360,551 +7387,7 @@ body {
     }
 
     .copyright-content p {
-        font-size: 13px;
-        padding: 0 16px;
-    }
-}
-
-/* AI委托交易对话框样式 */
-:deep(.ai-trading-dialog) {
-    border-radius: 16px;
-    overflow: hidden;
-}
-
-:deep(.ai-trading-dialog .el-dialog__header) {
-    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-    color: white;
-    padding: 24px;
-    border-bottom: none;
-}
-
-:deep(.ai-trading-dialog .el-dialog__title) {
-    color: white;
-    font-size: 20px;
-    font-weight: 600;
-}
-
-:deep(.ai-trading-dialog .el-dialog__headerbtn .el-dialog__close) {
-    color: white;
-    font-size: 20px;
-}
-
-:deep(.ai-trading-dialog .el-dialog__body) {
-    padding: 0;
-    max-height: 65vh;
-    overflow-y: auto;
-}
-
-.ai-trading-content {
-    padding: 20px;
-}
-
-.stock-header {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    padding: 16px;
-    background: linear-gradient(135deg, #f8fafc 0%, #e2e8f0 100%);
-    border-radius: 10px;
-    margin-bottom: 20px;
-    border: 1px solid #e2e8f0;
-}
-
-.stock-info h3 {
-    font-size: 20px;
-    font-weight: 600;
-    color: #1e293b;
-    margin: 0 0 8px 0;
-}
-
-.stock-code {
-    font-size: 14px;
-    color: #64748b;
-    background: white;
-    padding: 4px 12px;
-    border-radius: 6px;
-    margin-right: 12px;
-    border: 1px solid #e2e8f0;
-}
-
-.current-price {
-    font-size: 18px;
-    font-weight: 600;
-    color: #dc2626;
-}
-
-.service-cost {
-    text-align: right;
-}
-
-.cost-label {
-    display: block;
-    font-size: 14px;
-    color: #64748b;
-    margin-bottom: 4px;
-}
-
-.cost-amount {
-    font-size: 24px;
-    font-weight: 700;
-    color: #f59e0b;
-}
-
-.ai-trading-form {
-    margin-top: 0;
-}
-
-.form-section {
-    margin-bottom: 20px;
-    padding: 20px;
-    background: white;
-    border: 1px solid #e2e8f0;
-    border-radius: 12px;
-    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
-}
-
-.form-section.compact {
-    margin-bottom: 16px;
-    padding: 16px;
-}
-
-.form-section:last-child {
-    margin-bottom: 0;
-}
-
-.section-title {
-    font-size: 15px;
-    font-weight: 600;
-    color: #1e293b;
-    margin: 0 0 16px 0;
-    padding-bottom: 8px;
-    border-bottom: 2px solid #e2e8f0;
-    position: relative;
-}
-
-.section-title::after {
-    content: '';
-    position: absolute;
-    bottom: -2px;
-    left: 0;
-    width: 30px;
-    height: 2px;
-    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-}
-
-/* 新的紧凑布局样式 */
-.param-grid {
-    display: grid;
-    grid-template-columns: repeat(3, 1fr);
-    gap: 16px;
-}
-
-.param-item {
-    display: flex;
-    flex-direction: column;
-    gap: 8px;
-}
-
-.param-label {
-    font-size: 13px;
-    font-weight: 500;
-    color: #374151;
-    margin-bottom: 4px;
-}
-
-.param-input {
-    width: 100% !important;
-}
-
-/* 切换开关布局 */
-.toggle-grid {
-    display: flex;
-    flex-direction: column;
-    gap: 12px;
-}
-
-.toggle-item {
-    border: 1px solid #e2e8f0;
-    border-radius: 8px;
-    overflow: hidden;
-}
-
-.toggle-header {
-    padding: 12px 16px;
-    background: #f8fafc;
-    border-bottom: 1px solid #e2e8f0;
-}
-
-.toggle-checkbox {
-    font-weight: 500;
-    color: #374151;
-}
-
-.toggle-content {
-    padding: 12px 16px;
-    background: white;
-}
-
-.inline-controls {
-    display: flex;
-    align-items: center;
-    gap: 12px;
-}
-
-.control-select {
-    width: 120px;
-}
-
-.control-input {
-    width: 100px !important;
-}
-
-.control-unit {
-    font-size: 13px;
-    color: #6b7280;
-    font-weight: 500;
-    min-width: 20px;
-}
-
-/* 高级设置网格 */
-.advanced-grid {
-    display: grid;
-    grid-template-columns: repeat(2, 1fr);
-    gap: 16px;
-    margin-bottom: 16px;
-}
-
-.advanced-item {
-    display: flex;
-    flex-direction: column;
-    gap: 8px;
-}
-
-.input-with-unit {
-    display: flex;
-    align-items: center;
-    gap: 8px;
-}
-
-.input-unit {
-    font-size: 13px;
-    color: #6b7280;
-    font-weight: 500;
-    min-width: 20px;
-}
-
-/* 预警设置 */
-.alert-settings {
-    padding-top: 12px;
-    border-top: 1px solid #e2e8f0;
-}
-
-.checkbox-group {
-    display: flex;
-    gap: 20px;
-    margin-top: 8px;
-}
-
-:deep(.checkbox-group .el-checkbox) {
-    margin-right: 0;
-}
-
-:deep(.checkbox-group .el-checkbox__label) {
-    font-size: 13px;
-    color: #374151;
-}
-
-
-
-:deep(.ai-trading-form .el-form-item__label) {
-    font-weight: 500;
-    color: #374151;
-    font-size: 14px;
-}
-
-:deep(.ai-trading-form .el-input__wrapper) {
-    border-radius: 8px;
-    box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
-    border: 1px solid #d1d5db;
-}
-
-:deep(.ai-trading-form .el-input__wrapper:hover) {
-    border-color: #9ca3af;
-}
-
-:deep(.ai-trading-form .el-input__wrapper.is-focus) {
-    border-color: #667eea;
-    box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
-}
-
-:deep(.ai-trading-form .el-select .el-input__wrapper) {
-    border-radius: 8px;
-}
-
-:deep(.ai-trading-form .el-input-number) {
-    width: 100%;
-}
-
-/* 简化表单样式 */
-.ai-trading-form.simple {
-    margin-top: 0;
-}
-
-.simple-grid {
-    display: grid;
-    grid-template-columns: repeat(2, 1fr);
-    gap: 16px;
-}
-
-/* 风控设置样式 */
-.risk-controls {
-    display: flex;
-    flex-direction: column;
-    gap: 16px;
-}
-
-.risk-item {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    padding: 12px 16px;
-    background: #f8fafc;
-    border: 1px solid #e2e8f0;
-    border-radius: 8px;
-}
-
-.risk-checkbox {
-    font-weight: 500;
-    color: #374151;
-}
-
-.risk-input {
-    display: flex;
-    align-items: center;
-    gap: 8px;
-}
-
-.risk-number {
-    width: 80px !important;
-}
-
-.risk-unit {
-    font-size: 13px;
-    color: #6b7280;
-    font-weight: 500;
-    min-width: 16px;
-}
-
-/* AI策略预览 */
-.strategy-preview {
-    margin-top: 16px;
-    padding: 12px 16px;
-    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-    border-radius: 8px;
-    color: white;
-}
-
-.strategy-info {
-    display: flex;
-    align-items: center;
-    gap: 8px;
-    margin-bottom: 8px;
-}
-
-.strategy-label {
-    font-size: 13px;
-    font-weight: 500;
-    opacity: 0.9;
-}
-
-.strategy-value {
-    font-weight: 600;
-    font-size: 14px;
-}
-
-.strategy-risk {
-    font-size: 12px;
-    opacity: 0.8;
-}
-
-.strategy-desc {
-    font-size: 12px;
-    opacity: 0.9;
-    line-height: 1.4;
-}
-
-/* 高级设置简化版 */
-.advanced-simple {
-    display: flex;
-    flex-direction: column;
-    gap: 12px;
-}
-
-.advanced-row {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    padding: 8px 0;
-}
-
-.param-input-small {
-    width: 140px !important;
-}
-
-.input-with-unit-small {
-    display: flex;
-    align-items: center;
-    gap: 8px;
-}
-
-/* 高级设置切换 */
-.advanced-toggle {
-    text-align: center;
-    padding: 12px 0;
-    border-top: 1px solid #e2e8f0;
-    margin-top: 16px;
-}
-
-:deep(.advanced-toggle .el-button) {
-    color: #667eea;
-    font-size: 13px;
-}
-
-:deep(.advanced-toggle .el-button:hover) {
-    color: #5a67d8;
-}
-
-:deep(.ai-trading-form .el-input-number .el-input__wrapper) {
-    border-radius: 8px;
-    padding-right: 50px;
-    /* 为右侧控制按钮留出空间 */
-}
-
-:deep(.ai-trading-form .el-input-number .el-input-number__increase),
-:deep(.ai-trading-form .el-input-number .el-input-number__decrease) {
-    border-radius: 4px;
-    background: #f8fafc;
-    border: 1px solid #e2e8f0;
-}
-
-:deep(.ai-trading-form .el-input-number .el-input-number__increase:hover),
-:deep(.ai-trading-form .el-input-number .el-input-number__decrease:hover) {
-    background: #f1f5f9;
-    border-color: #cbd5e1;
-}
-
-/* 紧凑布局的数字输入框 */
-:deep(.param-input.el-input-number) {
-    width: 100% !important;
-}
-
-:deep(.control-input.el-input-number) {
-    width: 100px !important;
-}
-
-:deep(.control-input .el-input__wrapper) {
-    padding-right: 40px !important;
-}
-
-.unit {
-    margin-left: 8px;
-    font-size: 14px;
-    color: #6b7280;
-    font-weight: 500;
-}
-
-:deep(.ai-trading-dialog .el-dialog__footer) {
-    padding: 20px 24px;
-    background: #f8fafc;
-    border-top: 1px solid #e2e8f0;
-}
-
-:deep(.ai-trading-dialog .el-button) {
-    padding: 12px 24px;
-    border-radius: 8px;
-    font-weight: 500;
-}
-
-:deep(.ai-trading-dialog .el-button--primary) {
-    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-    border: none;
-    color: white;
-}
-
-:deep(.ai-trading-dialog .el-button--primary:hover) {
-    background: linear-gradient(135deg, #5a67d8 0%, #6b46c1 100%);
-    transform: translateY(-1px);
-    box-shadow: 0 4px 12px rgba(102, 126, 234, 0.3);
-}
-
-/* 响应式设计 */
-@media (max-width: 768px) {
-    .stock-header {
-        flex-direction: column;
-        align-items: flex-start;
-        gap: 16px;
-    }
-
-    .service-cost {
-        text-align: left;
-        width: 100%;
-        padding-top: 16px;
-        border-top: 1px solid #e2e8f0;
-    }
-
-    .form-section {
-        padding: 12px;
-        margin-bottom: 12px;
-    }
-
-    .ai-trading-content {
-        padding: 12px;
-    }
-
-    /* 移动端网格布局调整 */
-    .param-grid {
-        grid-template-columns: 1fr;
-        gap: 12px;
-    }
-
-    .advanced-grid {
-        grid-template-columns: 1fr;
-        gap: 12px;
-    }
-
-    .checkbox-group {
-        flex-direction: column;
-        gap: 12px;
-    }
-
-    .inline-controls {
-        flex-wrap: wrap;
-        gap: 8px;
-    }
-
-    .control-select {
-        width: 100px;
-    }
-
-    .control-input {
-        width: 80px !important;
-    }
-
-    :deep(.ai-trading-dialog) {
-        width: 95% !important;
-        margin: 0 !important;
-    }
-
-    :deep(.ai-trading-dialog .el-dialog__body) {
-        max-height: 65vh;
-    }
-
-    :deep(.ai-trading-dialog .el-dialog__header) {
-        padding: 16px;
-    }
-
-    .stock-header {
-        margin-bottom: 16px;
+        font-size: 12px;
     }
 }
 </style>

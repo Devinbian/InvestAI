@@ -32,9 +32,31 @@
             </div>
         </header>
 
+        <!-- 聊天历史记录 -->
+        <ChatHistory v-if="userStore.isLoggedIn" :visible="showChatHistory"
+            :current-chat-id="chatHistoryStore.currentChatId" :chat-history="chatHistory" @load-chat="handleLoadChat"
+            @create-new-chat="handleCreateNewChat" @rename-chat="handleRenameChat" @delete-chat="handleDeleteChat"
+            @close-panel="closeChatHistory" ref="chatHistoryComponentRef" />
+
+        <!-- 聊天历史悬浮切换按钮 - 只在面板收起时显示 -->
+        <button v-if="userStore.isLoggedIn && !showChatHistory" class="floating-history-toggle"
+            @click="toggleChatHistory" title="展开聊天记录">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none">
+                <path d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" stroke="currentColor" stroke-width="2"
+                    stroke-linecap="round" stroke-linejoin="round" />
+            </svg>
+        </button>
+
         <!-- 主体内容 -->
         <main class="modern-content main-container"
-            :class="{ 'chatting': isChatMode, 'with-sidebar': userStore.isLoggedIn }">
+            :class="{ 'chatting': isChatMode, 'with-sidebar': userStore.isLoggedIn, 'with-chat-history': showChatHistory }"
+            :style="showChatHistory ? {
+                transform: `translateX(${isMobileView ? '280px' : '320px'})`,
+                transition: 'transform 0.3s ease'
+            } : {
+                transform: 'translateX(0)',
+                transition: 'transform 0.3s ease'
+            }">
             <!-- 个性化引导流程 -->
             <OnboardingFlow v-if="showOnboarding" @complete="onOnboardingComplete" @analyze-stock="handleAnalyzeStock"
                 @execute-action="handleOnboardingAction" />
@@ -81,7 +103,7 @@
                 <div class="ai-card">
                     <div class="ai-input-row">
                         <el-input v-model="inputMessage" class="ai-input" type="textarea"
-                            :autosize="{ minRows: 2, maxRows: 6 }" placeholder="如：帮我分析一下芯片行业的龙头股..."
+                            :autosize="{ minRows: 2, maxRows: 6 }" placeholder="如：分析比亚迪近期走势及投资价值，考虑新能源政策影响..."
                             @keyup.enter.ctrl="sendMessage" clearable maxlength="500" show-word-limit />
                         <div class="ai-buttons">
                             <el-button class="ai-func-btn" circle @click="onVoiceClick">
@@ -216,13 +238,13 @@
                                         <div class="asset-amount">
                                             <span class="amount-label">总资产</span>
                                             <span class="amount-value">¥{{ formatCurrency(message.assetData.totalAssets)
-                                            }}</span>
+                                                }}</span>
                                         </div>
                                         <div class="asset-change"
                                             :class="[message.assetData.totalProfitPercent >= 0 ? 'profit' : 'loss']">
                                             <span class="change-icon">{{ message.assetData.totalProfitPercent >= 0 ?
                                                 '📈' : '📉'
-                                            }}</span>
+                                                }}</span>
                                             <span class="change-label">今日盈亏：</span>
                                             <span class="change-text">
                                                 {{ message.assetData.totalProfitPercent >= 0 ? '+' : '' }}¥{{
@@ -248,7 +270,7 @@
                                         <div class="stat-info">
                                             <div class="stat-label">持仓市值</div>
                                             <div class="stat-value">¥{{ formatCurrency(message.assetData.portfolioValue)
-                                            }}
+                                                }}
                                             </div>
                                         </div>
                                     </div>
@@ -309,7 +331,7 @@
                                                         <div class="stock-price-change">
                                                             <span class="current-price">¥{{
                                                                 position.currentPrice.toFixed(2)
-                                                            }}</span>
+                                                                }}</span>
                                                             <span
                                                                 :class="['price-change', position.profitPercent >= 0 ? 'positive' : 'negative']">
                                                                 {{ position.profitPercent >= 0 ? '+' : '' }}¥{{
@@ -323,10 +345,10 @@
                                                             <span class="detail-label">持仓数量：</span>
                                                             <span class="detail-value">{{
                                                                 position.quantity.toLocaleString()
-                                                            }}股</span>
+                                                                }}股</span>
                                                             <span class="detail-label">成本价：</span>
                                                             <span class="detail-value">¥{{ position.avgPrice.toFixed(2)
-                                                            }}</span>
+                                                                }}</span>
                                                         </div>
                                                         <div class="detail-row">
                                                             <span class="detail-label">持仓市值：</span>
@@ -335,7 +357,7 @@
                                                             <span class="detail-label">所属行业：</span>
                                                             <span class="detail-value industry">{{ position.industry ||
                                                                 '未分类'
-                                                            }}</span>
+                                                                }}</span>
                                                         </div>
                                                     </div>
                                                 </div>
@@ -516,7 +538,7 @@
                             <div v-if="message.isPersistent" class="recommendation-toolbar">
                                 <div class="toolbar-left">
                                     <span class="recommendation-time">{{ formatRecommendationTime(message.timestamp)
-                                    }}</span>
+                                        }}</span>
                                 </div>
                                 <div class="toolbar-right">
                                     <el-button size="small" text @click="refreshRecommendation(message)"
@@ -719,7 +741,7 @@
                 <!-- 输入框区域 -->
                 <div class="ai-input-row">
                     <el-input v-model="inputMessage" class="ai-input" type="textarea"
-                        :autosize="{ minRows: 2, maxRows: 6 }" placeholder="如：帮我分析一下芯片行业的龙头股..."
+                        :autosize="{ minRows: 2, maxRows: 6 }" placeholder="如：分析比亚迪近期走势及投资价值，考虑新能源政策影响..."
                         @keyup.enter.ctrl="sendMessage" clearable maxlength="500" show-word-limit />
                 </div>
 
@@ -810,6 +832,7 @@
 <script setup>
 import { ref, reactive, onMounted, onUnmounted, nextTick, watch, computed } from 'vue';
 import { useUserStore } from '../store/user';
+import { useChatHistoryStore } from '../store/chatHistory';
 import { User, Lock, ArrowDown, ArrowUp, Plus, Edit, Delete } from '@element-plus/icons-vue';
 import { ElMessage, ElMessageBox } from 'element-plus';
 import { mockApi, wechatLoginApi } from '../api/mock';
@@ -822,8 +845,10 @@ import InvestmentPreferencesDialog from '../components/InvestmentPreferencesDial
 import StockTradingDialog from '../components/StockTradingDialog.vue';
 import AITradingDialog from '../components/AITradingDialog.vue';
 import CustomizeShortcutsDialog from '../components/CustomizeShortcutsDialog.vue';
+import ChatHistory from '../components/ChatHistory.vue';
 
 const userStore = useUserStore();
+const chatHistoryStore = useChatHistoryStore();
 const inputMessage = ref('');
 const chatHistory = ref([]);
 const chatHistoryRef = ref(null);
@@ -831,6 +856,10 @@ const isChatMode = ref(false); // 控制是否进入聊天模式
 const showUserProfile = ref(false); // 控制是否显示个人中心
 const showChatShortcuts = ref(false); // 控制聊天模式下的快捷操作显示
 const isMobileView = ref(false); // 检测是否为移动端视图
+
+// 聊天历史相关
+const showChatHistory = ref(false); // 控制聊天历史面板显示
+const chatHistoryComponentRef = ref(null);
 
 // 快捷操作自定义相关
 const customizeDialogVisible = ref(false);
@@ -931,34 +960,34 @@ const initializeShortcuts = () => {
 
 const exampleGroups = [
     [
-        '我刚开始投资，应该从哪里入手？',
-        '根据我的偏好，推荐一些适合的投资产品',
-        '帮我解释一下股票和基金的区别',
-        '投资1万元，有什么好的建议吗？'
+        '我有10万元闲钱，月收入8千，适合什么投资组合？',
+        '帮我制定一个3年期的投资计划，目标年化收益12%',
+        '对比分析股票基金和指数基金，哪个更适合新手？',
+        '推荐几只适合定投的基金，风险等级中等偏低'
     ],
     [
-        '现在哪些板块值得关注？',
-        '怎样判断一只股票是否值得买入？',
-        '如何分散投资风险？',
-        '新能源汽车行业还有投资机会吗？'
+        '分析宁德时代和比亚迪的竞争优势，哪个更值得长期持有？',
+        '白酒板块中茅台、五粮液、泸州老窖如何选择？',
+        '银行股现在估值如何？招商银行vs平安银行投资价值对比',
+        '医药板块恒瑞医药、药明康德近期表现分析'
     ],
     [
-        '最近市场波动很大，怎么应对？',
-        '请分析一下当前的宏观经济形势',
-        '什么时候应该止损离场？',
-        '如何设置合理的仓位管理？'
+        '美联储加息对A股影响如何？现在应该加仓还是减仓？',
+        '如何利用技术指标判断大盘3000点支撑是否有效？',
+        '我持有的股票跌了20%，是止损还是补仓？具体策略',
+        '制定一个动态仓位管理策略，根据市场情况调整'
     ],
     [
-        '价值投资和成长投资哪个更好？',
-        '技术分析对投资决策有帮助吗？',
-        '如何挖掘被低估的优质股票？',
-        '长期持有还是波段操作更赚钱？'
+        '巴菲特价值投资法则在A股是否适用？具体如何操作？',
+        '如何用DCF模型给贵州茅台估值？当前价格是否合理？',
+        '筛选ROE连续5年超15%的优质股票，并分析投资逻辑',
+        '长期持有腾讯、阿里巴巴还是短线操作更赚钱？'
     ],
     [
-        '国外市场投资机会怎么样？',
-        'A股、港股、美股哪个更值得投资？',
-        '人民币汇率对投资有什么影响？',
-        '如何投资REITS房地产基金？'
+        '港股通投资腾讯、美团的优势和风险分析',
+        '对比A股、港股、美股的苹果公司，哪个更有投资价值？',
+        '人民币贬值背景下，如何配置海外资产对冲风险？',
+        'REITs基金收益率4-6%，与银行理财产品如何选择？'
     ]
 ];
 
@@ -1475,11 +1504,22 @@ const sendMessage = async () => {
     // 发送消息后切换到聊天模式
     isChatMode.value = true;
 
+    // 如果是新聊天，创建聊天记录
+    if (!chatHistoryStore.currentChatId) {
+        chatHistoryStore.createNewChat();
+    }
+
+    // 添加用户消息
+    const userMessage = { role: 'user', content: message };
+    chatHistory.value.push(userMessage);
+    chatHistoryStore.addMessageToCurrentChat(userMessage);
+
     const res = await mockApi.sendMessage(message);
-    chatHistory.value.push(
-        { role: 'user', content: message },
-        res.data
-    );
+
+    // 添加AI回复
+    chatHistory.value.push(res.data);
+    chatHistoryStore.addMessageToCurrentChat(res.data);
+
     await nextTick();
     scrollToBottom();
 };
@@ -1547,6 +1587,7 @@ const createNewChat = () => {
     chatHistory.value = [];
     inputMessage.value = '';
     isChatMode.value = false; // 退出聊天模式，回到初始状态
+    chatHistoryStore.clearCurrentChat(); // 清空聊天历史store中的当前聊天
     ElMessage.success('已创建新聊天');
 };
 
@@ -1644,6 +1685,53 @@ const setSuggestionText = (suggestion) => {
 const switchExampleGroup = () => {
     currentExampleGroupIndex.value = (currentExampleGroupIndex.value + 1) % exampleGroups.length;
     ElMessage.success(`已切换到第${currentExampleGroupIndex.value + 1}组问题`);
+};
+
+// 聊天历史相关方法
+const toggleChatHistory = () => {
+    showChatHistory.value = !showChatHistory.value;
+};
+
+const closeChatHistory = () => {
+    showChatHistory.value = false;
+};
+
+const handleLoadChat = (chat) => {
+    // 加载选中的聊天记录
+    chatHistory.value = [...chat.messages];
+    chatHistoryStore.loadChat(chat.id);
+    isChatMode.value = chatHistory.value.length > 0;
+
+    nextTick(() => {
+        scrollToBottom();
+    });
+
+    ElMessage.success('聊天记录已加载');
+};
+
+const handleCreateNewChat = () => {
+    // 如果当前有聊天内容，先保存到历史记录
+    if (chatHistory.value.length > 0 && !chatHistoryStore.currentChatId) {
+        const chatId = chatHistoryStore.createNewChat(chatHistory.value);
+        ElMessage.success('当前聊天已保存到历史记录');
+    }
+
+    // 创建新聊天
+    createNewChat();
+};
+
+const handleRenameChat = (chatId, newTitle) => {
+    chatHistoryStore.renameChat(chatId, newTitle);
+};
+
+const handleDeleteChat = (chatId) => {
+    chatHistoryStore.deleteChat(chatId);
+
+    // 如果删除的是当前聊天，清空界面
+    if (chatHistoryStore.currentChatId === chatId) {
+        chatHistory.value = [];
+        isChatMode.value = false;
+    }
 };
 
 // 智能荐股功能
@@ -1947,7 +2035,7 @@ const handleSidebarInteraction = async (data) => {
             message = `请详细分析一下${content.name}(${content.code})这只股票，包括基本面分析、技术面分析、投资建议和风险提示。`;
             break;
         case 'message':
-            message = `关于"${title}"这个消息，请帮我分析一下具体的影响和投资机会。消息内容：${content}`;
+            message = `请分析"${title}"这条市场消息对相关板块和个股的具体影响，并评估潜在投资机会。消息内容：${content}`;
             break;
         case 'market':
             message = `请分析一下${content.name}当前的走势，包括技术指标分析和后市预判。`;
@@ -2011,7 +2099,7 @@ const handleSidebarInteraction = async (data) => {
                 // 如果content是对象，尝试获取合适的字符串属性
                 message = content.name || content.title || content.text || JSON.stringify(content);
             } else {
-                message = String(content || '请帮我分析一下相关内容');
+                message = String(content || '请提供具体的市场分析和投资建议');
             }
     }
 
@@ -2027,7 +2115,7 @@ const handleSidebarInteraction = async (data) => {
 
     // 确保message是字符串类型
     if (typeof message !== 'string') {
-        message = String(message || '请帮我分析一下相关内容');
+        message = String(message || '请提供具体的市场分析和投资建议');
     }
 
     // 发送消息
@@ -2260,6 +2348,18 @@ onMounted(() => {
 
     // 初始化聊天历史区域高度
     updateChatHistoryHeight();
+
+    // 初始化快捷操作
+    initializeShortcuts();
+
+    // 如果有当前聊天ID，恢复聊天记录
+    if (chatHistoryStore.currentChatId) {
+        const currentChat = chatHistoryStore.getCurrentChat;
+        if (currentChat) {
+            chatHistory.value = [...currentChat.messages];
+            isChatMode.value = chatHistory.value.length > 0;
+        }
+    }
 
     // 添加窗口大小变化监听
     window.addEventListener('resize', handleResize);
@@ -2647,6 +2747,59 @@ body.onboarding-mode {
     display: flex;
     align-items: center;
     gap: 12px;
+}
+
+/* 悬浮聊天历史切换按钮 */
+.floating-history-toggle {
+    position: fixed;
+    top: 80px;
+    left: 20px;
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    border: none;
+    background: rgba(255, 255, 255, 0.95);
+    backdrop-filter: blur(10px);
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.15);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    color: #6b7280;
+    z-index: 110;
+}
+
+.floating-history-toggle:hover {
+    background: rgba(255, 255, 255, 1);
+    box-shadow: 0 6px 25px rgba(0, 0, 0, 0.2);
+    color: #374151;
+    transform: translateY(-2px);
+}
+
+.floating-history-toggle.active {
+    background: rgba(59, 130, 246, 0.1);
+    color: #3b82f6;
+    border: 2px solid rgba(59, 130, 246, 0.3);
+}
+
+.floating-history-toggle svg {
+    transition: all 0.2s ease;
+}
+
+/* 移动端悬浮按钮优化 */
+@media (max-width: 768px) {
+    .floating-history-toggle {
+        width: 36px;
+        height: 36px;
+        top: 70px;
+        left: 16px;
+    }
+
+    .floating-history-toggle svg {
+        width: 14px;
+        height: 14px;
+    }
 }
 
 .modern-logo {
@@ -4547,8 +4700,22 @@ body.onboarding-mode {
     border: none !important;
     box-shadow: none !important;
     background: transparent !important;
-    font-size: 1.1rem;
+    font-size: 0.95rem;
     resize: none;
+    line-height: 1.5;
+}
+
+.ai-input .el-textarea__inner {
+    font-size: 0.95rem !important;
+    line-height: 1.5 !important;
+    color: #374151 !important;
+}
+
+.ai-input .el-textarea__inner::placeholder {
+    color: #c1c7cd !important;
+    font-size: 0.85rem !important;
+    font-weight: 400 !important;
+    opacity: 0.8 !important;
 }
 
 .ai-buttons {
@@ -4803,6 +4970,21 @@ body.onboarding-mode {
         padding: 12px 16px;
         background: white;
         z-index: 1000;
+        transition: transform 0.3s ease;
+    }
+
+    /* 聊天历史面板展开时，聊天框也要调整 */
+    .main-container.with-chat-history .ai-card {
+        left: 320px;
+        width: calc(100vw - 320px);
+    }
+
+    /* 移动端聊天框调整 */
+    @media (max-width: 768px) {
+        .main-container.with-chat-history .ai-card {
+            left: 280px;
+            width: calc(100vw - 280px);
+        }
     }
 
     .ai-input-row {
@@ -5839,6 +6021,13 @@ body {
 :deep(.compact-search.is-focus .el-input__wrapper) {
     border-color: #3b82f6 !important;
     box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.15) !important;
+}
+
+:deep(.compact-search .el-input__inner::placeholder) {
+    color: #c1c7cd !important;
+    font-size: 0.8rem !important;
+    font-weight: 400 !important;
+    opacity: 0.75 !important;
 }
 
 .stats-section {
@@ -8186,6 +8375,8 @@ body {
         font-size: 12px;
     }
 }
+
+/* 移除旧的聊天历史面板布局适配，使用transform方式 */
 
 /* 移动端聊天布局最终修复 - 确保最高优先级 */
 @media (max-width: 768px) {

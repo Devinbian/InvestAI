@@ -158,8 +158,8 @@
                         <!-- 顶部搜索和统计 -->
                         <div class="sectors-header">
                             <div class="search-section">
-                                <el-input v-model="sectorSearchQuery" placeholder="搜索行业..." class="compact-search"
-                                    clearable @input="handleSectorSearch">
+                                <el-input v-model="sectorSearchQuery" placeholder="搜索行业名称，如：新能源、医药..."
+                                    class="compact-search" clearable @input="handleSectorSearch">
                                     <template #prefix>
                                         <svg width="14" height="14" viewBox="0 0 24 24" fill="none">
                                             <path d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" stroke="currentColor"
@@ -1519,6 +1519,13 @@ const skipPreferences = () => {
 :deep(.compact-search.is-focus .el-input__wrapper) {
     border-color: #3b82f6 !important;
     box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.15) !important;
+}
+
+:deep(.compact-search .el-input__inner::placeholder) {
+    color: #c1c7cd !important;
+    font-size: 0.8rem !important;
+    font-weight: 400 !important;
+    opacity: 0.75 !important;
 }
 
 .stats-section {

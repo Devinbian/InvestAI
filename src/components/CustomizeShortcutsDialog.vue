@@ -100,12 +100,12 @@
                                     <div class="form-row compact">
                                         <div class="form-group">
                                             <label class="form-label">操作标题</label>
-                                            <el-input v-model="shortcut.title" maxlength="10" placeholder="如：股票分析"
+                                            <el-input v-model="shortcut.title" maxlength="10" placeholder="如：个股深度分析"
                                                 show-word-limit size="small" />
                                         </div>
                                         <div class="form-group">
                                             <label class="form-label">简称</label>
-                                            <el-input v-model="shortcut.shortTitle" maxlength="2" placeholder="如：分析"
+                                            <el-input v-model="shortcut.shortTitle" maxlength="2" placeholder="如：深析"
                                                 style="width: 80px;" size="small" />
                                         </div>
                                     </div>
@@ -119,7 +119,8 @@
                                     <div class="form-group">
                                         <label class="form-label">执行内容</label>
                                         <el-input v-model="shortcut.prompt" type="textarea" :rows="3" maxlength="500"
-                                            placeholder="请输入您希望AI执行的具体操作内容..." show-word-limit size="small" />
+                                            placeholder="如：分析贵州茅台的财务数据和未来3年盈利预测，包括ROE、净利润增长率等关键指标..." show-word-limit
+                                            size="small" />
                                     </div>
                                 </div>
                             </div>
@@ -289,7 +290,7 @@ const addCustomShortcut = () => {
         title: '自定义操作',
         shortTitle: '自定',
         description: '请编辑此操作的描述',
-        prompt: '请输入您想要执行的操作内容',
+        prompt: '分析目标股票的基本面数据，包括PE、PB、ROE等核心指标，并给出投资建议',
         isDefault: false,
         isActive: true,
         isEditing: true
@@ -753,5 +754,20 @@ onMounted(() => {
 
 .icon-options::-webkit-scrollbar-thumb:hover {
     background: #94a3b8;
+}
+
+/* 占位符样式优化 */
+:deep(.el-input__inner::placeholder) {
+    color: #c1c7cd !important;
+    font-size: 0.8rem !important;
+    font-weight: 400 !important;
+    opacity: 0.75 !important;
+}
+
+:deep(.el-textarea__inner::placeholder) {
+    color: #c1c7cd !important;
+    font-size: 0.8rem !important;
+    font-weight: 400 !important;
+    opacity: 0.75 !important;
 }
 </style>

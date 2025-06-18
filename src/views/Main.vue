@@ -238,13 +238,13 @@
                                         <div class="asset-amount">
                                             <span class="amount-label">总资产</span>
                                             <span class="amount-value">¥{{ formatCurrency(message.assetData.totalAssets)
-                                                }}</span>
+                                            }}</span>
                                         </div>
                                         <div class="asset-change"
                                             :class="[message.assetData.totalProfitPercent >= 0 ? 'profit' : 'loss']">
                                             <span class="change-icon">{{ message.assetData.totalProfitPercent >= 0 ?
                                                 '📈' : '📉'
-                                                }}</span>
+                                            }}</span>
                                             <span class="change-label">今日盈亏：</span>
                                             <span class="change-text">
                                                 {{ message.assetData.totalProfitPercent >= 0 ? '+' : '' }}¥{{
@@ -270,7 +270,7 @@
                                         <div class="stat-info">
                                             <div class="stat-label">持仓市值</div>
                                             <div class="stat-value">¥{{ formatCurrency(message.assetData.portfolioValue)
-                                                }}
+                                            }}
                                             </div>
                                         </div>
                                     </div>
@@ -331,7 +331,7 @@
                                                         <div class="stock-price-change">
                                                             <span class="current-price">¥{{
                                                                 position.currentPrice.toFixed(2)
-                                                                }}</span>
+                                                            }}</span>
                                                             <span
                                                                 :class="['price-change', position.profitPercent >= 0 ? 'positive' : 'negative']">
                                                                 {{ position.profitPercent >= 0 ? '+' : '' }}¥{{
@@ -345,10 +345,10 @@
                                                             <span class="detail-label">持仓数量：</span>
                                                             <span class="detail-value">{{
                                                                 position.quantity.toLocaleString()
-                                                                }}股</span>
+                                                            }}股</span>
                                                             <span class="detail-label">成本价：</span>
                                                             <span class="detail-value">¥{{ position.avgPrice.toFixed(2)
-                                                                }}</span>
+                                                            }}</span>
                                                         </div>
                                                         <div class="detail-row">
                                                             <span class="detail-label">持仓市值：</span>
@@ -357,7 +357,7 @@
                                                             <span class="detail-label">所属行业：</span>
                                                             <span class="detail-value industry">{{ position.industry ||
                                                                 '未分类'
-                                                                }}</span>
+                                                            }}</span>
                                                         </div>
                                                     </div>
                                                 </div>
@@ -538,7 +538,7 @@
                             <div v-if="message.isPersistent" class="recommendation-toolbar">
                                 <div class="toolbar-left">
                                     <span class="recommendation-time">{{ formatRecommendationTime(message.timestamp)
-                                        }}</span>
+                                    }}</span>
                                 </div>
                                 <div class="toolbar-right">
                                     <el-button size="small" text @click="refreshRecommendation(message)"
@@ -813,7 +813,7 @@
                 </div>
                 <div class="guide-actions">
                     <el-button type="primary" size="small" @click="handleGuideAction">{{ guideActionText
-                    }}</el-button>
+                        }}</el-button>
                     <el-button size="small" @click="dismissGuide">稍后</el-button>
                 </div>
             </div>
@@ -3049,10 +3049,10 @@ body.onboarding-mode {
 
     /* 移动端聊天历史区域完整重新定义 */
     .chat-history-area {
-        height: calc(100vh - 56px - 160px) !important;
-        /* 进一步减少高度，为底部输入框和间隔留出更多空间 */
+        height: calc(100vh - 76px - 160px) !important;
+        /* 减少高度：76px(导航+间距) + 160px(输入框空间) */
         padding: 0 0 32px 16px !important;
-        /* 顶部无padding直接到导航底部，左侧16px间距，底部32px避免遮挡 */
+        /* 顶部无padding，左侧16px间距，底部32px避免遮挡 */
         margin: 0 !important;
         /* 移除所有margin */
         width: 100% !important;
@@ -3116,8 +3116,8 @@ body.onboarding-mode {
 
     /* 移动端聊天模式下的内容区域 */
     .modern-content.chatting {
-        padding-top: 56px !important;
-        /* 聊天模式下直接从导航栏底部开始 */
+        padding-top: 76px !important;
+        /* 聊天模式下从导航栏底部开始，增加20px间距 */
         padding-left: 0 !important;
         padding-right: 0 !important;
         /* 移除左右padding，让聊天区域占满宽度 */
@@ -5296,8 +5296,8 @@ body.onboarding-mode {
 
     /* 超小屏幕聊天历史区域高度优化 */
     .chat-history-area {
-        height: calc(100vh - 56px - 140px) !important;
-        /* 超小屏幕进一步减少高度，为输入框留出更多空间 */
+        height: calc(100vh - 76px - 140px) !important;
+        /* 超小屏幕减少高度，顶部76px包含导航和间距 */
         padding: 0 0 28px 12px !important;
         /* 移除顶部padding，左侧12px间距，增加底部padding确保间隔 */
         margin: 0 !important;
@@ -5307,7 +5307,7 @@ body.onboarding-mode {
 
     /* 超小屏幕聊天模式内容区域 */
     .modern-content.chatting {
-        padding-top: 56px !important;
+        padding-top: 76px !important;
         padding-left: 0 !important;
         padding-right: 0 !important;
     }
@@ -8373,9 +8373,9 @@ body {
 /* 移动端聊天布局最终修复 - 确保最高优先级 */
 @media (max-width: 768px) {
 
-    /* 问题1: 聊天内容顶部遮挡 - 聊天模式下直接从导航栏底部开始 */
+    /* 问题1: 聊天内容顶部遮挡 - 聊天模式下从导航栏底部开始，增加间距 */
     .modern-content.chatting {
-        padding-top: 56px !important;
+        padding-top: 76px !important;
         padding-left: 0 !important;
         padding-right: 0 !important;
         height: 100vh !important;
@@ -8447,8 +8447,8 @@ body {
 
     /* 问题2&3: 滚动条位置和底部内容展示 - 重新定义聊天历史区域 */
     .chat-history-area {
-        height: calc(100vh - 56px - 350px) !important;
-        /* 进一步大幅增加底部预留空间到350px，确保输入框完全不遮挡内容 */
+        height: calc(100vh - 76px - 350px) !important;
+        /* 大幅增加底部预留空间到350px，顶部76px包含导航和间距 */
         padding: 0 0 60px 8px !important;
         /* 减少左侧padding，让内容更宽 */
         margin: 0 !important;
@@ -8530,8 +8530,8 @@ body {
 
     /* 超小屏幕进一步优化 */
     .chat-history-area {
-        height: calc(100vh - 56px - 320px) !important;
-        /* 超小屏幕预留320px给输入区域 */
+        height: calc(100vh - 76px - 320px) !important;
+        /* 超小屏幕预留320px给输入区域，顶部76px包含导航和间距 */
         padding: 0 0 55px 6px !important;
         /* 减少左侧padding，让内容更宽 */
         scroll-padding-bottom: 80px !important;
@@ -8541,7 +8541,7 @@ body {
     }
 
     .modern-content.chatting {
-        padding-top: 56px !important;
+        padding-top: 76px !important;
         padding-left: 0 !important;
         padding-right: 0 !important;
     }

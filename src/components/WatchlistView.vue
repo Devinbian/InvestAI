@@ -90,7 +90,10 @@
                                     stroke="currentColor" stroke-width="2" />
                             </svg>
                             量化分析
-                            <span class="price-tag">¥1</span>
+                            <div class="price-tag-container">
+                                <span class="price-tag original-price">1智点</span>
+                                <span class="price-tag promo-price">0.5智点</span>
+                            </div>
                         </el-button>
                         <el-button size="small" @click.stop="showQuantAnalysisDialog(stock)" class="quant-analysis-btn">
                             <svg width="10" height="10" viewBox="0 0 24 24" fill="none">
@@ -98,7 +101,10 @@
                                     fill="none" />
                             </svg>
                             AI委托交易
-                            <span class="price-tag">¥1</span>
+                            <div class="price-tag-container">
+                                <span class="price-tag original-price">1智点</span>
+                                <span class="price-tag promo-price">0.5智点</span>
+                            </div>
                         </el-button>
 
                         <el-button size="small" @click.stop="showBuyDialog(stock)" class="buy-stock-btn-secondary">
@@ -216,16 +222,16 @@ const showPaidAnalysisDialog = (stock) => {
     }
 
     ElMessageBox.confirm(
-        `量化分析 ${stock.name}(${stock.code}) 需要支付 ¥1，是否继续？`,
+        `量化分析 ${stock.name}(${stock.code}) 促销价仅需 0.5智点（原价1智点），是否继续？`,
         '付费服务确认',
         {
-            confirmButtonText: '确认支付',
+            confirmButtonText: '确认支付 0.5智点',
             cancelButtonText: '取消',
             type: 'info',
         }
     ).then(() => {
-        // 扣费
-        if (userStore.deductBalance(1)) {
+        // 扣费（扣除0.5智点）
+        if (userStore.deductBalance(0.5)) {
             ElMessage.success('支付成功，正在生成量化分析...');
             emit('send-to-chat', {
                 type: 'paid-analysis',
@@ -233,7 +239,7 @@ const showPaidAnalysisDialog = (stock) => {
                 title: `量化分析${stock.name}(${stock.code})`
             });
         } else {
-            ElMessage.error('支付失败，余额不足');
+            ElMessage.error('支付失败，智点余额不足');
         }
     }).catch(() => {
         // 用户取消
@@ -249,16 +255,16 @@ const showQuantAnalysisDialog = (stock) => {
     }
 
     ElMessageBox.confirm(
-        `AI委托交易 ${stock.name}(${stock.code}) 需要支付 ¥1，是否继续？`,
+        `AI委托交易 ${stock.name}(${stock.code}) 促销价仅需 0.5智点（原价1智点），是否继续？`,
         '付费服务确认',
         {
-            confirmButtonText: '确认支付',
+            confirmButtonText: '确认支付 0.5智点',
             cancelButtonText: '取消',
             type: 'info',
         }
     ).then(() => {
-        // 扣费
-        if (userStore.deductBalance(1)) {
+        // 扣费（扣除0.5智点）
+        if (userStore.deductBalance(0.5)) {
             ElMessage.success('支付成功，正在生成AI委托交易...');
             emit('send-to-chat', {
                 type: 'quant-analysis',
@@ -266,7 +272,7 @@ const showQuantAnalysisDialog = (stock) => {
                 title: `AI委托交易${stock.name}(${stock.code})`
             });
         } else {
-            ElMessage.error('支付失败，余额不足');
+            ElMessage.error('支付失败，智点余额不足');
         }
     }).catch(() => {
         // 用户取消
@@ -614,7 +620,72 @@ const refreshWatchlist = () => {
     transform: translateY(-1px);
 }
 
-.price-tag {
+/* 价格标签容器 */
+.price-tag-container {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 1px;
+    margin-left: 3px;
+    position: relative;
+}
+
+/* 原价样式（更明显的对比） */
+.price-tag.original-price {
+    background: #9ca3af;
+    color: white;
+    font-size: 0.45rem;
+    font-weight: 600;
+    padding: 1px 3px;
+    border-radius: 2px;
+    line-height: 1;
+    text-decoration: line-through;
+    min-width: 22px;
+    text-align: center;
+    opacity: 0.9;
+}
+
+/* 促销价样式（紧凑但突出） */
+.price-tag.promo-price {
+    background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%);
+    color: white;
+    font-size: 0.55rem;
+    font-weight: 700;
+    padding: 2px 4px;
+    border-radius: 3px;
+    line-height: 1;
+    min-width: 26px;
+    text-align: center;
+    box-shadow: 0 1px 3px rgba(239, 68, 68, 0.4);
+    position: relative;
+}
+
+/* 促销价的轻微动画效果 */
+.price-tag.promo-price::after {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: linear-gradient(45deg, transparent 30%, rgba(255, 255, 255, 0.3) 50%, transparent 70%);
+    border-radius: 3px;
+    animation: shine 2s ease-in-out infinite;
+}
+
+@keyframes shine {
+    0% {
+        transform: translateX(-100%);
+    }
+
+    50%,
+    100% {
+        transform: translateX(100%);
+    }
+}
+
+/* 兼容旧版price-tag */
+.price-tag:not(.original-price):not(.promo-price) {
     background: #ef4444;
     color: white;
     font-size: 0.55rem;

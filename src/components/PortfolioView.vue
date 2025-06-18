@@ -142,7 +142,10 @@
                                     stroke="currentColor" stroke-width="2" />
                             </svg>
                             量化分析
-                            <span class="price-tag">¥1</span>
+                            <div class="price-tag-container">
+                                <span class="price-tag original-price">1智点</span>
+                                <span class="price-tag promo-price">0.5智点</span>
+                            </div>
                         </el-button>
                         <el-button size="small" @click.stop="showQuantAnalysisDialog(position)"
                             class="quant-analysis-btn">
@@ -151,7 +154,10 @@
                                     fill="none" />
                             </svg>
                             AI委托交易
-                            <span class="price-tag">¥1</span>
+                            <div class="price-tag-container">
+                                <span class="price-tag original-price">1智点</span>
+                                <span class="price-tag promo-price">0.5智点</span>
+                            </div>
                         </el-button>
                     </div>
                 </div>
@@ -274,16 +280,16 @@ const showPaidAnalysisDialog = (position) => {
     }
 
     ElMessageBox.confirm(
-        `量化分析 ${position.name}(${position.code}) 需要支付 ¥1，是否继续？`,
+        `量化分析 ${position.name}(${position.code}) 促销价仅需 0.5智点（原价1智点），是否继续？`,
         '付费服务确认',
         {
-            confirmButtonText: '确认支付',
+            confirmButtonText: '确认支付 0.5智点',
             cancelButtonText: '取消',
             type: 'info',
         }
     ).then(() => {
-        // 扣费
-        if (userStore.deductBalance(1)) {
+        // 扣费（扣除0.5智点）
+        if (userStore.deductBalance(0.5)) {
             ElMessage.success('支付成功，正在生成量化分析...');
             emit('send-to-chat', {
                 type: 'paid-analysis',
@@ -291,7 +297,7 @@ const showPaidAnalysisDialog = (position) => {
                 title: `量化分析${position.name}(${position.code})`
             });
         } else {
-            ElMessage.error('支付失败，余额不足');
+            ElMessage.error('支付失败，智点余额不足');
         }
     }).catch(() => {
         // 用户取消
@@ -306,16 +312,16 @@ const showQuantAnalysisDialog = (position) => {
     }
 
     ElMessageBox.confirm(
-        `AI委托交易 ${position.name}(${position.code}) 需要支付 ¥1，是否继续？`,
+        `AI委托交易 ${position.name}(${position.code}) 促销价仅需 0.5智点（原价1智点），是否继续？`,
         '付费服务确认',
         {
-            confirmButtonText: '确认支付',
+            confirmButtonText: '确认支付 0.5智点',
             cancelButtonText: '取消',
             type: 'info',
         }
     ).then(() => {
-        // 扣费
-        if (userStore.deductBalance(1)) {
+        // 扣费（扣除0.5智点）
+        if (userStore.deductBalance(0.5)) {
             ElMessage.success('支付成功，正在生成AI委托交易...');
             emit('send-to-chat', {
                 type: 'quant-analysis',
@@ -323,7 +329,7 @@ const showQuantAnalysisDialog = (position) => {
                 title: `AI委托交易${position.name}(${position.code})`
             });
         } else {
-            ElMessage.error('支付失败，余额不足');
+            ElMessage.error('支付失败，智点余额不足');
         }
     }).catch(() => {
         // 用户取消
@@ -374,22 +380,31 @@ const refreshData = () => {
 
 <style scoped>
 .portfolio-view {
-    height: 100%;
+    background: #fff;
+    border-radius: 12px;
+    border: 1px solid #f0f0f0;
+    overflow: hidden;
+    /* 使用 min-height 而不是固定 height，让内容可以自然展开 */
+    min-height: calc(100vh - 200px);
+    /* 如果内容超出视口，允许滚动 */
+    max-height: calc(100vh - 156px);
     display: flex;
     flex-direction: column;
-    overflow: hidden;
     margin: 4px;
+    /* 防止内容溢出导致的布局变化 */
+    contain: layout style;
 }
 
 .account-summary {
-    background: linear-gradient(135deg, #1f2937 0%, #374151 25%, #4b5563 50%, #6b7280 75%, #9ca3af 100%);
+    flex-shrink: 0;
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
     color: white;
-    padding: 24px;
-    margin: -20px -20px 0 -20px;
-    border-radius: 0 0 20px 20px;
+    padding: 10px;
+    margin-top: -20px;
+    /* 移除固定高度限制，让内容自然展开 */
+    min-height: auto;
+    /* 移除 max-height 和 overflow: hidden */
     position: relative;
-    overflow: hidden;
-    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.15);
 }
 
 .account-summary::before {
@@ -511,10 +526,11 @@ const refreshData = () => {
 }
 
 .total-assets-card:hover {
-    transform: translateY(-2px);
+    transform: translateY(-2px) translateZ(0);
     box-shadow:
         0 12px 32px rgba(0, 0, 0, 0.15),
         inset 0 1px 0 rgba(255, 255, 255, 0.4);
+    will-change: transform, box-shadow;
 }
 
 .asset-icon {
@@ -623,10 +639,11 @@ const refreshData = () => {
 
 .summary-card:hover {
     background: linear-gradient(135deg, rgba(255, 255, 255, 0.18) 0%, rgba(255, 255, 255, 0.1) 100%);
-    transform: translateY(-2px);
+    transform: translateY(-2px) translateZ(0);
     box-shadow:
         0 8px 24px rgba(0, 0, 0, 0.12),
         inset 0 1px 0 rgba(255, 255, 255, 0.35);
+    will-change: transform, box-shadow;
 }
 
 .summary-card:hover::before {
@@ -692,7 +709,33 @@ const refreshData = () => {
 .portfolio-content {
     flex: 1;
     overflow-y: auto;
-    padding: 20px 0;
+    overflow-x: hidden;
+    /* 添加内边距，参照自选股的样式 */
+    padding: 16px;
+    /* 添加滚动条稳定性 */
+    scrollbar-gutter: stable;
+    /* 移除固定的 min-height，让内容自然流动 */
+    /* 确保可以滚动到底部 */
+    height: 0;
+    /* 配合 flex: 1 使用 */
+}
+
+/* 添加滚动条样式 */
+.portfolio-content::-webkit-scrollbar {
+    width: 4px;
+}
+
+.portfolio-content::-webkit-scrollbar-track {
+    background: #f5f5f5;
+}
+
+.portfolio-content::-webkit-scrollbar-thumb {
+    background: #d1d5db;
+    border-radius: 2px;
+}
+
+.portfolio-content::-webkit-scrollbar-thumb:hover {
+    background: #9ca3af;
 }
 
 .empty-state {
@@ -700,9 +743,14 @@ const refreshData = () => {
     flex-direction: column;
     align-items: center;
     justify-content: center;
-    height: 300px;
+    /* 调整高度，确保在有内边距的容器中正确显示 */
+    height: calc(100% - 32px);
+    /* 减去父容器的padding */
+    min-height: 300px;
     text-align: center;
     color: #6b7280;
+    /* 添加一些内边距 */
+    padding: 40px 20px;
 }
 
 .empty-icon {
@@ -727,6 +775,7 @@ const refreshData = () => {
     display: flex;
     flex-direction: column;
     gap: 16px;
+    /* 移除之前可能存在的额外 padding，因为父容器已经有了 */
 }
 
 .stock-item {
@@ -743,8 +792,9 @@ const refreshData = () => {
 
 .stock-item:hover {
     border-color: #d1d5db;
-    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
-    transform: translateY(-2px);
+    box-shadow: 0 8px 25px rgba(0, 0, 0, 0.1);
+    transform: translateZ(0);
+    will-change: transform, box-shadow;
 }
 
 .stock-info {
@@ -896,7 +946,8 @@ const refreshData = () => {
 .sell-stock-btn:hover {
     background: #dc2626;
     border-color: #dc2626;
-    transform: translateY(-1px);
+    transform: translateY(-1px) translateZ(0);
+    will-change: transform;
 }
 
 .buy-stock-btn-secondary {
@@ -918,7 +969,8 @@ const refreshData = () => {
     background: #e5e7eb;
     border-color: #d1d5db;
     color: #d97706;
-    transform: translateY(-1px);
+    transform: translateY(-1px) translateZ(0);
+    will-change: transform;
 }
 
 /* 付费功能按钮样式 */
@@ -946,7 +998,8 @@ const refreshData = () => {
     background: #e5e7eb;
     border-color: #d1d5db;
     color: #1f2937;
-    transform: translateY(-1px);
+    transform: translateY(-1px) translateZ(0);
+    will-change: transform;
 }
 
 .quant-analysis-btn {
@@ -959,10 +1012,78 @@ const refreshData = () => {
     background: #fde68a;
     border-color: #f59e0b;
     color: #78350f;
-    transform: translateY(-1px);
+    transform: translateY(-1px) translateZ(0);
+    will-change: transform;
 }
 
-.price-tag {
+/* 价格标签容器 */
+.price-tag-container {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 1px;
+    margin-left: 3px;
+    position: relative;
+}
+
+/* 原价样式（更明显的对比） */
+.price-tag.original-price {
+    background: #9ca3af;
+    color: white;
+    font-size: 0.45rem;
+    font-weight: 600;
+    padding: 1px 3px;
+    border-radius: 2px;
+    line-height: 1;
+    text-decoration: line-through;
+    min-width: 22px;
+    text-align: center;
+    opacity: 0.9;
+}
+
+/* 促销价样式（紧凑但突出） */
+.price-tag.promo-price {
+    background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%);
+    color: white;
+    font-size: 0.55rem;
+    font-weight: 700;
+    padding: 2px 4px;
+    border-radius: 3px;
+    line-height: 1;
+    min-width: 26px;
+    text-align: center;
+    box-shadow: 0 1px 3px rgba(239, 68, 68, 0.4);
+    position: relative;
+}
+
+/* 促销价的轻微动画效果 */
+.price-tag.promo-price::after {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: linear-gradient(45deg, transparent 30%, rgba(255, 255, 255, 0.3) 50%, transparent 70%);
+    border-radius: 3px;
+    animation: shine 3s ease-in-out infinite;
+    will-change: transform;
+    transform: translateZ(0);
+}
+
+@keyframes shine {
+    0% {
+        transform: translateX(-100%) translateZ(0);
+    }
+
+    50%,
+    100% {
+        transform: translateX(100%) translateZ(0);
+    }
+}
+
+/* 兼容旧版price-tag */
+.price-tag:not(.original-price):not(.promo-price) {
     background: #ef4444;
     color: white;
     font-size: 0.55rem;
@@ -976,16 +1097,4 @@ const refreshData = () => {
 }
 
 /* 移除卖出对话框样式，改为使用主窗口的统一交易对话框 */
-
-/* 主容器样式 */
-.portfolio-container {
-    background: #fff;
-    border-radius: 12px;
-    border: 1px solid #f0f0f0;
-    overflow: hidden;
-    min-height: calc(100vh - 200px);
-    display: flex;
-    flex-direction: column;
-    margin: 4px;
-}
 </style>

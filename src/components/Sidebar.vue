@@ -246,11 +246,16 @@ const handleWheel = (event) => {
     display: flex;
     flex-direction: column;
     min-height: 0;
-    max-height: calc(100vh - 110px);
+    /* 调整高度计算，给账户总览更多空间 */
+    height: calc(100vh - 106px);
+    /* 56px(顶部) + 50px(tab导航) */
+    /* 添加滚动条稳定性 */
+    scrollbar-gutter: stable;
 }
 
 .tab-panel {
     flex: 1;
+    /* 修复：移除 overflow: visible，改为适当的滚动控制 */
     overflow: visible;
     display: flex;
     flex-direction: column;
@@ -258,6 +263,7 @@ const handleWheel = (event) => {
     margin: 0;
     min-height: 0;
     padding-bottom: 20px;
+    /* 移除固定的最小高度，让内容自然流动 */
 }
 
 /* Tab内容区域滚动条样式 */

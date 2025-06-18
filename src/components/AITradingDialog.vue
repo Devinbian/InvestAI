@@ -10,7 +10,10 @@
                 </div>
                 <div class="service-cost">
                     <span class="cost-label">服务费用</span>
-                    <span class="cost-amount">¥1</span>
+                    <div class="cost-pricing">
+                        <span class="cost-original">1智点</span>
+                        <span class="cost-promo">0.5智点</span>
+                    </div>
                 </div>
             </div>
 
@@ -125,7 +128,7 @@
             <div class="dialog-footer">
                 <el-button @click="handleCancel">取消</el-button>
                 <el-button type="primary" @click="handleConfirm" :loading="loading">
-                    确认委托 (¥1)
+                    确认委托 (0.5智点)
                 </el-button>
             </div>
         </template>
@@ -264,9 +267,9 @@ const handleCancel = () => {
 
 // 处理确认
 const handleConfirm = async () => {
-    // 检查余额
-    if (userStore.balance < 1) {
-        ElMessage.error('余额不足，请先充值');
+    // 检查余额（按0.5智点计算）
+    if (userStore.balance < 0.5) {
+        ElMessage.error('智点余额不足，请先充值');
         return;
     }
 
@@ -330,8 +333,8 @@ const handleConfirm = async () => {
     try {
         loading.value = true;
 
-        // 扣费
-        userStore.deductBalance(1);
+        // 扣费（扣除0.5智点）
+        userStore.deductBalance(0.5);
         ElMessage.success('支付成功，正在设置AI委托交易...');
 
         // 关闭对话框
@@ -466,10 +469,57 @@ watch(() => props.modelValue, (newVal) => {
     color: #64748b;
 }
 
-.cost-amount {
-    font-size: 16px;
+.cost-pricing {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-end;
+    gap: 2px;
+}
+
+.cost-original {
+    background: #9ca3af;
+    color: white;
+    font-size: 10px;
     font-weight: 600;
-    color: #f59e0b;
+    padding: 1px 3px;
+    border-radius: 2px;
+    text-decoration: line-through;
+    opacity: 0.9;
+}
+
+.cost-promo {
+    background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%);
+    color: white;
+    font-size: 14px;
+    font-weight: 700;
+    padding: 2px 5px;
+    border-radius: 3px;
+    box-shadow: 0 1px 3px rgba(239, 68, 68, 0.4);
+    position: relative;
+}
+
+/* 促销价的轻微动画效果 */
+.cost-promo::after {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: linear-gradient(45deg, transparent 30%, rgba(255, 255, 255, 0.3) 50%, transparent 70%);
+    border-radius: 3px;
+    animation: shine 2s ease-in-out infinite;
+}
+
+@keyframes shine {
+    0% {
+        transform: translateX(-100%);
+    }
+
+    50%,
+    100% {
+        transform: translateX(100%);
+    }
 }
 
 /* 表单样式 */

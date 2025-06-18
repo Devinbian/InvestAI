@@ -196,7 +196,10 @@
                                         stroke="currentColor" stroke-width="2" />
                                 </svg>
                                 量化分析
-                                <span class="price-tag">¥1</span>
+                                <div class="price-tag-container">
+                                    <span class="price-tag original-price">1智点</span>
+                                    <span class="price-tag promo-price">0.5智点</span>
+                                </div>
                             </el-button>
 
                             <!-- AI委托交易按钮（付费） -->
@@ -207,7 +210,10 @@
                                         fill="none" />
                                 </svg>
                                 AI委托交易
-                                <span class="price-tag">¥1</span>
+                                <div class="price-tag-container">
+                                    <span class="price-tag original-price">1智点</span>
+                                    <span class="price-tag promo-price">0.5智点</span>
+                                </div>
                             </el-button>
 
                             <!-- 购买按钮（非购买模式时显示） -->
@@ -238,13 +244,13 @@
                                         <div class="asset-amount">
                                             <span class="amount-label">总资产</span>
                                             <span class="amount-value">¥{{ formatCurrency(message.assetData.totalAssets)
-                                            }}</span>
+                                                }}</span>
                                         </div>
                                         <div class="asset-change"
                                             :class="[message.assetData.totalProfitPercent >= 0 ? 'profit' : 'loss']">
                                             <span class="change-icon">{{ message.assetData.totalProfitPercent >= 0 ?
                                                 '📈' : '📉'
-                                            }}</span>
+                                                }}</span>
                                             <span class="change-label">今日盈亏：</span>
                                             <span class="change-text">
                                                 {{ message.assetData.totalProfitPercent >= 0 ? '+' : '' }}¥{{
@@ -270,7 +276,7 @@
                                         <div class="stat-info">
                                             <div class="stat-label">持仓市值</div>
                                             <div class="stat-value">¥{{ formatCurrency(message.assetData.portfolioValue)
-                                            }}
+                                                }}
                                             </div>
                                         </div>
                                     </div>
@@ -331,7 +337,7 @@
                                                         <div class="stock-price-change">
                                                             <span class="current-price">¥{{
                                                                 position.currentPrice.toFixed(2)
-                                                            }}</span>
+                                                                }}</span>
                                                             <span
                                                                 :class="['price-change', position.profitPercent >= 0 ? 'positive' : 'negative']">
                                                                 {{ position.profitPercent >= 0 ? '+' : '' }}¥{{
@@ -345,10 +351,10 @@
                                                             <span class="detail-label">持仓数量：</span>
                                                             <span class="detail-value">{{
                                                                 position.quantity.toLocaleString()
-                                                            }}股</span>
+                                                                }}股</span>
                                                             <span class="detail-label">成本价：</span>
                                                             <span class="detail-value">¥{{ position.avgPrice.toFixed(2)
-                                                            }}</span>
+                                                                }}</span>
                                                         </div>
                                                         <div class="detail-row">
                                                             <span class="detail-label">持仓市值：</span>
@@ -357,7 +363,7 @@
                                                             <span class="detail-label">所属行业：</span>
                                                             <span class="detail-value industry">{{ position.industry ||
                                                                 '未分类'
-                                                            }}</span>
+                                                                }}</span>
                                                         </div>
                                                     </div>
                                                 </div>
@@ -394,7 +400,10 @@
                                                                 stroke="currentColor" stroke-width="2" />
                                                         </svg>
                                                         量化分析
-                                                        <span class="price-tag">¥1</span>
+                                                        <div class="price-tag-container">
+                                                            <span class="price-tag original-price">1智点</span>
+                                                            <span class="price-tag promo-price">0.5智点</span>
+                                                        </div>
                                                     </el-button>
 
                                                     <!-- AI委托交易按钮（付费） -->
@@ -405,7 +414,10 @@
                                                                 stroke-width="2" fill="none" />
                                                         </svg>
                                                         AI委托交易
-                                                        <span class="price-tag">¥1</span>
+                                                        <div class="price-tag-container">
+                                                            <span class="price-tag original-price">1智点</span>
+                                                            <span class="price-tag promo-price">0.5智点</span>
+                                                        </div>
                                                     </el-button>
                                                 </div>
                                             </div>
@@ -490,7 +502,10 @@
                                                                 stroke="currentColor" stroke-width="2" />
                                                         </svg>
                                                         量化分析
-                                                        <span class="price-tag">¥1</span>
+                                                        <div class="price-tag-container">
+                                                            <span class="price-tag original-price">1智点</span>
+                                                            <span class="price-tag promo-price">0.5智点</span>
+                                                        </div>
                                                     </el-button>
 
                                                     <!-- AI委托交易按钮（付费） -->
@@ -501,7 +516,10 @@
                                                                 stroke-width="2" fill="none" />
                                                         </svg>
                                                         AI委托交易
-                                                        <span class="price-tag">¥1</span>
+                                                        <div class="price-tag-container">
+                                                            <span class="price-tag original-price">1智点</span>
+                                                            <span class="price-tag promo-price">0.5智点</span>
+                                                        </div>
                                                     </el-button>
 
                                                     <!-- 购买按钮 -->
@@ -538,7 +556,7 @@
                             <div v-if="message.isPersistent" class="recommendation-toolbar">
                                 <div class="toolbar-left">
                                     <span class="recommendation-time">{{ formatRecommendationTime(message.timestamp)
-                                    }}</span>
+                                        }}</span>
                                 </div>
                                 <div class="toolbar-right">
                                     <el-button size="small" text @click="refreshRecommendation(message)"
@@ -635,7 +653,10 @@
                                                 stroke="currentColor" stroke-width="2" />
                                         </svg>
                                         量化分析
-                                        <span class="price-tag">¥1</span>
+                                        <div class="price-tag-container">
+                                            <span class="price-tag original-price">1智点</span>
+                                            <span class="price-tag promo-price">0.5智点</span>
+                                        </div>
                                     </el-button>
 
                                     <!-- AI委托交易按钮（付费） -->
@@ -646,7 +667,10 @@
                                                 fill="none" />
                                         </svg>
                                         AI委托交易
-                                        <span class="price-tag">¥1</span>
+                                        <div class="price-tag-container">
+                                            <span class="price-tag original-price">1智点</span>
+                                            <span class="price-tag promo-price">0.5智点</span>
+                                        </div>
                                     </el-button>
 
                                     <!-- 购买按钮 -->
@@ -813,7 +837,7 @@
                 </div>
                 <div class="guide-actions">
                     <el-button type="primary" size="small" @click="handleGuideAction">{{ guideActionText
-                        }}</el-button>
+                    }}</el-button>
                     <el-button size="small" @click="dismissGuide">稍后</el-button>
                 </div>
             </div>
@@ -2500,23 +2524,23 @@ const getRecommendLevelClass = (level) => {
 // 付费量化分析
 const showPaidAnalysisDialog = (stock) => {
     ElMessageBox.confirm(
-        `量化分析 ${stock.name}(${stock.code}) 需要支付 ¥1，是否继续？`,
+        `量化分析 ${stock.name}(${stock.code}) 促销价仅需 0.5智点（原价1智点），是否继续？`,
         '付费服务确认',
         {
-            confirmButtonText: '确认支付',
+            confirmButtonText: '确认支付 0.5智点',
             cancelButtonText: '取消',
             type: 'warning',
             customClass: 'paid-service-dialog'
         }
     ).then(() => {
-        // 检查余额
-        if (userStore.balance < 1) {
-            ElMessage.error('余额不足，请先充值');
+        // 检查余额（按0.5智点计算）
+        if (userStore.balance < 0.5) {
+            ElMessage.error('智点余额不足，请先充值');
             return;
         }
 
-        // 扣费并执行分析
-        userStore.deductBalance(1);
+        // 扣费并执行分析（扣除0.5智点）
+        userStore.deductBalance(0.5);
         ElMessage.success('支付成功，正在生成量化分析报告...');
 
         // 执行量化分析
@@ -3720,7 +3744,72 @@ body.onboarding-mode {
     transform: translateY(-1px);
 }
 
-.price-tag {
+/* 价格标签容器 */
+.price-tag-container {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 1px;
+    margin-left: 3px;
+    position: relative;
+}
+
+/* 原价样式（更明显的对比） */
+.price-tag.original-price {
+    background: #9ca3af;
+    color: white;
+    font-size: 0.45rem;
+    font-weight: 600;
+    padding: 1px 3px;
+    border-radius: 2px;
+    line-height: 1;
+    text-decoration: line-through;
+    min-width: 22px;
+    text-align: center;
+    opacity: 0.9;
+}
+
+/* 促销价样式（紧凑但突出） */
+.price-tag.promo-price {
+    background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%);
+    color: white;
+    font-size: 0.55rem;
+    font-weight: 700;
+    padding: 2px 4px;
+    border-radius: 3px;
+    line-height: 1;
+    min-width: 26px;
+    text-align: center;
+    box-shadow: 0 1px 3px rgba(239, 68, 68, 0.4);
+    position: relative;
+}
+
+/* 促销价的轻微动画效果 */
+.price-tag.promo-price::after {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: linear-gradient(45deg, transparent 30%, rgba(255, 255, 255, 0.3) 50%, transparent 70%);
+    border-radius: 3px;
+    animation: shine 2s ease-in-out infinite;
+}
+
+@keyframes shine {
+    0% {
+        transform: translateX(-100%);
+    }
+
+    50%,
+    100% {
+        transform: translateX(100%);
+    }
+}
+
+/* 兼容旧版price-tag（如果还有单独使用的地方） */
+.price-tag:not(.original-price):not(.promo-price) {
     background: #ef4444;
     color: white;
     font-size: 0.55rem;

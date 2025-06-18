@@ -318,4 +318,12 @@ const handleWheel = (event) => {
 .sidebar-toggle svg.rotated {
     transform: rotate(180deg);
 }
+
+/* 移动端响应式处理 */
+@media (max-width: 768px) {
+    .sidebar-container {
+        display: none !important;
+        /* 移动端完全隐藏侧边栏 */
+    }
+}
 </style>

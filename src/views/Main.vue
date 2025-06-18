@@ -216,13 +216,13 @@
                                         <div class="asset-amount">
                                             <span class="amount-label">总资产</span>
                                             <span class="amount-value">¥{{ formatCurrency(message.assetData.totalAssets)
-                                                }}</span>
+                                            }}</span>
                                         </div>
                                         <div class="asset-change"
                                             :class="[message.assetData.totalProfitPercent >= 0 ? 'profit' : 'loss']">
                                             <span class="change-icon">{{ message.assetData.totalProfitPercent >= 0 ?
                                                 '📈' : '📉'
-                                                }}</span>
+                                            }}</span>
                                             <span class="change-label">今日盈亏：</span>
                                             <span class="change-text">
                                                 {{ message.assetData.totalProfitPercent >= 0 ? '+' : '' }}¥{{
@@ -248,7 +248,7 @@
                                         <div class="stat-info">
                                             <div class="stat-label">持仓市值</div>
                                             <div class="stat-value">¥{{ formatCurrency(message.assetData.portfolioValue)
-                                                }}
+                                            }}
                                             </div>
                                         </div>
                                     </div>
@@ -309,7 +309,7 @@
                                                         <div class="stock-price-change">
                                                             <span class="current-price">¥{{
                                                                 position.currentPrice.toFixed(2)
-                                                                }}</span>
+                                                            }}</span>
                                                             <span
                                                                 :class="['price-change', position.profitPercent >= 0 ? 'positive' : 'negative']">
                                                                 {{ position.profitPercent >= 0 ? '+' : '' }}¥{{
@@ -323,10 +323,10 @@
                                                             <span class="detail-label">持仓数量：</span>
                                                             <span class="detail-value">{{
                                                                 position.quantity.toLocaleString()
-                                                                }}股</span>
+                                                            }}股</span>
                                                             <span class="detail-label">成本价：</span>
                                                             <span class="detail-value">¥{{ position.avgPrice.toFixed(2)
-                                                                }}</span>
+                                                            }}</span>
                                                         </div>
                                                         <div class="detail-row">
                                                             <span class="detail-label">持仓市值：</span>
@@ -335,7 +335,7 @@
                                                             <span class="detail-label">所属行业：</span>
                                                             <span class="detail-value industry">{{ position.industry ||
                                                                 '未分类'
-                                                                }}</span>
+                                                            }}</span>
                                                         </div>
                                                     </div>
                                                 </div>
@@ -516,7 +516,7 @@
                             <div v-if="message.isPersistent" class="recommendation-toolbar">
                                 <div class="toolbar-left">
                                     <span class="recommendation-time">{{ formatRecommendationTime(message.timestamp)
-                                        }}</span>
+                                    }}</span>
                                 </div>
                                 <div class="toolbar-right">
                                     <el-button size="small" text @click="refreshRecommendation(message)"
@@ -1486,7 +1486,39 @@ const sendMessage = async () => {
 
 const scrollToBottom = () => {
     if (chatHistoryRef.value) {
-        chatHistoryRef.value.scrollTop = chatHistoryRef.value.scrollHeight;
+        // 移动端特殊处理：确保滚动到真正的底部
+        const isMobile = window.innerWidth <= 768;
+        let scrollTarget = chatHistoryRef.value.scrollHeight;
+
+        if (isMobile) {
+            // 移动端需要额外的偏移量来确保内容不被输入框遮挡
+            const extraOffset = window.innerWidth <= 480 ? 80 : 100;
+            scrollTarget = chatHistoryRef.value.scrollHeight + extraOffset;
+        }
+
+        // 使用平滑滚动，提升用户体验
+        chatHistoryRef.value.scrollTo({
+            top: scrollTarget,
+            behavior: 'smooth'
+        });
+
+        // 备用方案：如果smooth不支持，使用直接设置
+        setTimeout(() => {
+            if (chatHistoryRef.value) {
+                chatHistoryRef.value.scrollTop = scrollTarget;
+            }
+        }, 100);
+
+        // 额外的确保方案：再次检查并调整
+        setTimeout(() => {
+            if (chatHistoryRef.value && isMobile) {
+                const currentScrollTop = chatHistoryRef.value.scrollTop;
+                const maxScrollTop = chatHistoryRef.value.scrollHeight - chatHistoryRef.value.clientHeight;
+                if (currentScrollTop < maxScrollTop) {
+                    chatHistoryRef.value.scrollTop = maxScrollTop;
+                }
+            }
+        }, 300);
     }
 };
 
@@ -2831,46 +2863,126 @@ body.onboarding-mode {
         max-width: 85%;
     }
 
-    /* 移动端聊天历史区域高度调整 */
+    /* 移动端聊天历史区域完整重新定义 */
     .chat-history-area {
-        height: calc(100vh - 56px - 220px);
-        padding: 16px 0;
+        height: calc(100vh - 56px - 160px) !important;
+        /* 进一步减少高度，为底部输入框和间隔留出更多空间 */
+        padding: 0 0 32px 16px !important;
+        /* 顶部无padding直接到导航底部，左侧16px间距，底部32px避免遮挡 */
+        margin: 0 !important;
+        /* 移除所有margin */
+        width: 100% !important;
+        max-width: none !important;
+        /* 移动端占满宽度 */
+        box-sizing: border-box !important;
+        /* 确保padding不影响宽度计算 */
+        scrollbar-width: thin;
+        scrollbar-color: rgba(0, 0, 0, 0.2) rgba(0, 0, 0, 0.05);
+    }
+
+    /* 移动端滚动条优化 - 始终可见 */
+    .chat-history-area::-webkit-scrollbar {
+        width: 4px !important;
+        /* 移动端稍细一些 */
+    }
+
+    .chat-history-area::-webkit-scrollbar-track {
+        background: rgba(0, 0, 0, 0.05) !important;
+        /* 轻微的背景色 */
+        border-radius: 2px;
+    }
+
+    .chat-history-area::-webkit-scrollbar-thumb {
+        background: rgba(0, 0, 0, 0.2) !important;
+        /* 移动端始终显示 */
+        border-radius: 2px;
+        opacity: 1 !important;
+        /* 强制显示 */
+        transition: background 0.2s ease;
+    }
+
+    .chat-history-area::-webkit-scrollbar-thumb:active {
+        background: rgba(0, 0, 0, 0.4) !important;
+        /* 触摸时加深 */
     }
 
     /* 移动端消息间距调整 */
     .chat-message {
         margin-bottom: 16px;
+        padding-right: 12px !important;
+        /* 为滚动条留出足够间距，避免内容贴边 */
+    }
+
+    /* 最后一条消息增加底部间距，确保与输入框有足够间隔 */
+    .chat-message:last-child {
+        margin-bottom: 32px;
     }
 
     .message-text {
         margin-bottom: 20px;
     }
 
+    /* 移动端主内容区域间距优化 */
+    .modern-content {
+        padding-top: 80px;
+        /* 增加顶部间距，避免太靠顶部 */
+        padding-left: 20px;
+        padding-right: 20px;
+    }
+
+    /* 移动端聊天模式下的内容区域 */
+    .modern-content.chatting {
+        padding-top: 56px !important;
+        /* 聊天模式下直接从导航栏底部开始 */
+        padding-left: 0 !important;
+        padding-right: 0 !important;
+        /* 移除左右padding，让聊天区域占满宽度 */
+        height: 100vh !important;
+        /* 占满整个视口高度 */
+        overflow: hidden !important;
+    }
+
     /* 移动端欢迎页面字体优化 */
     .modern-title {
         font-size: 2rem;
-        margin-bottom: 10px;
+        margin-bottom: 16px;
+        /* 增加标题下方间距 */
         letter-spacing: -0.5px;
     }
 
     .modern-desc {
         font-size: 0.95rem;
-        margin-bottom: 20px;
-        line-height: 1.5;
+        margin-bottom: 32px;
+        /* 增加描述下方间距 */
+        line-height: 1.6;
+        /* 增加行高，提升可读性 */
         padding: 0 16px;
     }
 
     /* 移动端欢迎区域间距优化 */
     .welcome-section {
+        margin-bottom: 32px;
+        /* 增加欢迎区域下方间距 */
+        padding-top: 20px;
+        /* 增加欢迎区域上方间距 */
+    }
+
+    /* 移动端AI输入卡片间距优化 */
+    .ai-card {
+        margin-top: 24px;
+        /* 增加AI输入卡片上方间距 */
         margin-bottom: 24px;
+        /* 增加AI输入卡片下方间距 */
     }
 
     .quick-examples {
-        margin-top: 12px;
+        margin-top: 16px;
+        /* 增加快捷示例上方间距 */
     }
 
     .examples-content {
-        margin-bottom: 12px;
+        margin-bottom: 16px;
+        /* 增加示例内容下方间距 */
     }
 }
 
@@ -4924,6 +5036,24 @@ body.onboarding-mode {
 
     .add-icon {
         font-size: 0.9rem !important;
+    }
+
+    /* 超小屏幕聊天历史区域高度优化 */
+    .chat-history-area {
+        height: calc(100vh - 56px - 140px) !important;
+        /* 超小屏幕进一步减少高度，为输入框留出更多空间 */
+        padding: 0 0 28px 12px !important;
+        /* 移除顶部padding，左侧12px间距，增加底部padding确保间隔 */
+        margin: 0 !important;
+        width: 100% !important;
+        max-width: none !important;
+    }
+
+    /* 超小屏幕聊天模式内容区域 */
+    .modern-content.chatting {
+        padding-top: 56px !important;
+        padding-left: 0 !important;
+        padding-right: 0 !important;
     }
 
     .chat-area {
@@ -7874,16 +8004,52 @@ body {
         grid-template-columns: 1fr;
     }
 
+    /* 超小屏幕主内容区域间距进一步优化 */
+    .modern-content {
+        padding-top: 100px;
+        /* 进一步增加顶部间距 */
+        padding-left: 16px;
+        padding-right: 16px;
+    }
+
     /* 超小屏幕字体进一步优化 */
     .modern-title {
         font-size: 1.75rem;
-        margin-bottom: 8px;
+        margin-bottom: 20px;
+        /* 增加标题下方间距 */
     }
 
     .modern-desc {
         font-size: 0.85rem;
         padding: 0 12px;
-        margin-bottom: 16px;
+        margin-bottom: 28px;
+        /* 增加描述下方间距 */
+        line-height: 1.7;
+        /* 进一步增加行高 */
+    }
+
+    /* 超小屏幕欢迎区域间距优化 */
+    .welcome-section {
+        margin-bottom: 28px;
+        padding-top: 24px;
+        /* 增加欢迎区域上方间距 */
+    }
+
+    /* 超小屏幕AI卡片间距优化 */
+    .ai-card {
+        margin-top: 20px;
+        margin-bottom: 20px;
+    }
+
+    /* 超小屏幕滚动条进一步优化 */
+    .chat-history-area::-webkit-scrollbar {
+        width: 3px;
+        /* 超小屏幕更细的滚动条 */
+    }
+
+    .chat-history-area::-webkit-scrollbar-thumb {
+        background: rgba(0, 0, 0, 0.25) !important;
+        /* 稍微加深一点 */
     }
 
     .chat-message.user .chat-message-content,
@@ -7936,6 +8102,166 @@ body {
 
     .copyright-content p {
         font-size: 12px;
+    }
+}
+
+/* 移动端聊天布局最终修复 - 确保最高优先级 */
+@media (max-width: 768px) {
+
+    /* 问题1: 聊天内容顶部遮挡 - 聊天模式下直接从导航栏底部开始 */
+    .modern-content.chatting {
+        padding-top: 56px !important;
+        padding-left: 0 !important;
+        padding-right: 0 !important;
+        height: 100vh !important;
+        overflow: hidden !important;
+    }
+
+    /* 移动端输入区域高度优化 */
+    .input-area {
+        padding: 12px 16px 16px 16px !important;
+        /* 进一步减少padding，节省更多空间 */
+    }
+
+    /* 移动端新聊天按钮区域优化 */
+    .new-chat-section {
+        margin-bottom: 8px !important;
+        /* 进一步减少间距 */
+    }
+
+    /* 移动端AI卡片间距优化 */
+    .ai-card {
+        margin: 0 !important;
+        /* 移除margin */
+        padding: 16px 20px !important;
+        /* 减少AI卡片的padding */
+    }
+
+    /* 移动端AI输入行间距优化 */
+    .ai-input-row {
+        padding: 12px 16px !important;
+        /* 减少输入行的padding */
+    }
+
+    /* 移动端AI按钮行间距优化 */
+    .ai-buttons-row {
+        margin-top: 8px !important;
+        /* 减少按钮行的上边距 */
+    }
+
+    /* 问题2&3: 滚动条位置和底部内容展示 - 重新定义聊天历史区域 */
+    .chat-history-area {
+        height: calc(100vh - 56px - 350px) !important;
+        /* 进一步大幅增加底部预留空间到350px，确保输入框完全不遮挡内容 */
+        padding: 0 0 60px 8px !important;
+        /* 减少左侧padding，让内容更宽 */
+        margin: 0 !important;
+        width: 100% !important;
+        max-width: none !important;
+        /* 移动端占满宽度，移除900px限制 */
+        box-sizing: border-box !important;
+        scroll-padding-bottom: 100px !important;
+        /* 使用CSS scroll-padding-bottom确保滚动时底部有足够间距 */
+    }
+
+    /* 消息右侧间距，避免贴滚动条 */
+    .chat-message {
+        padding-right: 8px !important;
+        /* 减少右侧padding，让消息内容更宽 */
+    }
+
+    /* 移动端聊天消息宽度优化 */
+    .chat-message.user .chat-message-content {
+        max-width: 90% !important;
+        /* 增加用户消息最大宽度 */
+    }
+
+    .chat-message.assistant .chat-message-content {
+        max-width: 90% !important;
+        /* 增加助手消息最大宽度 */
+    }
+
+    /* 最后一条消息额外增加底部间距 */
+    .chat-message:last-child {
+        margin-bottom: 60px !important;
+        /* 确保最后一条消息有足够间隔 */
+    }
+
+    /* 使用伪元素在聊天历史区域底部创建额外空间 */
+    .chat-history-area::after {
+        content: '';
+        display: block;
+        height: 100px !important;
+        /* 额外的底部空间 */
+        width: 100%;
+        flex-shrink: 0;
+    }
+}
+
+@media (max-width: 480px) {
+
+    /* 超小屏幕输入区域进一步优化 */
+    .input-area {
+        padding: 10px 12px 12px 12px !important;
+        /* 超小屏幕最小化padding */
+    }
+
+    /* 超小屏幕AI卡片进一步优化 */
+    .ai-card {
+        padding: 12px 16px !important;
+        /* 超小屏幕进一步减少AI卡片padding */
+    }
+
+    /* 超小屏幕AI输入行进一步优化 */
+    .ai-input-row {
+        padding: 10px 12px !important;
+        /* 超小屏幕最小化输入行padding */
+    }
+
+    /* 超小屏幕新聊天按钮区域 */
+    .new-chat-section {
+        margin-bottom: 6px !important;
+        /* 超小屏幕最小化间距 */
+    }
+
+    /* 超小屏幕进一步优化 */
+    .chat-history-area {
+        height: calc(100vh - 56px - 320px) !important;
+        /* 超小屏幕预留320px给输入区域 */
+        padding: 0 0 55px 6px !important;
+        /* 减少左侧padding，让内容更宽 */
+        scroll-padding-bottom: 80px !important;
+        /* 超小屏幕的滚动底部间距 */
+        max-width: none !important;
+        /* 确保超小屏幕也占满宽度 */
+    }
+
+    .modern-content.chatting {
+        padding-top: 56px !important;
+        padding-left: 0 !important;
+        padding-right: 0 !important;
+    }
+
+    /* 超小屏幕最后一条消息间距 */
+    .chat-message:last-child {
+        margin-bottom: 55px !important;
+    }
+
+    /* 超小屏幕伪元素底部空间 */
+    .chat-history-area::after {
+        height: 80px !important;
+        /* 超小屏幕的额外底部空间 */
+    }
+
+    /* 超小屏幕聊天消息宽度进一步优化 */
+    .chat-message.user .chat-message-content {
+        max-width: 92% !important;
+        /* 超小屏幕用户消息更宽 */
+    }
+
+    .chat-message.assistant .chat-message-content {
+        max-width: 92% !important;
+        /* 超小屏幕助手消息更宽 */
     }
 }
 </style>

@@ -45,12 +45,12 @@
                 <div v-if="todayChats.length > 0" class="history-group">
                     <div class="group-title">今天</div>
                     <div v-for="chat in todayChats" :key="chat.id"
-                        :class="['history-item', { 'active': chat.id === currentChatId }]" @click="loadChat(chat)">
-                        <div class="chat-info">
+                        :class="['history-item', { 'active': chat.id === currentChatId }]">
+                        <div class="chat-info" @click="loadChat(chat)" @touchstart="handleTouchStart(chat)">
                             <div class="chat-title">{{ chat.title }}</div>
                             <div class="chat-time">{{ formatTime(chat.lastMessage) }}</div>
                         </div>
-                        <div class="chat-actions">
+                        <div class="chat-actions" @click.stop>
                             <el-dropdown @command="(command) => handleChatAction(command, chat)" trigger="click">
                                 <span class="action-trigger">
                                     <svg width="14" height="14" viewBox="0 0 24 24" fill="none">
@@ -74,12 +74,12 @@
                 <div v-if="yesterdayChats.length > 0" class="history-group">
                     <div class="group-title">昨天</div>
                     <div v-for="chat in yesterdayChats" :key="chat.id"
-                        :class="['history-item', { 'active': chat.id === currentChatId }]" @click="loadChat(chat)">
-                        <div class="chat-info">
+                        :class="['history-item', { 'active': chat.id === currentChatId }]">
+                        <div class="chat-info" @click="loadChat(chat)" @touchstart="handleTouchStart(chat)">
                             <div class="chat-title">{{ chat.title }}</div>
                             <div class="chat-time">{{ formatTime(chat.lastMessage) }}</div>
                         </div>
-                        <div class="chat-actions">
+                        <div class="chat-actions" @click.stop>
                             <el-dropdown @command="(command) => handleChatAction(command, chat)" trigger="click">
                                 <span class="action-trigger">
                                     <svg width="14" height="14" viewBox="0 0 24 24" fill="none">
@@ -103,12 +103,12 @@
                 <div v-if="thisWeekChats.length > 0" class="history-group">
                     <div class="group-title">本周</div>
                     <div v-for="chat in thisWeekChats" :key="chat.id"
-                        :class="['history-item', { 'active': chat.id === currentChatId }]" @click="loadChat(chat)">
-                        <div class="chat-info">
+                        :class="['history-item', { 'active': chat.id === currentChatId }]">
+                        <div class="chat-info" @click="loadChat(chat)" @touchstart="handleTouchStart(chat)">
                             <div class="chat-title">{{ chat.title }}</div>
                             <div class="chat-time">{{ formatTime(chat.lastMessage) }}</div>
                         </div>
-                        <div class="chat-actions">
+                        <div class="chat-actions" @click.stop>
                             <el-dropdown @command="(command) => handleChatAction(command, chat)" trigger="click">
                                 <span class="action-trigger">
                                     <svg width="14" height="14" viewBox="0 0 24 24" fill="none">
@@ -132,12 +132,12 @@
                 <div v-if="olderChats.length > 0" class="history-group">
                     <div class="group-title">更早</div>
                     <div v-for="chat in olderChats" :key="chat.id"
-                        :class="['history-item', { 'active': chat.id === currentChatId }]" @click="loadChat(chat)">
-                        <div class="chat-info">
+                        :class="['history-item', { 'active': chat.id === currentChatId }]">
+                        <div class="chat-info" @click="loadChat(chat)" @touchstart="handleTouchStart(chat)">
                             <div class="chat-title">{{ chat.title }}</div>
                             <div class="chat-time">{{ formatDate(chat.lastMessage) }}</div>
                         </div>
-                        <div class="chat-actions">
+                        <div class="chat-actions" @click.stop>
                             <el-dropdown @command="(command) => handleChatAction(command, chat)" trigger="click">
                                 <span class="action-trigger">
                                     <svg width="14" height="14" viewBox="0 0 24 24" fill="none">
@@ -278,7 +278,31 @@ const closePanel = () => {
 };
 
 const loadChat = (chat) => {
+    // 先触发加载聊天事件
     emit('load-chat', chat);
+
+    // 移动端点击后立即触发关闭面板事件
+    if (window.innerWidth <= 768) {
+        // 立即关闭面板，不需要延迟
+        emit('close-panel');
+        console.log('移动端点击历史记录，触发关闭面板');
+    }
+};
+
+// 处理移动端触摸事件
+const handleTouchStart = (chat) => {
+    // 在移动端，直接触发 loadChat
+    if (window.innerWidth <= 768) {
+        loadChat(chat);
+    }
+};
+
+// 处理触摸结束事件（备用方法）
+const handleTouchEnd = (chat) => {
+    // 在移动端，直接触发 loadChat
+    if (window.innerWidth <= 768) {
+        loadChat(chat);
+    }
 };
 
 const handleChatAction = (command, chat) => {
@@ -493,7 +517,6 @@ setInterval(updateChatHistoryList, 1000);
     padding: 12px;
     margin: 2px 0;
     border-radius: 8px;
-    cursor: pointer;
     transition: all 0.2s ease;
     position: relative;
 }
@@ -510,6 +533,14 @@ setInterval(updateChatHistoryList, 1000);
 .chat-info {
     flex: 1;
     min-width: 0;
+    cursor: pointer;
+    padding: 0;
+    border-radius: 6px;
+    transition: all 0.2s ease;
+}
+
+.history-item:not(:hover) .chat-info:hover {
+    background: rgba(59, 130, 246, 0.08);
 }
 
 .chat-title {
@@ -592,6 +623,21 @@ setInterval(updateChatHistoryList, 1000);
 
     .chat-history-container.collapsed {
         width: 0;
+    }
+
+    /* 移动端触摸优化 */
+    .chat-info {
+        -webkit-tap-highlight-color: rgba(59, 130, 246, 0.2);
+        -webkit-touch-callout: none;
+        -webkit-user-select: none;
+        -moz-user-select: none;
+        -ms-user-select: none;
+        user-select: none;
+        touch-action: manipulation;
+    }
+
+    .history-item {
+        -webkit-tap-highlight-color: transparent;
     }
 }
 </style>

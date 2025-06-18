@@ -209,13 +209,13 @@
                                         <div class="asset-amount">
                                             <span class="amount-label">总资产</span>
                                             <span class="amount-value">¥{{ formatCurrency(message.assetData.totalAssets)
-                                            }}</span>
+                                                }}</span>
                                         </div>
                                         <div class="asset-change"
                                             :class="[message.assetData.totalProfitPercent >= 0 ? 'profit' : 'loss']">
                                             <span class="change-icon">{{ message.assetData.totalProfitPercent >= 0 ?
                                                 '📈' : '📉'
-                                            }}</span>
+                                                }}</span>
                                             <span class="change-label">今日盈亏：</span>
                                             <span class="change-text">
                                                 {{ message.assetData.totalProfitPercent >= 0 ? '+' : '' }}¥{{
@@ -241,7 +241,7 @@
                                         <div class="stat-info">
                                             <div class="stat-label">持仓市值</div>
                                             <div class="stat-value">¥{{ formatCurrency(message.assetData.portfolioValue)
-                                            }}
+                                                }}
                                             </div>
                                         </div>
                                     </div>
@@ -302,7 +302,7 @@
                                                         <div class="stock-price-change">
                                                             <span class="current-price">¥{{
                                                                 position.currentPrice.toFixed(2)
-                                                                }}</span>
+                                                            }}</span>
                                                             <span
                                                                 :class="['price-change', position.profitPercent >= 0 ? 'positive' : 'negative']">
                                                                 {{ position.profitPercent >= 0 ? '+' : '' }}¥{{
@@ -316,10 +316,10 @@
                                                             <span class="detail-label">持仓数量：</span>
                                                             <span class="detail-value">{{
                                                                 position.quantity.toLocaleString()
-                                                                }}股</span>
+                                                            }}股</span>
                                                             <span class="detail-label">成本价：</span>
                                                             <span class="detail-value">¥{{ position.avgPrice.toFixed(2)
-                                                                }}</span>
+                                                            }}</span>
                                                         </div>
                                                         <div class="detail-row">
                                                             <span class="detail-label">持仓市值：</span>
@@ -328,7 +328,7 @@
                                                             <span class="detail-label">所属行业：</span>
                                                             <span class="detail-value industry">{{ position.industry ||
                                                                 '未分类'
-                                                                }}</span>
+                                                            }}</span>
                                                         </div>
                                                     </div>
                                                 </div>
@@ -509,7 +509,7 @@
                             <div v-if="message.isPersistent" class="recommendation-toolbar">
                                 <div class="toolbar-left">
                                     <span class="recommendation-time">{{ formatRecommendationTime(message.timestamp)
-                                    }}</span>
+                                        }}</span>
                                 </div>
                                 <div class="toolbar-right">
                                     <el-button size="small" text @click="refreshRecommendation(message)"
@@ -982,9 +982,9 @@
                                 </div>
                                 <div class="stats-section">
                                     <span class="stat-chip">大分类 {{ preferencesForm.sectors.majorCategories.length
-                                        }}/2</span>
+                                    }}/2</span>
                                     <span class="stat-chip">细分 {{ preferencesForm.sectors.subCategories.length
-                                        }}/4</span>
+                                    }}/4</span>
                                 </div>
                             </div>
 
@@ -1196,7 +1196,7 @@
                                         <span class="change-amount">{{ selectedStock.change >= 0 ? '+' : '' }}{{
                                             selectedStock.change }}</span>
                                         <span class="change-percent">({{ selectedStock.changePercent >= 0 ? '+' : ''
-                                        }}{{
+                                            }}{{
                                                 selectedStock.changePercent }}%)</span>
                                     </div>
                                 </div>
@@ -1204,7 +1204,7 @@
                                     <div class="stat-item">
                                         <span class="stat-label">今开</span>
                                         <span class="stat-value">{{ (parseFloat(selectedStock.price) - 2.5).toFixed(2)
-                                        }}</span>
+                                            }}</span>
                                     </div>
                                     <div class="stat-item">
                                         <span class="stat-label">昨收</span>
@@ -1268,7 +1268,7 @@
                         <div class="info-item">
                             <span class="info-label">跌停</span>
                             <span class="info-value down">{{ (parseFloat(selectedStock.price) * 0.9).toFixed(2)
-                            }}</span>
+                                }}</span>
                         </div>
                         <div class="info-item">
                             <span class="info-label">总市值</span>
@@ -1448,6 +1448,140 @@
             <template #footer>
                 <div class="trading-footer">
                     <el-button class="cancel-btn" @click="buyDialogVisible = false">取消</el-button>
+                </div>
+            </template>
+        </el-dialog>
+
+        <!-- AI委托交易设置对话框 -->
+        <el-dialog v-model="showAITradingDialog" title="AI委托交易设置" width="750px" class="ai-trading-dialog">
+            <div v-if="selectedStockForAITrading" class="ai-trading-content">
+                <!-- 股票信息头部 -->
+                <div class="stock-header">
+                    <div class="stock-info">
+                        <h3>{{ selectedStockForAITrading.name }}</h3>
+                        <span class="stock-code">{{ selectedStockForAITrading.code }}</span>
+                        <span class="current-price">¥{{ selectedStockForAITrading.price ||
+                            selectedStockForAITrading.currentPrice }}</span>
+                    </div>
+                    <div class="service-cost">
+                        <span class="cost-label">服务费用</span>
+                        <span class="cost-amount">¥1</span>
+                    </div>
+                </div>
+
+                <!-- 交易设置表单 -->
+                <el-form :model="aiTradingForm" class="ai-trading-form simple">
+                    <!-- 基本交易参数 -->
+                    <div class="form-section compact">
+                        <h4 class="section-title">交易设置</h4>
+                        <div class="simple-grid">
+                            <div class="param-item">
+                                <label class="param-label">交易方向</label>
+                                <el-select v-model="aiTradingForm.action" class="param-input">
+                                    <el-option label="买入" value="buy" />
+                                    <el-option label="卖出" value="sell" />
+                                </el-select>
+                            </div>
+                            <div class="param-item">
+                                <label class="param-label">交易数量</label>
+                                <el-input-number v-model="aiTradingForm.quantity" :min="100" :step="100"
+                                    class="param-input" controls-position="right" />
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- 风控设置 -->
+                    <div class="form-section compact">
+                        <h4 class="section-title">风控设置</h4>
+
+                        <div class="risk-controls">
+                            <div class="risk-item">
+                                <el-checkbox v-model="aiTradingForm.enableStopLoss" class="risk-checkbox">
+                                    止损保护
+                                </el-checkbox>
+                                <div v-if="aiTradingForm.enableStopLoss" class="risk-input">
+                                    <el-input-number v-model="aiTradingForm.stopLossPercentage" :min="1" :max="20"
+                                        class="risk-number" controls-position="right" />
+                                    <span class="risk-unit">%</span>
+                                </div>
+                            </div>
+
+                            <div class="risk-item">
+                                <el-checkbox v-model="aiTradingForm.enableTakeProfit" class="risk-checkbox">
+                                    止盈目标
+                                </el-checkbox>
+                                <div v-if="aiTradingForm.enableTakeProfit" class="risk-input">
+                                    <el-input-number v-model="aiTradingForm.takeProfitPercentage" :min="1" :max="50"
+                                        class="risk-number" controls-position="right" />
+                                    <span class="risk-unit">%</span>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- AI策略预览 -->
+                        <div class="strategy-preview">
+                            <div class="strategy-info">
+                                <span class="strategy-label">AI策略：</span>
+                                <span class="strategy-value">{{ getStrategyText(aiTradingForm.strategy) }}</span>
+                                <span class="strategy-risk">({{ getRiskLevelText(aiTradingForm.riskLevel) }})</span>
+                            </div>
+                            <div class="strategy-desc">
+                                根据您的投资偏好自动配置，AI将24小时智能监控并执行最佳交易时机
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- 高级设置（可折叠） -->
+                    <div class="form-section compact" v-if="aiTradingForm.showAdvanced">
+                        <h4 class="section-title">高级设置</h4>
+
+                        <div class="advanced-simple">
+                            <div class="advanced-row">
+                                <label class="param-label">委托类型</label>
+                                <el-select v-model="aiTradingForm.orderType" class="param-input-small">
+                                    <el-option label="限价单" value="limit" />
+                                    <el-option label="市价单" value="market" />
+                                </el-select>
+                            </div>
+
+                            <div class="advanced-row">
+                                <label class="param-label">委托时效</label>
+                                <el-select v-model="aiTradingForm.timeInForce" class="param-input-small">
+                                    <el-option label="好价成交" value="GTC" />
+                                    <el-option label="当日有效" value="DAY" />
+                                </el-select>
+                            </div>
+
+                            <div class="advanced-row">
+                                <label class="param-label">最大亏损</label>
+                                <div class="input-with-unit-small">
+                                    <el-input-number v-model="aiTradingForm.maxLossAmount" :min="100"
+                                        class="param-input-small" controls-position="right" />
+                                    <span class="input-unit">元</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- 高级设置切换 -->
+                    <div class="advanced-toggle">
+                        <el-button link @click="aiTradingForm.showAdvanced = !aiTradingForm.showAdvanced">
+                            {{ aiTradingForm.showAdvanced ? '收起高级设置' : '展开高级设置' }}
+                            <el-icon>
+                                <ArrowDown v-if="!aiTradingForm.showAdvanced" />
+                                <ArrowUp v-else />
+                            </el-icon>
+                        </el-button>
+                    </div>
+                </el-form>
+            </div>
+
+            <template #footer>
+                <div class="dialog-footer">
+                    <el-button @click="showAITradingDialog = false">取消</el-button>
+                    <el-button type="primary" @click="confirmAITrading" :loading="false">
+                        确认委托 (¥1)
+                    </el-button>
                 </div>
             </template>
         </el-dialog>
@@ -1633,7 +1767,7 @@
 <script setup>
 import { ref, reactive, onMounted, onUnmounted, nextTick, watch, computed } from 'vue';
 import { useUserStore } from '../store/user';
-import { User, Lock, ArrowDown, Plus, Edit, Delete } from '@element-plus/icons-vue';
+import { User, Lock, ArrowDown, ArrowUp, Plus, Edit, Delete } from '@element-plus/icons-vue';
 import { ElMessage, ElMessageBox } from 'element-plus';
 import { mockApi, wechatLoginApi } from '../api/mock';
 import Sidebar from '../components/Sidebar.vue';
@@ -2310,6 +2444,65 @@ const buyForm = reactive({
     price: 0,
     orderType: 'limit' // limit: 限价, market: 市价
 });
+
+// AI委托交易相关
+const showAITradingDialog = ref(false);
+const selectedStockForAITrading = ref(null);
+const aiTradingForm = reactive({
+    // 核心参数（用户必须设置）
+    action: 'buy', // buy, sell
+    quantity: 100,
+
+    // 风控参数（简化，只保留最重要的）
+    enableStopLoss: true,
+    stopLossPercentage: 5, // 止损百分比
+    enableTakeProfit: true,
+    takeProfitPercentage: 10, // 止盈百分比
+
+    // 高级选项（默认折叠，从用户偏好获取）
+    showAdvanced: false,
+    orderType: 'limit', // 从用户偏好获取
+    timeInForce: 'GTC', // 从用户偏好获取
+    maxLossAmount: 1000, // 从用户偏好和余额计算
+    strategy: 'balanced', // 从用户偏好获取
+    riskLevel: 'medium' // 从用户偏好获取
+});
+
+// 从用户偏好初始化AI交易参数
+const initAITradingFromPreferences = () => {
+    const preferences = userStore.userInfo?.preferences;
+    if (preferences) {
+        // 根据用户风险偏好设置默认参数
+        switch (preferences.riskLevel) {
+            case 'conservative':
+                aiTradingForm.stopLossPercentage = 3;
+                aiTradingForm.takeProfitPercentage = 6;
+                aiTradingForm.strategy = 'conservative';
+                aiTradingForm.riskLevel = 'low';
+                aiTradingForm.maxLossAmount = Math.min(500, userStore.balance * 0.05);
+                break;
+            case 'moderate':
+                aiTradingForm.stopLossPercentage = 5;
+                aiTradingForm.takeProfitPercentage = 10;
+                aiTradingForm.strategy = 'balanced';
+                aiTradingForm.riskLevel = 'medium';
+                aiTradingForm.maxLossAmount = Math.min(1000, userStore.balance * 0.1);
+                break;
+            case 'aggressive':
+                aiTradingForm.stopLossPercentage = 8;
+                aiTradingForm.takeProfitPercentage = 15;
+                aiTradingForm.strategy = 'aggressive';
+                aiTradingForm.riskLevel = 'high';
+                aiTradingForm.maxLossAmount = Math.min(2000, userStore.balance * 0.15);
+                break;
+        }
+
+        // 根据用户经验设置委托类型
+        aiTradingForm.orderType = preferences.experience === 'beginner' ? 'market' : 'limit';
+    }
+};
+
+
 
 // 五档行情数据
 const sellOrders = ref([]);
@@ -3400,9 +3593,23 @@ const getRiskLevelText = (level) => {
         'stable': '稳健型',
         'balanced': '平衡型',
         'growth': '成长型',
-        'aggressive': '激进型'
+        'aggressive': '激进型',
+        'low': '低风险',
+        'medium': '中风险',
+        'high': '高风险',
+        'moderate': '稳健型'
     };
     return map[level] || '未设置';
+};
+
+// 获取策略文本
+const getStrategyText = (strategy) => {
+    const strategyMap = {
+        'conservative': '保守策略',
+        'balanced': '平衡策略',
+        'aggressive': '激进策略'
+    };
+    return strategyMap[strategy] || '平衡策略';
 };
 
 // 引导提示相关方法
@@ -3811,32 +4018,147 @@ const showPaidAnalysisDialog = (stock) => {
 
 // 付费AI委托交易
 const showQuantAnalysisDialog = (stock) => {
-    ElMessageBox.confirm(
-        `AI委托交易 ${stock.name}(${stock.code}) 需要支付 ¥1，是否继续？`,
-        '付费服务确认',
-        {
-            confirmButtonText: '确认支付',
-            cancelButtonText: '取消',
-            type: 'warning',
-            customClass: 'paid-service-dialog'
-        }
-    ).then(() => {
-        // 检查余额
-        if (userStore.balance < 1) {
-            ElMessage.error('余额不足，请先充值');
-            return;
-        }
+    // 初始化AI交易参数（从用户偏好获取）
+    initAITradingFromPreferences();
 
-        // 扣费并执行AI委托交易
-        userStore.deductBalance(1);
-        ElMessage.success('支付成功，正在生成AI委托交易报告...');
-
-        // 执行AI委托交易
-        performQuantAnalysis(stock);
-    }).catch(() => {
-        ElMessage.info('已取消AI委托交易');
-    });
+    // 显示AI委托交易设置对话框
+    showAITradingDialog.value = true;
+    selectedStockForAITrading.value = stock;
 };
+
+// 确认AI委托交易
+const confirmAITrading = async () => {
+    // 检查余额
+    if (userStore.balance < 1) {
+        ElMessage.error('余额不足，请先充值');
+        return;
+    }
+
+    // 表单验证
+    if (!selectedStockForAITrading.value) {
+        ElMessage.error('股票信息错误');
+        return;
+    }
+
+    if (aiTradingForm.quantity < 100 || aiTradingForm.quantity % 100 !== 0) {
+        ElMessage.error('交易数量必须是100的整数倍');
+        return;
+    }
+
+    // 构建AI委托交易参数
+    const tradingParams = {
+        stock: selectedStockForAITrading.value,
+        action: aiTradingForm.action,
+        quantity: aiTradingForm.quantity,
+        orderType: aiTradingForm.orderType,
+        timeInForce: aiTradingForm.timeInForce,
+        validUntil: aiTradingForm.validUntil,
+
+        // 止损止盈设置
+        stopLoss: aiTradingForm.enableStopLoss ? {
+            type: aiTradingForm.stopLossType,
+            percentage: aiTradingForm.stopLossPercentage,
+            price: aiTradingForm.stopLossPrice
+        } : null,
+
+        takeProfit: aiTradingForm.enableTakeProfit ? {
+            type: aiTradingForm.takeProfitType,
+            percentage: aiTradingForm.takeProfitPercentage,
+            price: aiTradingForm.takeProfitPrice
+        } : null,
+
+        trailingStop: aiTradingForm.enableTrailingStop ? {
+            amount: aiTradingForm.trailingStopAmount
+        } : null,
+
+        // 风控参数
+        riskControl: {
+            maxLossAmount: aiTradingForm.maxLossAmount,
+            maxPositionSize: aiTradingForm.maxPositionSize
+        },
+
+        // AI策略
+        aiStrategy: {
+            strategy: aiTradingForm.strategy,
+            riskLevel: aiTradingForm.riskLevel
+        },
+
+        // 监控设置
+        monitoring: {
+            priceAlert: aiTradingForm.priceAlert,
+            volumeAlert: aiTradingForm.volumeAlert,
+            newsAlert: aiTradingForm.newsAlert
+        }
+    };
+
+    try {
+        // 扣费
+        userStore.deductBalance(1);
+        ElMessage.success('支付成功，正在设置AI委托交易...');
+
+        // 关闭对话框
+        showAITradingDialog.value = false;
+
+        // 生成AI委托交易报告
+        const message = `【AI委托交易设置完成】已为${selectedStockForAITrading.value.name}(${selectedStockForAITrading.value.code})设置智能委托交易：
+
+🎯 **交易参数**
+• 交易方向：${aiTradingForm.action === 'buy' ? '买入' : '卖出'}
+• 交易数量：${aiTradingForm.quantity}股
+• 委托类型：${aiTradingForm.orderType === 'limit' ? '限价单' : '市价单'}
+• 委托时效：${getTimeInForceText(aiTradingForm.timeInForce)}
+
+🛡️ **风控设置**
+${aiTradingForm.enableStopLoss ? `• 止损：${aiTradingForm.stopLossType === 'percentage' ? aiTradingForm.stopLossPercentage + '%' : '¥' + aiTradingForm.stopLossPrice}` : ''}
+${aiTradingForm.enableTakeProfit ? `• 止盈：${aiTradingForm.takeProfitType === 'percentage' ? aiTradingForm.takeProfitPercentage + '%' : '¥' + aiTradingForm.takeProfitPrice}` : ''}
+${aiTradingForm.enableTrailingStop ? `• 追踪止损：¥${aiTradingForm.trailingStopAmount}` : ''}
+• 最大亏损：¥${aiTradingForm.maxLossAmount}
+• 最大仓位：${aiTradingForm.maxPositionSize}%
+
+🤖 **AI策略**
+• 交易策略：${getStrategyText(aiTradingForm.strategy)}
+• 风险等级：${getRiskLevelText(aiTradingForm.riskLevel)}
+
+📊 **监控预警**
+${aiTradingForm.priceAlert ? '• ✅ 价格预警已启用' : ''}
+${aiTradingForm.volumeAlert ? '• ✅ 成交量预警已启用' : ''}
+${aiTradingForm.newsAlert ? '• ✅ 新闻预警已启用' : ''}
+
+AI将根据您的设置参数，24小时智能监控市场，在最佳时机自动执行交易，并及时发送预警通知。`;
+
+        const res = await mockApi.sendMessage(message);
+        chatHistory.value.push(
+            { role: 'user', content: `AI委托交易设置 ${selectedStockForAITrading.value.name}(${selectedStockForAITrading.value.code})` },
+            {
+                ...res.data,
+                hasStockInfo: true,
+                stockInfo: selectedStockForAITrading.value,
+                isAITradingReport: true,
+                tradingParams: tradingParams
+            }
+        );
+
+        await nextTick();
+        scrollToBottom();
+
+    } catch (error) {
+        ElMessage.error('设置失败，请稍后重试');
+        console.error('AI委托交易设置失败:', error);
+    }
+};
+
+// 获取委托时效文本
+const getTimeInForceText = (timeInForce) => {
+    const timeInForceMap = {
+        'GTC': '好价成交',
+        'DAY': '当日有效',
+        'IOC': '立即成交或取消',
+        'GTD': '指定日期'
+    };
+    return timeInForceMap[timeInForce] || timeInForce;
+};
+
+
 
 // 个性化引导完成处理
 const onOnboardingComplete = (data) => {
@@ -9952,6 +10274,549 @@ body {
     .copyright-content p {
         font-size: 13px;
         padding: 0 16px;
+    }
+}
+
+/* AI委托交易对话框样式 */
+:deep(.ai-trading-dialog) {
+    border-radius: 16px;
+    overflow: hidden;
+}
+
+:deep(.ai-trading-dialog .el-dialog__header) {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    color: white;
+    padding: 24px;
+    border-bottom: none;
+}
+
+:deep(.ai-trading-dialog .el-dialog__title) {
+    color: white;
+    font-size: 20px;
+    font-weight: 600;
+}
+
+:deep(.ai-trading-dialog .el-dialog__headerbtn .el-dialog__close) {
+    color: white;
+    font-size: 20px;
+}
+
+:deep(.ai-trading-dialog .el-dialog__body) {
+    padding: 0;
+    max-height: 65vh;
+    overflow-y: auto;
+}
+
+.ai-trading-content {
+    padding: 20px;
+}
+
+.stock-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 16px;
+    background: linear-gradient(135deg, #f8fafc 0%, #e2e8f0 100%);
+    border-radius: 10px;
+    margin-bottom: 20px;
+    border: 1px solid #e2e8f0;
+}
+
+.stock-info h3 {
+    font-size: 20px;
+    font-weight: 600;
+    color: #1e293b;
+    margin: 0 0 8px 0;
+}
+
+.stock-code {
+    font-size: 14px;
+    color: #64748b;
+    background: white;
+    padding: 4px 12px;
+    border-radius: 6px;
+    margin-right: 12px;
+    border: 1px solid #e2e8f0;
+}
+
+.current-price {
+    font-size: 18px;
+    font-weight: 600;
+    color: #dc2626;
+}
+
+.service-cost {
+    text-align: right;
+}
+
+.cost-label {
+    display: block;
+    font-size: 14px;
+    color: #64748b;
+    margin-bottom: 4px;
+}
+
+.cost-amount {
+    font-size: 24px;
+    font-weight: 700;
+    color: #f59e0b;
+}
+
+.ai-trading-form {
+    margin-top: 0;
+}
+
+.form-section {
+    margin-bottom: 20px;
+    padding: 20px;
+    background: white;
+    border: 1px solid #e2e8f0;
+    border-radius: 12px;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+}
+
+.form-section.compact {
+    margin-bottom: 16px;
+    padding: 16px;
+}
+
+.form-section:last-child {
+    margin-bottom: 0;
+}
+
+.section-title {
+    font-size: 15px;
+    font-weight: 600;
+    color: #1e293b;
+    margin: 0 0 16px 0;
+    padding-bottom: 8px;
+    border-bottom: 2px solid #e2e8f0;
+    position: relative;
+}
+
+.section-title::after {
+    content: '';
+    position: absolute;
+    bottom: -2px;
+    left: 0;
+    width: 30px;
+    height: 2px;
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+}
+
+/* 新的紧凑布局样式 */
+.param-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 16px;
+}
+
+.param-item {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+
+.param-label {
+    font-size: 13px;
+    font-weight: 500;
+    color: #374151;
+    margin-bottom: 4px;
+}
+
+.param-input {
+    width: 100% !important;
+}
+
+/* 切换开关布局 */
+.toggle-grid {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+}
+
+.toggle-item {
+    border: 1px solid #e2e8f0;
+    border-radius: 8px;
+    overflow: hidden;
+}
+
+.toggle-header {
+    padding: 12px 16px;
+    background: #f8fafc;
+    border-bottom: 1px solid #e2e8f0;
+}
+
+.toggle-checkbox {
+    font-weight: 500;
+    color: #374151;
+}
+
+.toggle-content {
+    padding: 12px 16px;
+    background: white;
+}
+
+.inline-controls {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+}
+
+.control-select {
+    width: 120px;
+}
+
+.control-input {
+    width: 100px !important;
+}
+
+.control-unit {
+    font-size: 13px;
+    color: #6b7280;
+    font-weight: 500;
+    min-width: 20px;
+}
+
+/* 高级设置网格 */
+.advanced-grid {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 16px;
+    margin-bottom: 16px;
+}
+
+.advanced-item {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+
+.input-with-unit {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.input-unit {
+    font-size: 13px;
+    color: #6b7280;
+    font-weight: 500;
+    min-width: 20px;
+}
+
+/* 预警设置 */
+.alert-settings {
+    padding-top: 12px;
+    border-top: 1px solid #e2e8f0;
+}
+
+.checkbox-group {
+    display: flex;
+    gap: 20px;
+    margin-top: 8px;
+}
+
+:deep(.checkbox-group .el-checkbox) {
+    margin-right: 0;
+}
+
+:deep(.checkbox-group .el-checkbox__label) {
+    font-size: 13px;
+    color: #374151;
+}
+
+
+
+:deep(.ai-trading-form .el-form-item__label) {
+    font-weight: 500;
+    color: #374151;
+    font-size: 14px;
+}
+
+:deep(.ai-trading-form .el-input__wrapper) {
+    border-radius: 8px;
+    box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
+    border: 1px solid #d1d5db;
+}
+
+:deep(.ai-trading-form .el-input__wrapper:hover) {
+    border-color: #9ca3af;
+}
+
+:deep(.ai-trading-form .el-input__wrapper.is-focus) {
+    border-color: #667eea;
+    box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+}
+
+:deep(.ai-trading-form .el-select .el-input__wrapper) {
+    border-radius: 8px;
+}
+
+:deep(.ai-trading-form .el-input-number) {
+    width: 100%;
+}
+
+/* 简化表单样式 */
+.ai-trading-form.simple {
+    margin-top: 0;
+}
+
+.simple-grid {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 16px;
+}
+
+/* 风控设置样式 */
+.risk-controls {
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+}
+
+.risk-item {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 12px 16px;
+    background: #f8fafc;
+    border: 1px solid #e2e8f0;
+    border-radius: 8px;
+}
+
+.risk-checkbox {
+    font-weight: 500;
+    color: #374151;
+}
+
+.risk-input {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.risk-number {
+    width: 80px !important;
+}
+
+.risk-unit {
+    font-size: 13px;
+    color: #6b7280;
+    font-weight: 500;
+    min-width: 16px;
+}
+
+/* AI策略预览 */
+.strategy-preview {
+    margin-top: 16px;
+    padding: 12px 16px;
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    border-radius: 8px;
+    color: white;
+}
+
+.strategy-info {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin-bottom: 8px;
+}
+
+.strategy-label {
+    font-size: 13px;
+    font-weight: 500;
+    opacity: 0.9;
+}
+
+.strategy-value {
+    font-weight: 600;
+    font-size: 14px;
+}
+
+.strategy-risk {
+    font-size: 12px;
+    opacity: 0.8;
+}
+
+.strategy-desc {
+    font-size: 12px;
+    opacity: 0.9;
+    line-height: 1.4;
+}
+
+/* 高级设置简化版 */
+.advanced-simple {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+}
+
+.advanced-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 8px 0;
+}
+
+.param-input-small {
+    width: 140px !important;
+}
+
+.input-with-unit-small {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+/* 高级设置切换 */
+.advanced-toggle {
+    text-align: center;
+    padding: 12px 0;
+    border-top: 1px solid #e2e8f0;
+    margin-top: 16px;
+}
+
+:deep(.advanced-toggle .el-button) {
+    color: #667eea;
+    font-size: 13px;
+}
+
+:deep(.advanced-toggle .el-button:hover) {
+    color: #5a67d8;
+}
+
+:deep(.ai-trading-form .el-input-number .el-input__wrapper) {
+    border-radius: 8px;
+    padding-right: 50px;
+    /* 为右侧控制按钮留出空间 */
+}
+
+:deep(.ai-trading-form .el-input-number .el-input-number__increase),
+:deep(.ai-trading-form .el-input-number .el-input-number__decrease) {
+    border-radius: 4px;
+    background: #f8fafc;
+    border: 1px solid #e2e8f0;
+}
+
+:deep(.ai-trading-form .el-input-number .el-input-number__increase:hover),
+:deep(.ai-trading-form .el-input-number .el-input-number__decrease:hover) {
+    background: #f1f5f9;
+    border-color: #cbd5e1;
+}
+
+/* 紧凑布局的数字输入框 */
+:deep(.param-input.el-input-number) {
+    width: 100% !important;
+}
+
+:deep(.control-input.el-input-number) {
+    width: 100px !important;
+}
+
+:deep(.control-input .el-input__wrapper) {
+    padding-right: 40px !important;
+}
+
+.unit {
+    margin-left: 8px;
+    font-size: 14px;
+    color: #6b7280;
+    font-weight: 500;
+}
+
+:deep(.ai-trading-dialog .el-dialog__footer) {
+    padding: 20px 24px;
+    background: #f8fafc;
+    border-top: 1px solid #e2e8f0;
+}
+
+:deep(.ai-trading-dialog .el-button) {
+    padding: 12px 24px;
+    border-radius: 8px;
+    font-weight: 500;
+}
+
+:deep(.ai-trading-dialog .el-button--primary) {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    border: none;
+    color: white;
+}
+
+:deep(.ai-trading-dialog .el-button--primary:hover) {
+    background: linear-gradient(135deg, #5a67d8 0%, #6b46c1 100%);
+    transform: translateY(-1px);
+    box-shadow: 0 4px 12px rgba(102, 126, 234, 0.3);
+}
+
+/* 响应式设计 */
+@media (max-width: 768px) {
+    .stock-header {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 16px;
+    }
+
+    .service-cost {
+        text-align: left;
+        width: 100%;
+        padding-top: 16px;
+        border-top: 1px solid #e2e8f0;
+    }
+
+    .form-section {
+        padding: 12px;
+        margin-bottom: 12px;
+    }
+
+    .ai-trading-content {
+        padding: 12px;
+    }
+
+    /* 移动端网格布局调整 */
+    .param-grid {
+        grid-template-columns: 1fr;
+        gap: 12px;
+    }
+
+    .advanced-grid {
+        grid-template-columns: 1fr;
+        gap: 12px;
+    }
+
+    .checkbox-group {
+        flex-direction: column;
+        gap: 12px;
+    }
+
+    .inline-controls {
+        flex-wrap: wrap;
+        gap: 8px;
+    }
+
+    .control-select {
+        width: 100px;
+    }
+
+    .control-input {
+        width: 80px !important;
+    }
+
+    :deep(.ai-trading-dialog) {
+        width: 95% !important;
+        margin: 0 !important;
+    }
+
+    :deep(.ai-trading-dialog .el-dialog__body) {
+        max-height: 65vh;
+    }
+
+    :deep(.ai-trading-dialog .el-dialog__header) {
+        padding: 16px;
+    }
+
+    .stock-header {
+        margin-bottom: 16px;
     }
 }
 </style>

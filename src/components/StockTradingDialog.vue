@@ -802,7 +802,7 @@ watch(visible, (newVisible) => {
 .close-btn:hover {
     background: rgba(255, 255, 255, 0.25) !important;
     border-color: rgba(255, 255, 255, 0.4) !important;
-    transform: scale(1.1) rotate(90deg);
+    transform: scale(1.1);
     box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
 }
 

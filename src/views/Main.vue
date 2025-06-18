@@ -216,13 +216,13 @@
                                         <div class="asset-amount">
                                             <span class="amount-label">总资产</span>
                                             <span class="amount-value">¥{{ formatCurrency(message.assetData.totalAssets)
-                                            }}</span>
+                                                }}</span>
                                         </div>
                                         <div class="asset-change"
                                             :class="[message.assetData.totalProfitPercent >= 0 ? 'profit' : 'loss']">
                                             <span class="change-icon">{{ message.assetData.totalProfitPercent >= 0 ?
                                                 '📈' : '📉'
-                                            }}</span>
+                                                }}</span>
                                             <span class="change-label">今日盈亏：</span>
                                             <span class="change-text">
                                                 {{ message.assetData.totalProfitPercent >= 0 ? '+' : '' }}¥{{
@@ -248,7 +248,7 @@
                                         <div class="stat-info">
                                             <div class="stat-label">持仓市值</div>
                                             <div class="stat-value">¥{{ formatCurrency(message.assetData.portfolioValue)
-                                            }}
+                                                }}
                                             </div>
                                         </div>
                                     </div>
@@ -309,7 +309,7 @@
                                                         <div class="stock-price-change">
                                                             <span class="current-price">¥{{
                                                                 position.currentPrice.toFixed(2)
-                                                            }}</span>
+                                                                }}</span>
                                                             <span
                                                                 :class="['price-change', position.profitPercent >= 0 ? 'positive' : 'negative']">
                                                                 {{ position.profitPercent >= 0 ? '+' : '' }}¥{{
@@ -323,10 +323,10 @@
                                                             <span class="detail-label">持仓数量：</span>
                                                             <span class="detail-value">{{
                                                                 position.quantity.toLocaleString()
-                                                            }}股</span>
+                                                                }}股</span>
                                                             <span class="detail-label">成本价：</span>
                                                             <span class="detail-value">¥{{ position.avgPrice.toFixed(2)
-                                                            }}</span>
+                                                                }}</span>
                                                         </div>
                                                         <div class="detail-row">
                                                             <span class="detail-label">持仓市值：</span>
@@ -335,7 +335,7 @@
                                                             <span class="detail-label">所属行业：</span>
                                                             <span class="detail-value industry">{{ position.industry ||
                                                                 '未分类'
-                                                            }}</span>
+                                                                }}</span>
                                                         </div>
                                                     </div>
                                                 </div>
@@ -516,7 +516,7 @@
                             <div v-if="message.isPersistent" class="recommendation-toolbar">
                                 <div class="toolbar-left">
                                     <span class="recommendation-time">{{ formatRecommendationTime(message.timestamp)
-                                    }}</span>
+                                        }}</span>
                                 </div>
                                 <div class="toolbar-right">
                                     <el-button size="small" text @click="refreshRecommendation(message)"
@@ -799,7 +799,7 @@
         <UserProfile v-if="showUserProfile" @close="closeUserProfile" />
 
         <!-- 版权信息 -->
-        <div class="copyright-footer">
+        <div class="copyright-footer" v-show="!isChatMode || isMobileView">
             <div class="copyright-content">
                 <p>&copy; 2024 上海九方云智能科技有限公司 版权所有</p>
             </div>
@@ -1574,6 +1574,24 @@ const toggleChatShortcuts = () => {
         activeShortcuts: activeShortcuts.value.length,
         isMobileView: isMobileView.value
     });
+
+    // PC端动态调整聊天历史区域高度
+    if (!isMobileView.value) {
+        updateChatHistoryHeight();
+    }
+};
+
+// 更新聊天历史区域高度
+const updateChatHistoryHeight = () => {
+    const baseInputHeight = 200; // 基础输入区域高度
+    const shortcutsHeight = 80; // 快捷操作区域高度
+
+    const totalInputHeight = showChatShortcuts.value
+        ? baseInputHeight + shortcutsHeight
+        : baseInputHeight;
+
+    // 设置CSS变量
+    document.documentElement.style.setProperty('--input-area-height', `${totalInputHeight}px`);
 };
 
 // 检测移动端视图
@@ -2227,6 +2245,12 @@ const checkUserStatus = () => {
     }
 };
 
+// 窗口大小变化处理函数
+const handleResize = () => {
+    checkMobileView();
+    updateChatHistoryHeight();
+};
+
 onMounted(() => {
     scrollToBottom();
     checkUserStatus();
@@ -2234,8 +2258,11 @@ onMounted(() => {
     // 检测移动端视图
     checkMobileView();
 
+    // 初始化聊天历史区域高度
+    updateChatHistoryHeight();
+
     // 添加窗口大小变化监听
-    window.addEventListener('resize', checkMobileView);
+    window.addEventListener('resize', handleResize);
 
     // 添加滚动事件监听
     nextTick(() => {
@@ -2258,7 +2285,7 @@ onUnmounted(() => {
         clearInterval(countdownTimer);
     }
     // 清理窗口大小监听
-    window.removeEventListener('resize', checkMobileView);
+    window.removeEventListener('resize', handleResize);
 });
 
 const closeUserProfile = () => {
@@ -2673,7 +2700,8 @@ body.onboarding-mode {
     align-items: center;
     justify-content: center;
     padding: 56px 32px 0 32px;
-    max-width: 800px;
+    max-width: 900px;
+    /* 调整为与AI卡片一致的最大宽度，确保聊天消息区域与输入框宽度完全对齐 */
     margin: 0 auto;
     width: 100vw;
     box-sizing: border-box;
@@ -2992,14 +3020,16 @@ body.onboarding-mode {
     max-width: 900px;
     margin: 0 auto;
     padding: 20px 0;
+    /* 移除左右padding，让聊天历史区域的视觉边界与AI卡片的边界完全一致 */
     overflow-y: auto;
-    height: calc(100vh - 56px - 200px);
-    /* 页面高度 - 导航栏高度 - 输入区域高度(减少到200px) */
+    height: calc(100vh - 56px - var(--input-area-height, 200px));
+    /* 页面高度 - 导航栏高度 - 输入区域高度(动态调整) */
     scrollbar-width: thin;
     /* Firefox */
     scrollbar-color: transparent transparent;
     /* Firefox */
-    transition: scrollbar-color 0.3s ease;
+    transition: scrollbar-color 0.3s ease, height 0.3s ease;
+    /* 添加高度变化的过渡动画 */
 }
 
 .chat-history-area:hover {
@@ -3053,6 +3083,8 @@ body.onboarding-mode {
 .chat-message {
     display: flex;
     margin-bottom: 24px;
+    padding: 0 20px;
+    /* 添加左右间距，与AI卡片的内边距保持一致，确保消息内容不贴边 */
 }
 
 .chat-message.user .chat-message-content {
@@ -3061,7 +3093,8 @@ body.onboarding-mode {
     border-radius: 18px 18px 4px 18px;
     padding: 14px 20px;
     margin-left: auto;
-    max-width: 75%;
+    max-width: 95%;
+    /* PC端聊天消息占用更多宽度，保留必要间隔 */
     font-size: 1rem;
     line-height: 1.5;
 }
@@ -3072,7 +3105,8 @@ body.onboarding-mode {
     border-radius: 18px 18px 18px 4px;
     padding: 14px 20px;
     margin-right: auto;
-    max-width: 75%;
+    max-width: 95%;
+    /* PC端聊天消息占用更多宽度，保留必要间隔 */
     font-size: 1rem;
     line-height: 1.5;
 }
@@ -4237,8 +4271,8 @@ body.onboarding-mode {
 
 .chat-actions {
     display: flex !important;
-    gap: 8px;
-    /* 减少按钮间距 */
+    gap: 6px;
+    /* 进一步减少按钮间距 */
     align-items: center !important;
     flex-wrap: nowrap !important;
     /* 强制在一行显示，不允许换行 */
@@ -4248,28 +4282,30 @@ body.onboarding-mode {
 }
 
 .new-chat-btn {
-    border-radius: 16px;
-    /* 减少圆角 */
+    border-radius: 12px;
+    /* 进一步减少圆角，更紧凑 */
     background: #f5f7fa;
     color: #18181b;
     font-weight: 500;
     border: 1px solid #e0e0e0;
     box-shadow: none;
-    padding: 6px 16px;
-    /* 减少padding */
+    padding: 4px 12px;
+    /* 进一步减少padding，让按钮更紧凑 */
     transition: all 0.2s;
     display: flex !important;
     align-items: center !important;
-    gap: 6px;
-    /* 减少图标间距 */
-    font-size: 0.875rem;
-    /* 减小字体 */
-    height: 32px;
-    /* 固定高度 */
+    gap: 4px;
+    /* 进一步减少图标间距 */
+    font-size: 0.8rem;
+    /* 进一步减小字体 */
+    height: 28px;
+    /* 减小固定高度 */
     white-space: nowrap !important;
     /* 防止文字换行 */
     flex-shrink: 0 !important;
     /* 防止按钮被压缩 */
+    min-width: auto !important;
+    /* 允许按钮根据内容自适应宽度 */
 }
 
 .new-chat-btn:hover {
@@ -4278,28 +4314,30 @@ body.onboarding-mode {
 }
 
 .goto-recommendation-btn {
-    border-radius: 16px;
-    /* 减少圆角 */
+    border-radius: 12px;
+    /* 进一步减少圆角，更紧凑 */
     background: #fef3c7;
     color: #92400e;
     font-weight: 500;
     border: 1px solid #fbbf24;
     box-shadow: none;
-    padding: 6px 16px;
-    /* 减少padding */
+    padding: 4px 12px;
+    /* 进一步减少padding，让按钮更紧凑 */
     transition: all 0.2s;
     display: flex !important;
     align-items: center !important;
-    gap: 6px;
-    /* 减少图标间距 */
-    font-size: 0.875rem;
-    /* 减小字体 */
-    height: 32px;
-    /* 固定高度 */
+    gap: 4px;
+    /* 进一步减少图标间距 */
+    font-size: 0.8rem;
+    /* 进一步减小字体 */
+    height: 28px;
+    /* 减小固定高度 */
     white-space: nowrap !important;
     /* 防止文字换行 */
     flex-shrink: 0 !important;
     /* 防止按钮被压缩 */
+    min-width: auto !important;
+    /* 允许按钮根据内容自适应宽度 */
 }
 
 .goto-recommendation-btn:hover {
@@ -5114,14 +5152,14 @@ body.onboarding-mode {
 }
 
 .chat-actions {
-    flex-direction: column;
+    flex-direction: row;
     gap: 8px;
 }
 
 .new-chat-btn,
 .goto-recommendation-btn {
     width: 100%;
-    max-width: 200px;
+    max-width: 100px;
 }
 
 .dialog-footer {
@@ -7123,7 +7161,7 @@ body {
 .close-btn:hover {
     background: rgba(255, 255, 255, 0.25) !important;
     border-color: rgba(255, 255, 255, 0.4) !important;
-    transform: scale(1.1) rotate(90deg);
+    transform: scale(1.1);
     box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
 }
 

@@ -1,5 +1,5 @@
 <template>
-    <div class="main-modern" :class="{ 'onboarding-active': showOnboarding }">
+    <div class="main-modern" :class="{ 'onboarding-active': showOnboarding, 'with-chat-history': showChatHistory }">
         <!-- 顶部导航栏 -->
         <header class="modern-navbar">
             <div class="navbar-left">
@@ -238,13 +238,13 @@
                                         <div class="asset-amount">
                                             <span class="amount-label">总资产</span>
                                             <span class="amount-value">¥{{ formatCurrency(message.assetData.totalAssets)
-                                                }}</span>
+                                            }}</span>
                                         </div>
                                         <div class="asset-change"
                                             :class="[message.assetData.totalProfitPercent >= 0 ? 'profit' : 'loss']">
                                             <span class="change-icon">{{ message.assetData.totalProfitPercent >= 0 ?
                                                 '📈' : '📉'
-                                                }}</span>
+                                            }}</span>
                                             <span class="change-label">今日盈亏：</span>
                                             <span class="change-text">
                                                 {{ message.assetData.totalProfitPercent >= 0 ? '+' : '' }}¥{{
@@ -270,7 +270,7 @@
                                         <div class="stat-info">
                                             <div class="stat-label">持仓市值</div>
                                             <div class="stat-value">¥{{ formatCurrency(message.assetData.portfolioValue)
-                                                }}
+                                            }}
                                             </div>
                                         </div>
                                     </div>
@@ -331,7 +331,7 @@
                                                         <div class="stock-price-change">
                                                             <span class="current-price">¥{{
                                                                 position.currentPrice.toFixed(2)
-                                                                }}</span>
+                                                            }}</span>
                                                             <span
                                                                 :class="['price-change', position.profitPercent >= 0 ? 'positive' : 'negative']">
                                                                 {{ position.profitPercent >= 0 ? '+' : '' }}¥{{
@@ -345,10 +345,10 @@
                                                             <span class="detail-label">持仓数量：</span>
                                                             <span class="detail-value">{{
                                                                 position.quantity.toLocaleString()
-                                                                }}股</span>
+                                                            }}股</span>
                                                             <span class="detail-label">成本价：</span>
                                                             <span class="detail-value">¥{{ position.avgPrice.toFixed(2)
-                                                                }}</span>
+                                                            }}</span>
                                                         </div>
                                                         <div class="detail-row">
                                                             <span class="detail-label">持仓市值：</span>
@@ -357,7 +357,7 @@
                                                             <span class="detail-label">所属行业：</span>
                                                             <span class="detail-value industry">{{ position.industry ||
                                                                 '未分类'
-                                                                }}</span>
+                                                            }}</span>
                                                         </div>
                                                     </div>
                                                 </div>
@@ -538,7 +538,7 @@
                             <div v-if="message.isPersistent" class="recommendation-toolbar">
                                 <div class="toolbar-left">
                                     <span class="recommendation-time">{{ formatRecommendationTime(message.timestamp)
-                                        }}</span>
+                                    }}</span>
                                 </div>
                                 <div class="toolbar-right">
                                     <el-button size="small" text @click="refreshRecommendation(message)"
@@ -664,6 +664,90 @@
                     </div>
                 </div>
             </div>
+
+            <!-- 底部输入区域（仅在聊天状态显示） -->
+            <div class="input-area" v-if="isChatMode">
+                <!-- 新聊天按钮和快捷操作 -->
+                <div class="new-chat-section" v-if="chatHistory.length > 0">
+                    <div class="chat-actions">
+                        <el-button class="new-chat-btn" @click="createNewChat">
+                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none">
+                                <path d="M12 5v14m-7-7h14" stroke="currentColor" stroke-width="2" stroke-linecap="round"
+                                    stroke-linejoin="round" />
+                            </svg>
+                            新建聊天
+                        </el-button>
+
+                        <!-- 快速跳转到荐股列表 -->
+                        <el-button v-if="hasRecommendationInHistory" class="goto-recommendation-btn"
+                            @click="scrollToRecommendation">
+                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none">
+                                <path d="M3 3v18h18M7 16l4-4 4 4 4-4" stroke="currentColor" stroke-width="2"
+                                    fill="none" />
+                            </svg>
+                            查看荐股
+                        </el-button>
+                    </div>
+                </div>
+
+                <!-- PC端快捷操作栏（聊天模式下显示在输入框上方） -->
+                <div class="chat-shortcuts pc-shortcuts" v-if="showChatShortcuts && !isMobileView">
+                    <div class="shortcuts-grid">
+                        <el-button v-for="shortcut in activeShortcuts" :key="shortcut.id" class="chat-shortcut-btn"
+                            @click="handleShortcutClick(shortcut)">
+                            <span class="btn-icon">{{ shortcut.icon }}</span>
+                            <span class="btn-text">{{ shortcut.shortTitle || shortcut.title }}</span>
+                        </el-button>
+                        <el-button class="chat-shortcut-btn customize-btn-chat" @click="openCustomizeDialog">
+                            <span class="btn-icon">⚙️</span>
+                            <span class="btn-text">设置</span>
+                        </el-button>
+                        <el-button class="chat-shortcut-btn close-btn" @click="toggleChatShortcuts">
+                            <span class="btn-icon">✕</span>
+                            <span class="btn-text">收起</span>
+                        </el-button>
+                    </div>
+                </div>
+
+                <div class="ai-card">
+                    <!-- 输入框区域 -->
+                    <div class="ai-input-row">
+                        <el-input v-model="inputMessage" class="ai-input" type="textarea"
+                            :autosize="{ minRows: 2, maxRows: 6 }" placeholder="如：分析比亚迪近期走势及投资价值，考虑新能源政策影响..."
+                            @keyup.enter.ctrl="sendMessage" clearable maxlength="500" show-word-limit />
+                    </div>
+
+                    <!-- 按钮区域 -->
+                    <div class="ai-buttons-row">
+                        <div class="ai-buttons">
+                            <el-button class="ai-func-btn" circle @click="onVoiceClick">
+                                <svg width="16" height="16" viewBox="0 0 24 24" fill="none">
+                                    <path d="M12 1a3 3 0 0 0-3 3v8a3 3 0 0 0 6 0V4a3 3 0 0 0-3-3z" stroke="#888"
+                                        stroke-width="2" fill="none" />
+                                    <path d="M19 10v2a7 7 0 0 1-14 0v-2" stroke="#888" stroke-width="2" fill="none" />
+                                    <line x1="12" y1="19" x2="12" y2="23" stroke="#888" stroke-width="2" />
+                                    <line x1="8" y1="23" x2="16" y2="23" stroke="#888" stroke-width="2" />
+                                </svg>
+                            </el-button>
+                            <el-button class="ai-func-btn shortcuts-toggle-btn" circle @click="toggleChatShortcuts"
+                                v-if="!showChatShortcuts && userStore.isLoggedIn">
+                                <svg width="16" height="16" viewBox="0 0 24 24" fill="none">
+                                    <path d="M12 5v14m-7-7h14" stroke="#888" stroke-width="2" stroke-linecap="round"
+                                        stroke-linejoin="round" />
+                                </svg>
+                            </el-button>
+                            <el-button class="ai-send-btn" type="primary" circle @click="sendMessage"
+                                :disabled="!inputMessage.trim()">
+                                <svg width="16" height="16" viewBox="0 0 24 24" fill="none">
+                                    <line x1="22" y1="2" x2="11" y2="13" stroke="white" stroke-width="2" />
+                                    <polygon points="22,2 15,22 11,13 2,9 22,2" stroke="white" stroke-width="2"
+                                        fill="white" />
+                                </svg>
+                            </el-button>
+                        </div>
+                    </div>
+                </div>
+            </div>
         </main>
 
         <!-- 侧边栏（仅在登录后显示） -->
@@ -690,89 +774,6 @@
                     <el-button class="action-btn close-btn" @click="toggleChatShortcuts">
                         收起
                     </el-button>
-                </div>
-            </div>
-        </div>
-
-        <!-- 底部输入区域（仅在聊天状态显示） -->
-        <div class="input-area" v-if="isChatMode">
-            <!-- 新聊天按钮和快捷操作 -->
-            <div class="new-chat-section" v-if="chatHistory.length > 0">
-                <div class="chat-actions">
-                    <el-button class="new-chat-btn" @click="createNewChat">
-                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none">
-                            <path d="M12 5v14m-7-7h14" stroke="currentColor" stroke-width="2" stroke-linecap="round"
-                                stroke-linejoin="round" />
-                        </svg>
-                        新建聊天
-                    </el-button>
-
-                    <!-- 快速跳转到荐股列表 -->
-                    <el-button v-if="hasRecommendationInHistory" class="goto-recommendation-btn"
-                        @click="scrollToRecommendation">
-                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none">
-                            <path d="M3 3v18h18M7 16l4-4 4 4 4-4" stroke="currentColor" stroke-width="2" fill="none" />
-                        </svg>
-                        查看荐股
-                    </el-button>
-                </div>
-            </div>
-
-            <!-- PC端快捷操作栏（聊天模式下显示在输入框上方） -->
-            <div class="chat-shortcuts pc-shortcuts" v-if="showChatShortcuts && !isMobileView">
-                <div class="shortcuts-grid">
-                    <el-button v-for="shortcut in activeShortcuts" :key="shortcut.id" class="chat-shortcut-btn"
-                        @click="handleShortcutClick(shortcut)">
-                        <span class="btn-icon">{{ shortcut.icon }}</span>
-                        <span class="btn-text">{{ shortcut.shortTitle || shortcut.title }}</span>
-                    </el-button>
-                    <el-button class="chat-shortcut-btn customize-btn-chat" @click="openCustomizeDialog">
-                        <span class="btn-icon">⚙️</span>
-                        <span class="btn-text">设置</span>
-                    </el-button>
-                    <el-button class="chat-shortcut-btn close-btn" @click="toggleChatShortcuts">
-                        <span class="btn-icon">✕</span>
-                        <span class="btn-text">收起</span>
-                    </el-button>
-                </div>
-            </div>
-
-            <div class="ai-card">
-                <!-- 输入框区域 -->
-                <div class="ai-input-row">
-                    <el-input v-model="inputMessage" class="ai-input" type="textarea"
-                        :autosize="{ minRows: 2, maxRows: 6 }" placeholder="如：分析比亚迪近期走势及投资价值，考虑新能源政策影响..."
-                        @keyup.enter.ctrl="sendMessage" clearable maxlength="500" show-word-limit />
-                </div>
-
-                <!-- 按钮区域 -->
-                <div class="ai-buttons-row">
-                    <div class="ai-buttons">
-                        <el-button class="ai-func-btn" circle @click="onVoiceClick">
-                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none">
-                                <path d="M12 1a3 3 0 0 0-3 3v8a3 3 0 0 0 6 0V4a3 3 0 0 0-3-3z" stroke="#888"
-                                    stroke-width="2" fill="none" />
-                                <path d="M19 10v2a7 7 0 0 1-14 0v-2" stroke="#888" stroke-width="2" fill="none" />
-                                <line x1="12" y1="19" x2="12" y2="23" stroke="#888" stroke-width="2" />
-                                <line x1="8" y1="23" x2="16" y2="23" stroke="#888" stroke-width="2" />
-                            </svg>
-                        </el-button>
-                        <el-button class="ai-func-btn shortcuts-toggle-btn" circle @click="toggleChatShortcuts"
-                            v-if="!showChatShortcuts && userStore.isLoggedIn">
-                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none">
-                                <path d="M12 5v14m-7-7h14" stroke="#888" stroke-width="2" stroke-linecap="round"
-                                    stroke-linejoin="round" />
-                            </svg>
-                        </el-button>
-                        <el-button class="ai-send-btn" type="primary" circle @click="sendMessage"
-                            :disabled="!inputMessage.trim()">
-                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none">
-                                <line x1="22" y1="2" x2="11" y2="13" stroke="white" stroke-width="2" />
-                                <polygon points="22,2 15,22 11,13 2,9 22,2" stroke="white" stroke-width="2"
-                                    fill="white" />
-                            </svg>
-                        </el-button>
-                    </div>
                 </div>
             </div>
         </div>
@@ -811,7 +812,8 @@
                     <p>{{ guideMessage }}</p>
                 </div>
                 <div class="guide-actions">
-                    <el-button type="primary" size="small" @click="handleGuideAction">{{ guideActionText }}</el-button>
+                    <el-button type="primary" size="small" @click="handleGuideAction">{{ guideActionText
+                        }}</el-button>
                     <el-button size="small" @click="dismissGuide">稍后</el-button>
                 </div>
             </div>
@@ -4412,6 +4414,8 @@ body.onboarding-mode {
     transition: all 0.3s;
     /* 完全无背景无边框设计 */
 }
+
+
 
 /* 移除输入区域的right限制，让它保持全宽 */
 

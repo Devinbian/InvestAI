@@ -1,6 +1,6 @@
 <template>
-    <el-dialog v-model="visible" :show-close="false" :close-on-click-modal="false" :lock-scroll="false" width="720px"
-        class="auth-dialog">
+    <el-dialog v-model="visible" :show-close="false" :close-on-click-modal="false" :lock-scroll="false"
+        :width="dialogWidth" class="auth-dialog">
         <template #header>
             <div></div>
         </template>
@@ -52,11 +52,11 @@
                 <div class="third-party-login">
                     <el-button class="wechat-login-btn" @click="handleWechatLogin" :loading="wechatLoginLoading">
                         <div class="wechat-icon">
-                            <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor">
+                            <svg width="20" height="20" viewBox="0 0 1024 1024" fill="currentColor">
                                 <path
-                                    d="M8.691 2.188C3.891 2.188 0 5.476 0 9.53c0 2.212 1.17 4.203 3.002 5.55a.59.59 0 0 1 .213.665l-.39 1.48c-.019.07-.048.141-.048.213 0 .163.13.295.29.295a.326.326 0 0 0 .167-.054l1.903-1.114a.864.864 0 0 1 .717-.098 10.16 10.16 0 0 0 2.837.403c.276 0 .543-.027.811-.05-.857-2.578.157-4.972 1.932-6.446 1.703-1.415 4.882-1.900 7.6.5.5-3.187-2.75-6.876-8.372-6.876zm-3.488 5.69c-.865 0-1.566-.701-1.566-1.565 0-.865.701-1.566 1.566-1.566.865 0 1.565.701 1.565 1.566 0 .864-.7 1.565-1.565 1.565zm5.194 0c-.865 0-1.566-.701-1.566-1.565 0-.865.701-1.566 1.566-1.566.865 0 1.565.701 1.565 1.566 0 .864-.7 1.565-1.565 1.565z" />
+                                    d="M690.1 377.4c5.9 0 11.8 0.2 17.6 0.5-15.8-73.3-102.2-127.9-204.1-127.9-114.9 0-208.7 77.3-208.7 172.5 0 55.4 30.2 100.8 80.7 136.1l-20.2 60.5 70.4-35.2c25.1 5 45.2 10.1 70.4 10.1 6.5 0 13-0.3 19.4-0.8-4.1-14.1-6.4-28.9-6.4-44.2 0-88.8 75.1-160.6 180.9-160.6z m-114.3-41.9c15.1 0 25.1 10.1 25.1 25.1 0 15-10.1 25.1-25.1 25.1-15.1 0-30.2-10.1-30.2-25.1 0-15 15.1-25.1 30.2-25.1z m-125.7 50.2c-15.1 0-30.2-10.1-30.2-25.1 0-15 15.1-25.1 30.2-25.1 15 0 25.1 10.1 25.1 25.1 0 15-10.1 25.1-25.1 25.1z" />
                                 <path
-                                    d="M15.293 9.025c-.328 0-.66.018-.99.057-.931.110-1.831.402-2.65.859-2.301 1.283-3.677 3.449-3.677 5.303 0 3.765 3.186 6.822 7.094 6.822.402 0 .805-.027 1.201-.08a.805.805 0 0 1 .68.097l1.77 1.034c.027.016.06.025.094.025.12 0 .215-.097.215-.215 0-.054-.022-.105-.035-.158l-.365-1.378a.548.548 0 0 1 .198-.62c1.7-1.251 2.765-3.047 2.765-5.125 0-3.765-3.186-6.821-7.094-6.821h-.206zm-2.43 4.565c-.865 0-1.565-.7-1.565-1.565s.7-1.565 1.565-1.565 1.565.7 1.565 1.565-.7 1.565-1.565 1.565zm4.565 0c-.865 0-1.565-.7-1.565-1.565s.7-1.565 1.565-1.565 1.565.7 1.565 1.565-.7 1.565-1.565 1.565z" />
+                                    d="M866.7 579.1c0-75.1-75.1-135.1-165.5-135.1-95.5 0-165.5 60-165.5 135.1 0 75.1 70 135.1 165.5 135.1 20.1 0 40.2-5 60.3-10.1l55.3 30.2-15.1-50.2c35.2-25.1 65.5-60.3 65.5-105z m-220.7-25.1c-10.1 0-20.1-10.1-20.1-20.1 0-10.1 10.1-20.1 20.1-20.1 10.1 0 20.1 10.1 20.1 20.1 0 10.1-10.1 20.1-20.1 20.1z m110.4 0c-10.1 0-20.1-10.1-20.1-20.1 0-10.1 10.1-20.1 20.1-20.1 10.1 0 20.1 10.1 20.1 20.1 0 10.1-10.1 20.1-20.1 20.1z" />
                             </svg>
                         </div>
                         <span>微信登录</span>
@@ -115,6 +115,18 @@ const loginFormRef = ref(null);
 const loginLoading = ref(false);
 const wechatLoginLoading = ref(false);
 const isRegisterMode = ref(props.registerMode);
+
+// 响应式对话框宽度
+const dialogWidth = computed(() => {
+    if (typeof window !== 'undefined') {
+        const width = window.innerWidth;
+        if (width < 480) return '95%';
+        if (width < 768) return '90%';
+        if (width < 1024) return '600px';
+        return '720px';
+    }
+    return '720px';
+});
 
 // 响应式数据
 const loginForm = reactive({
@@ -552,5 +564,245 @@ watch(() => props.registerMode, (newVal) => {
     background: transparent;
     text-decoration: underline;
     text-underline-offset: 2px;
+}
+
+/* 响应式布局 */
+/* 平板端适配 (768px - 1024px) */
+@media (max-width: 1024px) {
+    .auth-container {
+        padding: 24px 32px;
+        gap: 32px;
+        min-height: 350px;
+    }
+
+    .auth-logo-section {
+        padding-right: 16px;
+    }
+
+    .logo-image {
+        width: 60px;
+        height: 60px;
+    }
+
+    .auth-main-title {
+        font-size: 1.5rem;
+    }
+
+    .auth-main-subtitle {
+        font-size: 0.9rem;
+    }
+
+    .auth-form-wrapper {
+        padding-left: 16px;
+    }
+}
+
+/* 手机端适配 (小于768px) */
+@media (max-width: 768px) {
+    :deep(.auth-dialog) {
+        margin: 0 !important;
+        border-radius: 12px !important;
+    }
+
+    .auth-container {
+        flex-direction: column;
+        padding: 20px 20px;
+        gap: 16px;
+        min-height: auto;
+        text-align: center;
+    }
+
+    .auth-logo-section {
+        padding-right: 0;
+        margin-bottom: 0;
+    }
+
+    .logo-image {
+        width: 50px;
+        height: 50px;
+    }
+
+    .auth-main-title {
+        font-size: 1.25rem;
+        margin-bottom: 4px;
+    }
+
+    .auth-main-subtitle {
+        font-size: 0.8rem;
+        margin-bottom: 0;
+    }
+
+    .auth-form-wrapper {
+        max-width: 100%;
+        padding-left: 0;
+        border-left: none;
+        border-top: 1px solid #f3f4f6;
+        padding-top: 16px;
+    }
+
+    .auth-form-item {
+        margin-bottom: 12px;
+    }
+
+    :deep(.auth-input .el-input__wrapper) {
+        height: 48px !important;
+    }
+
+    .auth-submit-btn {
+        height: 48px;
+        font-size: 1.05rem;
+        margin-bottom: 16px;
+    }
+
+    .wechat-login-btn {
+        height: 48px;
+        font-size: 1.05rem;
+    }
+
+    .auth-divider {
+        margin: 16px 0;
+    }
+
+    .auth-mode-switch {
+        margin-bottom: 12px;
+    }
+
+    .auth-footer {
+        padding-top: 12px;
+        margin-top: 12px;
+    }
+}
+
+/* 超小屏幕适配 (小于480px) */
+@media (max-width: 480px) {
+    .auth-container {
+        padding: 16px 16px;
+        gap: 12px;
+    }
+
+    .logo-image {
+        width: 45px;
+        height: 45px;
+    }
+
+    .auth-main-title {
+        font-size: 1.125rem;
+    }
+
+    .auth-main-subtitle {
+        font-size: 0.75rem;
+    }
+
+    .auth-form-wrapper {
+        padding-top: 12px;
+    }
+
+    .auth-form-item {
+        margin-bottom: 10px;
+    }
+
+    :deep(.auth-input .el-input__wrapper) {
+        height: 44px !important;
+        padding: 0 12px !important;
+    }
+
+    .auth-submit-btn {
+        height: 44px;
+        font-size: 1rem;
+        margin-bottom: 12px;
+    }
+
+    .wechat-login-btn {
+        height: 44px;
+        font-size: 1rem;
+    }
+
+    .auth-divider {
+        margin: 12px 0;
+    }
+
+    .switch-text,
+    .switch-link {
+        font-size: 0.8rem;
+    }
+
+    .recovery-link {
+        font-size: 0.8rem;
+    }
+
+    .cancel-btn {
+        font-size: 0.8rem;
+    }
+}
+
+/* 横屏手机适配 */
+@media (max-height: 600px) and (max-width: 768px) {
+    .auth-container {
+        flex-direction: row;
+        padding: 16px 20px;
+        gap: 20px;
+        min-height: auto;
+    }
+
+    .auth-logo-section {
+        flex: 0.6;
+        padding-right: 16px;
+        border-right: 1px solid #f3f4f6;
+        text-align: left;
+    }
+
+    .logo-image {
+        width: 40px;
+        height: 40px;
+    }
+
+    .auth-main-title {
+        font-size: 1.125rem;
+        margin-bottom: 4px;
+    }
+
+    .auth-main-subtitle {
+        font-size: 0.75rem;
+    }
+
+    .auth-form-wrapper {
+        flex: 1.4;
+        padding-left: 16px;
+        padding-top: 0;
+        border-top: none;
+        border-left: none;
+    }
+
+    .auth-form-item {
+        margin-bottom: 12px;
+    }
+
+    :deep(.auth-input .el-input__wrapper) {
+        height: 40px !important;
+    }
+
+    .auth-submit-btn {
+        height: 40px;
+        font-size: 0.9rem;
+        margin-bottom: 16px;
+    }
+
+    .wechat-login-btn {
+        height: 40px;
+        font-size: 0.9rem;
+    }
+
+    .auth-divider {
+        margin: 16px 0;
+    }
+
+    .auth-mode-switch {
+        margin-bottom: 12px;
+    }
+
+    .auth-footer {
+        padding-top: 12px;
+        margin-top: 12px;
+    }
 }
 </style>

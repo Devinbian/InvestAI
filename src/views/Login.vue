@@ -129,6 +129,7 @@ const handleLogin = async () => {
     box-shadow: 0 15px 30px rgba(0, 0, 0, 0.1);
     width: 1000px;
     max-width: 100%;
+    min-height: 600px;
 }
 
 .login-left {
@@ -217,5 +218,219 @@ const handleLogin = async () => {
 .register-link {
     text-align: center;
     color: #666;
+}
+
+/* 平板端适配 (768px - 1024px) */
+@media (max-width: 1024px) {
+    .login-content {
+        width: 90%;
+        max-width: 800px;
+    }
+
+    .login-left,
+    .login-right {
+        padding: 30px;
+    }
+
+    .logo {
+        width: 60px;
+        height: 60px;
+    }
+
+    .brand h1 {
+        font-size: 20px;
+    }
+
+    .features {
+        margin-top: 30px;
+    }
+
+    .feature-item {
+        margin: 15px 0;
+        font-size: 14px;
+    }
+
+    .feature-item .el-icon {
+        font-size: 20px;
+    }
+}
+
+/* 手机端适配 (小于768px) */
+@media (max-width: 768px) {
+    .login-container {
+        padding: 10px;
+        align-items: flex-start;
+        padding-top: 15px;
+    }
+
+    .login-content {
+        flex-direction: column;
+        width: 100%;
+        max-width: 400px;
+        border-radius: 15px;
+        min-height: auto;
+    }
+
+    .login-left {
+        padding: 20px 20px 15px 20px;
+        min-height: auto;
+    }
+
+    .brand {
+        margin-bottom: 0;
+    }
+
+    .brand h1 {
+        font-size: 18px;
+        margin-bottom: 4px;
+    }
+
+    .slogan {
+        font-size: 14px;
+        margin-top: 4px;
+    }
+
+    .logo {
+        width: 45px;
+        height: 45px;
+        margin-bottom: 12px;
+    }
+
+    .features {
+        display: none;
+        /* 在手机端隐藏功能列表以节省空间 */
+    }
+
+    .login-right {
+        padding: 16px 20px 20px 20px;
+    }
+
+    .login-form {
+        max-width: 100%;
+    }
+
+    .login-form h2 {
+        font-size: 20px;
+        text-align: center;
+        margin-bottom: 8px;
+    }
+
+    .subtitle {
+        text-align: center;
+        font-size: 14px;
+        margin-bottom: 20px;
+    }
+
+    .remember-forgot {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 8px;
+        margin-bottom: 20px;
+    }
+
+    .login-button {
+        padding: 14px;
+        font-size: 16px;
+        border-radius: 8px;
+        margin-bottom: 16px;
+    }
+
+    .register-link {
+        font-size: 14px;
+    }
+}
+
+/* 超小屏幕适配 (小于480px) */
+@media (max-width: 480px) {
+    .login-container {
+        padding: 5px;
+    }
+
+    .login-content {
+        border-radius: 10px;
+        box-shadow: 0 8px 20px rgba(0, 0, 0, 0.1);
+    }
+
+    .login-left {
+        padding: 20px 15px 15px 15px;
+    }
+
+    .login-right {
+        padding: 15px;
+    }
+
+    .brand h1 {
+        font-size: 16px;
+    }
+
+    .slogan {
+        font-size: 12px;
+    }
+
+    .logo {
+        width: 40px;
+        height: 40px;
+        margin-bottom: 10px;
+    }
+
+    .login-form h2 {
+        font-size: 18px;
+    }
+
+    .subtitle {
+        font-size: 13px;
+    }
+}
+
+/* 横屏手机适配 */
+@media (max-height: 600px) and (max-width: 768px) {
+    .login-container {
+        align-items: center;
+        padding: 10px;
+    }
+
+    .login-content {
+        flex-direction: row;
+        max-width: 90%;
+        width: auto;
+    }
+
+    .login-left {
+        flex: 0.8;
+        padding: 20px;
+    }
+
+    .brand h1 {
+        font-size: 16px;
+    }
+
+    .slogan {
+        font-size: 12px;
+    }
+
+    .logo {
+        width: 40px;
+        height: 40px;
+        margin-bottom: 10px;
+    }
+
+    .features {
+        display: none;
+    }
+
+    .login-right {
+        flex: 1.2;
+        padding: 20px;
+    }
+
+    .login-form h2 {
+        font-size: 18px;
+        margin-bottom: 8px;
+    }
+
+    .subtitle {
+        font-size: 13px;
+        margin-bottom: 20px;
+    }
 }
 </style>

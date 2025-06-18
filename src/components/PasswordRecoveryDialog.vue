@@ -1,6 +1,6 @@
 <template>
-    <el-dialog v-model="visible" :show-close="false" :close-on-click-modal="false" :lock-scroll="false" width="500px"
-        class="recovery-dialog">
+    <el-dialog v-model="visible" :show-close="false" :close-on-click-modal="false" :lock-scroll="false"
+        :width="dialogWidth" class="recovery-dialog">
         <template #header>
             <div></div>
         </template>
@@ -137,6 +137,18 @@ const recoveryRules = {
 const visible = computed({
     get: () => props.modelValue,
     set: (value) => emit('update:modelValue', value)
+});
+
+// 响应式对话框宽度
+const dialogWidth = computed(() => {
+    if (typeof window !== 'undefined') {
+        const width = window.innerWidth;
+        if (width < 480) return '95%';
+        if (width < 768) return '90%';
+        if (width < 1024) return '450px';
+        return '500px';
+    }
+    return '500px';
 });
 
 // 方法
@@ -495,5 +507,206 @@ watch(visible, (newVal) => {
 .cancel-btn:hover {
     color: #374151;
     background: #f9fafb;
+}
+
+/* 响应式布局 */
+/* 平板端适配 (768px - 1024px) */
+@media (max-width: 1024px) {
+    .recovery-container {
+        padding: 24px 32px;
+        min-height: 350px;
+    }
+
+    .recovery-header {
+        margin-bottom: 24px;
+    }
+
+    .recovery-logo .logo-image {
+        width: 40px;
+        height: 40px;
+    }
+
+    .recovery-title {
+        font-size: 1.375rem;
+    }
+
+    .recovery-subtitle {
+        font-size: 0.8rem;
+    }
+}
+
+/* 手机端适配 (小于768px) */
+@media (max-width: 768px) {
+    :deep(.recovery-dialog) {
+        margin: 0 !important;
+        border-radius: 12px !important;
+    }
+
+    .recovery-container {
+        padding: 20px 20px;
+        min-height: auto;
+    }
+
+    .recovery-header {
+        margin-bottom: 18px;
+    }
+
+    .recovery-logo .logo-image {
+        width: 40px;
+        height: 40px;
+    }
+
+    .recovery-title {
+        font-size: 1.25rem;
+        margin-bottom: 6px;
+    }
+
+    .recovery-subtitle {
+        font-size: 0.8rem;
+        max-width: 100%;
+    }
+
+    .recovery-form-item {
+        margin-bottom: 14px;
+    }
+
+    .verify-code-row {
+        flex-direction: column;
+        gap: 10px;
+    }
+
+    .send-code-btn {
+        width: 100%;
+        height: 48px;
+        font-size: 1rem;
+    }
+
+    :deep(.recovery-input .el-input__wrapper) {
+        height: 48px !important;
+    }
+
+    .recovery-submit-btn {
+        height: 48px;
+        font-size: 1.05rem;
+        margin-bottom: 16px;
+    }
+
+    .recovery-back {
+        margin-bottom: 12px;
+    }
+
+    .recovery-footer {
+        padding-top: 12px;
+    }
+}
+
+/* 超小屏幕适配 (小于480px) */
+@media (max-width: 480px) {
+    .recovery-container {
+        padding: 20px 16px;
+    }
+
+    .recovery-header {
+        margin-bottom: 20px;
+    }
+
+    .recovery-logo .logo-image {
+        width: 36px;
+        height: 36px;
+    }
+
+    .recovery-title {
+        font-size: 1.125rem;
+    }
+
+    .recovery-subtitle {
+        font-size: 0.75rem;
+    }
+
+    .recovery-form-item {
+        margin-bottom: 16px;
+    }
+
+    .send-code-btn {
+        height: 44px;
+        font-size: 0.9rem;
+        padding: 0 12px;
+    }
+
+    :deep(.recovery-input .el-input__wrapper) {
+        height: 44px !important;
+        padding: 0 12px !important;
+    }
+
+    .recovery-submit-btn {
+        height: 44px;
+        font-size: 1rem;
+        margin-bottom: 20px;
+    }
+
+    .back-text,
+    .back-link {
+        font-size: 0.8rem;
+    }
+
+    .cancel-btn {
+        font-size: 0.8rem;
+    }
+}
+
+/* 横屏手机适配 */
+@media (max-height: 600px) and (max-width: 768px) {
+    .recovery-container {
+        padding: 16px 20px;
+    }
+
+    .recovery-header {
+        margin-bottom: 16px;
+    }
+
+    .recovery-logo {
+        margin-bottom: 8px;
+    }
+
+    .recovery-logo .logo-image {
+        width: 32px;
+        height: 32px;
+    }
+
+    .recovery-title {
+        font-size: 1rem;
+        margin-bottom: 4px;
+    }
+
+    .recovery-subtitle {
+        font-size: 0.7rem;
+    }
+
+    .recovery-form-item {
+        margin-bottom: 12px;
+    }
+
+    .send-code-btn {
+        height: 40px;
+        font-size: 0.8rem;
+    }
+
+    :deep(.recovery-input .el-input__wrapper) {
+        height: 40px !important;
+    }
+
+    .recovery-submit-btn {
+        height: 40px;
+        font-size: 0.9rem;
+        margin-bottom: 16px;
+    }
+
+    .recovery-back {
+        margin-bottom: 12px;
+    }
+
+    .recovery-footer {
+        padding-top: 12px;
+    }
 }
 </style>

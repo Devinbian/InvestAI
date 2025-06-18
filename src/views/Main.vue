@@ -33,13 +33,14 @@
         </header>
 
         <!-- 主体内容 -->
-        <main class="modern-content" :class="{ 'chatting': isChatMode, 'with-sidebar': userStore.isLoggedIn }">
+        <main class="modern-content main-container"
+            :class="{ 'chatting': isChatMode, 'with-sidebar': userStore.isLoggedIn }">
             <!-- 个性化引导流程 -->
             <OnboardingFlow v-if="showOnboarding" @complete="onOnboardingComplete" @analyze-stock="handleAnalyzeStock"
                 @execute-action="handleOnboardingAction" />
 
             <!-- 初始状态：标题、描述和输入区域作为一个整体 -->
-            <div class="center-container" v-else-if="!isChatMode">
+            <div class="center-container chat-area" v-else-if="!isChatMode">
                 <div class="welcome-section">
                     <div class="modern-title">👋 您好，我是智投小助</div>
                     <div class="modern-desc">
@@ -92,6 +93,13 @@
                                     <line x1="8" y1="23" x2="16" y2="23" stroke="#888" stroke-width="2" />
                                 </svg>
                             </el-button>
+                            <el-button class="ai-func-btn shortcuts-toggle-btn" circle @click="toggleChatShortcuts"
+                                v-if="isMobileView && userStore.isLoggedIn">
+                                <svg width="20" height="20" viewBox="0 0 24 24" fill="none">
+                                    <path d="M12 5v14m-7-7h14" stroke="#888" stroke-width="2" stroke-linecap="round"
+                                        stroke-linejoin="round" />
+                                </svg>
+                            </el-button>
                             <el-button class="ai-send-btn" type="primary" circle @click="sendMessage"
                                 :disabled="!inputMessage.trim()">
                                 <svg width="20" height="20" viewBox="0 0 24 24" fill="none">
@@ -104,7 +112,7 @@
                     </div>
                 </div>
 
-                <div class="ai-suggestions">
+                <div class="ai-suggestions" v-if="!isMobileView">
                     <!-- 快捷操作按钮 -->
                     <div class="suggestion-row">
                         <el-button v-for="shortcut in activeShortcuts" :key="shortcut.id" class="ai-suggestion-btn"
@@ -121,7 +129,7 @@
             </div>
 
             <!-- 聊天历史区域 -->
-            <div class="chat-history-area" v-if="isChatMode && chatHistory.length" ref="chatHistoryRef">
+            <div class="chat-history-area chat-area" v-if="isChatMode && chatHistory.length" ref="chatHistoryRef">
                 <div v-for="(message, idx) in chatHistory" :key="idx" :class="['chat-message', message.role]">
                     <div class="chat-message-content">
                         <div v-if="message.content" class="message-text">{{ message.content }}</div>
@@ -640,6 +648,30 @@
         <Sidebar v-if="userStore.isLoggedIn" @send-to-chat="handleSidebarInteraction" @show-buy-dialog="showBuyDialog"
             @show-sell-dialog="handleShowSellDialog" />
 
+        <!-- 快捷操作栏（移动端独立显示） -->
+        <div class="mobile-shortcuts-overlay" v-if="showChatShortcuts && isMobileView" @click="toggleChatShortcuts">
+            <div class="mobile-shortcuts-container" @click.stop>
+                <!-- 快捷操作按钮 -->
+                <div class="shortcuts-main-grid">
+                    <el-button v-for="shortcut in activeShortcuts" :key="shortcut.id" class="shortcut-btn-mobile"
+                        @click="handleShortcutClick(shortcut)">
+                        {{ shortcut.shortTitle || shortcut.title }}
+                    </el-button>
+                </div>
+
+                <!-- 底部操作按钮 -->
+                <div class="shortcuts-bottom-actions">
+                    <el-button class="action-btn add-btn" @click="openCustomizeDialog">
+                        <span class="add-icon">+</span>
+                        添加
+                    </el-button>
+                    <el-button class="action-btn close-btn" @click="toggleChatShortcuts">
+                        收起
+                    </el-button>
+                </div>
+            </div>
+        </div>
+
         <!-- 底部输入区域（仅在聊天状态显示） -->
         <div class="input-area" v-if="isChatMode">
             <!-- 新聊天按钮和快捷操作 -->
@@ -664,8 +696,8 @@
                 </div>
             </div>
 
-            <!-- 快捷操作栏（聊天模式下） -->
-            <div class="chat-shortcuts" v-if="showChatShortcuts">
+            <!-- PC端快捷操作栏（聊天模式下显示在输入框上方） -->
+            <div class="chat-shortcuts pc-shortcuts" v-if="showChatShortcuts && !isMobileView">
                 <div class="shortcuts-grid">
                     <el-button v-for="shortcut in activeShortcuts" :key="shortcut.id" class="chat-shortcut-btn"
                         @click="handleShortcutClick(shortcut)">
@@ -684,10 +716,15 @@
             </div>
 
             <div class="ai-card">
+                <!-- 输入框区域 -->
                 <div class="ai-input-row">
                     <el-input v-model="inputMessage" class="ai-input" type="textarea"
                         :autosize="{ minRows: 2, maxRows: 6 }" placeholder="如：帮我分析一下芯片行业的龙头股..."
                         @keyup.enter.ctrl="sendMessage" clearable maxlength="500" show-word-limit />
+                </div>
+
+                <!-- 按钮区域 -->
+                <div class="ai-buttons-row">
                     <div class="ai-buttons">
                         <el-button class="ai-func-btn" circle @click="onVoiceClick">
                             <svg width="20" height="20" viewBox="0 0 24 24" fill="none">
@@ -699,7 +736,7 @@
                             </svg>
                         </el-button>
                         <el-button class="ai-func-btn shortcuts-toggle-btn" circle @click="toggleChatShortcuts"
-                            v-if="!showChatShortcuts">
+                            v-if="!showChatShortcuts && userStore.isLoggedIn">
                             <svg width="20" height="20" viewBox="0 0 24 24" fill="none">
                                 <path d="M12 5v14m-7-7h14" stroke="#888" stroke-width="2" stroke-linecap="round"
                                     stroke-linejoin="round" />
@@ -793,6 +830,7 @@ const chatHistoryRef = ref(null);
 const isChatMode = ref(false); // 控制是否进入聊天模式
 const showUserProfile = ref(false); // 控制是否显示个人中心
 const showChatShortcuts = ref(false); // 控制聊天模式下的快捷操作显示
+const isMobileView = ref(false); // 检测是否为移动端视图
 
 // 快捷操作自定义相关
 const customizeDialogVisible = ref(false);
@@ -1498,6 +1536,17 @@ const onVoiceClick = () => {
 // 切换聊天快捷操作显示
 const toggleChatShortcuts = () => {
     showChatShortcuts.value = !showChatShortcuts.value;
+    console.log('toggleChatShortcuts:', {
+        showChatShortcuts: showChatShortcuts.value,
+        userLoggedIn: userStore.isLoggedIn,
+        activeShortcuts: activeShortcuts.value.length,
+        isMobileView: isMobileView.value
+    });
+};
+
+// 检测移动端视图
+const checkMobileView = () => {
+    isMobileView.value = window.innerWidth <= 768;
 };
 
 // 处理下拉菜单命令
@@ -2150,6 +2199,12 @@ onMounted(() => {
     scrollToBottom();
     checkUserStatus();
 
+    // 检测移动端视图
+    checkMobileView();
+
+    // 添加窗口大小变化监听
+    window.addEventListener('resize', checkMobileView);
+
     // 添加滚动事件监听
     nextTick(() => {
         if (chatHistoryRef.value && !chatHistoryRef.value.hasScrollListener) {
@@ -2170,6 +2225,8 @@ onUnmounted(() => {
     if (countdownTimer) {
         clearInterval(countdownTimer);
     }
+    // 清理窗口大小监听
+    window.removeEventListener('resize', checkMobileView);
 });
 
 const closeUserProfile = () => {
@@ -2759,6 +2816,61 @@ body.onboarding-mode {
     .refresh-examples-btn {
         width: 28px;
         height: 28px;
+    }
+
+    /* 移动端聊天消息字体优化 */
+    .chat-message.user .chat-message-content {
+        font-size: 0.9rem;
+        padding: 12px 16px;
+        max-width: 85%;
+    }
+
+    .chat-message.assistant .chat-message-content {
+        font-size: 0.9rem;
+        padding: 12px 16px;
+        max-width: 85%;
+    }
+
+    /* 移动端聊天历史区域高度调整 */
+    .chat-history-area {
+        height: calc(100vh - 56px - 220px);
+        padding: 16px 0;
+    }
+
+    /* 移动端消息间距调整 */
+    .chat-message {
+        margin-bottom: 16px;
+    }
+
+    .message-text {
+        margin-bottom: 20px;
+    }
+
+    /* 移动端欢迎页面字体优化 */
+    .modern-title {
+        font-size: 2rem;
+        margin-bottom: 10px;
+        letter-spacing: -0.5px;
+    }
+
+    .modern-desc {
+        font-size: 0.95rem;
+        margin-bottom: 20px;
+        line-height: 1.5;
+        padding: 0 16px;
+    }
+
+    /* 移动端欢迎区域间距优化 */
+    .welcome-section {
+        margin-bottom: 24px;
+    }
+
+    .quick-examples {
+        margin-top: 12px;
+    }
+
+    .examples-content {
+        margin-bottom: 12px;
     }
 }
 
@@ -3361,6 +3473,25 @@ body.onboarding-mode {
         padding: 1px 4px;
         min-width: 40px;
         white-space: nowrap;
+    }
+
+    /* 移动端股票信息字体优化 */
+    .stock-name {
+        font-size: 0.9rem;
+    }
+
+    .stock-code {
+        font-size: 0.75rem;
+    }
+
+    .stock-item {
+        padding: 12px;
+    }
+
+    /* 移动端股票列表间距优化 */
+    .stock-list {
+        gap: 8px;
+        margin-top: 12px;
     }
 }
 
@@ -4154,6 +4285,40 @@ body.onboarding-mode {
     }
 }
 
+@keyframes slideUp {
+    from {
+        opacity: 0;
+        transform: translateY(20px);
+    }
+
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+@keyframes fadeIn {
+    from {
+        opacity: 0;
+    }
+
+    to {
+        opacity: 1;
+    }
+}
+
+@keyframes slideUpModal {
+    from {
+        opacity: 0;
+        transform: translateY(100%);
+    }
+
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
 .ai-card {
     width: 100%;
     max-width: 900px;
@@ -4170,13 +4335,19 @@ body.onboarding-mode {
 }
 
 .ai-input-row {
-    display: flex;
-    align-items: flex-end;
     background: #f8f9fa;
     border-radius: 20px;
     box-shadow: 0 2px 8px 0 rgba(0, 0, 0, 0.04);
     padding: 16px 20px;
+    display: flex;
+    flex-direction: column;
     gap: 12px;
+}
+
+.ai-buttons-row {
+    display: flex;
+    justify-content: flex-end;
+    margin-top: 12px;
 }
 
 .ai-input {
@@ -4190,8 +4361,10 @@ body.onboarding-mode {
 
 .ai-buttons {
     display: flex;
-    align-items: flex-end;
+    align-items: center;
     gap: 8px;
+    align-self: flex-end;
+    /* 在垂直布局中右对齐 */
 }
 
 .ai-func-btn {
@@ -4393,48 +4566,392 @@ body.onboarding-mode {
 
 /* 响应式设计 */
 @media (max-width: 768px) {
-    .suggestion-row {
+
+    /* 防止移动端缩放和选择 */
+    html,
+    body {
+        touch-action: manipulation;
+        -webkit-user-select: none;
+        -webkit-touch-callout: none;
+        -webkit-tap-highlight-color: transparent;
+        overscroll-behavior: none;
+    }
+
+    /* 主容器调整 - 让聊天框沉底 */
+    .main-container {
+        display: flex;
+        flex-direction: column;
+        min-height: 100vh;
+        padding-bottom: 0;
+    }
+
+    .chat-area {
+        flex: 1;
+        display: flex;
+        flex-direction: column;
+        padding-bottom: 80px;
+        padding-top: 40px;
+        /* 增加顶部间距 */
+        /* 为底部聊天框留出空间 */
+    }
+
+    /* 聊天输入框固定在底部 */
+    .ai-card {
+        position: fixed;
+        bottom: 0;
+        left: 0;
+        right: 0;
+        max-width: none;
+        margin: 0;
+        border-radius: 0;
+        border-top: 1px solid #e5e7eb;
+        box-shadow: 0 -4px 20px rgba(0, 0, 0, 0.1);
+        padding: 12px 16px;
+        background: white;
+        z-index: 1000;
+    }
+
+    .ai-input-row {
+        padding: 12px 16px;
+        border-radius: 16px;
+    }
+
+    .ai-buttons-row {
+        margin-top: 8px;
+        justify-content: flex-end;
+        padding-right: 4px;
+        /* 增加右侧间距，方便操作 */
+    }
+
+    /* 缩小按钮尺寸 */
+    .ai-func-btn {
+        width: 36px;
+        height: 36px;
+        min-width: 36px;
+        min-height: 36px;
+    }
+
+    .ai-func-btn svg {
+        width: 16px;
+        height: 16px;
+    }
+
+    .ai-send-btn {
+        width: 36px;
+        height: 36px;
+        min-width: 36px;
+        min-height: 36px;
+    }
+
+    .ai-send-btn svg {
+        width: 16px;
+        height: 16px;
+    }
+
+    /* 隐藏顶部快捷指令区域 */
+    .ai-suggestions {
+        display: none;
+    }
+
+    /* PC端快捷操作样式（保持原有设计） */
+    .chat-shortcuts.pc-shortcuts {
+        width: 100%;
+        max-width: 900px;
+        margin-bottom: 12px;
+        animation: slideDown 0.3s ease-out;
+    }
+
+    .pc-shortcuts .shortcuts-grid {
+        display: flex;
+        gap: 8px;
+        justify-content: center;
+        flex-wrap: wrap;
+    }
+
+    .pc-shortcuts .chat-shortcut-btn {
+        display: flex;
         flex-direction: column;
         align-items: center;
-    }
-
-    .ai-suggestion-btn {
-        min-width: 200px;
-        width: 100%;
-        max-width: 280px;
-    }
-
-    /* 聊天快捷操作移动端适配 */
-    .shortcuts-grid {
-        gap: 6px;
-        justify-content: space-around;
-    }
-
-    .chat-shortcut-btn {
-        min-height: 45px;
-        min-width: 55px;
-        padding: 6px 8px;
         gap: 2px;
+        padding: 8px 12px;
+        border-radius: 12px;
+        background: #f8fafc;
+        border: 1px solid #e5e7eb;
+        color: #374151;
+        font-weight: 500;
+        transition: all 0.2s ease;
+        min-height: 50px;
+        min-width: 60px;
+        justify-content: center;
+        box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
     }
 
-    .chat-shortcut-btn .btn-icon {
-        font-size: 1rem;
+    .pc-shortcuts .chat-shortcut-btn:hover {
+        background: #f1f5f9;
+        border-color: #cbd5e1;
+        color: #1f2937;
+        transform: translateY(-1px);
+        box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
     }
 
-    .chat-shortcut-btn .btn-text {
-        font-size: 0.7rem;
+    .pc-shortcuts .chat-shortcut-btn .btn-icon {
+        font-size: 1.1rem;
+        display: block;
     }
 
-    .chat-actions {
-        flex-direction: column;
-        gap: 8px;
+    .pc-shortcuts .chat-shortcut-btn .btn-text {
+        font-size: 0.75rem;
+        line-height: 1;
+        text-align: center;
+        white-space: nowrap;
     }
 
-    .new-chat-btn,
-    .goto-recommendation-btn {
-        width: 100%;
-        max-width: 200px;
+    /* PC端收起按钮样式 */
+    .pc-shortcuts .chat-shortcut-btn.close-btn {
+        background: #f8fafc !important;
+        border-color: #e2e8f0 !important;
+        color: #475569 !important;
     }
+
+    .pc-shortcuts .chat-shortcut-btn.close-btn:hover {
+        background: #f1f5f9 !important;
+        border-color: #cbd5e1 !important;
+        color: #334155 !important;
+    }
+
+    /* 移动端快捷操作优雅菜单设计 */
+    .mobile-shortcuts-overlay {
+        position: fixed !important;
+        top: 0 !important;
+        left: 0 !important;
+        right: 0 !important;
+        bottom: 0 !important;
+        background: rgba(0, 0, 0, 0.4) !important;
+        z-index: 9999 !important;
+        display: flex !important;
+        align-items: flex-end !important;
+        justify-content: center !important;
+        animation: fadeIn 0.2s ease-out !important;
+    }
+
+    .mobile-shortcuts-container {
+        width: 100% !important;
+        max-width: 400px !important;
+        background: #ffffff !important;
+        border-radius: 16px 16px 0 0 !important;
+        padding: 16px !important;
+        margin: 0 8px 0 8px !important;
+        box-shadow: 0 -4px 20px rgba(0, 0, 0, 0.15) !important;
+        animation: slideUpModal 0.3s ease-out !important;
+    }
+
+    /* 主要快捷操作网格 */
+    .shortcuts-main-grid {
+        display: flex !important;
+        flex-wrap: wrap !important;
+        gap: 8px !important;
+        margin-bottom: 16px !important;
+        justify-content: center !important;
+        align-items: center !important;
+    }
+
+    .shortcut-btn-mobile {
+        height: 36px !important;
+        min-height: 36px !important;
+        padding: 8px 16px !important;
+        border-radius: 8px !important;
+        background: #f8fafc !important;
+        border: 1px solid #e2e8f0 !important;
+        color: #374151 !important;
+        font-size: 0.75rem !important;
+        font-weight: 500 !important;
+        white-space: nowrap !important;
+        transition: all 0.2s ease !important;
+        flex-shrink: 0 !important;
+    }
+
+    .shortcut-btn-mobile:hover {
+        background: #f1f5f9 !important;
+        border-color: #cbd5e1 !important;
+        transform: translateY(-1px) !important;
+        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1) !important;
+    }
+
+    /* 底部操作按钮 */
+    .shortcuts-bottom-actions {
+        display: flex !important;
+        gap: 8px !important;
+        padding-top: 12px !important;
+        border-top: 1px solid #f1f5f9 !important;
+    }
+
+    .action-btn {
+        flex: 1 !important;
+        height: 40px !important;
+        border-radius: 8px !important;
+        font-size: 0.8rem !important;
+        font-weight: 500 !important;
+        transition: all 0.2s ease !important;
+        display: flex !important;
+        align-items: center !important;
+        justify-content: center !important;
+        gap: 4px !important;
+    }
+
+    /* 添加按钮样式 */
+    .add-btn {
+        background: #f0f9ff !important;
+        border: 1px solid #0ea5e9 !important;
+        color: #0ea5e9 !important;
+    }
+
+    .add-btn:hover {
+        background: #e0f2fe !important;
+        border-color: #0284c7 !important;
+        color: #0284c7 !important;
+    }
+
+    .add-icon {
+        font-size: 1rem !important;
+        font-weight: 300 !important;
+        line-height: 1 !important;
+    }
+
+    /* 收起按钮样式 */
+    .shortcuts-bottom-actions .close-btn {
+        background: #f8fafc !important;
+        border: 1px solid #e2e8f0 !important;
+        color: #374151 !important;
+        width: auto !important;
+        height: 40px !important;
+        border-radius: 8px !important;
+        display: flex !important;
+        align-items: center !important;
+        justify-content: center !important;
+    }
+
+    .shortcuts-bottom-actions .close-btn:hover {
+        background: #f1f5f9 !important;
+        border-color: #cbd5e1 !important;
+        color: #1f2937 !important;
+        transform: none !important;
+        box-shadow: none !important;
+    }
+
+    /* Footer优化 */
+    .copyright-footer {
+        margin-top: 20px;
+        padding: 8px 0;
+    }
+
+    .copyright-content p {
+        font-size: 10px;
+        color: #9ca3af;
+    }
+}
+
+/* 超小屏幕优化 */
+@media (max-width: 480px) {
+    .chat-area {
+        padding-top: 30px;
+        /* 超小屏幕也增加顶部间距 */
+    }
+
+    .ai-card {
+        padding: 10px 12px;
+    }
+
+    .ai-input-row {
+        padding: 10px 14px;
+        border-radius: 14px;
+    }
+
+    .ai-buttons-row {
+        margin-top: 6px;
+        justify-content: flex-end;
+        padding-right: 2px;
+        /* 超小屏幕更小的右侧间距 */
+    }
+
+    /* 进一步缩小按钮 */
+    .ai-func-btn {
+        width: 32px;
+        height: 32px;
+        min-width: 32px;
+        min-height: 32px;
+    }
+
+    .ai-func-btn svg {
+        width: 14px;
+        height: 14px;
+    }
+
+    .ai-send-btn {
+        width: 32px;
+        height: 32px;
+        min-width: 32px;
+        min-height: 32px;
+    }
+
+    .ai-send-btn svg {
+        width: 14px;
+        height: 14px;
+    }
+
+    .mobile-shortcuts-container {
+        margin: 0 4px 0 4px !important;
+        padding: 12px !important;
+    }
+
+    .shortcuts-main-grid {
+        gap: 6px !important;
+        margin-bottom: 12px !important;
+    }
+
+    .shortcut-btn-mobile {
+        height: 32px !important;
+        min-height: 32px !important;
+        padding: 6px 12px !important;
+        font-size: 0.7rem !important;
+        border-radius: 6px !important;
+    }
+
+    .shortcuts-bottom-actions .action-btn {
+        height: 36px !important;
+        font-size: 0.75rem !important;
+        gap: 3px !important;
+    }
+
+    .add-icon {
+        font-size: 0.9rem !important;
+    }
+
+    .chat-area {
+        padding-bottom: 70px;
+        /* 调整底部间距 */
+    }
+
+    /* Footer进一步缩小 */
+    .copyright-footer {
+        margin-top: 16px;
+        padding: 6px 0;
+    }
+
+    .copyright-content p {
+        font-size: 9px;
+        color: #a1a1aa;
+    }
+}
+
+.chat-actions {
+    flex-direction: column;
+    gap: 8px;
+}
+
+.new-chat-btn,
+.goto-recommendation-btn {
+    width: 100%;
+    max-width: 200px;
 }
 
 .dialog-footer {
@@ -7355,6 +7872,37 @@ body {
 @media (max-width: 480px) {
     .overview-stats {
         grid-template-columns: 1fr;
+    }
+
+    /* 超小屏幕字体进一步优化 */
+    .modern-title {
+        font-size: 1.75rem;
+        margin-bottom: 8px;
+    }
+
+    .modern-desc {
+        font-size: 0.85rem;
+        padding: 0 12px;
+        margin-bottom: 16px;
+    }
+
+    .chat-message.user .chat-message-content,
+    .chat-message.assistant .chat-message-content {
+        font-size: 0.85rem;
+        padding: 10px 14px;
+    }
+
+    .stock-name {
+        font-size: 0.85rem;
+    }
+
+    .stock-code {
+        font-size: 0.7rem;
+    }
+
+    .example-tag {
+        font-size: 0.75rem;
+        padding: 4px 8px;
     }
 }
 

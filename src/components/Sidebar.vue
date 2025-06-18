@@ -298,7 +298,7 @@ const handleWheel = (event) => {
 .sidebar-toggle {
     position: fixed;
     /* 改为fixed定位 */
-    top: 66px;
+    top: 16px;
     /* 调整位置 */
     right: 8px;
     /* 始终在右侧边缘 */

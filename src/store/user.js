@@ -51,7 +51,10 @@ export const useUserStore = defineStore("user", {
           },
         ]),
     ), // 持仓列表，添加默认测试数据
-    balance: parseFloat(localStorage.getItem("balance") || "100000"), // 账户余额，默认10万
+    balance: parseFloat(localStorage.getItem("balance") || "100000"), // 股票交易账户余额，默认10万
+    smartPointsBalance: parseFloat(
+      localStorage.getItem("smartPointsBalance") || "0",
+    ), // 智点账户余额，默认0
   }),
 
   actions: {
@@ -73,11 +76,13 @@ export const useUserStore = defineStore("user", {
       this.watchlist = [];
       this.portfolio = [];
       this.balance = 100000;
+      this.smartPointsBalance = 0;
       localStorage.removeItem("token");
       localStorage.removeItem("userInfo");
       localStorage.removeItem("watchlist");
       localStorage.removeItem("portfolio");
       localStorage.removeItem("balance");
+      localStorage.removeItem("smartPointsBalance");
     },
 
     // 自选股管理
@@ -221,6 +226,50 @@ export const useUserStore = defineStore("user", {
     addBalance(amount) {
       this.balance += parseFloat(amount);
       localStorage.setItem("balance", this.balance.toString());
+    },
+
+    // 智点账户管理
+    deductSmartPoints(amount) {
+      if (this.smartPointsBalance >= amount) {
+        this.smartPointsBalance -= amount;
+        localStorage.setItem(
+          "smartPointsBalance",
+          this.smartPointsBalance.toString(),
+        );
+        return true;
+      }
+      return false;
+    },
+
+    addSmartPoints(amount) {
+      this.smartPointsBalance += amount;
+      localStorage.setItem(
+        "smartPointsBalance",
+        this.smartPointsBalance.toString(),
+      );
+    },
+
+    // 充值智点（使用现金购买智点，1元=1智点）
+    purchaseSmartPoints(cashAmount) {
+      const smartPointsAmount = cashAmount * 1;
+      if (this.balance >= cashAmount) {
+        this.balance -= cashAmount;
+        this.smartPointsBalance += smartPointsAmount;
+        localStorage.setItem("balance", this.balance.toString());
+        localStorage.setItem(
+          "smartPointsBalance",
+          this.smartPointsBalance.toString(),
+        );
+        return {
+          success: true,
+          message: `成功购买${smartPointsAmount}智点，花费¥${cashAmount}`,
+          smartPointsAmount,
+        };
+      }
+      return {
+        success: false,
+        message: "股票交易账户余额不足",
+      };
     },
   },
 });

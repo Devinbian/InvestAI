@@ -26,10 +26,18 @@
                         <div class="user-stats">
                             <div class="stat-item">
                                 <span class="stat-value">¥{{ (userStore.balance || 0).toFixed(2) }}</span>
-                                <span class="stat-label">账户余额</span>
-                                <el-button type="primary" size="small" @click="showRecharge = true"
+                                <span class="stat-label">股票交易账户</span>
+                                <el-button type="primary" size="small" @click="showStockRecharge = true"
                                     class="recharge-btn">
                                     充值
+                                </el-button>
+                            </div>
+                            <div class="stat-item">
+                                <span class="stat-value">{{ (userStore.smartPointsBalance || 0).toFixed(0) }}</span>
+                                <span class="stat-label">智点余额</span>
+                                <el-button type="success" size="small" @click="showSmartPointsRecharge = true"
+                                    class="recharge-btn">
+                                    购买
                                 </el-button>
                             </div>
                             <div class="stat-item">
@@ -123,6 +131,112 @@
                                         <div class="status-info">
                                             <h4>邮箱验证</h4>
                                             <p>邮箱未验证</p>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </el-tab-pane>
+
+                    <!-- 账户管理 -->
+                    <el-tab-pane label="账户管理" name="accounts">
+                        <div class="tab-content">
+                            <div class="accounts-container">
+                                <!-- 股票交易账户 -->
+                                <div class="account-card stock-account">
+                                    <div class="account-header">
+                                        <div class="account-icon">
+                                            <el-icon size="24">
+                                                <TrendCharts />
+                                            </el-icon>
+                                        </div>
+                                        <div class="account-info">
+                                            <h3>股票交易账户</h3>
+                                            <p>专门用于股票买卖交易</p>
+                                        </div>
+                                    </div>
+                                    <div class="account-balance">
+                                        <div class="balance-amount">
+                                            <span class="currency">¥</span>
+                                            <span class="amount">{{ (userStore.balance || 0).toFixed(2) }}</span>
+                                        </div>
+                                        <div class="balance-actions">
+                                            <el-button type="primary" @click="showStockRecharge = true">
+                                                <el-icon>
+                                                    <Plus />
+                                                </el-icon>
+                                                充值
+                                            </el-button>
+                                            <el-button @click="showTransferDialog = true">
+                                                <el-icon>
+                                                    <Switch />
+                                                </el-icon>
+                                                转账
+                                            </el-button>
+                                        </div>
+                                    </div>
+                                    <div class="account-stats">
+                                        <div class="stat-row">
+                                            <span class="stat-label">今日盈亏：</span>
+                                            <span class="stat-value profit">+¥1,234.56</span>
+                                        </div>
+                                        <div class="stat-row">
+                                            <span class="stat-label">总资产：</span>
+                                            <span class="stat-value">¥{{ getTotalAssets().toFixed(2) }}</span>
+                                        </div>
+                                        <div class="stat-row">
+                                            <span class="stat-label">持仓市值：</span>
+                                            <span class="stat-value">¥{{ getPortfolioValue().toFixed(2) }}</span>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <!-- 智点账户 -->
+                                <div class="account-card points-account">
+                                    <div class="account-header">
+                                        <div class="account-icon">
+                                            <el-icon size="24">
+                                                <Star />
+                                            </el-icon>
+                                        </div>
+                                        <div class="account-info">
+                                            <h3>智点账户</h3>
+                                            <p>用于购买AI分析、专业报告等付费服务</p>
+                                        </div>
+                                    </div>
+                                    <div class="account-balance">
+                                        <div class="balance-amount points-balance">
+                                            <span class="amount">{{ (userStore.smartPointsBalance || 0).toFixed(0)
+                                                }}</span>
+                                            <span class="currency">智点</span>
+                                        </div>
+                                        <div class="balance-actions">
+                                            <el-button type="success" @click="showSmartPointsRecharge = true">
+                                                <el-icon>
+                                                    <Plus />
+                                                </el-icon>
+                                                购买智点
+                                            </el-button>
+                                            <el-button @click="showPointsHistory = true">
+                                                <el-icon>
+                                                    <List />
+                                                </el-icon>
+                                                使用记录
+                                            </el-button>
+                                        </div>
+                                    </div>
+                                    <div class="account-stats">
+                                        <div class="stat-row">
+                                            <span class="stat-label">兑换比例：</span>
+                                            <span class="stat-value">1元 = 1智点</span>
+                                        </div>
+                                        <div class="stat-row">
+                                            <span class="stat-label">本月消费：</span>
+                                            <span class="stat-value">120智点</span>
+                                        </div>
+                                        <div class="stat-row">
+                                            <span class="stat-label">可用服务：</span>
+                                            <span class="stat-value">AI分析、专业报告</span>
                                         </div>
                                     </div>
                                 </div>
@@ -243,20 +357,44 @@
                 </template>
             </el-dialog>
 
-            <!-- 充值对话框 -->
-            <el-dialog v-model="showRecharge" title="账户充值" width="450px" class="profile-dialog">
+            <!-- 股票账户充值对话框 -->
+            <el-dialog v-model="showStockRecharge" title="股票交易账户充值" width="600px"
+                class="profile-dialog recharge-dialog">
                 <div class="recharge-content">
                     <div class="current-balance">
                         <span class="balance-label">当前余额：</span>
                         <span class="balance-value">¥{{ (userStore.balance || 0).toFixed(2) }}</span>
                     </div>
 
-                    <div class="recharge-amounts">
-                        <h4>选择充值金额</h4>
-                        <div class="amount-grid">
-                            <div v-for="amount in rechargeAmounts" :key="amount" class="amount-item"
-                                :class="{ active: selectedAmount === amount }" @click="selectedAmount = amount">
-                                ¥{{ amount }}
+                    <div class="recharge-row">
+                        <div class="recharge-amounts">
+                            <h4>选择充值金额</h4>
+                            <div class="amount-grid">
+                                <div v-for="amount in rechargeAmounts" :key="amount" class="amount-item"
+                                    :class="{ active: selectedAmount === amount }" @click="selectedAmount = amount">
+                                    ¥{{ amount }}
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="payment-methods">
+                            <h4>支付方式</h4>
+                            <div class="payment-grid">
+                                <div class="payment-item" :class="{ active: selectedPayment === 'alipay' }"
+                                    @click="selectedPayment = 'alipay'">
+                                    <div class="payment-icon alipay">支</div>
+                                    <span>支付宝</span>
+                                </div>
+                                <div class="payment-item" :class="{ active: selectedPayment === 'wechat' }"
+                                    @click="selectedPayment = 'wechat'">
+                                    <div class="payment-icon wechat">微</div>
+                                    <span>微信支付</span>
+                                </div>
+                                <div class="payment-item" :class="{ active: selectedPayment === 'bank' }"
+                                    @click="selectedPayment = 'bank'">
+                                    <div class="payment-icon bank">银</div>
+                                    <span>银行卡</span>
+                                </div>
                             </div>
                         </div>
                     </div>
@@ -267,27 +405,6 @@
                             class="profile-input" @input="selectedAmount = null">
                             <template #prepend>¥</template>
                         </el-input>
-                    </div>
-
-                    <div class="payment-methods">
-                        <h4>支付方式</h4>
-                        <div class="payment-grid">
-                            <div class="payment-item" :class="{ active: selectedPayment === 'alipay' }"
-                                @click="selectedPayment = 'alipay'">
-                                <div class="payment-icon alipay">支</div>
-                                <span>支付宝</span>
-                            </div>
-                            <div class="payment-item" :class="{ active: selectedPayment === 'wechat' }"
-                                @click="selectedPayment = 'wechat'">
-                                <div class="payment-icon wechat">微</div>
-                                <span>微信支付</span>
-                            </div>
-                            <div class="payment-item" :class="{ active: selectedPayment === 'bank' }"
-                                @click="selectedPayment = 'bank'">
-                                <div class="payment-icon bank">银</div>
-                                <span>银行卡</span>
-                            </div>
-                        </div>
                     </div>
 
                     <div class="recharge-summary">
@@ -302,10 +419,81 @@
                     </div>
                 </div>
                 <template #footer>
-                    <el-button @click="showRecharge = false" class="dialog-cancel-btn">取消</el-button>
-                    <el-button type="primary" @click="handleRecharge" :loading="recharging"
+                    <el-button @click="showStockRecharge = false" class="dialog-cancel-btn">取消</el-button>
+                    <el-button type="primary" @click="handleStockRecharge" :loading="stockRecharging"
                         :disabled="getFinalAmount() <= 0" class="dialog-submit-btn">
                         确认充值 ¥{{ getFinalAmount() }}
+                    </el-button>
+                </template>
+            </el-dialog>
+
+            <!-- 智点购买对话框 -->
+            <el-dialog v-model="showSmartPointsRecharge" title="购买智点" width="600px"
+                class="profile-dialog recharge-dialog">
+                <div class="recharge-content">
+                    <div class="current-balance">
+                        <span class="balance-label">当前智点余额：</span>
+                        <span class="balance-value">{{ (userStore.smartPointsBalance || 0).toFixed(0) }}智点</span>
+                    </div>
+                    <div class="current-balance">
+                        <span class="balance-label">股票账户余额：</span>
+                        <span class="balance-value">¥{{ (userStore.balance || 0).toFixed(2) }}</span>
+                    </div>
+
+                    <div class="points-row">
+                        <div class="points-info">
+                            <div class="info-card">
+                                <h4>兑换说明</h4>
+                                <p>• 1元人民币 = 1智点</p>
+                                <p>• 智点用于购买AI分析、专业报告等付费服务</p>
+                                <p>• 智点不可提现，仅限平台内消费</p>
+                            </div>
+                        </div>
+
+                        <div class="recharge-amounts">
+                            <h4>选择购买金额</h4>
+                            <div class="amount-grid">
+                                <div v-for="amount in smartPointsAmounts" :key="amount" class="amount-item"
+                                    :class="{ active: selectedSmartPointsAmount === amount }"
+                                    @click="selectedSmartPointsAmount = amount">
+                                    <div class="amount-cash">¥{{ amount }}</div>
+                                    <div class="amount-points">{{ amount * 1 }}智点</div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="custom-amount">
+                        <h4>自定义金额</h4>
+                        <el-input v-model="customSmartPointsAmount" placeholder="请输入购买金额" type="number" min="1"
+                            max="10000" class="profile-input" @input="selectedSmartPointsAmount = null">
+                            <template #prepend>¥</template>
+                            <template #append>= {{ (customSmartPointsAmount * 1 || 0) }}智点</template>
+                        </el-input>
+                    </div>
+
+                    <div class="recharge-summary">
+                        <div class="summary-item">
+                            <span>购买金额：</span>
+                            <span class="amount">¥{{ getSmartPointsFinalAmount() }}</span>
+                        </div>
+                        <div class="summary-item">
+                            <span>获得智点：</span>
+                            <span class="amount">{{ getSmartPointsFinalAmount() * 1 }}智点</span>
+                        </div>
+                        <div class="summary-item">
+                            <span>购买后余额：</span>
+                            <span class="amount">{{ ((userStore.smartPointsBalance || 0) + getSmartPointsFinalAmount() *
+                                1).toFixed(0) }}智点</span>
+                        </div>
+                    </div>
+                </div>
+                <template #footer>
+                    <el-button @click="showSmartPointsRecharge = false" class="dialog-cancel-btn">取消</el-button>
+                    <el-button type="success" @click="handleSmartPointsPurchase" :loading="smartPointsPurchasing"
+                        :disabled="getSmartPointsFinalAmount() <= 0 || userStore.balance < getSmartPointsFinalAmount()"
+                        class="dialog-submit-btn">
+                        确认购买 {{ getSmartPointsFinalAmount() * 1 }}智点
                     </el-button>
                 </template>
             </el-dialog>
@@ -317,7 +505,7 @@
 import { ref, reactive, onMounted } from 'vue';
 import { useUserStore } from '../store/user';
 import { ElMessage } from 'element-plus';
-import { Edit, Close, CircleCheck, Warning } from '@element-plus/icons-vue';
+import { Edit, Close, CircleCheck, Warning, TrendCharts, Star, Plus, Switch, List } from '@element-plus/icons-vue';
 
 // 定义emit事件
 const emit = defineEmits(['close']);
@@ -332,14 +520,22 @@ const showBindPhone = ref(false);
 const showBindEmail = ref(false);
 const saving = ref(false);
 const changingPassword = ref(false);
-const showRecharge = ref(false);
+const showStockRecharge = ref(false);
+const showSmartPointsRecharge = ref(false);
+const showTransferDialog = ref(false);
+const showPointsHistory = ref(false);
 const selectedAmount = ref(null);
 const selectedPayment = ref(null);
 const customAmount = ref(null);
-const recharging = ref(false);
+const stockRecharging = ref(false);
+const selectedSmartPointsAmount = ref(null);
+const customSmartPointsAmount = ref(null);
+const smartPointsPurchasing = ref(false);
 
 // 充值金额选项
 const rechargeAmounts = [100, 500, 1000, 2000, 5000, 10000];
+// 智点购买金额选项
+const smartPointsAmounts = [10, 50, 100, 200, 500, 1000];
 
 // 通知设置
 const notificationSettings = reactive({
@@ -460,7 +656,7 @@ const getFinalAmount = () => {
     }
 };
 
-const handleRecharge = async () => {
+const handleStockRecharge = async () => {
     const amount = getFinalAmount();
     if (amount <= 0) {
         ElMessage.warning('请选择充值金额');
@@ -472,20 +668,70 @@ const handleRecharge = async () => {
         return;
     }
 
-    recharging.value = true;
+    stockRecharging.value = true;
 
     // 模拟支付过程
     setTimeout(() => {
         userStore.addBalance(amount);
-        ElMessage.success(`充值成功！已充值 ¥${amount.toFixed(2)}`);
+        ElMessage.success(`股票交易账户充值成功！已充值 ¥${amount.toFixed(2)}`);
 
         // 重置表单
         selectedAmount.value = null;
         customAmount.value = null;
         selectedPayment.value = null;
-        showRecharge.value = false;
-        recharging.value = false;
+        showStockRecharge.value = false;
+        stockRecharging.value = false;
     }, 2000);
+};
+
+const getSmartPointsFinalAmount = () => {
+    if (selectedSmartPointsAmount.value) {
+        return selectedSmartPointsAmount.value;
+    } else if (customSmartPointsAmount.value) {
+        return parseFloat(customSmartPointsAmount.value) || 0;
+    } else {
+        return 0;
+    }
+};
+
+const handleSmartPointsPurchase = async () => {
+    const amount = getSmartPointsFinalAmount();
+    if (amount <= 0) {
+        ElMessage.warning('请选择购买金额');
+        return;
+    }
+
+    if (userStore.balance < amount) {
+        ElMessage.warning('股票交易账户余额不足');
+        return;
+    }
+
+    smartPointsPurchasing.value = true;
+
+    // 模拟购买过程
+    setTimeout(() => {
+        const result = userStore.purchaseSmartPoints(amount);
+        if (result.success) {
+            ElMessage.success(result.message);
+            // 重置表单
+            selectedSmartPointsAmount.value = null;
+            customSmartPointsAmount.value = null;
+            showSmartPointsRecharge.value = false;
+        } else {
+            ElMessage.error(result.message);
+        }
+        smartPointsPurchasing.value = false;
+    }, 1500);
+};
+
+const getTotalAssets = () => {
+    return userStore.getTotalAssets();
+};
+
+const getPortfolioValue = () => {
+    return userStore.portfolio.reduce((total, position) => {
+        return total + position.quantity * parseFloat(position.price || position.avgPrice);
+    }, 0);
 };
 
 onMounted(() => {
@@ -1041,16 +1287,59 @@ onMounted(() => {
 }
 
 /* 充值对话框样式 */
+.recharge-dialog {
+    max-height: 90vh;
+}
+
+.recharge-dialog :deep(.el-dialog__body) {
+    padding: 16px 20px;
+    max-height: 70vh;
+    overflow-y: auto;
+}
+
 .recharge-content {
-    padding: 20px 0;
+    padding: 0;
+}
+
+/* 横向布局 */
+.recharge-row {
+    display: flex;
+    gap: 24px;
+    margin-bottom: 16px;
+}
+
+.recharge-row .recharge-amounts {
+    flex: 1;
+    margin-bottom: 0;
+}
+
+.recharge-row .payment-methods {
+    flex: 1;
+    margin-bottom: 0;
+}
+
+.points-row {
+    display: flex;
+    gap: 24px;
+    margin-bottom: 16px;
+}
+
+.points-row .points-info {
+    flex: 1;
+    margin-bottom: 0;
+}
+
+.points-row .recharge-amounts {
+    flex: 1;
+    margin-bottom: 0;
 }
 
 .current-balance {
     text-align: center;
-    padding: 20px;
+    padding: 12px 16px;
     background: #f8fafc;
-    border-radius: 12px;
-    margin-bottom: 24px;
+    border-radius: 8px;
+    margin-bottom: 16px;
 }
 
 .balance-label {
@@ -1071,25 +1360,26 @@ onMounted(() => {
     font-size: 0.875rem;
     font-weight: 600;
     color: #18181b;
-    margin: 0 0 12px 0;
+    margin: 0 0 8px 0;
 }
 
 .amount-grid {
     display: grid;
     grid-template-columns: repeat(3, 1fr);
-    gap: 12px;
-    margin-bottom: 24px;
+    gap: 8px;
+    margin-bottom: 0;
 }
 
 .amount-item {
-    padding: 16px;
+    padding: 12px 8px;
     border: 2px solid #e5e7eb;
-    border-radius: 8px;
+    border-radius: 6px;
     text-align: center;
     cursor: pointer;
     transition: all 0.2s ease;
     font-weight: 500;
     color: #374151;
+    font-size: 0.875rem;
 }
 
 .amount-item:hover {
@@ -1104,27 +1394,28 @@ onMounted(() => {
 }
 
 .custom-amount {
-    margin-bottom: 24px;
+    margin-bottom: 16px;
 }
 
 .payment-grid {
     display: grid;
     grid-template-columns: repeat(3, 1fr);
-    gap: 12px;
-    margin-bottom: 24px;
+    gap: 8px;
+    margin-bottom: 0;
 }
 
 .payment-item {
-    padding: 16px;
+    padding: 12px 8px;
     border: 2px solid #e5e7eb;
-    border-radius: 8px;
+    border-radius: 6px;
     text-align: center;
     cursor: pointer;
     transition: all 0.2s ease;
     display: flex;
     flex-direction: column;
     align-items: center;
-    gap: 8px;
+    gap: 6px;
+    font-size: 0.875rem;
 }
 
 .payment-item:hover {
@@ -1139,14 +1430,14 @@ onMounted(() => {
 }
 
 .payment-icon {
-    width: 32px;
-    height: 32px;
+    width: 28px;
+    height: 28px;
     border-radius: 50%;
     display: flex;
     align-items: center;
     justify-content: center;
     font-weight: 600;
-    font-size: 0.875rem;
+    font-size: 0.8rem;
 }
 
 .payment-icon.alipay {
@@ -1229,5 +1520,224 @@ onMounted(() => {
     .tab-content {
         max-height: calc(95vh - 280px);
     }
+
+    .accounts-container {
+        grid-template-columns: 1fr;
+    }
+
+    .account-card {
+        margin-bottom: 20px;
+    }
+
+    .amount-grid {
+        grid-template-columns: repeat(2, 1fr);
+    }
+
+    .payment-grid {
+        grid-template-columns: repeat(2, 1fr);
+    }
+
+    .recharge-row {
+        flex-direction: column;
+        gap: 16px;
+    }
+
+    .points-row {
+        flex-direction: column;
+        gap: 16px;
+    }
+
+    .recharge-dialog {
+        width: 95vw !important;
+        max-width: 500px;
+    }
+}
+
+/* 账户管理样式 */
+.accounts-container {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 24px;
+    margin-top: 20px;
+}
+
+.account-card {
+    background: white;
+    border: 1px solid #e5e7eb;
+    border-radius: 16px;
+    padding: 24px;
+    transition: all 0.3s ease;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04);
+}
+
+.account-card:hover {
+    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.12);
+    transform: translateY(-2px);
+}
+
+.stock-account {
+    border-left: 4px solid #3b82f6;
+}
+
+.points-account {
+    border-left: 4px solid #10b981;
+}
+
+.account-header {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    margin-bottom: 24px;
+}
+
+.account-icon {
+    width: 48px;
+    height: 48px;
+    border-radius: 12px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: white;
+}
+
+.stock-account .account-icon {
+    background: linear-gradient(135deg, #3b82f6, #1d4ed8);
+}
+
+.points-account .account-icon {
+    background: linear-gradient(135deg, #10b981, #059669);
+}
+
+.account-info h3 {
+    margin: 0 0 4px 0;
+    font-size: 1.125rem;
+    font-weight: 600;
+    color: #18181b;
+}
+
+.account-info p {
+    margin: 0;
+    font-size: 0.875rem;
+    color: #6b7280;
+}
+
+.account-balance {
+    margin-bottom: 24px;
+}
+
+.balance-amount {
+    display: flex;
+    align-items: baseline;
+    gap: 4px;
+    margin-bottom: 16px;
+}
+
+.balance-amount .currency {
+    font-size: 1.125rem;
+    font-weight: 500;
+    color: #6b7280;
+}
+
+.balance-amount .amount {
+    font-size: 2rem;
+    font-weight: 700;
+    color: #18181b;
+}
+
+.points-balance .currency {
+    order: 2;
+    color: #10b981;
+}
+
+.points-balance .amount {
+    color: #10b981;
+}
+
+.balance-actions {
+    display: flex;
+    gap: 12px;
+}
+
+.balance-actions .el-button {
+    flex: 1;
+    height: 40px;
+    border-radius: 8px;
+    font-weight: 500;
+}
+
+.account-stats {
+    border-top: 1px solid #f3f4f6;
+    padding-top: 20px;
+}
+
+.stat-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 12px;
+}
+
+.stat-row:last-child {
+    margin-bottom: 0;
+}
+
+.stat-label {
+    font-size: 0.875rem;
+    color: #6b7280;
+}
+
+.stat-value {
+    font-size: 0.875rem;
+    font-weight: 500;
+    color: #18181b;
+}
+
+.stat-value.profit {
+    color: #10b981;
+}
+
+.stat-value.loss {
+    color: #ef4444;
+}
+
+/* 智点购买对话框样式 */
+.points-info {
+    margin-bottom: 0;
+}
+
+.info-card {
+    background: #f0f9ff;
+    border: 1px solid #bae6fd;
+    border-radius: 6px;
+    padding: 12px;
+}
+
+.info-card h4 {
+    margin: 0 0 6px 0;
+    font-size: 0.8rem;
+    font-weight: 600;
+    color: #0369a1;
+}
+
+.info-card p {
+    margin: 2px 0;
+    font-size: 0.75rem;
+    color: #0369a1;
+    line-height: 1.3;
+}
+
+.amount-item .amount-cash {
+    font-size: 0.875rem;
+    font-weight: 600;
+    margin-bottom: 2px;
+}
+
+.amount-item .amount-points {
+    font-size: 0.7rem;
+    opacity: 0.8;
+}
+
+.amount-item.active .amount-points {
+    opacity: 1;
 }
 </style>

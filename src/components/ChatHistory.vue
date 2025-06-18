@@ -377,12 +377,14 @@ setInterval(updateChatHistoryList, 1000);
 }
 
 .history-header {
-    padding: 16px;
+    padding: 12px 16px;
     border-bottom: 1px solid #f0f0f0;
     display: flex;
     align-items: center;
     justify-content: space-between;
     flex-shrink: 0;
+    height: 56px;
+    box-sizing: border-box;
 }
 
 .header-title {
@@ -411,6 +413,11 @@ setInterval(updateChatHistoryList, 1000);
     background: transparent;
     color: #6b7280;
     transition: all 0.2s ease;
+    width: 32px;
+    height: 32px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
 }
 
 .new-chat-btn:hover,

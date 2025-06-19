@@ -1,0 +1,244 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+    <title>移动端聊天框测试</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: #f5f5f5;
+            height: 100vh;
+            overflow: hidden;
+        }
+
+        .container {
+            display: flex;
+            flex-direction: column;
+            height: calc(var(--actual-vh, 1vh) * 100);
+        }
+
+        .header {
+            background: white;
+            padding: 12px 16px;
+            border-bottom: 1px solid #e5e7eb;
+            flex-shrink: 0;
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+        }
+
+        .chat-area {
+            flex: 1;
+            overflow-y: auto;
+            padding: 16px;
+            padding-bottom: 200px; /* 为输入框预留空间 */
+        }
+
+        .message {
+            margin-bottom: 16px;
+            padding: 12px 16px;
+            background: white;
+            border-radius: 12px;
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+        }
+
+        .input-area {
+            position: fixed;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(10px);
+            border-top: 1px solid rgba(0, 0, 0, 0.1);
+            box-shadow: 0 -2px 10px rgba(0, 0, 0, 0.1);
+            padding: 16px;
+            z-index: 1000;
+            transition: all 0.3s ease;
+        }
+
+        .input-area.focused {
+            background: rgba(255, 255, 255, 0.98);
+            backdrop-filter: blur(15px);
+            box-shadow: 0 -4px 20px rgba(0, 0, 0, 0.15);
+        }
+
+        .input-container {
+            display: flex;
+            gap: 12px;
+            align-items: flex-end;
+        }
+
+        .text-input {
+            flex: 1;
+            border: 1px solid #ddd;
+            border-radius: 20px;
+            padding: 12px 16px;
+            font-size: 16px;
+            resize: none;
+            outline: none;
+            min-height: 44px;
+            max-height: 120px;
+        }
+
+        .send-btn {
+            width: 44px;
+            height: 44px;
+            background: #007AFF;
+            color: white;
+            border: none;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            flex-shrink: 0;
+        }
+
+        .status {
+            position: fixed;
+            top: 80px;
+            left: 16px;
+            right: 16px;
+            background: rgba(0, 0, 0, 0.8);
+            color: white;
+            padding: 8px 12px;
+            border-radius: 8px;
+            font-size: 12px;
+            z-index: 2000;
+        }
+
+        /* 动态视口高度 */
+        :root {
+            --actual-vh: 1vh;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>移动端聊天框测试</h1>
+        </div>
+        
+        <div class="chat-area" id="chatArea">
+            <div class="message">这是第一条消息，用来测试聊天区域的显示效果。</div>
+            <div class="message">这里是第二条消息，内容稍长一些，用来测试多行文本的显示效果和滚动功能。</div>
+            <div class="message">第三条消息，继续测试滚动效果。</div>
+            <div class="message">第四条消息，当输入框弹出时，这些消息应该能够正常显示，不被遮挡。</div>
+            <div class="message">第五条消息，测试在虚拟键盘弹出时的布局调整。</div>
+            <div class="message">第六条消息，确保所有内容都能正常访问。</div>
+            <div class="message">第七条消息，这是最后一条测试消息。</div>
+        </div>
+    </div>
+
+    <div class="input-area" id="inputArea">
+        <div class="input-container">
+            <textarea class="text-input" id="textInput" placeholder="请输入消息..." rows="1"></textarea>
+            <button class="send-btn" onclick="sendMessage()">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none">
+                    <line x1="22" y1="2" x2="11" y2="13" stroke="currentColor" stroke-width="2"/>
+                    <polygon points="22,2 15,22 11,13 2,9 22,2" fill="currentColor"/>
+                </svg>
+            </button>
+        </div>
+    </div>
+
+    <div class="status" id="status">
+        视口高度: <span id="viewportHeight">--</span> | 
+        实际高度: <span id="actualHeight">--</span> | 
+        输入框状态: <span id="inputStatus">未聚焦</span>
+    </div>
+
+    <script>
+        // 动态视口高度处理
+        function updateViewportHeight() {
+            const visualViewport = window.visualViewport;
+            const actualHeight = visualViewport ? visualViewport.height : window.innerHeight;
+            
+            // 设置CSS自定义属性
+            document.documentElement.style.setProperty('--actual-vh', `${actualHeight * 0.01}px`);
+            
+            // 更新状态显示
+            document.getElementById('viewportHeight').textContent = window.innerHeight + 'px';
+            document.getElementById('actualHeight').textContent = actualHeight + 'px';
+            
+            console.log('视口高度更新:', {
+                windowHeight: window.innerHeight,
+                actualHeight: actualHeight,
+                difference: window.innerHeight - actualHeight
+            });
+        }
+
+        // 初始化
+        updateViewportHeight();
+
+        // 监听视口变化
+        if (window.visualViewport) {
+            window.visualViewport.addEventListener('resize', updateViewportHeight);
+            window.visualViewport.addEventListener('scroll', updateViewportHeight);
+        }
+
+        // 兼容性处理
+        window.addEventListener('resize', () => {
+            setTimeout(updateViewportHeight, 100);
+        });
+        window.addEventListener('orientationchange', () => {
+            setTimeout(updateViewportHeight, 300);
+        });
+
+        // 输入框事件处理
+        const textInput = document.getElementById('textInput');
+        const inputArea = document.getElementById('inputArea');
+        const inputStatus = document.getElementById('inputStatus');
+
+        textInput.addEventListener('focus', () => {
+            inputArea.classList.add('focused');
+            inputStatus.textContent = '已聚焦';
+            setTimeout(updateViewportHeight, 300);
+        });
+
+        textInput.addEventListener('blur', () => {
+            inputArea.classList.remove('focused');
+            inputStatus.textContent = '未聚焦';
+            setTimeout(updateViewportHeight, 300);
+        });
+
+        // 自动调整输入框高度
+        textInput.addEventListener('input', function() {
+            this.style.height = 'auto';
+            this.style.height = Math.min(this.scrollHeight, 120) + 'px';
+        });
+
+        // 发送消息
+        function sendMessage() {
+            const message = textInput.value.trim();
+            if (message) {
+                const chatArea = document.getElementById('chatArea');
+                const messageDiv = document.createElement('div');
+                messageDiv.className = 'message';
+                messageDiv.textContent = message;
+                chatArea.appendChild(messageDiv);
+                
+                // 滚动到底部
+                chatArea.scrollTop = chatArea.scrollHeight;
+                
+                // 清空输入框
+                textInput.value = '';
+                textInput.style.height = 'auto';
+            }
+        }
+
+        // 回车发送
+        textInput.addEventListener('keydown', (e) => {
+            if (e.key === 'Enter' && !e.shiftKey) {
+                e.preventDefault();
+                sendMessage();
+            }
+        });
+    </script>
+</body>
+</html> 

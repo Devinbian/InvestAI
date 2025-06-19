@@ -133,6 +133,7 @@
                                         stroke-linejoin="round" />
                                 </svg>
                             </el-button>
+
                             <el-button class="ai-send-btn" type="primary" circle @click="sendMessage"
                                 :disabled="!inputMessage.trim()">
                                 <svg width="20" height="20" viewBox="0 0 24 24" fill="none">
@@ -255,13 +256,13 @@
                                         <div class="asset-amount">
                                             <span class="amount-label">总资产</span>
                                             <span class="amount-value">¥{{ formatCurrency(message.assetData.totalAssets)
-                                            }}</span>
+                                                }}</span>
                                         </div>
                                         <div class="asset-change"
                                             :class="[message.assetData.totalProfitPercent >= 0 ? 'profit' : 'loss']">
                                             <span class="change-icon">{{ message.assetData.totalProfitPercent >= 0 ?
                                                 '📈' : '📉'
-                                            }}</span>
+                                                }}</span>
                                             <span class="change-label">今日盈亏：</span>
                                             <span class="change-text">
                                                 {{ message.assetData.totalProfitPercent >= 0 ? '+' : '' }}¥{{
@@ -287,7 +288,7 @@
                                         <div class="stat-info">
                                             <div class="stat-label">持仓市值</div>
                                             <div class="stat-value">¥{{ formatCurrency(message.assetData.portfolioValue)
-                                            }}
+                                                }}
                                             </div>
                                         </div>
                                     </div>
@@ -348,7 +349,7 @@
                                                         <div class="stock-price-change">
                                                             <span class="current-price">¥{{
                                                                 position.currentPrice.toFixed(2)
-                                                            }}</span>
+                                                                }}</span>
                                                             <span
                                                                 :class="['price-change', position.profitPercent >= 0 ? 'positive' : 'negative']">
                                                                 {{ position.profitPercent >= 0 ? '+' : '' }}¥{{
@@ -362,10 +363,10 @@
                                                             <span class="detail-label">持仓数量：</span>
                                                             <span class="detail-value">{{
                                                                 position.quantity.toLocaleString()
-                                                            }}股</span>
+                                                                }}股</span>
                                                             <span class="detail-label">成本价：</span>
                                                             <span class="detail-value">¥{{ position.avgPrice.toFixed(2)
-                                                            }}</span>
+                                                                }}</span>
                                                         </div>
                                                         <div class="detail-row">
                                                             <span class="detail-label">持仓市值：</span>
@@ -374,7 +375,7 @@
                                                             <span class="detail-label">所属行业：</span>
                                                             <span class="detail-value industry">{{ position.industry ||
                                                                 '未分类'
-                                                            }}</span>
+                                                                }}</span>
                                                         </div>
                                                     </div>
                                                 </div>
@@ -567,7 +568,7 @@
                             <div v-if="message.isPersistent" class="recommendation-toolbar">
                                 <div class="toolbar-left">
                                     <span class="recommendation-time">{{ formatRecommendationTime(message.timestamp)
-                                    }}</span>
+                                        }}</span>
                                 </div>
                                 <div class="toolbar-right">
                                     <el-button size="small" text @click="refreshRecommendation(message)"
@@ -858,7 +859,7 @@
                 </div>
                 <div class="guide-actions">
                     <el-button type="primary" size="small" @click="handleGuideAction">{{ guideActionText
-                        }}</el-button>
+                    }}</el-button>
                     <el-button size="small" @click="dismissGuide">稍后</el-button>
                 </div>
             </div>
@@ -1577,6 +1578,15 @@ const sendMessage = async () => {
 
     await nextTick();
     scrollToBottom();
+
+    // 移动端消息发送后的处理
+    if (isMobileView.value) {
+        console.log('准备调用fixMobileChatBox - sendMessage');
+        setTimeout(() => {
+            fixMobileChatBox(); // 确保输入框不被遮挡
+            scrollToBottom();
+        }, 100);
+    }
 };
 
 const scrollToBottom = () => {
@@ -1587,7 +1597,7 @@ const scrollToBottom = () => {
 
         if (isMobile) {
             // 移动端需要额外的偏移量来确保内容不被输入框遮挡
-            const extraOffset = window.innerWidth <= 480 ? 80 : 100;
+            const extraOffset = window.innerWidth <= 480 ? 50 : 60; // 减少额外偏移
             scrollTarget = chatHistoryRef.value.scrollHeight + extraOffset;
         }
 
@@ -1617,6 +1627,18 @@ const scrollToBottom = () => {
     }
 };
 
+// 滚动到顶部的函数
+const scrollToTop = () => {
+    if (chatHistoryRef.value) {
+        chatHistoryRef.value.scrollTo({
+            top: 0,
+            behavior: 'smooth'
+        });
+
+        console.log('聊天区域已滚动到顶部');
+    }
+};
+
 // 滚动条显示控制
 let scrollTimer = null;
 const handleScroll = () => {
@@ -1643,6 +1665,16 @@ const createNewChat = () => {
     inputMessage.value = '';
     isChatMode.value = false; // 退出聊天模式，回到初始状态
     chatHistoryStore.clearCurrentChat(); // 清空聊天历史store中的当前聊天
+
+    // 确保移动端布局重置
+    if (isMobileView.value) {
+        nextTick(() => {
+            setTimeout(() => {
+                resetMobileLayout();
+            }, 100);
+        });
+    }
+
     ElMessage.success('已创建新聊天');
 };
 
@@ -1656,6 +1688,37 @@ watch(chatHistory, () => {
         }
     });
 }, { deep: true });
+
+// 监听聊天模式变化 - 简化处理，参照微信浏览器
+watch(isChatMode, (newVal) => {
+    console.log('isChatMode变化:', { newVal, isMobileView: isMobileView.value });
+
+    if (newVal) {
+        // 进入聊天模式
+        nextTick(() => {
+            scrollToBottom();
+            updateChatHistoryHeight();
+
+            // 移动端处理
+            if (isMobileView.value) {
+                console.log('准备调用fixMobileChatBox - isChatMode监听器');
+                setTimeout(() => {
+                    fixMobileChatBox(); // 确保输入框不被遮挡
+                    handleMobileKeyboard(); // 键盘监听
+                }, 100);
+            }
+        });
+    } else {
+        // 退出聊天模式，恢复初始状态
+        nextTick(() => {
+            if (isMobileView.value) {
+                setTimeout(() => {
+                    resetMobileLayout();
+                }, 100);
+            }
+        });
+    }
+});
 
 // 语音输入相关状态
 const isRecording = ref(false);
@@ -1982,42 +2045,188 @@ const checkMobileView = () => {
     isMobileView.value = window.innerWidth <= 768;
 };
 
-// 修复移动端聊天框显示问题
+
+
+
+
+
+
+// 移动端聊天框修复 - 使用visualViewport检测实际可视区域
 const fixMobileChatBox = () => {
-    if (isMobileView.value) {
-        // 强制显示聊天输入框
+    console.log('fixMobileChatBox被调用', { isMobileView: isMobileView.value, isChatMode: isChatMode.value });
+
+    // 只在移动端且聊天模式下才进行修复
+    if (isMobileView.value && isChatMode.value) {
         nextTick(() => {
-            const chatBox = document.querySelector('.ai-card');
-            if (chatBox) {
-                chatBox.style.display = 'block';
-                chatBox.style.position = 'fixed';
-                chatBox.style.bottom = '0';
-                chatBox.style.left = '0';
-                chatBox.style.right = '0';
-                chatBox.style.zIndex = '1000';
-                chatBox.style.background = 'white';
-                chatBox.style.borderTop = '1px solid #e5e7eb';
-                chatBox.style.boxShadow = '0 -4px 20px rgba(0, 0, 0, 0.1)';
+            const inputArea = document.querySelector('.input-area');
+            const aiCard = document.querySelector('.ai-card');
 
-                // 确保输入框可见
-                const input = chatBox.querySelector('.ai-input');
-                if (input) {
-                    input.style.display = 'block';
-                    input.style.visibility = 'visible';
+            if (inputArea) {
+                let bottomOffset = 0;
+
+                // 检测浏览器类型和版本，提供更精确的兼容性处理
+                const userAgent = navigator.userAgent.toLowerCase();
+                const isAndroid = userAgent.includes('android');
+                const isIOS = userAgent.includes('iphone') || userAgent.includes('ipad');
+                const isChrome = userAgent.includes('chrome') || userAgent.includes('crios'); // iOS Chrome使用CriOS
+                const isSafari = userAgent.includes('safari') && !userAgent.includes('chrome') && !userAgent.includes('crios');
+                const isFirefox = userAgent.includes('firefox') || userAgent.includes('fxios'); // iOS Firefox使用FxiOS
+                const isWechat = userAgent.includes('micromessenger');
+
+                // 更精确的iOS Chrome检测 - iOS Chrome的User Agent包含CriOS而不是Chrome
+                const isIOSChrome = isIOS && (userAgent.includes('crios') || userAgent.includes('chrome'));
+                const isIOSSafari = isIOS && isSafari;
+
+                // 检测浏览器类型和版本，提供更精确的兼容性处理
+                const uaInfo = navigator.userAgent.toLowerCase();
+
+                // 使用visualViewport API检测实际可视区域
+                if (window.visualViewport) {
+                    const visualHeight = window.visualViewport.height;
+                    const windowHeight = window.innerHeight;
+                    bottomOffset = Math.max(0, windowHeight - visualHeight);
+
+                    // 针对不同浏览器的特殊调整
+                    if (isAndroid && isChrome && bottomOffset === 0) {
+                        // Android Chrome可能需要额外的工具栏高度检测
+                        const toolbarHeight = Math.max(0, window.screen.height - window.screen.availHeight - windowHeight);
+                        if (toolbarHeight > 0) {
+                            bottomOffset = Math.min(toolbarHeight, 80); // 限制最大高度
+                        }
+                    }
+
+                    console.log('VisualViewport检测:', {
+                        visualHeight,
+                        windowHeight,
+                        bottomOffset,
+                        screenHeight: window.screen.height,
+                        screenAvailHeight: window.screen.availHeight,
+                        documentHeight: document.documentElement.clientHeight,
+                        bodyHeight: document.body.clientHeight,
+                        browser: { isAndroid, isIOS, isChrome, isSafari, isFirefox, isWechat, isIOSChrome, isIOSSafari },
+                        userAgent: navigator.userAgent,
+                        offsetTop: window.visualViewport.offsetTop,
+                        offsetLeft: window.visualViewport.offsetLeft
+                    });
+                } else {
+                    // 降级方案：根据浏览器类型提供不同的处理
+                    const screenHeight = window.screen.height;
+                    const windowHeight = window.innerHeight;
+
+                    if (isWechat) {
+                        // 微信浏览器通常不需要额外偏移
+                        bottomOffset = 0;
+                    } else if (isAndroid && isChrome) {
+                        // Android Chrome 浏览器工具栏高度通常在56-72px
+                        bottomOffset = Math.min(72, Math.max(0, screenHeight - windowHeight - 100));
+                    } else if (isIOS && isSafari) {
+                        // iOS Safari 工具栏高度通常在44-88px
+                        bottomOffset = Math.min(88, Math.max(0, screenHeight - windowHeight - 150));
+                    } else if (isFirefox) {
+                        // Firefox 工具栏高度
+                        bottomOffset = Math.min(60, Math.max(0, screenHeight - windowHeight - 80));
+                    } else {
+                        // 其他浏览器的通用处理
+                        bottomOffset = Math.min(80, Math.max(0, screenHeight - windowHeight - 100));
+                    }
+
+                    console.log('降级检测:', {
+                        screenHeight,
+                        windowHeight,
+                        bottomOffset,
+                        screenAvailHeight: window.screen.availHeight,
+                        documentHeight: document.documentElement.clientHeight,
+                        bodyHeight: document.body.clientHeight,
+                        browser: { isAndroid, isIOS, isChrome, isSafari, isFirefox, isWechat, isIOSChrome, isIOSSafari },
+                        userAgent: navigator.userAgent
+                    });
                 }
 
-                // 确保按钮可见
-                const buttons = chatBox.querySelector('.ai-buttons');
-                if (buttons) {
-                    buttons.style.display = 'flex';
-                    buttons.style.visibility = 'visible';
+                // 现在调整input-area的位置，ai-card会跟随父容器移动
+                // 这样新建聊天按钮等所有内容都会一起移动
+                if (inputArea) {
+                    // 临时测试：强制设置一个固定偏移量来验证修复是否有效
+                    let finalBottomOffset = bottomOffset;
+
+                    // 微信浏览器特殊处理：始终不偏移
+                    if (isWechat) {
+                        finalBottomOffset = 0;
+                        console.log('微信浏览器检测，强制使用底部位置 0px');
+                    } else if (bottomOffset < 10) {
+                        // 非微信浏览器且检测偏移量太小时，使用经验值
+                        if (isIOS && isSafari) {
+                            finalBottomOffset = 80; // iOS Safari 强制偏移
+                        } else if (isIOS && isChrome) {
+                            finalBottomOffset = 110; // iOS Chrome 需要更大的偏移量
+                        } else if (isAndroid && isChrome) {
+                            finalBottomOffset = 70; // Android Chrome 强制偏移
+                        } else if (isChrome) {
+                            finalBottomOffset = 60; // 桌面Chrome移动模式
+                        } else {
+                            finalBottomOffset = 50; // 其他浏览器默认偏移
+                        }
+                        console.log(`检测偏移量过小(${bottomOffset}px)，使用经验值: ${finalBottomOffset}px`);
+                        console.log(`浏览器检测结果: iOS=${isIOS}, Chrome=${isChrome}, IOSChrome=${isIOSChrome}, Safari=${isSafari}`);
+                    }
+
+                    // 根据浏览器类型调整触发阈值
+                    const threshold = isWechat ? -1 : 5; // 微信浏览器阈值设为-1，确保永远不触发偏移
+
+                    if (finalBottomOffset > threshold) {
+                        // 强制设置样式，确保优先级足够高
+                        inputArea.style.cssText += `bottom: ${finalBottomOffset}px !important;`;
+                        console.log(`已调整输入区域位置，底部偏移: ${finalBottomOffset}px (原始: ${bottomOffset}px, 阈值: ${threshold}px)`);
+                        console.log(`输入区域当前bottom样式: ${inputArea.style.bottom}`);
+                    } else {
+                        inputArea.style.cssText += `bottom: 0px !important;`;
+                        console.log(`输入区域使用默认底部位置 (偏移: ${finalBottomOffset}px < 阈值: ${threshold}px)`);
+                    }
+
+                    // 确保输入区域的其他关键样式
+                    inputArea.style.setProperty('position', 'fixed', 'important');
+                    inputArea.style.setProperty('left', '0', 'important');
+                    inputArea.style.setProperty('right', '0', 'important');
+                    inputArea.style.setProperty('z-index', '1000', 'important');
                 }
 
-                console.log('移动端聊天框已修复');
+                // input-area不需要特殊处理，保持其原有样式
+
+                // 调试：检查ai-card的位置和样式
+                if (aiCard) {
+                    const aiCardStyles = window.getComputedStyle(aiCard);
+                    const inputAreaRect = inputArea.getBoundingClientRect();
+                    const aiCardRect = aiCard.getBoundingClientRect();
+
+                    console.log('AI卡片调试信息:', {
+                        aiCardPosition: aiCardStyles.position,
+                        aiCardBottom: aiCardStyles.bottom,
+                        aiCardTop: aiCardStyles.top,
+                        inputAreaRect: {
+                            top: inputAreaRect.top,
+                            bottom: inputAreaRect.bottom,
+                            height: inputAreaRect.height
+                        },
+                        aiCardRect: {
+                            top: aiCardRect.top,
+                            bottom: aiCardRect.bottom,
+                            height: aiCardRect.height
+                        }
+                    });
+
+                    // 检查ai-card是否有可能影响定位的样式
+                    const problematicStyles = ['position', 'top', 'bottom', 'left', 'right', 'transform', 'margin-bottom'];
+                    const aiCardComputedStyles = {};
+                    problematicStyles.forEach(prop => {
+                        aiCardComputedStyles[prop] = aiCardStyles.getPropertyValue(prop);
+                    });
+                    console.log('AI卡片样式检查:', aiCardComputedStyles);
+                }
             }
         });
     }
 };
+
+
 
 // 处理下拉菜单命令
 const handleDropdownCommand = (command) => {
@@ -2712,14 +2921,71 @@ const checkUserStatus = () => {
     }
 };
 
-// 窗口大小变化处理函数
+// 重置移动端布局
+const resetMobileLayout = () => {
+    if (!isMobileView.value) return;
+
+    const inputArea = document.querySelector('.input-area');
+
+    console.log('重置移动端布局');
+
+    // 清除强制设置的样式，让CSS类样式生效
+    if (inputArea) {
+        // 清除所有可能的内联样式
+        ['position', 'bottom', 'left', 'right', 'z-index', 'margin', 'padding'].forEach(prop => {
+            inputArea.style.removeProperty(prop);
+        });
+
+        // 完全清除style属性，让CSS自然生效
+        inputArea.removeAttribute('style');
+
+        console.log('移动端布局已完全重置，移除所有内联样式');
+    }
+
+    setTimeout(() => {
+        // 确保页面滚动到顶部
+        window.scrollTo({
+            top: 0,
+            behavior: 'smooth'
+        });
+
+        // 如果有聊天历史区域，也滚动到顶部
+        if (chatHistoryRef.value) {
+            scrollToTop();
+        }
+
+        console.log('移动端布局已重置');
+    }, 50);
+};
+
+
+
+// 窗口大小变化处理函数 - 简化处理
 const handleResize = () => {
     checkMobileView();
     updateChatHistoryHeight();
-    // 修复移动端聊天框
-    setTimeout(() => {
-        fixMobileChatBox();
-    }, 100);
+    // 移动端聊天模式下的处理
+    if (isMobileView.value && isChatMode.value) {
+        setTimeout(() => {
+            fixMobileChatBox(); // 确保输入框不被遮挡
+            scrollToBottom();
+        }, 100);
+    }
+};
+
+// 简化的移动端虚拟键盘处理 - 参照微信浏览器表现
+const handleMobileKeyboard = () => {
+    if (!isMobileView.value || !isChatMode.value) return;
+
+    console.log('简化的虚拟键盘处理已启用');
+
+    // 监听orientationchange，这个是必要的
+    window.addEventListener('orientationchange', () => {
+        setTimeout(() => {
+            // 屏幕旋转后滚动到底部
+            scrollToBottom();
+        }, 500);
+    });
 };
 
 onMounted(() => {
@@ -2747,8 +3013,9 @@ onMounted(() => {
         document.body.classList.add('wechat-browser');
     }
 
-    // 修复移动端聊天框显示问题
-    fixMobileChatBox();
+    // 初始状态不调用修复函数，让CSS自然生效
+
+
 
     // 如果有当前聊天ID，恢复聊天记录
     if (chatHistoryStore.currentChatId) {
@@ -2774,6 +3041,24 @@ onMounted(() => {
             chatHistoryRef.value.hasScrollListener = true;
         }
     });
+
+    // 移动端聊天框修复
+    if (isMobileView.value) {
+        // 初始状态只重置布局，不调用修复函数
+        resetMobileLayout();
+        handleMobileKeyboard();
+
+        // 监听visualViewport变化来处理浏览器工具栏显示/隐藏
+        if (window.visualViewport) {
+            const handleViewportChange = () => {
+                if (isMobileView.value && isChatMode.value) {
+                    setTimeout(fixMobileChatBox, 100); // 延迟执行确保变化完成
+                }
+            };
+            window.visualViewport.addEventListener('resize', handleViewportChange);
+            window.visualViewport.addEventListener('scroll', handleViewportChange);
+        }
+    }
 });
 
 // 组件卸载时清理
@@ -2796,6 +3081,13 @@ onUnmounted(() => {
     }
     // 清理窗口大小监听
     window.removeEventListener('resize', handleResize);
+
+    // 清理移动端视口监听
+    if (window.visualViewport) {
+        window.visualViewport.removeEventListener('resize', () => { });
+        window.visualViewport.removeEventListener('scroll', () => { });
+    }
+    window.removeEventListener('orientationchange', () => { });
 });
 
 const closeUserProfile = () => {
@@ -3547,8 +3839,9 @@ body.onboarding-mode {
     .modern-content {
         padding-top: 80px;
         /* 增加顶部间距，避免太靠顶部 */
-        padding-left: 20px;
-        padding-right: 20px;
+        padding-left: 0px !important;
+        padding-right: 0px !important;
+        /* 移除左右padding，让AI卡片能够占满全屏 */
     }
 
     /* 移动端聊天模式下的内容区域 */
@@ -3586,14 +3879,39 @@ body.onboarding-mode {
         /* 增加欢迎区域下方间距 */
         padding-top: 20px;
         /* 增加欢迎区域上方间距 */
+        padding-left: 20px;
+        padding-right: 20px;
+        /* 给欢迎区域添加左右间距，避免内容贴边 */
     }
 
-    /* 移动端AI输入卡片间距优化 */
+    /* 移动端AI输入卡片间距优化 - 仅适用于非移动端 */
     .ai-card {
         margin-top: 24px;
         /* 增加AI输入卡片上方间距 */
         margin-bottom: 24px;
         /* 增加AI输入卡片下方间距 */
+    }
+
+    /* 移动端覆盖：AI卡片占满全屏 */
+    @media (max-width: 768px) {
+        .ai-card {
+            margin: 0 !important;
+            padding: 12px 0 calc(12px + env(safe-area-inset-bottom, 0px)) 0 !important;
+            border-radius: 0 !important;
+            width: 100% !important;
+            box-sizing: border-box !important;
+            /* 移除左右padding，让AI卡片完全占满屏幕宽度 */
+        }
+
+        /* AI输入行添加左右内边距 */
+        .ai-input-row {
+            padding: 0 16px !important;
+        }
+
+        /* AI按钮行添加左右内边距 */
+        .ai-buttons-row {
+            padding: 0 16px !important;
+        }
     }
 
     .quick-examples {
@@ -5532,20 +5850,36 @@ body.onboarding-mode {
         /* 为底部聊天框留出空间 */
     }
 
-    /* 聊天输入框固定在底部 */
-    .ai-card {
+    /* 移动端输入区域容器固定在底部 */
+    .input-area {
         position: fixed !important;
         bottom: 0 !important;
         left: 0 !important;
         right: 0 !important;
+        z-index: 1000 !important;
+        background: transparent !important;
+        padding: 0 !important;
+        margin: 0 !important;
+        border: none !important;
+        box-sizing: border-box !important;
+        width: 100% !important;
+    }
+
+    /* 聊天输入框相对于父容器定位 */
+    .ai-card {
+        position: relative !important;
+        bottom: auto !important;
+        left: auto !important;
+        right: auto !important;
         max-width: none !important;
         margin: 0 !important;
         border-radius: 0 !important;
         border-top: 1px solid #e5e7eb !important;
         box-shadow: 0 -4px 20px rgba(0, 0, 0, 0.1) !important;
-        padding: 12px 16px !important;
+        padding: 12px 0 calc(12px + env(safe-area-inset-bottom, 0px)) 0 !important;
+        /* 移除左右padding，让AI卡片占满全屏宽度 */
         background: white !important;
-        z-index: 1000 !important;
+        z-index: auto !important;
         transition: transform 0.3s ease !important;
         /* 确保在所有移动端浏览器中显示 */
         display: block !important;
@@ -5554,20 +5888,25 @@ body.onboarding-mode {
         /* 防止被其他元素遮挡 */
         transform: translateZ(0) !important;
         -webkit-transform: translateZ(0) !important;
+        /* 防止内容溢出 */
+        box-sizing: border-box !important;
+        /* 确保宽度100% */
+        width: 100% !important;
     }
 
 
 
     .ai-input-row {
-        padding: 12px 16px;
-        border-radius: 16px;
+        padding: 0 16px;
+        border-radius: 0;
+        /* 添加左右内边距，确保内容不贴边 */
     }
 
     .ai-buttons-row {
         margin-top: 8px;
         justify-content: flex-end;
-        padding-right: 4px;
-        /* 增加右侧间距，方便操作 */
+        padding: 0 16px;
+        /* 添加左右内边距，与输入行保持一致 */
     }
 
     /* 缩小按钮尺寸 */
@@ -5594,6 +5933,8 @@ body.onboarding-mode {
         width: 16px;
         height: 16px;
     }
+
+
 
     /* 隐藏顶部快捷指令区域 */
     .ai-suggestions {
@@ -8948,18 +9289,84 @@ body {
 
     /* 微信环境下的底部间距优化 */
     body.wechat-browser .ai-card {
+        padding: 12px 0 16px 0 !important;
+        /* 微信环境下给底部一点间距，左右padding为0确保占满全屏 */
+        width: 100% !important;
+        border-radius: 0 !important;
+        /* 微信环境下移除圆角确保占满全屏 */
         margin-bottom: 0 !important;
-        padding-bottom: 16px !important;
+        /* 确保没有底部margin */
     }
 
     body.wechat-browser .input-area {
-        padding-bottom: 12px !important;
-        margin-bottom: 0 !important;
+        padding: 0 !important;
+        margin: 0 !important;
+        bottom: 0 !important;
+        /* 微信环境下确保input-area贴底部 */
+    }
+
+    /* 微信环境下AI输入行和按钮行的底部间距 */
+    body.wechat-browser .ai-input-row {
+        padding-bottom: 8px !important;
+        /* 微信环境下给输入行添加底部间距 */
+    }
+
+    body.wechat-browser .ai-buttons-row {
+        padding-bottom: 8px !important;
+        /* 微信环境下给按钮行添加底部间距，确保不贴底边 */
+    }
+
+    /* 微信环境下欢迎区域优化 */
+    body.wechat-browser .welcome-section {
+        margin-bottom: 20px !important;
+        /* 微信环境下减少欢迎区域底部间距 */
+        flex-shrink: 0 !important;
+        /* 微信环境下防止欢迎区域被压缩 */
     }
 
     /* 微信环境下确保版权信息完全隐藏 */
     body.wechat-browser .copyright-footer {
         display: none !important;
+        margin-top: 0 !important;
+        margin-bottom: 0 !important;
+        padding: 0 !important;
+        /* 微信环境下移除所有margin和padding */
+    }
+
+    /* 微信环境下确保center-container贴底部 */
+    body.wechat-browser .center-container {
+        margin-bottom: 0 !important;
+        padding-bottom: 0 !important;
+        /* 微信环境下移除底部间距，让AI卡片完全贴底 */
+        display: flex !important;
+        flex-direction: column !important;
+        justify-content: space-between !important;
+        /* 微信环境下让欢迎区域和AI卡片分布更均匀 */
+        min-height: 0 !important;
+        /* 微信环境下允许收缩 */
+    }
+
+    /* 微信环境下确保modern-content贴底部 */
+    body.wechat-browser .modern-content {
+        padding-bottom: 0 !important;
+        margin-bottom: 0 !important;
+        /* 微信环境下移除底部间距 */
+        height: 100vh !important;
+        /* 微信环境下确保占满整个视口高度 */
+        display: flex !important;
+        flex-direction: column !important;
+        justify-content: space-between !important;
+        /* 微信环境下让内容分布更均匀 */
+        padding-top: 60px !important;
+        /* 微信环境下给顶部一些间距 */
+    }
+
+    /* 微信环境下确保整个页面容器贴底 */
+    body.wechat-browser .app-container {
+        height: 100vh !important;
+        margin: 0 !important;
+        padding: 0 !important;
+        overflow: hidden !important;
     }
 }
 
@@ -8974,27 +9381,20 @@ body {
         padding-left: 0 !important;
         padding-right: 0 !important;
         height: 100vh !important;
+        /* 兼容性回退 */
+        height: 100dvh !important;
+        /* 使用动态视口高度 */
         overflow: hidden !important;
     }
 
-    /* 移动端输入区域高度优化 */
-    .input-area {
-        padding: 12px 16px 16px 16px !important;
-        /* 进一步减少padding，节省更多空间 */
-        background: transparent !important;
-        /* 移动端也使用透明背景 */
-        backdrop-filter: none !important;
-        /* 移除模糊效果 */
-        border: none !important;
-        /* 移除所有边框 */
-        box-shadow: none !important;
-        /* 移除所有阴影 */
-    }
+    /* 移动端输入区域现在负责定位，在CSS中已在@media (max-width: 768px)中定义 */
 
     /* 移动端新聊天按钮区域优化 */
     .new-chat-section {
         margin-bottom: 8px !important;
         /* 进一步减少间距 */
+        padding: 0 16px !important;
+        /* 添加左右间距，与其他内容保持一致 */
     }
 
     /* 移动端按钮布局优化 - 确保一行显示 */
@@ -9024,35 +9424,42 @@ body {
     .ai-card {
         margin: 0 !important;
         /* 移除margin */
-        padding: 16px 20px !important;
-        /* 减少AI卡片的padding */
+        padding: 12px 0 calc(env(safe-area-inset-bottom) + 12px) 0 !important;
+        /* 左右padding为0确保占满全屏，底部padding考虑安全区域 */
+        width: 100% !important;
+        border-radius: 0 !important;
+        /* 移除圆角确保占满全屏 */
     }
 
     /* 移动端AI输入行间距优化 */
     .ai-input-row {
         padding: 12px 16px !important;
-        /* 减少输入行的padding */
+        /* 保持输入行的左右padding，确保内容不贴边 */
     }
 
     /* 移动端AI按钮行间距优化 */
     .ai-buttons-row {
         margin-top: 8px !important;
         /* 减少按钮行的上边距 */
+        padding: 0 16px !important;
+        /* 添加左右padding，确保按钮不贴边 */
     }
 
-    /* 问题2&3: 滚动条位置和底部内容展示 - 重新定义聊天历史区域 */
+    /* 问题2&3: 滚动条位置和底部内容展示 - 参照微信浏览器优化 */
     .chat-history-area {
-        height: calc(100vh - 76px - 350px) !important;
-        /* 大幅增加底部预留空间到350px，顶部76px包含导航和间距 */
-        padding: 0 0 60px 8px !important;
-        /* 减少左侧padding，让内容更宽 */
+        height: calc(100vh - 76px - 120px) !important;
+        /* 兼容性回退，参照微信浏览器减少预留空间 */
+        height: calc(100dvh - 76px - 120px) !important;
+        /* 使用动态视口高度，预留120px给输入区域 */
+        padding: 20px 8px 60px 8px !important;
+        /* 顶部20px，底部60px，参照微信浏览器间距 */
         margin: 0 !important;
         width: 100% !important;
         max-width: none !important;
-        /* 移动端占满宽度，移除900px限制 */
         box-sizing: border-box !important;
-        scroll-padding-bottom: 100px !important;
-        /* 使用CSS scroll-padding-bottom确保滚动时底部有足够间距 */
+        overflow-y: auto !important;
+        -webkit-overflow-scrolling: touch !important;
+        /* iOS滚动优化 */
     }
 
     /* 消息右侧间距，避免贴滚动条 */
@@ -9091,30 +9498,21 @@ body {
 
 @media (max-width: 480px) {
 
-    /* 超小屏幕输入区域进一步优化 */
-    .input-area {
-        padding: 10px 12px 12px 12px !important;
-        /* 超小屏幕最小化padding */
-        background: transparent !important;
-        /* 超小屏幕也使用透明背景 */
-        backdrop-filter: none !important;
-        /* 移除模糊效果 */
-        border: none !important;
-        /* 移除所有边框 */
-        box-shadow: none !important;
-        /* 移除所有阴影 */
-    }
+    /* 超小屏幕输入区域继承@media (max-width: 768px)中的样式 */
 
     /* 超小屏幕AI卡片进一步优化 */
     .ai-card {
-        padding: 12px 16px !important;
-        /* 超小屏幕进一步减少AI卡片padding */
+        padding: 12px 0 calc(env(safe-area-inset-bottom) + 12px) 0 !important;
+        /* 超小屏幕左右padding为0确保占满全屏，底部padding考虑安全区域 */
+        width: 100% !important;
+        border-radius: 0 !important;
+        /* 移除圆角确保占满全屏 */
     }
 
     /* 超小屏幕AI输入行进一步优化 */
     .ai-input-row {
         padding: 10px 12px !important;
-        /* 超小屏幕最小化输入行padding */
+        /* 超小屏幕保持输入行的左右padding，确保内容不贴边 */
     }
 
     /* 超小屏幕新聊天按钮区域 */
@@ -9123,16 +9521,23 @@ body {
         /* 超小屏幕最小化间距 */
     }
 
-    /* 超小屏幕进一步优化 */
+    /* 超小屏幕AI按钮行间距优化 */
+    .ai-buttons-row {
+        padding: 0 12px !important;
+        /* 超小屏幕添加左右padding，确保按钮不贴边 */
+    }
+
+    /* 超小屏幕进一步优化 - 参照微信浏览器 */
     .chat-history-area {
-        height: calc(100vh - 76px - 320px) !important;
-        /* 超小屏幕预留320px给输入区域，顶部76px包含导航和间距 */
-        padding: 0 0 55px 6px !important;
-        /* 减少左侧padding，让内容更宽 */
-        scroll-padding-bottom: 80px !important;
-        /* 超小屏幕的滚动底部间距 */
+        height: calc(100vh - 76px - 100px) !important;
+        /* 兼容性回退，超小屏幕参照微信浏览器 */
+        height: calc(100dvh - 76px - 100px) !important;
+        /* 使用动态视口高度，超小屏幕预留100px给输入区域 */
+        padding: 15px 6px 40px 6px !important;
+        /* 超小屏幕顶部15px，底部40px，参照微信浏览器 */
         max-width: none !important;
-        /* 确保超小屏幕也占满宽度 */
+        overflow-y: auto !important;
+        -webkit-overflow-scrolling: touch !important;
     }
 
     .modern-content.chatting {

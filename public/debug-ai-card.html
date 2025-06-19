@@ -1,0 +1,210 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AI卡片位置调试</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: #f5f5f5;
+            padding: 20px;
+        }
+        
+        .debug-info {
+            position: fixed;
+            top: 10px;
+            left: 10px;
+            background: rgba(0,0,0,0.8);
+            color: white;
+            padding: 10px;
+            border-radius: 5px;
+            font-size: 12px;
+            z-index: 10000;
+            max-width: 300px;
+        }
+        
+        .test-container {
+            height: 100vh;
+            display: flex;
+            flex-direction: column;
+        }
+        
+        .content-area {
+            flex: 1;
+            background: white;
+            padding: 20px;
+            overflow-y: auto;
+        }
+        
+        .input-area {
+            position: fixed;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            background: white;
+            border-top: 1px solid #e5e7eb;
+            box-shadow: 0 -2px 10px rgba(0, 0, 0, 0.1);
+            z-index: 9999;
+            padding: 12px 16px 16px 16px;
+        }
+        
+        .ai-card {
+            background: #f8f9fa;
+            border-radius: 12px;
+            padding: 16px;
+            border: 2px solid #007bff;
+        }
+        
+        .ai-input-row {
+            margin-bottom: 12px;
+        }
+        
+        .ai-input {
+            width: 100%;
+            padding: 12px;
+            border: 1px solid #ddd;
+            border-radius: 8px;
+            resize: vertical;
+        }
+        
+        .ai-buttons-row {
+            display: flex;
+            justify-content: flex-end;
+            gap: 8px;
+        }
+        
+        .ai-btn {
+            padding: 8px 16px;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+        }
+        
+        .ai-send-btn {
+            background: #007bff;
+            color: white;
+        }
+        
+        .controls {
+            margin-bottom: 20px;
+        }
+        
+        .control-btn {
+            margin-right: 10px;
+            padding: 8px 16px;
+            background: #007bff;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+        }
+        
+        .highlight {
+            outline: 3px solid red !important;
+            outline-offset: 2px;
+        }
+    </style>
+</head>
+<body>
+    <div class="debug-info" id="debugInfo">
+        调试信息将显示在这里
+    </div>
+    
+    <div class="test-container">
+        <div class="content-area">
+            <div class="controls">
+                <button class="control-btn" onclick="adjustInputArea(0)">底部位置: 0px</button>
+                <button class="control-btn" onclick="adjustInputArea(50)">底部位置: 50px</button>
+                <button class="control-btn" onclick="adjustInputArea(100)">底部位置: 100px</button>
+                <button class="control-btn" onclick="highlightElements()">高亮元素</button>
+                <button class="control-btn" onclick="updateDebugInfo()">更新调试信息</button>
+            </div>
+            
+            <h2>AI卡片位置调试测试</h2>
+            <p>这个页面用于测试.input-area和.ai-card的位置关系。</p>
+            <p>点击上面的按钮来调整底部位置，观察AI卡片是否跟随移动。</p>
+            
+            <div style="height: 500px; background: linear-gradient(45deg, #f0f0f0, #e0e0e0); display: flex; align-items: center; justify-content: center; margin: 20px 0;">
+                <p>填充内容区域</p>
+            </div>
+        </div>
+        
+        <div class="input-area" id="inputArea">
+            <div class="ai-card" id="aiCard">
+                <div class="ai-input-row">
+                    <textarea class="ai-input" rows="3" placeholder="请输入您的问题..."></textarea>
+                </div>
+                <div class="ai-buttons-row">
+                    <button class="ai-btn">语音</button>
+                    <button class="ai-btn ai-send-btn">发送</button>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <script>
+        function adjustInputArea(bottomValue) {
+            const inputArea = document.getElementById('inputArea');
+            inputArea.style.bottom = bottomValue + 'px';
+            updateDebugInfo();
+        }
+        
+        function highlightElements() {
+            const inputArea = document.getElementById('inputArea');
+            const aiCard = document.getElementById('aiCard');
+            
+            inputArea.classList.toggle('highlight');
+            aiCard.classList.toggle('highlight');
+            
+            setTimeout(() => {
+                inputArea.classList.remove('highlight');
+                aiCard.classList.remove('highlight');
+            }, 3000);
+        }
+        
+        function updateDebugInfo() {
+            const inputArea = document.getElementById('inputArea');
+            const aiCard = document.getElementById('aiCard');
+            const debugInfo = document.getElementById('debugInfo');
+            
+            const inputAreaRect = inputArea.getBoundingClientRect();
+            const aiCardRect = aiCard.getBoundingClientRect();
+            const inputAreaStyles = window.getComputedStyle(inputArea);
+            const aiCardStyles = window.getComputedStyle(aiCard);
+            
+            debugInfo.innerHTML = `
+                <strong>Input Area:</strong><br>
+                Position: ${inputAreaStyles.position}<br>
+                Bottom: ${inputAreaStyles.bottom}<br>
+                Rect: ${Math.round(inputAreaRect.top)}, ${Math.round(inputAreaRect.bottom)}<br>
+                <br>
+                <strong>AI Card:</strong><br>
+                Position: ${aiCardStyles.position}<br>
+                Bottom: ${aiCardStyles.bottom}<br>
+                Margin-bottom: ${aiCardStyles.marginBottom}<br>
+                Rect: ${Math.round(aiCardRect.top)}, ${Math.round(aiCardRect.bottom)}<br>
+                <br>
+                <strong>视口信息:</strong><br>
+                Window: ${window.innerHeight}px<br>
+                ${window.visualViewport ? `Visual: ${window.visualViewport.height}px` : 'No visualViewport'}
+            `;
+        }
+        
+        // 页面加载时更新调试信息
+        window.addEventListener('load', updateDebugInfo);
+        window.addEventListener('resize', updateDebugInfo);
+        
+        // 监听visualViewport变化
+        if (window.visualViewport) {
+            window.visualViewport.addEventListener('resize', updateDebugInfo);
+        }
+    </script>
+</body>
+</html> 

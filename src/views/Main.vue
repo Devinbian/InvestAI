@@ -633,6 +633,16 @@
                                                     </span>
                                                 </div>
                                                 <span class="recommend-score">{{ stock.recommendIndex }}/5.0</span>
+                                                <el-tooltip content="推荐指数说明：
+5.0：强烈推荐 - 投资价值极高
+4.0-4.9：推荐 - 具备较好投资价值
+3.0-3.9：中性 - 可持续观察
+2.0-2.9：谨慎 - 建议控制仓位
+1.0-1.9：不推荐 - 建议回避" placement="top" effect="dark" :show-after="100">
+                                                    <el-icon class="help-icon">
+                                                        <QuestionFilled />
+                                                    </el-icon>
+                                                </el-tooltip>
                                                 <span
                                                     :class="['recommend-level', getRecommendLevelClass(stock.recommendLevel)]">
                                                     {{ stock.recommendLevel }}
@@ -665,6 +675,29 @@
                                         <div class="stock-reason">
                                             <span class="reason-label">推荐理由：</span>
                                             <span class="reason-text">{{ stock.reason }}</span>
+                                        </div>
+                                        <div class="recommend-index">
+                                            <div class="recommend-stars">
+                                                <span v-for="i in 5" :key="i" :class="['star', i <= Math.floor(stock.recommendIndex) ? 'filled' :
+                                                    i <= stock.recommendIndex ? 'half' : 'empty']">
+                                                    ★
+                                                </span>
+                                            </div>
+                                            <span class="recommend-score">{{ stock.recommendIndex }}/5.0</span>
+                                            <el-tooltip content="推荐指数说明：
+5.0：强烈推荐 - 投资价值极高
+4.0-4.9：推荐 - 具备较好投资价值
+3.0-3.9：中性 - 可持续观察
+2.0-2.9：谨慎 - 建议控制仓位
+1.0-1.9：不推荐 - 建议回避" placement="top" effect="dark" :show-after="100">
+                                                <el-icon class="help-icon">
+                                                    <QuestionFilled />
+                                                </el-icon>
+                                            </el-tooltip>
+                                            <span
+                                                :class="['recommend-level', getRecommendLevelClass(stock.recommendLevel)]">
+                                                {{ stock.recommendLevel }}
+                                            </span>
                                         </div>
                                     </div>
                                 </div>
@@ -1020,7 +1053,7 @@
 import { ref, reactive, onMounted, onUnmounted, nextTick, watch, computed } from 'vue';
 import { useUserStore } from '../store/user';
 import { useChatHistoryStore } from '../store/chatHistory';
-import { User, Lock, ArrowDown, ArrowUp, Plus, Edit, Delete } from '@element-plus/icons-vue';
+import { User, Lock, ArrowDown, ArrowUp, Plus, Edit, Delete, QuestionFilled } from '@element-plus/icons-vue';
 import { ElMessage, ElMessageBox } from 'element-plus';
 import { mockApi, wechatLoginApi } from '../api/mock';
 import Sidebar from '../components/Sidebar.vue';
@@ -4548,39 +4581,42 @@ body.onboarding-mode {
     border-radius: 4px;
 }
 
+.help-icon {
+    font-size: 14px;
+    color: #94a3b8;
+    cursor: pointer;
+    transition: color 0.2s ease;
+}
+
+.help-icon:hover {
+    color: #64748b;
+}
+
 .recommend-level {
     font-size: 0.75rem;
     font-weight: 600;
-    padding: 2px 8px;
-    border-radius: 12px;
-    text-align: center;
-    min-width: 60px;
-    white-space: nowrap;
-    flex-shrink: 0;
+    padding: 2px 6px;
+    border-radius: 4px;
 }
 
 .recommend-level.strong-recommend {
-    color: #059669;
-    background: #d1fae5;
-    border: 1px solid #10b981;
+    background: #dcfce7;
+    color: #166534;
 }
 
 .recommend-level.recommend {
-    color: #0ea5e9;
-    background: #e0f2fe;
-    border: 1px solid #0ea5e9;
+    background: #dbeafe;
+    color: #1d4ed8;
 }
 
 .recommend-level.neutral {
-    color: #6b7280;
-    background: #f3f4f6;
-    border: 1px solid #d1d5db;
+    background: #fef3c7;
+    color: #92400e;
 }
 
 .recommend-level.caution {
-    color: #dc2626;
     background: #fee2e2;
-    border: 1px solid #f87171;
+    color: #dc2626;
 }
 
 .stock-price-change {

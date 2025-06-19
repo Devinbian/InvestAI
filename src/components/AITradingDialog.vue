@@ -133,7 +133,8 @@
             <div class="dialog-footer">
                 <el-button @click="handleCancel">取消</el-button>
                 <el-button type="primary" @click="handleConfirm" :loading="loading">
-                    确认委托 (0.5智点)
+                    <span class="confirm-text">确认委托 (0.5智点)</span>
+                    <span class="confirm-text-mobile">确认 (0.5智点)</span>
                 </el-button>
             </div>
         </template>
@@ -883,10 +884,18 @@ watch(() => props.modelValue, (newVal) => {
 
     .dialog-footer .el-button {
         flex: 1;
-        max-width: 110px;
-        height: 34px;
-        font-size: 13px;
-        padding: 6px 12px;
+        max-width: 100px;
+        height: 36px;
+        font-size: 14px;
+        padding: 8px 10px;
+    }
+
+    .confirm-text {
+        display: inline;
+    }
+
+    .confirm-text-mobile {
+        display: none;
     }
 }
 
@@ -955,10 +964,18 @@ watch(() => props.modelValue, (newVal) => {
     }
 
     .dialog-footer .el-button {
-        max-width: 100px;
-        height: 32px;
-        font-size: 12px;
-        padding: 5px 10px;
+        max-width: 90px;
+        height: 34px;
+        font-size: 13px;
+        padding: 6px 8px;
+    }
+
+    .confirm-text {
+        display: none;
+    }
+
+    .confirm-text-mobile {
+        display: inline;
     }
 }
 
@@ -1027,10 +1044,18 @@ watch(() => props.modelValue, (newVal) => {
     }
 
     .dialog-footer .el-button {
-        max-width: 90px;
-        height: 30px;
-        font-size: 11px;
-        padding: 4px 8px;
+        max-width: 80px;
+        height: 32px;
+        font-size: 12px;
+        padding: 5px 6px;
+    }
+
+    .confirm-text {
+        display: none;
+    }
+
+    .confirm-text-mobile {
+        display: inline;
     }
 }
 
@@ -1135,7 +1160,17 @@ watch(() => props.modelValue, (newVal) => {
 
 .mobile-dialog .dialog-footer .el-button {
     flex: 1 !important;
-    height: 40px !important;
-    font-size: 16px !important;
+    max-width: 120px !important;
+    height: 38px !important;
+    font-size: 14px !important;
+    padding: 8px 10px !important;
+}
+
+.mobile-dialog .confirm-text {
+    display: none !important;
+}
+
+.mobile-dialog .confirm-text-mobile {
+    display: inline !important;
 }
 </style>

@@ -1024,7 +1024,14 @@ const analyzeStock = (stock) => {
             targetPrice: stock.targetPrice,
             expectedReturn: stock.expectedReturn,
             score: stock.score,
-            reason: stock.reason
+            reason: stock.reason,
+            recommendIndex: stock.score / 20, // 将100分制转换为5分制
+            recommendIndexDesc: `推荐指数说明：
+5.0：强烈推荐 - 投资价值极高
+4.0-4.9：推荐 - 具备较好投资价值
+3.0-3.9：中性 - 可持续观察
+2.0-2.9：谨慎 - 建议控制仓位
+1.0-1.9：不推荐 - 建议回避`
         },
         title: `${stock.name}因子分析详情`
     });

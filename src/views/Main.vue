@@ -256,13 +256,13 @@
                                         <div class="asset-amount">
                                             <span class="amount-label">总资产</span>
                                             <span class="amount-value">¥{{ formatCurrency(message.assetData.totalAssets)
-                                                }}</span>
+                                            }}</span>
                                         </div>
                                         <div class="asset-change"
                                             :class="[message.assetData.totalProfitPercent >= 0 ? 'profit' : 'loss']">
                                             <span class="change-icon">{{ message.assetData.totalProfitPercent >= 0 ?
                                                 '📈' : '📉'
-                                                }}</span>
+                                            }}</span>
                                             <span class="change-label">今日盈亏：</span>
                                             <span class="change-text">
                                                 {{ message.assetData.totalProfitPercent >= 0 ? '+' : '' }}¥{{
@@ -288,7 +288,7 @@
                                         <div class="stat-info">
                                             <div class="stat-label">持仓市值</div>
                                             <div class="stat-value">¥{{ formatCurrency(message.assetData.portfolioValue)
-                                                }}
+                                            }}
                                             </div>
                                         </div>
                                     </div>
@@ -349,7 +349,7 @@
                                                         <div class="stock-price-change">
                                                             <span class="current-price">¥{{
                                                                 position.currentPrice.toFixed(2)
-                                                                }}</span>
+                                                            }}</span>
                                                             <span
                                                                 :class="['price-change', position.profitPercent >= 0 ? 'positive' : 'negative']">
                                                                 {{ position.profitPercent >= 0 ? '+' : '' }}¥{{
@@ -363,10 +363,10 @@
                                                             <span class="detail-label">持仓数量：</span>
                                                             <span class="detail-value">{{
                                                                 position.quantity.toLocaleString()
-                                                                }}股</span>
+                                                            }}股</span>
                                                             <span class="detail-label">成本价：</span>
                                                             <span class="detail-value">¥{{ position.avgPrice.toFixed(2)
-                                                                }}</span>
+                                                            }}</span>
                                                         </div>
                                                         <div class="detail-row">
                                                             <span class="detail-label">持仓市值：</span>
@@ -375,7 +375,7 @@
                                                             <span class="detail-label">所属行业：</span>
                                                             <span class="detail-value industry">{{ position.industry ||
                                                                 '未分类'
-                                                                }}</span>
+                                                            }}</span>
                                                         </div>
                                                     </div>
                                                 </div>
@@ -568,7 +568,7 @@
                             <div v-if="message.isPersistent" class="recommendation-toolbar">
                                 <div class="toolbar-left">
                                     <span class="recommendation-time">{{ formatRecommendationTime(message.timestamp)
-                                        }}</span>
+                                    }}</span>
                                 </div>
                                 <div class="toolbar-right">
                                     <el-button size="small" text @click="refreshRecommendation(message)"
@@ -859,7 +859,7 @@
                 </div>
                 <div class="guide-actions">
                     <el-button type="primary" size="small" @click="handleGuideAction">{{ guideActionText
-                    }}</el-button>
+                        }}</el-button>
                     <el-button size="small" @click="dismissGuide">稍后</el-button>
                 </div>
             </div>
@@ -9316,6 +9316,8 @@ body {
         /* 微信环境下给按钮行添加底部间距，确保不贴底边 */
     }
 
+
+
     /* 微信环境下欢迎区域优化 */
     body.wechat-browser .welcome-section {
         margin-bottom: 20px !important;
@@ -9433,8 +9435,8 @@ body {
 
     /* 移动端AI输入行间距优化 */
     .ai-input-row {
-        padding: 12px 16px !important;
-        /* 保持输入行的左右padding，确保内容不贴边 */
+        padding: 12px 20px !important;
+        /* 增加输入行的左右padding，确保内容不贴边 */
     }
 
     /* 移动端AI按钮行间距优化 */
@@ -9445,14 +9447,14 @@ body {
         /* 添加左右padding，确保按钮不贴边 */
     }
 
-    /* 问题2&3: 滚动条位置和底部内容展示 - 参照微信浏览器优化 */
+    /* 问题2&3: 滚动条位置和底部内容展示 - 默认适应非微信浏览器 */
     .chat-history-area {
-        height: calc(100vh - 76px - 120px) !important;
-        /* 兼容性回退，参照微信浏览器减少预留空间 */
-        height: calc(100dvh - 76px - 120px) !important;
-        /* 使用动态视口高度，预留120px给输入区域 */
-        padding: 20px 8px 60px 8px !important;
-        /* 顶部20px，底部60px，参照微信浏览器间距 */
+        height: calc(100vh - 76px - 180px) !important;
+        /* 兼容性回退，增加预留空间给非微信浏览器的输入框偏移 */
+        height: calc(100dvh - 76px - 180px) !important;
+        /* 使用动态视口高度，预留180px给输入区域和工具栏偏移 */
+        padding: 20px 8px 80px 8px !important;
+        /* 顶部20px，底部80px，适度增加底部间距适应非微信浏览器 */
         margin: 0 !important;
         width: 100% !important;
         max-width: none !important;
@@ -9479,20 +9481,41 @@ body {
         /* 增加助手消息最大宽度 */
     }
 
-    /* 最后一条消息额外增加底部间距 */
+    /* 最后一条消息额外增加底部间距 - 默认适应非微信浏览器 */
     .chat-message:last-child {
-        margin-bottom: 60px !important;
-        /* 确保最后一条消息有足够间隔 */
+        margin-bottom: 100px !important;
+        /* 确保最后一条消息有足够间隔，适应非微信浏览器的输入框偏移 */
     }
 
-    /* 使用伪元素在聊天历史区域底部创建额外空间 */
+    /* 使用伪元素在聊天历史区域底部创建额外空间 - 默认适应非微信浏览器 */
     .chat-history-area::after {
         content: '';
         display: block;
-        height: 100px !important;
-        /* 额外的底部空间 */
+        height: 120px !important;
+        /* 额外的底部空间，适应非微信浏览器的输入框偏移 */
         width: 100%;
         flex-shrink: 0;
+    }
+
+    /* 微信环境下聊天历史区域优化 - 恢复紧凑布局，覆盖上面的默认样式 */
+    body.wechat-browser .chat-history-area {
+        height: calc(100vh - 76px - 120px) !important;
+        /* 微信环境下恢复原有的120px预留空间 */
+        height: calc(100dvh - 76px - 120px) !important;
+        padding: 20px 8px 60px 8px !important;
+        /* 微信环境下恢复原有的60px底部间距 */
+    }
+
+    /* 微信环境下最后一条消息间距 - 覆盖上面的默认样式 */
+    body.wechat-browser .chat-message:last-child {
+        margin-bottom: 60px !important;
+        /* 微信环境下恢复原有的60px底部间距 */
+    }
+
+    /* 微信环境下伪元素底部空间 - 覆盖上面的默认样式 */
+    body.wechat-browser .chat-history-area::after {
+        height: 100px !important;
+        /* 微信环境下恢复原有的100px额外空间 */
     }
 }
 
@@ -9511,8 +9534,8 @@ body {
 
     /* 超小屏幕AI输入行进一步优化 */
     .ai-input-row {
-        padding: 10px 12px !important;
-        /* 超小屏幕保持输入行的左右padding，确保内容不贴边 */
+        padding: 10px 16px !important;
+        /* 超小屏幕增加输入行的左右padding，确保内容不贴边 */
     }
 
     /* 超小屏幕新聊天按钮区域 */
@@ -9527,34 +9550,10 @@ body {
         /* 超小屏幕添加左右padding，确保按钮不贴边 */
     }
 
-    /* 超小屏幕进一步优化 - 参照微信浏览器 */
-    .chat-history-area {
-        height: calc(100vh - 76px - 100px) !important;
-        /* 兼容性回退，超小屏幕参照微信浏览器 */
-        height: calc(100dvh - 76px - 100px) !important;
-        /* 使用动态视口高度，超小屏幕预留100px给输入区域 */
-        padding: 15px 6px 40px 6px !important;
-        /* 超小屏幕顶部15px，底部40px，参照微信浏览器 */
-        max-width: none !important;
-        overflow-y: auto !important;
-        -webkit-overflow-scrolling: touch !important;
-    }
-
     .modern-content.chatting {
         padding-top: 76px !important;
         padding-left: 0 !important;
         padding-right: 0 !important;
-    }
-
-    /* 超小屏幕最后一条消息间距 */
-    .chat-message:last-child {
-        margin-bottom: 55px !important;
-    }
-
-    /* 超小屏幕伪元素底部空间 */
-    .chat-history-area::after {
-        height: 80px !important;
-        /* 超小屏幕的额外底部空间 */
     }
 
     /* 超小屏幕聊天消息宽度进一步优化 */

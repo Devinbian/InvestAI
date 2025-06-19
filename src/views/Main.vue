@@ -209,8 +209,8 @@
                                 </svg>
                                 量化分析
                                 <div class="price-tag-container">
-                                    <span class="price-tag original-price">1智点</span>
-                                    <span class="price-tag promo-price">0.5智点</span>
+                                    <span class="price-tag original-price">3智点</span>
+                                    <span class="price-tag promo-price">1智点</span>
                                 </div>
                             </el-button>
 
@@ -223,8 +223,8 @@
                                 </svg>
                                 AI委托交易
                                 <div class="price-tag-container">
-                                    <span class="price-tag original-price">1智点</span>
-                                    <span class="price-tag promo-price">0.5智点</span>
+                                    <span class="price-tag original-price">3智点</span>
+                                    <span class="price-tag promo-price">1智点</span>
                                 </div>
                             </el-button>
 
@@ -237,6 +237,53 @@
                                 </svg>
                                 购买
                             </el-button>
+                        </div>
+
+                        <!-- 量化分析报告操作按钮 -->
+                        <div v-if="message.isQuantAnalysis" class="quant-analysis-actions">
+                            <div class="analysis-actions-header">
+                                <span class="actions-title">📊 报告操作</span>
+                                <div v-if="activeReminders.filter(r => r.isActive).length > 0"
+                                    class="active-reminders-badge">
+                                    <span class="badge-icon">🔔</span>
+                                    <span class="badge-text">{{activeReminders.filter(r => r.isActive).length
+                                    }}个活跃提醒</span>
+                                </div>
+                            </div>
+                            <div class="analysis-actions-buttons">
+                                <el-button size="small" @click="setQuantAnalysisReminder(message)" class="reminder-btn">
+                                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none">
+                                        <path
+                                            d="M12 22c1.1 0 2-.9 2-2h-4c0 1.1.9 2 2 2zm6-6v-5c0-3.07-1.64-5.64-4.5-6.32V4c0-.83-.67-1.5-1.5-1.5s-1.5.67-1.5 1.5v.68C7.63 5.36 6 7.92 6 11v5l-2 2v1h16v-1l-2-2z"
+                                            fill="currentColor" />
+                                    </svg>
+                                    设置提醒
+                                    <span v-if="activeReminders.filter(r => r.isActive).length > 0"
+                                        class="reminder-count-badge">
+                                        {{activeReminders.filter(r => r.isActive).length}}
+                                    </span>
+                                </el-button>
+                                <el-button size="small" @click="openRecordsCenter" class="records-btn">
+                                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none">
+                                        <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"
+                                            stroke="currentColor" stroke-width="2" fill="none" />
+                                        <polyline points="14,2 14,8 20,8" stroke="currentColor" stroke-width="2"
+                                            fill="none" />
+                                        <line x1="16" y1="13" x2="8" y2="13" stroke="currentColor" stroke-width="2" />
+                                        <line x1="16" y1="17" x2="8" y2="17" stroke="currentColor" stroke-width="2" />
+                                        <polyline points="10,9 9,9 8,9" stroke="currentColor" stroke-width="2"
+                                            fill="none" />
+                                    </svg>
+                                    查看报告
+                                </el-button>
+                            </div>
+                            <div class="analysis-tip">
+                                <svg width="16" height="16" viewBox="0 0 24 24" fill="none">
+                                    <circle cx="12" cy="12" r="10" stroke="#1890ff" stroke-width="2" fill="none" />
+                                    <path d="m9 12 2 2 4-4" stroke="#1890ff" stroke-width="2" fill="none" />
+                                </svg>
+                                <span>💡 付费的量化分析报告可以在记录中心查看</span>
+                            </div>
                         </div>
 
                         <!-- 股票账户信息展示 -->
@@ -413,8 +460,8 @@
                                                         </svg>
                                                         量化分析
                                                         <div class="price-tag-container">
-                                                            <span class="price-tag original-price">1智点</span>
-                                                            <span class="price-tag promo-price">0.5智点</span>
+                                                            <span class="price-tag original-price">3智点</span>
+                                                            <span class="price-tag promo-price">1智点</span>
                                                         </div>
                                                     </el-button>
 
@@ -427,8 +474,8 @@
                                                         </svg>
                                                         AI委托交易
                                                         <div class="price-tag-container">
-                                                            <span class="price-tag original-price">1智点</span>
-                                                            <span class="price-tag promo-price">0.5智点</span>
+                                                            <span class="price-tag original-price">3智点</span>
+                                                            <span class="price-tag promo-price">1智点</span>
                                                         </div>
                                                     </el-button>
                                                 </div>
@@ -515,8 +562,8 @@
                                                         </svg>
                                                         量化分析
                                                         <div class="price-tag-container">
-                                                            <span class="price-tag original-price">1智点</span>
-                                                            <span class="price-tag promo-price">0.5智点</span>
+                                                            <span class="price-tag original-price">3智点</span>
+                                                            <span class="price-tag promo-price">1智点</span>
                                                         </div>
                                                     </el-button>
 
@@ -529,8 +576,8 @@
                                                         </svg>
                                                         AI委托交易
                                                         <div class="price-tag-container">
-                                                            <span class="price-tag original-price">1智点</span>
-                                                            <span class="price-tag promo-price">0.5智点</span>
+                                                            <span class="price-tag original-price">3智点</span>
+                                                            <span class="price-tag promo-price">1智点</span>
                                                         </div>
                                                     </el-button>
 
@@ -666,8 +713,8 @@
                                         </svg>
                                         量化分析
                                         <div class="price-tag-container">
-                                            <span class="price-tag original-price">1智点</span>
-                                            <span class="price-tag promo-price">0.5智点</span>
+                                            <span class="price-tag original-price">3智点</span>
+                                            <span class="price-tag promo-price">1智点</span>
                                         </div>
                                     </el-button>
 
@@ -680,8 +727,8 @@
                                         </svg>
                                         AI委托交易
                                         <div class="price-tag-container">
-                                            <span class="price-tag original-price">1智点</span>
-                                            <span class="price-tag promo-price">0.5智点</span>
+                                            <span class="price-tag original-price">3智点</span>
+                                            <span class="price-tag promo-price">1智点</span>
                                         </div>
                                     </el-button>
 
@@ -871,6 +918,109 @@
         <!-- 记录中心 -->
         <RecordsCenter v-if="showRecordsCenter" @close="closeRecordsCenter" />
 
+        <!-- 量化分析提醒设置对话框 -->
+        <el-dialog v-model="showQuantReminderDialog" title="设置量化分析提醒" :width="reminderDialogWidth"
+            :before-close="handleReminderCancel" class="reminder-dialog">
+            <div class="reminder-dialog-content">
+                <div class="stock-info-section">
+                    <h4>📊 股票信息</h4>
+                    <div class="stock-info-display">
+                        <span class="stock-name">{{ reminderForm.stockName }}</span>
+                        <span class="stock-code">({{ reminderForm.stockCode }})</span>
+                    </div>
+                </div>
+
+                <div class="reminder-form-section">
+                    <h4>⚙️ 提醒条件设置</h4>
+
+                    <div class="form-row">
+                        <label class="form-label">提醒类型：</label>
+                        <el-select v-model="reminderForm.type" placeholder="选择提醒类型" class="type-select">
+                            <el-option label="价格突破" value="price">
+                                <span class="option-content">
+                                    <span class="option-icon">💰</span>
+                                    <span>价格突破</span>
+                                </span>
+                            </el-option>
+                            <el-option label="涨跌幅" value="change">
+                                <span class="option-content">
+                                    <span class="option-icon">📈</span>
+                                    <span>涨跌幅</span>
+                                </span>
+                            </el-option>
+                            <el-option label="成交量" value="volume">
+                                <span class="option-content">
+                                    <span class="option-icon">📊</span>
+                                    <span>成交量</span>
+                                </span>
+                            </el-option>
+                        </el-select>
+                    </div>
+
+                    <div class="form-row">
+                        <label class="form-label">触发条件：</label>
+                        <el-select v-model="reminderForm.condition" placeholder="选择触发条件" class="condition-select">
+                            <template v-if="reminderForm.type === 'price'">
+                                <el-option label="突破（大于等于）" value="above"></el-option>
+                                <el-option label="跌破（小于等于）" value="below"></el-option>
+                            </template>
+                            <template v-else-if="reminderForm.type === 'change'">
+                                <el-option label="涨幅超过" value="increase"></el-option>
+                                <el-option label="跌幅超过" value="decrease"></el-option>
+                            </template>
+                            <template v-else-if="reminderForm.type === 'volume'">
+                                <el-option label="放量（超过）" value="above"></el-option>
+                                <el-option label="缩量（低于）" value="below"></el-option>
+                            </template>
+                        </el-select>
+                    </div>
+
+                    <div class="form-row">
+                        <label class="form-label">数值设置：</label>
+                        <div class="value-input-group">
+                            <el-input v-model="reminderForm.value" type="number" :placeholder="getValuePlaceholder()"
+                                class="value-input">
+                                <template #append>
+                                    <span class="input-unit">{{ getValueUnit() }}</span>
+                                </template>
+                            </el-input>
+                        </div>
+                    </div>
+
+                    <div class="reminder-preview">
+                        <div class="preview-title">📋 提醒预览</div>
+                        <div class="preview-content">
+                            {{ getReminderPreview() }}
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 当前活跃提醒列表 -->
+                <div v-if="activeReminders.length > 0" class="active-reminders-section">
+                    <h4>🔔 当前活跃提醒</h4>
+                    <div class="reminders-list">
+                        <div v-for="reminder in activeReminders.filter(r => r.isActive)" :key="reminder.id"
+                            class="reminder-item">
+                            <div class="reminder-info">
+                                <span class="reminder-stock">{{ reminder.stockName }}</span>
+                                <span class="reminder-desc">{{ getReminderDescription(reminder) }}</span>
+                                <span class="reminder-time">{{ reminder.createdAt }}</span>
+                            </div>
+                            <el-button size="small" type="danger" @click="removeReminder(reminder.id)"
+                                class="remove-btn">删除</el-button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <template #footer>
+                <div class="dialog-footer">
+                    <el-button @click="handleReminderCancel">取消</el-button>
+                    <el-button type="primary" @click="handleReminderConfirm">确认设置</el-button>
+                </div>
+            </template>
+        </el-dialog>
+
         <!-- 版权信息 -->
         <div class="copyright-footer" v-show="!isChatMode && (!isMobileView || !isWechatEnv)">
             <div class="copyright-content">
@@ -907,6 +1057,28 @@ const chatHistoryRef = ref(null);
 const isChatMode = ref(false); // 控制是否进入聊天模式
 const showUserProfile = ref(false); // 控制是否显示个人中心
 const showRecordsCenter = ref(false); // 控制是否显示记录中心
+const showQuantReminderDialog = ref(false); // 控制量化分析提醒对话框
+const currentReminderMessage = ref(null); // 当前设置提醒的消息
+const reminderForm = ref({
+    type: 'price', // price, change, volume
+    condition: 'above', // above, below, increase, decrease
+    value: '',
+    stockCode: '',
+    stockName: ''
+});
+const activeReminders = ref([]); // 活跃的提醒列表
+
+// 计算提醒对话框宽度
+const reminderDialogWidth = computed(() => {
+    if (typeof window !== 'undefined') {
+        const width = window.innerWidth;
+        if (width < 480) return '95%';
+        if (width < 768) return '90%';
+        if (width < 1024) return '500px';
+        return '600px';
+    }
+    return '500px';
+});
 const showChatShortcuts = ref(false); // 控制聊天模式下的快捷操作显示
 const isMobileView = ref(false); // 检测是否为移动端视图
 
@@ -3204,23 +3376,23 @@ const getRecommendLevelClass = (level) => {
 // 付费量化分析
 const showPaidAnalysisDialog = (stock) => {
     ElMessageBox.confirm(
-        `量化分析 ${stock.name}(${stock.code}) 促销价仅需 0.5智点（原价1智点），是否继续？`,
+        `量化分析 ${stock.name}(${stock.code}) 促销价仅需 1智点（原价3智点），是否继续？`,
         '付费服务确认',
         {
-            confirmButtonText: '确认支付 0.5智点',
+            confirmButtonText: '确认支付 1智点',
             cancelButtonText: '取消',
             type: 'warning',
             customClass: 'paid-service-dialog'
         }
     ).then(() => {
-        // 检查余额（按0.5智点计算）
-        if (userStore.balance < 0.5) {
+        // 检查余额（按1智点计算）
+        if (userStore.balance < 1) {
             ElMessage.error('智点余额不足，请先充值');
             return;
         }
 
-        // 扣费并执行分析（扣除0.5智点）
-        userStore.deductBalance(0.5);
+        // 扣费并执行分析（扣除1智点）
+        userStore.deductBalance(1);
         ElMessage.success('支付成功，正在生成量化分析报告...');
 
         // 执行量化分析
@@ -3263,6 +3435,166 @@ const handleAITradingConfirmed = async (data) => {
         ElMessage.error('设置失败，请稍后重试');
         console.error('AI委托交易设置失败:', error);
     }
+};
+
+// 量化分析报告操作方法
+const setQuantAnalysisReminder = (message) => {
+    showQuantReminderDialog.value = true;
+    currentReminderMessage.value = message;
+};
+
+const openRecordsCenter = () => {
+    showRecordsCenter.value = true;
+};
+
+// 提醒对话框处理方法
+const handleReminderConfirm = () => {
+    if (!reminderForm.value.value) {
+        ElMessage.error('请输入提醒条件的数值');
+        return;
+    }
+
+    const reminder = {
+        id: Date.now(),
+        type: reminderForm.value.type,
+        condition: reminderForm.value.condition,
+        value: parseFloat(reminderForm.value.value),
+        stockCode: reminderForm.value.stockCode,
+        stockName: reminderForm.value.stockName,
+        createdAt: new Date().toLocaleString(),
+        isActive: true
+    };
+
+    activeReminders.value.push(reminder);
+
+    // 生成提醒描述
+    let conditionText = '';
+    if (reminder.type === 'price') {
+        conditionText = `价格${reminder.condition === 'above' ? '突破' : '跌破'} ¥${reminder.value}`;
+    } else if (reminder.type === 'change') {
+        conditionText = `涨跌幅${reminder.condition === 'increase' ? '超过' : '低于'} ${reminder.value}%`;
+    } else if (reminder.type === 'volume') {
+        conditionText = `成交量${reminder.condition === 'above' ? '超过' : '低于'} ${reminder.value}万手`;
+    }
+
+    ElMessage.success(`已设置提醒：${reminder.stockName} ${conditionText}`);
+
+    // 模拟提醒触发（实际应用中应该是后台监控）
+    setTimeout(() => {
+        ElMessage({
+            message: `🔔 提醒触发：${reminder.stockName} ${conditionText}`,
+            type: 'warning',
+            duration: 5000,
+            showClose: true
+        });
+
+        // 将提醒标记为已触发
+        const index = activeReminders.value.findIndex(r => r.id === reminder.id);
+        if (index !== -1) {
+            activeReminders.value[index].isActive = false;
+        }
+    }, 10000); // 10秒后模拟触发提醒
+
+    showQuantReminderDialog.value = false;
+    resetReminderForm();
+};
+
+const handleReminderCancel = () => {
+    showQuantReminderDialog.value = false;
+    resetReminderForm();
+};
+
+const resetReminderForm = () => {
+    reminderForm.value = {
+        type: 'price',
+        condition: 'above',
+        value: '',
+        stockCode: '',
+        stockName: ''
+    };
+};
+
+// 删除提醒
+const removeReminder = (reminderId) => {
+    const index = activeReminders.value.findIndex(r => r.id === reminderId);
+    if (index !== -1) {
+        const reminder = activeReminders.value[index];
+        activeReminders.value.splice(index, 1);
+        ElMessage.success(`已删除 ${reminder.stockName} 的提醒`);
+    }
+};
+
+// 监听提醒对话框打开，初始化表单数据
+watch(showQuantReminderDialog, (newVal) => {
+    if (newVal && currentReminderMessage.value) {
+        // 从消息中提取股票信息
+        if (currentReminderMessage.value.stockInfo) {
+            reminderForm.value.stockCode = currentReminderMessage.value.stockInfo.code;
+            reminderForm.value.stockName = currentReminderMessage.value.stockInfo.name;
+        } else {
+            // 如果没有股票信息，使用默认值
+            reminderForm.value.stockCode = '000001';
+            reminderForm.value.stockName = '平安银行';
+        }
+    }
+});
+
+// 提醒对话框辅助方法
+const getValuePlaceholder = () => {
+    switch (reminderForm.value.type) {
+        case 'price':
+            return '例如：15.50';
+        case 'change':
+            return '例如：5.0';
+        case 'volume':
+            return '例如：1000';
+        default:
+            return '请输入数值';
+    }
+};
+
+const getValueUnit = () => {
+    switch (reminderForm.value.type) {
+        case 'price':
+            return '元';
+        case 'change':
+            return '%';
+        case 'volume':
+            return '万手';
+        default:
+            return '';
+    }
+};
+
+const getReminderPreview = () => {
+    if (!reminderForm.value.value) {
+        return '请完善提醒条件设置';
+    }
+
+    const { stockName, type, condition, value } = reminderForm.value;
+    let conditionText = '';
+
+    if (type === 'price') {
+        conditionText = `价格${condition === 'above' ? '突破' : '跌破'} ¥${value}`;
+    } else if (type === 'change') {
+        conditionText = `${condition === 'increase' ? '涨幅' : '跌幅'}超过 ${value}%`;
+    } else if (type === 'volume') {
+        conditionText = `成交量${condition === 'above' ? '超过' : '低于'} ${value}万手`;
+    }
+
+    return `当 ${stockName} ${conditionText} 时，系统将发送提醒通知`;
+};
+
+const getReminderDescription = (reminder) => {
+    let conditionText = '';
+    if (reminder.type === 'price') {
+        conditionText = `价格${reminder.condition === 'above' ? '突破' : '跌破'} ¥${reminder.value}`;
+    } else if (reminder.type === 'change') {
+        conditionText = `${reminder.condition === 'increase' ? '涨幅' : '跌幅'}超过 ${reminder.value}%`;
+    } else if (reminder.type === 'volume') {
+        conditionText = `成交量${reminder.condition === 'above' ? '超过' : '低于'} ${reminder.value}万手`;
+    }
+    return conditionText;
 };
 
 
@@ -4577,9 +4909,30 @@ body.onboarding-mode {
 
     .stock-item-actions {
         justify-content: flex-start;
-        gap: 2px;
-        flex-wrap: nowrap;
-        overflow-x: auto;
+        gap: 4px;
+        flex-wrap: wrap;
+        overflow-x: visible;
+    }
+
+    .stock-item-actions .el-button {
+        font-size: 10px;
+        padding: 4px 8px;
+        min-height: 28px;
+        border-radius: 6px;
+        flex-shrink: 0;
+    }
+
+    .stock-item-actions .el-button svg {
+        width: 10px;
+        height: 10px;
+    }
+
+    .sell-stock-btn,
+    .buy-stock-btn-secondary {
+        font-size: 10px;
+        padding: 4px 8px;
+        min-height: 28px;
+        border-radius: 6px;
     }
 
     .recommend-index {
@@ -5342,6 +5695,25 @@ body.onboarding-mode {
     flex-wrap: wrap;
 }
 
+/* 移动端快捷操作网格优化 */
+@media (max-width: 768px) {
+    .shortcuts-grid {
+        gap: 6px;
+        padding: 0 8px;
+        justify-content: flex-start;
+        overflow-x: auto;
+        flex-wrap: nowrap;
+        -webkit-overflow-scrolling: touch;
+    }
+}
+
+@media (max-width: 480px) {
+    .shortcuts-grid {
+        gap: 4px;
+        padding: 0 6px;
+    }
+}
+
 .chat-shortcut-btn {
     display: flex;
     flex-direction: column;
@@ -5814,6 +6186,28 @@ body.onboarding-mode {
 /* 响应式设计 */
 @media (max-width: 768px) {
 
+    /* AI建议按钮移动端优化 */
+    .ai-suggestion-btn {
+        font-size: 0.75rem;
+        padding: 8px 12px;
+        min-width: 100px;
+        border-radius: 12px;
+        min-height: 36px;
+    }
+
+    .btn-icon {
+        font-size: 0.875rem;
+    }
+
+    .customize-btn-inline {
+        width: 32px;
+        height: 32px;
+    }
+
+    .customize-icon {
+        font-size: 12px;
+    }
+
     /* 防止移动端缩放和选择 */
     html,
     body {
@@ -6264,6 +6658,7 @@ body.onboarding-mode {
     display: flex;
     justify-content: flex-end;
     gap: 12px;
+    padding-top: 16px;
 }
 
 html,
@@ -9124,8 +9519,6 @@ body {
         gap: 16px;
     }
 
-
-
     .overview-stats {
         grid-template-columns: repeat(2, 1fr);
         gap: 12px;
@@ -9316,8 +9709,6 @@ body {
         /* 微信环境下给按钮行添加底部间距，确保不贴底边 */
     }
 
-
-
     /* 微信环境下欢迎区域优化 */
     body.wechat-browser .welcome-section {
         margin-bottom: 20px !important;
@@ -9403,23 +9794,35 @@ body {
     .chat-actions {
         flex-wrap: nowrap !important;
         /* 移动端强制一行显示 */
-        gap: 6px !important;
-        /* 移动端减少间距 */
+        gap: 4px !important;
+        /* 移动端进一步减少间距 */
         justify-content: center !important;
+        overflow-x: auto !important;
+        /* 允许水平滚动以防按钮过多 */
+        padding: 0 4px !important;
+        /* 添加少量内边距 */
     }
 
     .new-chat-btn,
     .goto-recommendation-btn {
-        font-size: 0.8rem !important;
+        font-size: 0.75rem !important;
         /* 移动端字体更小 */
-        padding: 6px 12px !important;
+        padding: 5px 10px !important;
         /* 移动端按钮更紧凑 */
-        height: 30px !important;
+        height: 28px !important;
         /* 移动端按钮高度更小 */
         white-space: nowrap !important;
         /* 防止文字换行 */
         flex-shrink: 0 !important;
         /* 防止按钮被压缩 */
+        border-radius: 8px !important;
+        /* 减少圆角 */
+    }
+
+    .new-chat-btn svg,
+    .goto-recommendation-btn svg {
+        width: 12px;
+        height: 12px;
     }
 
     /* 移动端AI卡片间距优化 */
@@ -9445,6 +9848,36 @@ body {
         /* 减少按钮行的上边距 */
         padding: 0 16px !important;
         /* 添加左右padding，确保按钮不贴边 */
+    }
+
+    /* 移动端AI功能按钮优化 */
+    .ai-func-btn {
+        width: 32px;
+        height: 32px;
+        min-width: 32px;
+        min-height: 32px;
+    }
+
+    .ai-func-btn svg {
+        width: 16px;
+        height: 16px;
+    }
+
+    /* 移动端快捷操作按钮优化 */
+    .chat-shortcut-btn {
+        padding: 6px 10px;
+        min-height: 40px;
+        min-width: 50px;
+        font-size: 11px;
+        gap: 1px;
+    }
+
+    .chat-shortcut-btn .btn-icon {
+        font-size: 14px;
+    }
+
+    .chat-shortcut-btn .btn-text {
+        font-size: 10px;
     }
 
     /* 问题2&3: 滚动条位置和底部内容展示 - 默认适应非微信浏览器 */
@@ -9550,6 +9983,58 @@ body {
         /* 超小屏幕添加左右padding，确保按钮不贴边 */
     }
 
+    /* 超小屏幕AI功能按钮进一步优化 */
+    .ai-func-btn {
+        width: 30px;
+        height: 30px;
+        min-width: 30px;
+        min-height: 30px;
+    }
+
+    .ai-func-btn svg {
+        width: 14px;
+        height: 14px;
+    }
+
+    /* 超小屏幕快捷操作按钮进一步优化 */
+    .chat-shortcut-btn {
+        padding: 5px 8px;
+        min-height: 36px;
+        min-width: 45px;
+        font-size: 10px;
+        gap: 1px;
+    }
+
+    .chat-shortcut-btn .btn-icon {
+        font-size: 13px;
+    }
+
+    .chat-shortcut-btn .btn-text {
+        font-size: 9px;
+    }
+
+    /* 超小屏幕AI建议按钮进一步优化 */
+    .ai-suggestion-btn {
+        font-size: 0.7rem;
+        padding: 6px 10px;
+        min-width: 90px;
+        border-radius: 10px;
+        min-height: 32px;
+    }
+
+    .btn-icon {
+        font-size: 0.8rem;
+    }
+
+    .customize-btn-inline {
+        width: 28px;
+        height: 28px;
+    }
+
+    .customize-icon {
+        font-size: 11px;
+    }
+
     .modern-content.chatting {
         padding-top: 76px !important;
         padding-left: 0 !important;
@@ -9565,6 +10050,895 @@ body {
     .chat-message.assistant .chat-message-content {
         max-width: 92% !important;
         /* 超小屏幕助手消息更宽 */
+    }
+}
+
+/* 量化分析报告操作按钮样式 */
+.quant-analysis-actions {
+    margin-top: 16px;
+    padding: 16px;
+    background: linear-gradient(135deg, #f8f9ff 0%, #e8f2ff 100%);
+    border-radius: 12px;
+    border: 1px solid #e1e8f0;
+}
+
+.analysis-actions-header {
+    margin-bottom: 12px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.actions-title {
+    font-size: 14px;
+    font-weight: 600;
+    color: #2c3e50;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+}
+
+.active-reminders-badge {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    background: linear-gradient(135deg, #fef3c7 0%, #fde68a 100%);
+    padding: 4px 8px;
+    border-radius: 12px;
+    border: 1px solid #f59e0b;
+    font-size: 11px;
+    color: #92400e;
+    font-weight: 500;
+}
+
+.badge-icon {
+    font-size: 12px;
+    animation: pulse 2s infinite;
+}
+
+@keyframes pulse {
+
+    0%,
+    100% {
+        opacity: 1;
+    }
+
+    50% {
+        opacity: 0.6;
+    }
+}
+
+.badge-text {
+    white-space: nowrap;
+}
+
+.analysis-actions-buttons {
+    display: flex;
+    gap: 12px;
+    margin-bottom: 12px;
+    flex-wrap: wrap;
+}
+
+.reminder-btn {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    border: none;
+    color: white;
+    border-radius: 8px;
+    transition: all 0.3s ease;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    font-size: 13px;
+    padding: 8px 16px;
+    height: auto;
+}
+
+.reminder-btn {
+    position: relative;
+}
+
+.reminder-btn:hover {
+    transform: translateY(-1px);
+    box-shadow: 0 4px 12px rgba(102, 126, 234, 0.4);
+}
+
+.reminder-count-badge {
+    position: absolute;
+    top: -6px;
+    right: -6px;
+    background: #ef4444;
+    color: white;
+    font-size: 10px;
+    font-weight: 600;
+    padding: 2px 5px;
+    border-radius: 10px;
+    min-width: 16px;
+    height: 16px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    line-height: 1;
+    border: 2px solid white;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+}
+
+.records-btn {
+    background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+    border: none;
+    color: white;
+    border-radius: 8px;
+    transition: all 0.3s ease;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    font-size: 13px;
+    padding: 8px 16px;
+    height: auto;
+}
+
+.records-btn:hover {
+    transform: translateY(-1px);
+    box-shadow: 0 4px 12px rgba(240, 147, 251, 0.4);
+}
+
+.analysis-tip {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 8px 12px;
+    background: rgba(24, 144, 255, 0.05);
+    border-radius: 8px;
+    border-left: 3px solid #1890ff;
+    font-size: 12px;
+    color: #666;
+}
+
+.analysis-tip svg {
+    flex-shrink: 0;
+}
+
+/* 移动端量化分析报告操作按钮优化 */
+@media (max-width: 768px) {
+    .quant-analysis-actions {
+        margin-top: 12px;
+        padding: 10px;
+        border-radius: 8px;
+    }
+
+    .analysis-actions-header {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 6px;
+        margin-bottom: 10px;
+    }
+
+    .analysis-actions-buttons {
+        gap: 6px;
+        margin-bottom: 8px;
+        flex-direction: row;
+        justify-content: flex-start;
+        flex-wrap: wrap;
+    }
+
+    .reminder-btn,
+    .records-btn {
+        font-size: 11px;
+        padding: 6px 10px;
+        flex: none;
+        min-width: auto;
+        min-height: 32px;
+        border-radius: 5px;
+        gap: 4px;
+    }
+
+    .reminder-btn svg,
+    .records-btn svg {
+        width: 12px;
+        height: 12px;
+    }
+
+    .analysis-tip {
+        font-size: 10px;
+        padding: 6px 8px;
+        line-height: 1.3;
+    }
+
+    .actions-title {
+        font-size: 12px;
+    }
+
+    .active-reminders-badge {
+        font-size: 9px;
+        padding: 2px 5px;
+        border-radius: 8px;
+    }
+
+    .reminder-count-badge {
+        top: -3px;
+        right: -3px;
+        font-size: 8px;
+        min-width: 14px;
+        height: 14px;
+        padding: 1px 3px;
+    }
+
+    /* 股票操作按钮移动端优化 */
+    .stock-actions {
+        gap: 4px;
+        margin-top: 8px;
+        flex-wrap: wrap;
+        justify-content: flex-start;
+    }
+
+    .add-watchlist-btn,
+    .remove-watchlist-btn,
+    .continue-analysis-btn,
+    .buy-stock-btn,
+    .buy-stock-btn-secondary,
+    .paid-analysis-btn,
+    .quant-analysis-btn {
+        font-size: 10px;
+        padding: 4px 8px;
+        border-radius: 6px;
+        min-height: 28px;
+        gap: 2px;
+        white-space: nowrap;
+        flex-shrink: 0;
+    }
+
+    .add-watchlist-btn svg,
+    .remove-watchlist-btn svg,
+    .continue-analysis-btn svg,
+    .buy-stock-btn svg,
+    .buy-stock-btn-secondary svg,
+    .paid-analysis-btn svg,
+    .quant-analysis-btn svg {
+        width: 10px;
+        height: 10px;
+    }
+
+    /* 价格标签移动端优化 */
+    .price-tag-container {
+        gap: 2px;
+        margin-left: 2px;
+    }
+
+    .price-tag {
+        font-size: 8px;
+        padding: 1px 3px;
+        border-radius: 2px;
+    }
+}
+
+@media (max-width: 480px) {
+    .quant-analysis-actions {
+        margin-top: 10px;
+        padding: 8px;
+        border-radius: 6px;
+    }
+
+    .analysis-actions-header {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 4px;
+        margin-bottom: 8px;
+    }
+
+    .analysis-actions-buttons {
+        flex-direction: row;
+        gap: 4px;
+        width: 100%;
+        justify-content: flex-start;
+        flex-wrap: wrap;
+    }
+
+    .reminder-btn,
+    .records-btn {
+        font-size: 10px;
+        padding: 5px 8px;
+        min-height: 30px;
+        border-radius: 4px;
+        flex: none;
+        min-width: auto;
+    }
+
+    .analysis-tip {
+        font-size: 9px;
+        padding: 5px 7px;
+        line-height: 1.2;
+    }
+
+    .actions-title {
+        font-size: 11px;
+    }
+
+    .active-reminders-badge {
+        font-size: 8px;
+        padding: 2px 4px;
+    }
+
+    /* 股票操作按钮超小屏优化 */
+    .stock-actions {
+        gap: 3px;
+        margin-top: 6px;
+    }
+
+    .add-watchlist-btn,
+    .remove-watchlist-btn,
+    .continue-analysis-btn,
+    .buy-stock-btn,
+    .buy-stock-btn-secondary,
+    .paid-analysis-btn,
+    .quant-analysis-btn {
+        font-size: 9px;
+        padding: 3px 6px;
+        border-radius: 4px;
+        min-height: 26px;
+        gap: 1px;
+    }
+
+    .add-watchlist-btn svg,
+    .remove-watchlist-btn svg,
+    .continue-analysis-btn svg,
+    .buy-stock-btn svg,
+    .buy-stock-btn-secondary svg,
+    .paid-analysis-btn svg,
+    .quant-analysis-btn svg {
+        width: 9px;
+        height: 9px;
+    }
+
+    .price-tag {
+        font-size: 7px;
+        padding: 1px 2px;
+    }
+}
+
+/* 超小屏幕优化 (320px及以下) */
+@media (max-width: 320px) {
+    .quant-analysis-actions {
+        padding: 6px;
+        margin-top: 8px;
+    }
+
+    .analysis-actions-buttons {
+        gap: 3px;
+        flex-direction: row;
+        justify-content: flex-start;
+    }
+
+    .reminder-btn,
+    .records-btn {
+        font-size: 9px;
+        padding: 4px 6px;
+        min-height: 28px;
+        border-radius: 3px;
+    }
+
+    .actions-title {
+        font-size: 10px;
+    }
+
+    .analysis-tip {
+        font-size: 8px;
+        padding: 4px 6px;
+    }
+
+    /* 股票操作按钮极小屏优化 */
+    .stock-actions {
+        gap: 2px;
+        margin-top: 5px;
+    }
+
+    .add-watchlist-btn,
+    .remove-watchlist-btn,
+    .continue-analysis-btn,
+    .buy-stock-btn,
+    .buy-stock-btn-secondary,
+    .paid-analysis-btn,
+    .quant-analysis-btn {
+        font-size: 8px;
+        padding: 2px 5px;
+        border-radius: 3px;
+        min-height: 24px;
+        gap: 1px;
+    }
+
+    .add-watchlist-btn svg,
+    .remove-watchlist-btn svg,
+    .continue-analysis-btn svg,
+    .buy-stock-btn svg,
+    .buy-stock-btn-secondary svg,
+    .paid-analysis-btn svg,
+    .quant-analysis-btn svg {
+        width: 8px;
+        height: 8px;
+    }
+
+    .price-tag {
+        font-size: 6px;
+        padding: 0px 2px;
+    }
+}
+
+/* 提醒对话框样式 */
+:deep(.reminder-dialog) {
+    border-radius: 16px;
+    overflow: hidden;
+    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.12);
+    border: 1px solid #e5e7eb;
+}
+
+:deep(.reminder-dialog .el-dialog__header) {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    color: white;
+    padding: 16px 20px;
+    margin: 0;
+}
+
+:deep(.reminder-dialog .el-dialog__title) {
+    color: white;
+    font-weight: 600;
+    font-size: 16px;
+}
+
+:deep(.reminder-dialog .el-dialog__headerbtn .el-dialog__close) {
+    color: white;
+    font-size: 18px;
+}
+
+:deep(.reminder-dialog .el-dialog__body) {
+    padding: 0;
+}
+
+.reminder-dialog-content {
+    max-height: 70vh;
+    overflow-y: auto;
+    padding: 20px;
+}
+
+.stock-info-section {
+    margin-bottom: 20px;
+    padding: 16px;
+    background: linear-gradient(135deg, #f0f9ff 0%, #e0f2fe 100%);
+    border-radius: 8px;
+    border-left: 4px solid #0ea5e9;
+}
+
+.stock-info-section h4 {
+    margin: 0 0 10px 0;
+    color: #0f172a;
+    font-size: 14px;
+    font-weight: 600;
+}
+
+.stock-info-display {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    flex-wrap: wrap;
+}
+
+.stock-name {
+    font-size: 16px;
+    font-weight: 600;
+    color: #1e40af;
+}
+
+.stock-code {
+    font-size: 14px;
+    color: #64748b;
+    background: rgba(255, 255, 255, 0.7);
+    padding: 2px 8px;
+    border-radius: 4px;
+}
+
+.reminder-form-section {
+    margin-bottom: 20px;
+}
+
+.reminder-form-section h4 {
+    margin: 0 0 16px 0;
+    color: #0f172a;
+    font-size: 14px;
+    font-weight: 600;
+}
+
+.form-row {
+    display: flex;
+    align-items: center;
+    margin-bottom: 16px;
+    gap: 12px;
+}
+
+.form-label {
+    min-width: 80px;
+    font-size: 14px;
+    color: #374151;
+    font-weight: 500;
+}
+
+.type-select,
+.condition-select {
+    flex: 1;
+    max-width: 200px;
+}
+
+.option-content {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.option-icon {
+    font-size: 16px;
+}
+
+.value-input-group {
+    flex: 1;
+    max-width: 200px;
+}
+
+.value-input .el-input-group__append {
+    background: #f8fafc;
+    border-left: 1px solid #e2e8f0;
+    color: #64748b;
+    font-weight: 500;
+}
+
+.reminder-preview {
+    margin-top: 20px;
+    padding: 16px;
+    background: linear-gradient(135deg, #fefce8 0%, #fef3c7 100%);
+    border-radius: 8px;
+    border-left: 4px solid #f59e0b;
+}
+
+.preview-title {
+    font-size: 13px;
+    font-weight: 600;
+    color: #92400e;
+    margin-bottom: 8px;
+}
+
+.preview-content {
+    font-size: 14px;
+    color: #78350f;
+    line-height: 1.5;
+}
+
+.active-reminders-section {
+    margin-top: 20px;
+    padding-top: 20px;
+    border-top: 1px solid #e5e7eb;
+}
+
+.active-reminders-section h4 {
+    margin: 0 0 12px 0;
+    color: #0f172a;
+    font-size: 14px;
+    font-weight: 600;
+}
+
+.reminders-list {
+    max-height: 200px;
+    overflow-y: auto;
+}
+
+.reminder-item {
+    display: flex;
+    justify-content: between;
+    align-items: center;
+    padding: 12px;
+    background: #f8fafc;
+    border-radius: 6px;
+    margin-bottom: 8px;
+    border: 1px solid #e2e8f0;
+}
+
+.reminder-info {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+}
+
+.reminder-stock {
+    font-size: 14px;
+    font-weight: 600;
+    color: #1e40af;
+}
+
+.reminder-desc {
+    font-size: 12px;
+    color: #64748b;
+    line-height: 1.4;
+}
+
+.reminder-time {
+    font-size: 11px;
+    color: #94a3b8;
+}
+
+.remove-btn {
+    margin-left: 12px;
+    padding: 6px 12px;
+    font-size: 12px;
+    min-height: 32px;
+}
+
+.dialog-footer {
+    display: flex;
+    justify-content: flex-end;
+    gap: 12px;
+}
+
+/* 移动端提醒对话框优化 */
+@media (max-width: 768px) {
+    :deep(.reminder-dialog) {
+        margin: 5vh auto !important;
+        border-radius: 12px !important;
+    }
+
+    :deep(.reminder-dialog .el-dialog__header) {
+        padding: 12px 16px;
+    }
+
+    :deep(.reminder-dialog .el-dialog__title) {
+        font-size: 15px;
+    }
+
+    .reminder-dialog-content {
+        max-height: 65vh;
+        padding: 16px;
+    }
+
+    .stock-info-section {
+        padding: 12px;
+        margin-bottom: 16px;
+    }
+
+    .stock-info-display {
+        gap: 6px;
+    }
+
+    .stock-name {
+        font-size: 15px;
+    }
+
+    .stock-code {
+        font-size: 13px;
+        padding: 1px 6px;
+    }
+
+    .form-row {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 8px;
+        margin-bottom: 20px;
+    }
+
+    .form-label {
+        min-width: auto;
+        width: 100%;
+        font-size: 13px;
+        margin-bottom: 4px;
+    }
+
+    .type-select,
+    .condition-select,
+    .value-input-group {
+        max-width: none;
+        width: 100%;
+    }
+
+    .reminder-preview {
+        padding: 12px;
+        margin-top: 16px;
+    }
+
+    .preview-title {
+        font-size: 12px;
+    }
+
+    .preview-content {
+        font-size: 13px;
+    }
+
+    .reminder-item {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 8px;
+        padding: 10px;
+    }
+
+    .reminder-info {
+        width: 100%;
+    }
+
+    .remove-btn {
+        margin-left: 0;
+        align-self: flex-end;
+        min-height: 36px;
+        padding: 8px 16px;
+    }
+
+    .dialog-footer {
+        gap: 8px;
+        padding-top: 20px;
+        justify-content: center;
+        align-items: center;
+    }
+
+    .dialog-footer .el-button {
+        flex: 1;
+        min-height: 36px;
+        max-width: 120px;
+        font-size: 13px;
+        padding: 8px 16px;
+    }
+}
+
+@media (max-width: 480px) {
+    :deep(.reminder-dialog) {
+        margin: 2vh auto !important;
+        width: 95% !important;
+        max-width: none !important;
+        border-radius: 10px !important;
+    }
+
+    :deep(.reminder-dialog .el-dialog__header) {
+        padding: 10px 12px;
+    }
+
+    :deep(.reminder-dialog .el-dialog__title) {
+        font-size: 14px;
+    }
+
+    :deep(.reminder-dialog .el-dialog__headerbtn .el-dialog__close) {
+        font-size: 16px;
+    }
+
+    .reminder-dialog-content {
+        max-height: 60vh;
+        padding: 12px;
+    }
+
+    .stock-info-section {
+        padding: 10px;
+        margin-bottom: 12px;
+    }
+
+    .stock-info-section h4 {
+        font-size: 13px;
+        margin-bottom: 8px;
+    }
+
+    .reminder-form-section h4 {
+        font-size: 13px;
+        margin-bottom: 12px;
+    }
+
+    .form-row {
+        margin-bottom: 16px;
+    }
+
+    .reminder-preview {
+        padding: 10px;
+        margin-top: 12px;
+    }
+
+    .active-reminders-section {
+        margin-top: 16px;
+        padding-top: 16px;
+    }
+
+    .active-reminders-section h4 {
+        font-size: 13px;
+        margin-bottom: 10px;
+    }
+
+    .reminders-list {
+        max-height: 150px;
+    }
+
+    .reminder-item {
+        padding: 8px;
+    }
+
+    .dialog-footer {
+        flex-direction: row;
+        gap: 12px;
+        justify-content: center;
+        align-items: center;
+        padding-top: 16px;
+    }
+
+    .dialog-footer .el-button {
+        flex: 1;
+        max-width: 100px;
+        min-height: 38px;
+        font-size: 13px;
+        padding: 8px 12px;
+        border-radius: 6px;
+    }
+}
+
+/* 超小屏幕提醒对话框优化 */
+@media (max-width: 320px) {
+    :deep(.reminder-dialog) {
+        margin: 1vh auto !important;
+        width: 98% !important;
+        border-radius: 8px !important;
+    }
+
+    :deep(.reminder-dialog .el-dialog__header) {
+        padding: 8px 10px;
+    }
+
+    :deep(.reminder-dialog .el-dialog__title) {
+        font-size: 13px;
+    }
+
+    .reminder-dialog-content {
+        padding: 10px;
+        max-height: 65vh;
+    }
+
+    .stock-info-section,
+    .reminder-preview {
+        padding: 8px;
+    }
+
+    .stock-name {
+        font-size: 14px;
+    }
+
+    .stock-code {
+        font-size: 12px;
+    }
+
+    .form-label {
+        font-size: 12px;
+    }
+
+    .preview-content {
+        font-size: 12px;
+    }
+
+    .reminder-item {
+        padding: 6px;
+    }
+
+    .reminder-stock {
+        font-size: 13px;
+    }
+
+    .reminder-desc {
+        font-size: 11px;
+    }
+
+    .remove-btn {
+        font-size: 11px;
+        padding: 6px 12px;
+        min-height: 32px;
+    }
+
+    .dialog-footer {
+        flex-direction: row;
+        gap: 10px;
+        justify-content: center;
+        align-items: center;
+        padding-top: 14px;
+    }
+
+    .dialog-footer .el-button {
+        flex: 1;
+        max-width: 90px;
+        min-height: 36px;
+        font-size: 12px;
+        padding: 6px 10px;
+        border-radius: 5px;
     }
 }
 </style>

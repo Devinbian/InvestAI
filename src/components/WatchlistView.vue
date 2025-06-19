@@ -91,8 +91,8 @@
                             </svg>
                             量化分析
                             <div class="price-tag-container">
-                                <span class="price-tag original-price">1智点</span>
-                                <span class="price-tag promo-price">0.5智点</span>
+                                <span class="price-tag original-price">3智点</span>
+                                <span class="price-tag promo-price">1智点</span>
                             </div>
                         </el-button>
                         <el-button size="small" @click.stop="showQuantAnalysisDialog(stock)" class="quant-analysis-btn">
@@ -102,8 +102,8 @@
                             </svg>
                             AI委托交易
                             <div class="price-tag-container">
-                                <span class="price-tag original-price">1智点</span>
-                                <span class="price-tag promo-price">0.5智点</span>
+                                <span class="price-tag original-price">3智点</span>
+                                <span class="price-tag promo-price">1智点</span>
                             </div>
                         </el-button>
 
@@ -222,16 +222,16 @@ const showPaidAnalysisDialog = (stock) => {
     }
 
     ElMessageBox.confirm(
-        `量化分析 ${stock.name}(${stock.code}) 促销价仅需 0.5智点（原价1智点），是否继续？`,
+        `量化分析 ${stock.name}(${stock.code}) 促销价仅需 1智点（原价3智点），是否继续？`,
         '付费服务确认',
         {
-            confirmButtonText: '确认支付 0.5智点',
+            confirmButtonText: '确认支付 1智点',
             cancelButtonText: '取消',
             type: 'info',
         }
     ).then(() => {
-        // 扣费（扣除0.5智点）
-        if (userStore.deductBalance(0.5)) {
+        // 扣费（扣除1智点）
+        if (userStore.deductBalance(1)) {
             ElMessage.success('支付成功，正在生成量化分析...');
             emit('send-to-chat', {
                 type: 'paid-analysis',
@@ -255,16 +255,16 @@ const showQuantAnalysisDialog = (stock) => {
     }
 
     ElMessageBox.confirm(
-        `AI委托交易 ${stock.name}(${stock.code}) 促销价仅需 0.5智点（原价1智点），是否继续？`,
+        `AI委托交易 ${stock.name}(${stock.code}) 促销价仅需 1智点（原价3智点），是否继续？`,
         '付费服务确认',
         {
-            confirmButtonText: '确认支付 0.5智点',
+            confirmButtonText: '确认支付 1智点',
             cancelButtonText: '取消',
             type: 'info',
         }
     ).then(() => {
-        // 扣费（扣除0.5智点）
-        if (userStore.deductBalance(0.5)) {
+        // 扣费（扣除1智点）
+        if (userStore.deductBalance(1)) {
             ElMessage.success('支付成功，正在生成AI委托交易...');
             emit('send-to-chat', {
                 type: 'quant-analysis',

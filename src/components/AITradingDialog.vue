@@ -745,5 +745,58 @@ watch(() => props.modelValue, (newVal) => {
     .param-input-small {
         width: 100%;
     }
+
+    /* 移动端按钮优化 */
+    .dialog-footer {
+        padding: 12px 16px 16px 16px;
+        justify-content: center;
+        gap: 10px;
+    }
+
+    .dialog-footer .el-button {
+        flex: 1;
+        max-width: 120px;
+        min-height: 36px;
+        font-size: 13px;
+        padding: 8px 16px;
+        border-radius: 6px;
+    }
+}
+
+@media (max-width: 480px) {
+    .ai-trading-dialog {
+        width: 98vw !important;
+        margin: 2vh auto !important;
+    }
+
+    .dialog-footer {
+        padding: 10px 12px 14px 12px;
+        gap: 8px;
+    }
+
+    .dialog-footer .el-button {
+        flex: 1;
+        max-width: 100px;
+        min-height: 38px;
+        font-size: 13px;
+        padding: 8px 12px;
+        border-radius: 6px;
+    }
+}
+
+@media (max-width: 320px) {
+    .dialog-footer {
+        padding: 8px 10px 12px 10px;
+        gap: 6px;
+    }
+
+    .dialog-footer .el-button {
+        flex: 1;
+        max-width: 90px;
+        min-height: 36px;
+        font-size: 12px;
+        padding: 6px 10px;
+        border-radius: 5px;
+    }
 }
 </style>

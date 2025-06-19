@@ -735,6 +735,50 @@ onMounted(() => {
         height: 35px;
         font-size: 16px;
     }
+
+    /* 移动端按钮优化 */
+    .dialog-footer {
+        padding: 12px 16px 16px 16px;
+        justify-content: center;
+    }
+
+    .dialog-footer .el-button {
+        min-height: 36px;
+        font-size: 13px;
+        padding: 8px 20px;
+        border-radius: 6px;
+    }
+}
+
+@media (max-width: 480px) {
+    .customize-dialog {
+        width: 98vw !important;
+        margin: 2vh auto !important;
+    }
+
+    .dialog-footer {
+        padding: 10px 12px 14px 12px;
+    }
+
+    .dialog-footer .el-button {
+        min-height: 38px;
+        font-size: 13px;
+        padding: 8px 16px;
+        border-radius: 6px;
+    }
+}
+
+@media (max-width: 320px) {
+    .dialog-footer {
+        padding: 8px 10px 12px 10px;
+    }
+
+    .dialog-footer .el-button {
+        min-height: 36px;
+        font-size: 12px;
+        padding: 6px 14px;
+        border-radius: 5px;
+    }
 }
 
 .icon-options::-webkit-scrollbar {

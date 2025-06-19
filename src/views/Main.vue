@@ -107,15 +107,25 @@
                             :autosize="{ minRows: 2, maxRows: 6 }" placeholder="如：分析比亚迪近期走势及投资价值，考虑新能源政策影响..."
                             @keyup.enter.ctrl="sendMessage" clearable maxlength="500" show-word-limit />
                         <div class="ai-buttons">
-                            <el-button class="ai-func-btn" circle @click="onVoiceClick">
-                                <svg width="20" height="20" viewBox="0 0 24 24" fill="none">
-                                    <path d="M12 1a3 3 0 0 0-3 3v8a3 3 0 0 0 6 0V4a3 3 0 0 0-3-3z" stroke="#888"
-                                        stroke-width="2" fill="none" />
-                                    <path d="M19 10v2a7 7 0 0 1-14 0v-2" stroke="#888" stroke-width="2" fill="none" />
-                                    <line x1="12" y1="19" x2="12" y2="23" stroke="#888" stroke-width="2" />
-                                    <line x1="8" y1="23" x2="16" y2="23" stroke="#888" stroke-width="2" />
-                                </svg>
-                            </el-button>
+                            <div class="voice-btn-container">
+                                <el-button class="ai-func-btn voice-btn" :class="{ 'recording': isRecording }" circle
+                                    @click="onVoiceClick"
+                                    :title="isRecording ? `录音中 ${recordingDuration}s` : '点击开始语音输入'">
+                                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none">
+                                        <path d="M12 1a3 3 0 0 0-3 3v8a3 3 0 0 0 6 0V4a3 3 0 0 0-3-3z"
+                                            :stroke="isRecording ? '#ff4757' : '#888'" stroke-width="2"
+                                            :fill="isRecording ? '#ff4757' : 'none'" />
+                                        <path d="M19 10v2a7 7 0 0 1-14 0v-2" :stroke="isRecording ? '#ff4757' : '#888'"
+                                            stroke-width="2" fill="none" />
+                                        <line x1="12" y1="19" x2="12" y2="23" :stroke="isRecording ? '#ff4757' : '#888'"
+                                            stroke-width="2" />
+                                        <line x1="8" y1="23" x2="16" y2="23" :stroke="isRecording ? '#ff4757' : '#888'"
+                                            stroke-width="2" />
+                                    </svg>
+                                </el-button>
+                                <!-- 录音计时显示 -->
+                                <div v-if="isRecording" class="recording-timer">{{ recordingDuration }}s</div>
+                            </div>
                             <el-button class="ai-func-btn shortcuts-toggle-btn" circle @click="toggleChatShortcuts"
                                 v-if="isMobileView && userStore.isLoggedIn">
                                 <svg width="20" height="20" viewBox="0 0 24 24" fill="none">
@@ -745,15 +755,25 @@
                     <!-- 按钮区域 -->
                     <div class="ai-buttons-row">
                         <div class="ai-buttons">
-                            <el-button class="ai-func-btn" circle @click="onVoiceClick">
-                                <svg width="16" height="16" viewBox="0 0 24 24" fill="none">
-                                    <path d="M12 1a3 3 0 0 0-3 3v8a3 3 0 0 0 6 0V4a3 3 0 0 0-3-3z" stroke="#888"
-                                        stroke-width="2" fill="none" />
-                                    <path d="M19 10v2a7 7 0 0 1-14 0v-2" stroke="#888" stroke-width="2" fill="none" />
-                                    <line x1="12" y1="19" x2="12" y2="23" stroke="#888" stroke-width="2" />
-                                    <line x1="8" y1="23" x2="16" y2="23" stroke="#888" stroke-width="2" />
-                                </svg>
-                            </el-button>
+                            <div class="voice-btn-container">
+                                <el-button class="ai-func-btn voice-btn" :class="{ 'recording': isRecording }" circle
+                                    @click="onVoiceClick"
+                                    :title="isRecording ? `录音中 ${recordingDuration}s` : '点击开始语音输入'">
+                                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none">
+                                        <path d="M12 1a3 3 0 0 0-3 3v8a3 3 0 0 0 6 0V4a3 3 0 0 0-3-3z"
+                                            :stroke="isRecording ? '#ff4757' : '#888'" stroke-width="2"
+                                            :fill="isRecording ? '#ff4757' : 'none'" />
+                                        <path d="M19 10v2a7 7 0 0 1-14 0v-2" :stroke="isRecording ? '#ff4757' : '#888'"
+                                            stroke-width="2" fill="none" />
+                                        <line x1="12" y1="19" x2="12" y2="23" :stroke="isRecording ? '#ff4757' : '#888'"
+                                            stroke-width="2" />
+                                        <line x1="8" y1="23" x2="16" y2="23" :stroke="isRecording ? '#ff4757' : '#888'"
+                                            stroke-width="2" />
+                                    </svg>
+                                </el-button>
+                                <!-- 录音计时显示 -->
+                                <div v-if="isRecording" class="recording-timer">{{ recordingDuration }}s</div>
+                            </div>
                             <el-button class="ai-func-btn shortcuts-toggle-btn" circle @click="toggleChatShortcuts"
                                 v-if="!showChatShortcuts && userStore.isLoggedIn">
                                 <svg width="16" height="16" viewBox="0 0 24 24" fill="none">
@@ -851,7 +871,7 @@
         <RecordsCenter v-if="showRecordsCenter" @close="closeRecordsCenter" />
 
         <!-- 版权信息 -->
-        <div class="copyright-footer" v-show="!isChatMode || isMobileView">
+        <div class="copyright-footer" v-show="!isChatMode && (!isMobileView || !isWechatEnv)">
             <div class="copyright-content">
                 <p>&copy; 2024 上海九方云智能科技有限公司 版权所有</p>
             </div>
@@ -1637,8 +1657,295 @@ watch(chatHistory, () => {
     });
 }, { deep: true });
 
+// 语音输入相关状态
+const isRecording = ref(false);
+const recognition = ref(null);
+const voiceTimer = ref(null);
+const recordingDuration = ref(0);
+
+// 检测是否为微信内置浏览器
+const isWechatBrowser = () => {
+    const ua = navigator.userAgent.toLowerCase();
+    return ua.includes('micromessenger');
+};
+
+// 微信语音识别相关
+const wxVoiceLocalId = ref('');
+const isWxVoiceSupported = ref(false);
+const isWechatEnv = ref(false); // 微信环境检测
+
+// 初始化微信JS-SDK语音功能
+const initWechatVoice = () => {
+    if (isWechatBrowser() && typeof wx !== 'undefined') {
+        try {
+            // 检查微信JS-SDK是否可用
+            wx.checkJsApi({
+                jsApiList: ['startRecord', 'stopRecord', 'translateVoice'],
+                success: function (res) {
+                    if (res.checkResult.startRecord && res.checkResult.stopRecord && res.checkResult.translateVoice) {
+                        isWxVoiceSupported.value = true;
+                        console.log('微信语音识别功能可用');
+                    }
+                }
+            });
+        } catch (error) {
+            console.log('微信JS-SDK未配置或不可用');
+        }
+    }
+};
+
+// 微信开始录音
+const startWechatVoiceRecord = () => {
+    if (!isWxVoiceSupported.value) {
+        ElMessage.error('微信语音功能不可用，请确保在微信中打开并配置了JS-SDK');
+        return;
+    }
+
+    wx.startRecord({
+        success: function () {
+            isRecording.value = true;
+            startRecordingTimer();
+            ElMessage.success('🎤 开始微信语音输入，请说话...');
+        },
+        cancel: function () {
+            ElMessage.info('用户取消录音');
+            stopRecording();
+        }
+    });
+};
+
+// 微信停止录音并识别
+const stopWechatVoiceRecord = () => {
+    if (!isWxVoiceSupported.value) return;
+
+    wx.stopRecord({
+        success: function (res) {
+            wxVoiceLocalId.value = res.localId;
+
+            // 识别语音
+            wx.translateVoice({
+                localId: wxVoiceLocalId.value,
+                isShowProgressTips: 1,
+                success: function (res) {
+                    const result = res.translateResult;
+                    if (result && result.trim()) {
+                        // 更新输入框内容
+                        const currentValue = inputMessage.value.trim();
+                        if (currentValue) {
+                            inputMessage.value = currentValue + ' ' + result.trim();
+                        } else {
+                            inputMessage.value = result.trim();
+                        }
+                        ElMessage.success(`语音识别完成: "${result.substring(0, 20)}${result.length > 20 ? '...' : ''}"`);
+                    } else {
+                        ElMessage.warning('未识别到语音内容，请重试');
+                    }
+                    stopRecording();
+                },
+                fail: function (res) {
+                    ElMessage.error('语音识别失败，请重试');
+                    stopRecording();
+                }
+            });
+        },
+        fail: function (res) {
+            ElMessage.error('录音失败，请重试');
+            stopRecording();
+        }
+    });
+};
+
+// 初始化语音识别
+const initSpeechRecognition = () => {
+    // 微信内置浏览器不支持语音识别
+    if (isWechatBrowser()) {
+        console.log('微信内置浏览器不支持语音识别');
+        return false;
+    }
+
+    if ('webkitSpeechRecognition' in window || 'SpeechRecognition' in window) {
+        try {
+            const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+            recognition.value = new SpeechRecognition();
+
+            // 配置语音识别参数
+            recognition.value.continuous = true;
+            recognition.value.interimResults = true;
+            recognition.value.lang = 'zh-CN';
+            recognition.value.maxAlternatives = 1;
+
+            // 识别结果处理
+            recognition.value.onresult = (event) => {
+                let finalTranscript = '';
+
+                for (let i = event.resultIndex; i < event.results.length; i++) {
+                    const transcript = event.results[i][0].transcript;
+                    if (event.results[i].isFinal) {
+                        finalTranscript += transcript;
+                    }
+                }
+
+                // 更新输入框内容
+                if (finalTranscript) {
+                    const cleanedText = finalTranscript.trim();
+                    const currentValue = inputMessage.value.trim();
+                    if (currentValue) {
+                        inputMessage.value = currentValue + ' ' + cleanedText;
+                    } else {
+                        inputMessage.value = cleanedText;
+                    }
+                }
+            };
+
+            // 识别开始
+            recognition.value.onstart = () => {
+                console.log('语音识别开始');
+                startRecordingTimer();
+            };
+
+            // 识别结束
+            recognition.value.onend = () => {
+                console.log('语音识别结束');
+                stopRecording();
+            };
+
+            // 识别错误处理
+            recognition.value.onerror = (event) => {
+                console.error('语音识别错误:', event.error);
+                let errorMessage = '语音识别失败';
+
+                switch (event.error) {
+                    case 'no-speech':
+                        errorMessage = '未检测到语音，请重新尝试';
+                        break;
+                    case 'audio-capture':
+                        errorMessage = '无法访问麦克风，请检查权限设置';
+                        break;
+                    case 'not-allowed':
+                        errorMessage = '麦克风权限被拒绝，请在浏览器设置中允许麦克风访问';
+                        break;
+                    case 'network':
+                        errorMessage = '网络连接异常，请检查网络后重试';
+                        break;
+                    case 'language-not-supported':
+                        errorMessage = '不支持中文语音识别';
+                        break;
+                }
+
+                ElMessage.error(errorMessage);
+                stopRecording();
+            };
+
+            return true;
+        } catch (error) {
+            console.error('初始化语音识别失败:', error);
+            return false;
+        }
+    }
+    return false;
+};
+
+// 开始录音计时
+const startRecordingTimer = () => {
+    recordingDuration.value = 0;
+    voiceTimer.value = setInterval(() => {
+        recordingDuration.value++;
+
+        // 15秒时提示用户
+        if (recordingDuration.value === 15) {
+            ElMessage.info('💡 继续说话，或点击麦克风按钮结束录音');
+        }
+
+        // 45秒时警告用户即将停止
+        if (recordingDuration.value === 45) {
+            ElMessage.warning('⏰ 录音即将结束，还有15秒');
+        }
+
+        // 最长录音60秒
+        if (recordingDuration.value >= 60) {
+            ElMessage.info('⏱️ 录音时间已达上限，自动停止');
+            stopVoiceRecording();
+        }
+    }, 1000);
+};
+
+// 停止录音
+const stopRecording = () => {
+    isRecording.value = false;
+    if (voiceTimer.value) {
+        clearInterval(voiceTimer.value);
+        voiceTimer.value = null;
+    }
+    recordingDuration.value = 0;
+};
+
+// 开始语音录音
+const startVoiceRecording = () => {
+    // 微信浏览器优先使用微信语音功能
+    if (isWechatBrowser()) {
+        if (isWxVoiceSupported.value) {
+            startWechatVoiceRecord();
+        } else {
+            // 微信环境下的提示已在onVoiceClick中处理
+            console.log('微信环境：语音功能需要JS-SDK配置');
+        }
+        return;
+    }
+
+    if (!recognition.value) {
+        ElMessage.error('您的浏览器不支持语音识别功能，建议使用Chrome浏览器');
+        return;
+    }
+
+    try {
+        isRecording.value = true;
+        recognition.value.start();
+        ElMessage.success('🎤 开始语音输入，请说话...');
+    } catch (error) {
+        console.error('启动语音识别失败:', error);
+        ElMessage.error('启动语音识别失败，请重试');
+        stopRecording();
+    }
+};
+
+// 停止语音录音
+const stopVoiceRecording = () => {
+    // 微信浏览器使用微信语音功能
+    if (isWechatBrowser() && isWxVoiceSupported.value) {
+        stopWechatVoiceRecord();
+        return;
+    }
+
+    if (recognition.value && isRecording.value) {
+        recognition.value.stop();
+    }
+    stopRecording();
+};
+
 const onVoiceClick = () => {
-    ElMessage.info('语音输入功能开发中...');
+    // 基本日志记录
+    console.log('语音按钮点击');
+
+    // 微信环境特殊处理
+    if (isWechatBrowser()) {
+        // 显示语音功能提示
+        ElMessage({
+            message: '💬 微信语音功能需要JS-SDK配置，当前暂不可用',
+            type: 'warning',
+            duration: 4000,
+            showClose: true,
+            dangerouslyUseHTMLString: false
+        });
+
+        return; // 微信环境下直接返回，不执行后续逻辑
+    }
+
+    if (isRecording.value) {
+        stopVoiceRecording();
+        ElMessage.info('🛑 语音输入已停止');
+    } else {
+        startVoiceRecording();
+    }
 };
 
 // 切换聊天快捷操作显示
@@ -1673,6 +1980,43 @@ const updateChatHistoryHeight = () => {
 // 检测移动端视图
 const checkMobileView = () => {
     isMobileView.value = window.innerWidth <= 768;
+};
+
+// 修复移动端聊天框显示问题
+const fixMobileChatBox = () => {
+    if (isMobileView.value) {
+        // 强制显示聊天输入框
+        nextTick(() => {
+            const chatBox = document.querySelector('.ai-card');
+            if (chatBox) {
+                chatBox.style.display = 'block';
+                chatBox.style.position = 'fixed';
+                chatBox.style.bottom = '0';
+                chatBox.style.left = '0';
+                chatBox.style.right = '0';
+                chatBox.style.zIndex = '1000';
+                chatBox.style.background = 'white';
+                chatBox.style.borderTop = '1px solid #e5e7eb';
+                chatBox.style.boxShadow = '0 -4px 20px rgba(0, 0, 0, 0.1)';
+
+                // 确保输入框可见
+                const input = chatBox.querySelector('.ai-input');
+                if (input) {
+                    input.style.display = 'block';
+                    input.style.visibility = 'visible';
+                }
+
+                // 确保按钮可见
+                const buttons = chatBox.querySelector('.ai-buttons');
+                if (buttons) {
+                    buttons.style.display = 'flex';
+                    buttons.style.visibility = 'visible';
+                }
+
+                console.log('移动端聊天框已修复');
+            }
+        });
+    }
 };
 
 // 处理下拉菜单命令
@@ -2372,6 +2716,10 @@ const checkUserStatus = () => {
 const handleResize = () => {
     checkMobileView();
     updateChatHistoryHeight();
+    // 修复移动端聊天框
+    setTimeout(() => {
+        fixMobileChatBox();
+    }, 100);
 };
 
 onMounted(() => {
@@ -2386,6 +2734,21 @@ onMounted(() => {
 
     // 初始化快捷操作
     initializeShortcuts();
+
+    // 初始化语音识别
+    initSpeechRecognition();
+
+    // 初始化微信语音功能
+    initWechatVoice();
+
+    // 检测微信环境并设置相关状态
+    isWechatEnv.value = isWechatBrowser();
+    if (isWechatEnv.value) {
+        document.body.classList.add('wechat-browser');
+    }
+
+    // 修复移动端聊天框显示问题
+    fixMobileChatBox();
 
     // 如果有当前聊天ID，恢复聊天记录
     if (chatHistoryStore.currentChatId) {
@@ -2423,6 +2786,13 @@ onUnmounted(() => {
     }
     if (countdownTimer) {
         clearInterval(countdownTimer);
+    }
+    // 清理语音识别资源
+    if (recognition.value && isRecording.value) {
+        recognition.value.stop();
+    }
+    if (voiceTimer.value) {
+        clearInterval(voiceTimer.value);
     }
     // 清理窗口大小监听
     window.removeEventListener('resize', handleResize);
@@ -4884,6 +5254,68 @@ body.onboarding-mode {
     background: #e0e0e0;
 }
 
+/* 语音按钮录音状态样式 */
+.voice-btn.recording {
+    background: #ffe5e5 !important;
+    border: 2px solid #ff4757 !important;
+    animation: voice-recording 1.5s infinite;
+}
+
+.voice-btn.recording:hover {
+    background: #ffdddd !important;
+}
+
+@keyframes voice-recording {
+
+    0%,
+    100% {
+        box-shadow: 0 0 0 0 rgba(255, 71, 87, 0.4);
+    }
+
+    50% {
+        box-shadow: 0 0 0 8px rgba(255, 71, 87, 0.1);
+    }
+}
+
+/* 语音按钮容器 */
+.voice-btn-container {
+    position: relative;
+    display: inline-block;
+}
+
+/* 录音计时器样式 */
+.recording-timer {
+    position: absolute;
+    top: -8px;
+    right: -8px;
+    background: #ff4757;
+    color: white;
+    font-size: 10px;
+    font-weight: bold;
+    padding: 2px 6px;
+    border-radius: 10px;
+    min-width: 20px;
+    text-align: center;
+    box-shadow: 0 2px 4px rgba(255, 71, 87, 0.3);
+    animation: timer-pulse 1s ease-in-out infinite alternate;
+    z-index: 10;
+    line-height: 1;
+}
+
+@keyframes timer-pulse {
+    0% {
+        transform: scale(1);
+        opacity: 0.9;
+    }
+
+    100% {
+        transform: scale(1.1);
+        opacity: 1;
+    }
+}
+
+
+
 .ai-send-btn {
     border-radius: 50%;
     width: 36px;
@@ -5072,14 +5504,22 @@ body.onboarding-mode {
         -webkit-touch-callout: none;
         -webkit-tap-highlight-color: transparent;
         overscroll-behavior: none;
+        /* 确保移动端正确显示 */
+        width: 100% !important;
+        overflow-x: hidden !important;
+        position: relative !important;
     }
 
     /* 主容器调整 - 让聊天框沉底 */
     .main-container {
-        display: flex;
-        flex-direction: column;
-        min-height: 100vh;
-        padding-bottom: 0;
+        display: flex !important;
+        flex-direction: column !important;
+        min-height: 100vh !important;
+        min-height: -webkit-fill-available !important;
+        /* iOS Safari 兼容 */
+        padding-bottom: 0 !important;
+        position: relative !important;
+        width: 100% !important;
     }
 
     .chat-area {
@@ -5094,19 +5534,26 @@ body.onboarding-mode {
 
     /* 聊天输入框固定在底部 */
     .ai-card {
-        position: fixed;
-        bottom: 0;
-        left: 0;
-        right: 0;
-        max-width: none;
-        margin: 0;
-        border-radius: 0;
-        border-top: 1px solid #e5e7eb;
-        box-shadow: 0 -4px 20px rgba(0, 0, 0, 0.1);
-        padding: 12px 16px;
-        background: white;
-        z-index: 1000;
-        transition: transform 0.3s ease;
+        position: fixed !important;
+        bottom: 0 !important;
+        left: 0 !important;
+        right: 0 !important;
+        max-width: none !important;
+        margin: 0 !important;
+        border-radius: 0 !important;
+        border-top: 1px solid #e5e7eb !important;
+        box-shadow: 0 -4px 20px rgba(0, 0, 0, 0.1) !important;
+        padding: 12px 16px !important;
+        background: white !important;
+        z-index: 1000 !important;
+        transition: transform 0.3s ease !important;
+        /* 确保在所有移动端浏览器中显示 */
+        display: block !important;
+        visibility: visible !important;
+        opacity: 1 !important;
+        /* 防止被其他元素遮挡 */
+        transform: translateZ(0) !important;
+        -webkit-transform: translateZ(0) !important;
     }
 
 
@@ -5340,7 +5787,7 @@ body.onboarding-mode {
 
     /* Footer优化 */
     .copyright-footer {
-        margin-top: 20px;
+        margin-top: 0;
         padding: 8px 0;
     }
 
@@ -8497,6 +8944,22 @@ body {
 
     .copyright-content p {
         font-size: 12px;
+    }
+
+    /* 微信环境下的底部间距优化 */
+    body.wechat-browser .ai-card {
+        margin-bottom: 0 !important;
+        padding-bottom: 16px !important;
+    }
+
+    body.wechat-browser .input-area {
+        padding-bottom: 12px !important;
+        margin-bottom: 0 !important;
+    }
+
+    /* 微信环境下确保版权信息完全隐藏 */
+    body.wechat-browser .copyright-footer {
+        display: none !important;
     }
 }
 

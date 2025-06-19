@@ -77,15 +77,15 @@
                     <div class="stock-actions">
                         <el-button size="small" text @click.stop="removeFromWatchlist(stock.code)"
                             class="remove-watchlist-btn">
-                            <svg width="10" height="10" viewBox="0 0 24 24" fill="none">
+                            <svg width="14" height="14" viewBox="0 0 24 24" fill="none">
                                 <path
                                     d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"
                                     fill="currentColor" />
                             </svg>
-                            移除关注
+                            移除自选
                         </el-button>
                         <el-button size="small" @click.stop="showPaidAnalysisDialog(stock)" class="paid-analysis-btn">
-                            <svg width="10" height="10" viewBox="0 0 24 24" fill="none">
+                            <svg width="14" height="14" viewBox="0 0 24 24" fill="none">
                                 <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"
                                     stroke="currentColor" stroke-width="2" />
                             </svg>
@@ -96,7 +96,7 @@
                             </div>
                         </el-button>
                         <el-button size="small" @click.stop="showQuantAnalysisDialog(stock)" class="quant-analysis-btn">
-                            <svg width="10" height="10" viewBox="0 0 24 24" fill="none">
+                            <svg width="14" height="14" viewBox="0 0 24 24" fill="none">
                                 <path d="M3 3v18h18M7 16l4-4 4 4 4-4" stroke="currentColor" stroke-width="2"
                                     fill="none" />
                             </svg>
@@ -108,7 +108,7 @@
                         </el-button>
 
                         <el-button size="small" @click.stop="showBuyDialog(stock)" class="buy-stock-btn-secondary">
-                            <svg width="10" height="10" viewBox="0 0 24 24" fill="none">
+                            <svg width="14" height="14" viewBox="0 0 24 24" fill="none">
                                 <path d="M12 2v20M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"
                                     stroke="currentColor" stroke-width="2" />
                             </svg>
@@ -408,8 +408,8 @@ const refreshWatchlist = () => {
 .watchlist-list {
     display: flex;
     flex-direction: column;
-    gap: 16px;
-    padding: 16px;
+    gap: 12px;
+    padding: 12px;
     flex: 1;
     overflow-y: auto;
 }
@@ -418,12 +418,12 @@ const refreshWatchlist = () => {
     background: white;
     border: 1px solid #e5e7eb;
     border-radius: 12px;
-    padding: 20px;
+    padding: 16px;
     cursor: pointer;
     transition: all 0.3s ease;
     display: flex;
     flex-direction: column;
-    gap: 16px;
+    gap: 12px;
 }
 
 .stock-item:hover {
@@ -440,7 +440,7 @@ const refreshWatchlist = () => {
     display: flex;
     justify-content: space-between;
     align-items: flex-start;
-    margin-bottom: 16px;
+    margin-bottom: 12px;
 }
 
 .stock-name-code {
@@ -455,7 +455,7 @@ const refreshWatchlist = () => {
 }
 
 .stock-name {
-    font-size: 1.1rem;
+    font-size: 1rem;
     font-weight: 600;
     color: #1e293b;
 }
@@ -732,12 +732,5 @@ const refreshWatchlist = () => {
     border-top: 1px solid #f5f5f5;
     text-align: center;
     flex-shrink: 0;
-}
-
-:deep(.el-button) {
-    display: flex;
-    align-items: center;
-    gap: 4px;
-    font-size: 0.85rem;
 }
 </style>

@@ -44,7 +44,7 @@
                                     <el-icon class="help-icon">
                                         <QuestionFilled />
                                     </el-icon>
-                                </el-tooltip>
+                                </el-tooltip>19
                                 <span :class="['recommend-level', getRecommendLevelClass(stock.recommendLevel)]">
                                     {{ stock.recommendLevel }}
                                 </span>

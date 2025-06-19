@@ -122,14 +122,14 @@
 
                     <div class="stock-actions">
                         <el-button size="small" @click.stop="showSellDialog(position)" class="sell-stock-btn">
-                            <svg width="11" height="11" viewBox="0 0 24 24" fill="none">
+                            <svg width="14" height="14" viewBox="0 0 24 24" fill="none">
                                 <path d="M12 2v20M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"
                                     stroke="currentColor" stroke-width="2" />
                             </svg>
                             卖出
                         </el-button>
                         <el-button size="small" @click.stop="showBuyDialog(position)" class="buy-stock-btn-secondary">
-                            <svg width="11" height="11" viewBox="0 0 24 24" fill="none">
+                            <svg width="14" height="14" viewBox="0 0 24 24" fill="none">
                                 <path d="M12 2v20M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"
                                     stroke="currentColor" stroke-width="2" />
                             </svg>
@@ -137,7 +137,7 @@
                         </el-button>
                         <el-button size="small" @click.stop="showPaidAnalysisDialog(position)"
                             class="paid-analysis-btn">
-                            <svg width="11" height="11" viewBox="0 0 24 24" fill="none">
+                            <svg width="14" height="14" viewBox="0 0 24 24" fill="none">
                                 <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"
                                     stroke="currentColor" stroke-width="2" />
                             </svg>
@@ -149,7 +149,7 @@
                         </el-button>
                         <el-button size="small" @click.stop="showQuantAnalysisDialog(position)"
                             class="quant-analysis-btn">
-                            <svg width="11" height="11" viewBox="0 0 24 24" fill="none">
+                            <svg width="14" height="14" viewBox="0 0 24 24" fill="none">
                                 <path d="M3 3v18h18M7 16l4-4 4 4 4-4" stroke="currentColor" stroke-width="2"
                                     fill="none" />
                             </svg>
@@ -711,7 +711,7 @@ const refreshData = () => {
     overflow-y: auto;
     overflow-x: hidden;
     /* 添加内边距，参照自选股的样式 */
-    padding: 16px;
+    padding: 12px;
     /* 添加滚动条稳定性 */
     scrollbar-gutter: stable;
     /* 移除固定的 min-height，让内容自然流动 */
@@ -774,7 +774,7 @@ const refreshData = () => {
 .portfolio-list {
     display: flex;
     flex-direction: column;
-    gap: 16px;
+    gap: 12px;
     /* 移除之前可能存在的额外 padding，因为父容器已经有了 */
 }
 
@@ -782,12 +782,12 @@ const refreshData = () => {
     background: white;
     border: 1px solid #e5e7eb;
     border-radius: 12px;
-    padding: 20px;
+    padding: 16px;
     cursor: pointer;
     transition: all 0.3s ease;
     display: flex;
     flex-direction: column;
-    gap: 16px;
+    gap: 12px;
 }
 
 .stock-item:hover {
@@ -805,7 +805,7 @@ const refreshData = () => {
     display: flex;
     justify-content: space-between;
     align-items: flex-start;
-    margin-bottom: 16px;
+    margin-bottom: 12px;
 }
 
 .stock-name-code {
@@ -820,7 +820,7 @@ const refreshData = () => {
 }
 
 .stock-name {
-    font-size: 1.1rem;
+    font-size: 1rem;
     font-weight: 600;
     color: #1e293b;
 }

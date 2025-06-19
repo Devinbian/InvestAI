@@ -223,54 +223,24 @@
                                 </svg>
                                 购买
                             </el-button>
+
+                            <!-- 设置提醒按钮（仅在量化分析消息中显示） -->
+                            <el-button v-if="message.isQuantAnalysis" size="small"
+                                @click="setQuantAnalysisReminder(message)" class="reminder-btn-small">
+                                <svg width="14" height="14" viewBox="0 0 24 24" fill="none">
+                                    <path
+                                        d="M12 22c1.1 0 2-.9 2-2h-4c0 1.1.9 2 2 2zm6-6v-5c0-3.07-1.64-5.64-4.5-6.32V4c0-.83-.67-1.5-1.5-1.5s-1.5.67-1.5 1.5v.68C7.63 5.36 6 7.92 6 11v5l-2 2v1h16v-1l-2-2z"
+                                        fill="currentColor" />
+                                </svg>
+                                设置提醒
+                                <span v-if="activeReminders.filter(r => r.isActive).length > 0"
+                                    class="reminder-count-badge-small">
+                                    {{activeReminders.filter(r => r.isActive).length}}
+                                </span>
+                            </el-button>
                         </div>
 
-                        <!-- 量化分析报告操作按钮 -->
-                        <div v-if="message.isQuantAnalysis" class="quant-analysis-actions">
-                            <div class="analysis-actions-header">
-                                <span class="actions-title">📊 报告操作</span>
-                                <div v-if="activeReminders.filter(r => r.isActive).length > 0"
-                                    class="active-reminders-badge">
-                                    <span class="badge-icon">🔔</span>
-                                    <span class="badge-text">{{activeReminders.filter(r => r.isActive).length
-                                    }}个活跃提醒</span>
-                                </div>
-                            </div>
-                            <div class="analysis-actions-buttons">
-                                <el-button size="small" @click="setQuantAnalysisReminder(message)" class="reminder-btn">
-                                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none">
-                                        <path
-                                            d="M12 22c1.1 0 2-.9 2-2h-4c0 1.1.9 2 2 2zm6-6v-5c0-3.07-1.64-5.64-4.5-6.32V4c0-.83-.67-1.5-1.5-1.5s-1.5.67-1.5 1.5v.68C7.63 5.36 6 7.92 6 11v5l-2 2v1h16v-1l-2-2z"
-                                            fill="currentColor" />
-                                    </svg>
-                                    设置提醒
-                                    <span v-if="activeReminders.filter(r => r.isActive).length > 0"
-                                        class="reminder-count-badge">
-                                        {{activeReminders.filter(r => r.isActive).length}}
-                                    </span>
-                                </el-button>
-                                <el-button size="small" @click="openRecordsCenter" class="records-btn">
-                                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none">
-                                        <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"
-                                            stroke="currentColor" stroke-width="2" fill="none" />
-                                        <polyline points="14,2 14,8 20,8" stroke="currentColor" stroke-width="2"
-                                            fill="none" />
-                                        <line x1="16" y1="13" x2="8" y2="13" stroke="currentColor" stroke-width="2" />
-                                        <line x1="16" y1="17" x2="8" y2="17" stroke="currentColor" stroke-width="2" />
-                                        <polyline points="10,9 9,9 8,9" stroke="currentColor" stroke-width="2"
-                                            fill="none" />
-                                    </svg>
-                                    查看报告
-                                </el-button>
-                            </div>
-                            <div class="analysis-tip">
-                                <svg width="16" height="16" viewBox="0 0 24 24" fill="none">
-                                    <circle cx="12" cy="12" r="10" stroke="#1890ff" stroke-width="2" fill="none" />
-                                    <path d="m9 12 2 2 4-4" stroke="#1890ff" stroke-width="2" fill="none" />
-                                </svg>
-                                <span>💡 付费的量化分析报告可以在记录中心查看</span>
-                            </div>
-                        </div>
+
 
                         <!-- 股票账户信息展示 -->
                         <div v-if="message.hasAssetInfo && message.assetData" class="stock-account-container">
@@ -289,13 +259,13 @@
                                         <div class="asset-amount">
                                             <span class="amount-label">总资产</span>
                                             <span class="amount-value">¥{{ formatCurrency(message.assetData.totalAssets)
-                                            }}</span>
+                                                }}</span>
                                         </div>
                                         <div class="asset-change"
                                             :class="[message.assetData.totalProfitPercent >= 0 ? 'profit' : 'loss']">
                                             <span class="change-icon">{{ message.assetData.totalProfitPercent >= 0 ?
                                                 '📈' : '📉'
-                                            }}</span>
+                                                }}</span>
                                             <span class="change-label">今日盈亏：</span>
                                             <span class="change-text">
                                                 {{ message.assetData.totalProfitPercent >= 0 ? '+' : '' }}¥{{
@@ -321,7 +291,7 @@
                                         <div class="stat-info">
                                             <div class="stat-label">持仓市值</div>
                                             <div class="stat-value">¥{{ formatCurrency(message.assetData.portfolioValue)
-                                            }}
+                                                }}
                                             </div>
                                         </div>
                                     </div>
@@ -382,7 +352,7 @@
                                                         <div class="stock-price-change">
                                                             <span class="current-price">¥{{
                                                                 position.currentPrice.toFixed(2)
-                                                            }}</span>
+                                                                }}</span>
                                                             <span
                                                                 :class="['price-change', position.profitPercent >= 0 ? 'positive' : 'negative']">
                                                                 {{ position.profitPercent >= 0 ? '+' : '' }}¥{{
@@ -396,10 +366,10 @@
                                                             <span class="detail-label">持仓数量：</span>
                                                             <span class="detail-value">{{
                                                                 position.quantity.toLocaleString()
-                                                            }}股</span>
+                                                                }}股</span>
                                                             <span class="detail-label">成本价：</span>
                                                             <span class="detail-value">¥{{ position.avgPrice.toFixed(2)
-                                                            }}</span>
+                                                                }}</span>
                                                         </div>
                                                         <div class="detail-row">
                                                             <span class="detail-label">持仓市值：</span>
@@ -408,7 +378,7 @@
                                                             <span class="detail-label">所属行业：</span>
                                                             <span class="detail-value industry">{{ position.industry ||
                                                                 '未分类'
-                                                            }}</span>
+                                                                }}</span>
                                                         </div>
                                                     </div>
                                                 </div>
@@ -417,7 +387,7 @@
                                                     <!-- 卖出按钮 -->
                                                     <el-button size="small" @click="showBuyDialog(position, 'sell')"
                                                         class="sell-stock-btn">
-                                                        <svg width="11" height="11" viewBox="0 0 24 24" fill="none">
+                                                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none">
                                                             <path
                                                                 d="M12 2v20M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"
                                                                 stroke="currentColor" stroke-width="2" />
@@ -428,7 +398,7 @@
                                                     <!-- 买入按钮（加仓） -->
                                                     <el-button size="small" @click="showBuyDialog(position, 'buy')"
                                                         class="buy-stock-btn-secondary">
-                                                        <svg width="11" height="11" viewBox="0 0 24 24" fill="none">
+                                                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none">
                                                             <path
                                                                 d="M12 2v20M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"
                                                                 stroke="currentColor" stroke-width="2" />
@@ -439,7 +409,7 @@
                                                     <!-- 量化分析按钮（付费） -->
                                                     <el-button size="small" @click="showPaidAnalysisDialog(position)"
                                                         class="paid-analysis-btn">
-                                                        <svg width="11" height="11" viewBox="0 0 24 24" fill="none">
+                                                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none">
                                                             <path
                                                                 d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"
                                                                 stroke="currentColor" stroke-width="2" />
@@ -454,7 +424,7 @@
                                                     <!-- AI委托交易按钮（付费） -->
                                                     <el-button size="small" @click="showQuantAnalysisDialog(position)"
                                                         class="quant-analysis-btn">
-                                                        <svg width="11" height="11" viewBox="0 0 24 24" fill="none">
+                                                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none">
                                                             <path d="M3 3v18h18M7 16l4-4 4 4 4-4" stroke="currentColor"
                                                                 stroke-width="2" fill="none" />
                                                         </svg>
@@ -530,7 +500,7 @@
                                                     <!-- 移除自选按钮 -->
                                                     <el-button size="small" @click="removeFromWatchlist(stock.code)"
                                                         class="remove-watchlist-btn">
-                                                        <svg width="10" height="10" viewBox="0 0 24 24" fill="none">
+                                                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none">
                                                             <path
                                                                 d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"
                                                                 fill="currentColor" />
@@ -541,7 +511,7 @@
                                                     <!-- 量化分析按钮（付费） -->
                                                     <el-button size="small" @click="showPaidAnalysisDialog(stock)"
                                                         class="paid-analysis-btn">
-                                                        <svg width="10" height="10" viewBox="0 0 24 24" fill="none">
+                                                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none">
                                                             <path
                                                                 d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"
                                                                 stroke="currentColor" stroke-width="2" />
@@ -556,7 +526,7 @@
                                                     <!-- AI委托交易按钮（付费） -->
                                                     <el-button size="small" @click="showQuantAnalysisDialog(stock)"
                                                         class="quant-analysis-btn">
-                                                        <svg width="10" height="10" viewBox="0 0 24 24" fill="none">
+                                                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none">
                                                             <path d="M3 3v18h18M7 16l4-4 4 4 4-4" stroke="currentColor"
                                                                 stroke-width="2" fill="none" />
                                                         </svg>
@@ -570,7 +540,7 @@
                                                     <!-- 购买按钮 -->
                                                     <el-button size="small" @click="showBuyDialog(stock)"
                                                         class="buy-stock-btn-secondary">
-                                                        <svg width="10" height="10" viewBox="0 0 24 24" fill="none">
+                                                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none">
                                                             <path
                                                                 d="M12 2v20M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"
                                                                 stroke="currentColor" stroke-width="2" />
@@ -601,7 +571,7 @@
                             <div v-if="message.isPersistent" class="recommendation-toolbar">
                                 <div class="toolbar-left">
                                     <span class="recommendation-time">{{ formatRecommendationTime(message.timestamp)
-                                    }}</span>
+                                        }}</span>
                                 </div>
                                 <div class="toolbar-right">
                                     <el-button size="small" text @click="refreshRecommendation(message)"
@@ -925,7 +895,7 @@
                 </div>
                 <div class="guide-actions">
                     <el-button type="primary" size="small" @click="handleGuideAction">{{ guideActionText
-                        }}</el-button>
+                    }}</el-button>
                     <el-button size="small" @click="dismissGuide">稍后</el-button>
                 </div>
             </div>
@@ -942,74 +912,187 @@
             :before-close="handleReminderCancel" class="reminder-dialog">
             <div class="reminder-dialog-content">
                 <div class="stock-info-section">
-                    <h4>📊 股票信息</h4>
+                    <h4>📊 量化分析股票</h4>
                     <div class="stock-info-display">
                         <span class="stock-name">{{ reminderForm.stockName }}</span>
                         <span class="stock-code">({{ reminderForm.stockCode }})</span>
                     </div>
                 </div>
 
+                <div class="quant-analysis-summary">
+                    <h4>🎯 当前量化分析结果</h4>
+                    <div class="analysis-summary-grid">
+                        <div class="summary-item">
+                            <span class="summary-label">综合评分</span>
+                            <span class="summary-value score">{{ currentQuantAnalysis.overallScore }}/10</span>
+                        </div>
+                        <div class="summary-item">
+                            <span class="summary-label">信号强度</span>
+                            <span class="summary-value signal">{{ currentQuantAnalysis.signalStrength }}</span>
+                        </div>
+                        <div class="summary-item">
+                            <span class="summary-label">买入信号</span>
+                            <span class="summary-value signal-score">{{ currentQuantAnalysis.buySignalScore
+                                }}/100</span>
+                        </div>
+                        <div class="summary-item">
+                            <span class="summary-label">量化评级</span>
+                            <span class="summary-value rating">{{ currentQuantAnalysis.rating }}</span>
+                        </div>
+                    </div>
+                </div>
+
                 <div class="reminder-form-section">
-                    <h4>⚙️ 提醒条件设置</h4>
-
-                    <div class="form-row">
-                        <label class="form-label">提醒类型：</label>
-                        <el-select v-model="reminderForm.type" placeholder="选择提醒类型" class="type-select">
-                            <el-option label="价格突破" value="price">
-                                <span class="option-content">
-                                    <span class="option-icon">💰</span>
-                                    <span>价格突破</span>
-                                </span>
-                            </el-option>
-                            <el-option label="涨跌幅" value="change">
-                                <span class="option-content">
-                                    <span class="option-icon">📈</span>
-                                    <span>涨跌幅</span>
-                                </span>
-                            </el-option>
-                            <el-option label="成交量" value="volume">
-                                <span class="option-content">
-                                    <span class="option-icon">📊</span>
-                                    <span>成交量</span>
-                                </span>
-                            </el-option>
-                        </el-select>
+                    <h4>⚙️ 量化条件提醒设置</h4>
+                    <div class="batch-reminder-tip">
+                        <el-alert title="批量设置" type="info" :closable="false" show-icon>
+                            <template #default>
+                                勾选需要的提醒条件，可同时设置多个
+                            </template>
+                        </el-alert>
                     </div>
 
-                    <div class="form-row">
-                        <label class="form-label">触发条件：</label>
-                        <el-select v-model="reminderForm.condition" placeholder="选择触发条件" class="condition-select">
-                            <template v-if="reminderForm.type === 'price'">
-                                <el-option label="突破（大于等于）" value="above"></el-option>
-                                <el-option label="跌破（小于等于）" value="below"></el-option>
-                            </template>
-                            <template v-else-if="reminderForm.type === 'change'">
-                                <el-option label="涨幅超过" value="increase"></el-option>
-                                <el-option label="跌幅超过" value="decrease"></el-option>
-                            </template>
-                            <template v-else-if="reminderForm.type === 'volume'">
-                                <el-option label="放量（超过）" value="above"></el-option>
-                                <el-option label="缩量（低于）" value="below"></el-option>
-                            </template>
-                        </el-select>
-                    </div>
+                    <!-- 快速选择区域 -->
+                    <div class="quick-select-area">
+                        <div class="quick-select-header">
+                            <span class="quick-select-title">🚀 快速选择</span>
+                            <div class="quick-select-actions">
+                                <el-button size="small" @click="selectRecommendedConditions" type="primary" plain>
+                                    推荐配置
+                                </el-button>
+                                <el-button size="small" @click="clearAllConditions" plain>
+                                    清空选择
+                                </el-button>
+                            </div>
+                        </div>
 
-                    <div class="form-row">
-                        <label class="form-label">数值设置：</label>
-                        <div class="value-input-group">
-                            <el-input v-model="reminderForm.value" type="number" :placeholder="getValuePlaceholder()"
-                                class="value-input">
-                                <template #append>
-                                    <span class="input-unit">{{ getValueUnit() }}</span>
-                                </template>
-                            </el-input>
+                        <!-- 紧凑的条件选择网格 -->
+                        <div class="conditions-grid">
+                            <!-- 综合评分 -->
+                            <div class="condition-category">
+                                <div class="category-header">
+                                    <span class="category-icon">🎯</span>
+                                    <span class="category-name">综合评分</span>
+                                </div>
+                                <div class="category-items">
+                                    <div class="condition-chip"
+                                        :class="{ active: isConditionSelected('overall_score', 'score_above') }"
+                                        @click="toggleCondition('overall_score', 'score_above')">
+                                        <span>评分上升至</span>
+                                        <el-input v-if="isConditionSelected('overall_score', 'score_above')"
+                                            v-model="reminderConditions.overall_score.values.score_above" type="number"
+                                            placeholder="8.0" class="chip-input" @click.stop>
+                                            <template #append>分</template>
+                                        </el-input>
+                                    </div>
+                                    <div class="condition-chip"
+                                        :class="{ active: isConditionSelected('overall_score', 'score_below') }"
+                                        @click="toggleCondition('overall_score', 'score_below')">
+                                        <span>评分下降至</span>
+                                        <el-input v-if="isConditionSelected('overall_score', 'score_below')"
+                                            v-model="reminderConditions.overall_score.values.score_below" type="number"
+                                            placeholder="6.0" class="chip-input" @click.stop>
+                                            <template #append>分</template>
+                                        </el-input>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- 买入信号 -->
+                            <div class="condition-category">
+                                <div class="category-header">
+                                    <span class="category-icon">📈</span>
+                                    <span class="category-name">买入信号</span>
+                                </div>
+                                <div class="category-items">
+                                    <div class="condition-chip"
+                                        :class="{ active: isConditionSelected('buy_signal', 'signal_above') }"
+                                        @click="toggleCondition('buy_signal', 'signal_above')">
+                                        <span>信号强度达到</span>
+                                        <el-input v-if="isConditionSelected('buy_signal', 'signal_above')"
+                                            v-model="reminderConditions.buy_signal.values.signal_above" type="number"
+                                            placeholder="90" class="chip-input" @click.stop>
+                                            <template #append>分</template>
+                                        </el-input>
+                                    </div>
+                                    <div class="condition-chip"
+                                        :class="{ active: isConditionSelected('buy_signal', 'buy_signal_trigger') }"
+                                        @click="toggleCondition('buy_signal', 'buy_signal_trigger')">
+                                        <span>出现买入信号</span>
+                                    </div>
+                                    <div class="condition-chip"
+                                        :class="{ active: isConditionSelected('buy_signal', 'sell_signal_trigger') }"
+                                        @click="toggleCondition('buy_signal', 'sell_signal_trigger')">
+                                        <span>出现卖出信号</span>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- 技术指标 -->
+                            <div class="condition-category">
+                                <div class="category-header">
+                                    <span class="category-icon">📊</span>
+                                    <span class="category-name">技术指标</span>
+                                </div>
+                                <div class="category-items">
+                                    <div class="condition-chip"
+                                        :class="{ active: isConditionSelected('technical', 'macd_golden') }"
+                                        @click="toggleCondition('technical', 'macd_golden')">
+                                        <span>MACD金叉</span>
+                                    </div>
+                                    <div class="condition-chip"
+                                        :class="{ active: isConditionSelected('technical', 'rsi_oversold') }"
+                                        @click="toggleCondition('technical', 'rsi_oversold')">
+                                        <span>RSI超卖</span>
+                                    </div>
+                                    <div class="condition-chip"
+                                        :class="{ active: isConditionSelected('technical', 'boll_break') }"
+                                        @click="toggleCondition('technical', 'boll_break')">
+                                        <span>布林带突破</span>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- 评级和风险 -->
+                            <div class="condition-category">
+                                <div class="category-header">
+                                    <span class="category-icon">⭐</span>
+                                    <span class="category-name">评级风险</span>
+                                </div>
+                                <div class="category-items">
+                                    <div class="condition-chip"
+                                        :class="{ active: isConditionSelected('rating_change', 'rating_upgrade') }"
+                                        @click="toggleCondition('rating_change', 'rating_upgrade')">
+                                        <span>评级上调</span>
+                                    </div>
+                                    <div class="condition-chip"
+                                        :class="{ active: isConditionSelected('rating_change', 'rating_downgrade') }"
+                                        @click="toggleCondition('rating_change', 'rating_downgrade')">
+                                        <span>评级下调</span>
+                                    </div>
+                                    <div class="condition-chip"
+                                        :class="{ active: isConditionSelected('risk_alert', 'risk_abnormal') }"
+                                        @click="toggleCondition('risk_alert', 'risk_abnormal')">
+                                        <span>风险异常</span>
+                                    </div>
+                                </div>
+                            </div>
                         </div>
                     </div>
 
-                    <div class="reminder-preview">
-                        <div class="preview-title">📋 提醒预览</div>
-                        <div class="preview-content">
-                            {{ getReminderPreview() }}
+                    <!-- 选中条件摘要 -->
+                    <div class="selected-summary" v-if="getSelectedConditionsCount() > 0">
+                        <div class="summary-header">
+                            <span class="summary-title">📋 已选择 {{ getSelectedConditionsCount() }} 个提醒条件</span>
+                            <el-button size="small" @click="clearAllConditions" text type="danger">
+                                清空
+                            </el-button>
+                        </div>
+                        <div class="summary-tags">
+                            <el-tag v-for="preview in getBatchPreview()" :key="preview.id" closable
+                                @close="removeSelectedCondition(preview)" class="summary-tag">
+                                {{ preview.icon }} {{ preview.shortText }}
+                            </el-tag>
                         </div>
                     </div>
                 </div>
@@ -1079,13 +1162,64 @@ const showRecordsCenter = ref(false); // 控制是否显示记录中心
 const showQuantReminderDialog = ref(false); // 控制量化分析提醒对话框
 const currentReminderMessage = ref(null); // 当前设置提醒的消息
 const reminderForm = ref({
-    type: 'price', // price, change, volume
-    condition: 'above', // above, below, increase, decrease
+    type: 'overall_score', // 量化分析相关的提醒类型
+    condition: 'score_above', // 对应的触发条件
     value: '',
     stockCode: '',
     stockName: ''
 });
 const activeReminders = ref([]); // 活跃的提醒列表
+
+// 当前量化分析结果（模拟数据，实际应该从量化分析结果中提取）
+const currentQuantAnalysis = ref({
+    overallScore: '7.8',
+    signalStrength: '强',
+    buySignalScore: '85',
+    rating: 'A级',
+    technicalIndicators: {
+        macd: { dif: 1.25, dea: 0.89, status: '金叉' },
+        rsi: { value: 65.2, status: '强势区间' },
+        boll: { status: '突破上轨' },
+        kdj: { k: 78, d: 65, j: 85, status: '多头排列' }
+    },
+    riskMetrics: {
+        volatility: 28.5,
+        maxDrawdown: 15.2,
+        sharpeRatio: 1.35,
+        var95: 2.1
+    }
+});
+
+// 批量提醒条件设置
+const reminderConditions = ref({
+    overall_score: {
+        conditions: [],
+        values: {
+            score_above: '',
+            score_below: '',
+            score_change: ''
+        }
+    },
+    buy_signal: {
+        conditions: [],
+        values: {
+            signal_above: '',
+            signal_below: ''
+        }
+    },
+    technical: {
+        conditions: []
+    },
+    rating_change: {
+        conditions: [],
+        values: {
+            rating_reach: ''
+        }
+    },
+    risk_alert: {
+        conditions: []
+    }
+});
 
 // 计算提醒对话框宽度
 const reminderDialogWidth = computed(() => {
@@ -3458,8 +3592,45 @@ const handleAITradingConfirmed = async (data) => {
 
 // 量化分析报告操作方法
 const setQuantAnalysisReminder = (message) => {
-    showQuantReminderDialog.value = true;
+    // 从量化分析消息内容中提取股票信息
+    const content = message.content;
+    const stockMatch = content.match(/\*\*(.+?)\((.+?)\)\s+量化分析报告\*\*/);
+
+    if (stockMatch) {
+        reminderForm.value.stockName = stockMatch[1];
+        reminderForm.value.stockCode = stockMatch[2];
+    } else {
+        reminderForm.value.stockName = '量化分析股票';
+        reminderForm.value.stockCode = '000000';
+    }
+
+    // 从量化分析内容中提取关键指标（实际应用中应该从API返回的结构化数据中获取）
+    // 提取综合评分
+    const scoreMatch = content.match(/综合评分：(\d+\.?\d*)/);
+    if (scoreMatch) {
+        currentQuantAnalysis.value.overallScore = scoreMatch[1];
+    }
+
+    // 提取买入信号评分
+    const signalMatch = content.match(/买入信号：多因子模型评分(\d+)/);
+    if (signalMatch) {
+        currentQuantAnalysis.value.buySignalScore = signalMatch[1];
+    }
+
+    // 提取信号强度
+    const strengthMatch = content.match(/信号强度【(.+?)】/);
+    if (strengthMatch) {
+        currentQuantAnalysis.value.signalStrength = strengthMatch[1];
+    }
+
+    // 提取量化评级
+    const ratingMatch = content.match(/量化评级：(.+?级)/);
+    if (ratingMatch) {
+        currentQuantAnalysis.value.rating = ratingMatch[1];
+    }
+
     currentReminderMessage.value = message;
+    showQuantReminderDialog.value = true;
 };
 
 const openRecordsCenter = () => {
@@ -3468,69 +3639,277 @@ const openRecordsCenter = () => {
 
 // 提醒对话框处理方法
 const handleReminderConfirm = () => {
-    if (!reminderForm.value.value) {
-        ElMessage.error('请输入提醒条件的数值');
+    const selectedConditions = getSelectedConditions();
+
+    // 调试信息
+    console.log('当前选中的条件:', selectedConditions);
+    console.log('提醒条件数据:', reminderConditions.value);
+
+    if (selectedConditions.length === 0) {
+        ElMessage.error('请至少选择一个提醒条件');
         return;
     }
 
-    const reminder = {
-        id: Date.now(),
-        type: reminderForm.value.type,
-        condition: reminderForm.value.condition,
-        value: parseFloat(reminderForm.value.value),
+    // 验证需要数值的条件是否已填写
+    const invalidConditions = selectedConditions.filter(condition => {
+        if (condition.needsValue && (!condition.value || condition.value === '')) {
+            return true;
+        }
+        return false;
+    });
+
+    if (invalidConditions.length > 0) {
+        ElMessage.error('请填写所有需要数值的提醒条件');
+        return;
+    }
+
+    // 批量创建提醒
+    const newReminders = selectedConditions.map(condition => ({
+        id: Date.now() + Math.random(),
+        type: condition.type,
+        condition: condition.condition,
+        value: condition.value,
         stockCode: reminderForm.value.stockCode,
         stockName: reminderForm.value.stockName,
         createdAt: new Date().toLocaleString(),
-        isActive: true
-    };
+        isActive: true,
+        isQuantAnalysis: true
+    }));
 
-    activeReminders.value.push(reminder);
+    activeReminders.value.push(...newReminders);
 
-    // 生成提醒描述
-    let conditionText = '';
-    if (reminder.type === 'price') {
-        conditionText = `价格${reminder.condition === 'above' ? '突破' : '跌破'} ¥${reminder.value}`;
-    } else if (reminder.type === 'change') {
-        conditionText = `涨跌幅${reminder.condition === 'increase' ? '超过' : '低于'} ${reminder.value}%`;
-    } else if (reminder.type === 'volume') {
-        conditionText = `成交量${reminder.condition === 'above' ? '超过' : '低于'} ${reminder.value}万手`;
-    }
+    ElMessage.success(`已成功设置 ${newReminders.length} 个量化分析提醒`);
 
-    ElMessage.success(`已设置提醒：${reminder.stockName} ${conditionText}`);
+    // 模拟提醒触发（实际应用中应该是后台监控量化指标）
+    newReminders.forEach((reminder, index) => {
+        setTimeout(() => {
+            const conditionText = getReminderDescription(reminder);
+            ElMessage({
+                message: `🔔 量化分析提醒触发：${reminder.stockName} ${conditionText}`,
+                type: 'warning',
+                duration: 5000,
+                showClose: true
+            });
 
-    // 模拟提醒触发（实际应用中应该是后台监控）
-    setTimeout(() => {
-        ElMessage({
-            message: `🔔 提醒触发：${reminder.stockName} ${conditionText}`,
-            type: 'warning',
-            duration: 5000,
-            showClose: true
-        });
-
-        // 将提醒标记为已触发
-        const index = activeReminders.value.findIndex(r => r.id === reminder.id);
-        if (index !== -1) {
-            activeReminders.value[index].isActive = false;
-        }
-    }, 10000); // 10秒后模拟触发提醒
+            // 将提醒标记为已触发
+            const reminderIndex = activeReminders.value.findIndex(r => r.id === reminder.id);
+            if (reminderIndex !== -1) {
+                activeReminders.value[reminderIndex].isActive = false;
+            }
+        }, 15000 + index * 2000); // 错开触发时间
+    });
 
     showQuantReminderDialog.value = false;
-    resetReminderForm();
+    resetReminderConditions();
 };
 
 const handleReminderCancel = () => {
     showQuantReminderDialog.value = false;
-    resetReminderForm();
+    resetReminderConditions();
 };
 
 const resetReminderForm = () => {
     reminderForm.value = {
-        type: 'price',
-        condition: 'above',
+        type: 'overall_score',
+        condition: 'score_above',
         value: '',
         stockCode: '',
         stockName: ''
     };
+};
+
+const resetReminderConditions = () => {
+    reminderConditions.value = {
+        overall_score: {
+            conditions: [],
+            values: {
+                score_above: '',
+                score_below: '',
+                score_change: ''
+            }
+        },
+        buy_signal: {
+            conditions: [],
+            values: {
+                signal_above: '',
+                signal_below: ''
+            }
+        },
+        technical: {
+            conditions: []
+        },
+        rating_change: {
+            conditions: [],
+            values: {
+                rating_reach: ''
+            }
+        },
+        risk_alert: {
+            conditions: []
+        }
+    };
+};
+
+// 获取选中的条件
+const getSelectedConditions = () => {
+    const conditions = [];
+
+    // 综合评分条件
+    reminderConditions.value.overall_score.conditions.forEach(condition => {
+        const value = reminderConditions.value.overall_score.values[condition];
+        conditions.push({
+            type: 'overall_score',
+            condition: condition,
+            value: value ? parseFloat(value) : null,
+            needsValue: ['score_above', 'score_below', 'score_change'].includes(condition)
+        });
+    });
+
+    // 买入信号条件
+    reminderConditions.value.buy_signal.conditions.forEach(condition => {
+        const value = reminderConditions.value.buy_signal.values[condition];
+        conditions.push({
+            type: 'buy_signal',
+            condition: condition,
+            value: value ? parseFloat(value) : null,
+            needsValue: ['signal_above', 'signal_below'].includes(condition)
+        });
+    });
+
+    // 技术指标条件
+    reminderConditions.value.technical.conditions.forEach(condition => {
+        conditions.push({
+            type: 'technical',
+            condition: condition,
+            value: null,
+            needsValue: false
+        });
+    });
+
+    // 评级变化条件
+    reminderConditions.value.rating_change.conditions.forEach(condition => {
+        const value = reminderConditions.value.rating_change.values[condition];
+        conditions.push({
+            type: 'rating_change',
+            condition: condition,
+            value: value || null,
+            needsValue: condition === 'rating_reach'
+        });
+    });
+
+    // 风险指标条件
+    reminderConditions.value.risk_alert.conditions.forEach(condition => {
+        conditions.push({
+            type: 'risk_alert',
+            condition: condition,
+            value: null,
+            needsValue: false
+        });
+    });
+
+    return conditions;
+};
+
+// 获取选中条件数量
+const getSelectedConditionsCount = () => {
+    return getSelectedConditions().length;
+};
+
+// 获取批量预览
+const getBatchPreview = () => {
+    const conditions = getSelectedConditions();
+    const stockName = reminderForm.value.stockName || '当前股票';
+
+    return conditions.map((condition, index) => {
+        const mockReminder = {
+            type: condition.type,
+            condition: condition.condition,
+            value: condition.value,
+            isQuantAnalysis: true
+        };
+
+        const description = getReminderDescription(mockReminder);
+        const icons = {
+            overall_score: '🎯',
+            buy_signal: '📈',
+            technical: '📊',
+            rating_change: '⭐',
+            risk_alert: '⚠️'
+        };
+
+        return {
+            id: `${condition.type}_${condition.condition}`,
+            icon: icons[condition.type] || '📋',
+            text: `${stockName} ${description}`,
+            shortText: description,
+            type: condition.type,
+            condition: condition.condition
+        };
+    });
+};
+
+// 检查条件是否被选中
+const isConditionSelected = (type, condition) => {
+    if (type === 'overall_score') {
+        return reminderConditions.value.overall_score.conditions.includes(condition);
+    } else if (type === 'buy_signal') {
+        return reminderConditions.value.buy_signal.conditions.includes(condition);
+    } else if (type === 'technical') {
+        return reminderConditions.value.technical.conditions.includes(condition);
+    } else if (type === 'rating_change') {
+        return reminderConditions.value.rating_change.conditions.includes(condition);
+    } else if (type === 'risk_alert') {
+        return reminderConditions.value.risk_alert.conditions.includes(condition);
+    }
+    return false;
+};
+
+// 切换条件选择状态
+const toggleCondition = (type, condition) => {
+    const typeData = reminderConditions.value[type];
+    const index = typeData.conditions.indexOf(condition);
+
+    if (index > -1) {
+        // 移除条件
+        typeData.conditions.splice(index, 1);
+    } else {
+        // 添加条件
+        typeData.conditions.push(condition);
+    }
+};
+
+// 清空所有选择
+const clearAllConditions = () => {
+    Object.keys(reminderConditions.value).forEach(type => {
+        reminderConditions.value[type].conditions = [];
+    });
+};
+
+// 选择推荐配置
+const selectRecommendedConditions = () => {
+    // 清空现有选择
+    clearAllConditions();
+
+    // 设置推荐的条件
+    reminderConditions.value.overall_score.conditions = ['score_above'];
+    reminderConditions.value.overall_score.values.score_above = '8.5';
+
+    reminderConditions.value.buy_signal.conditions = ['buy_signal_trigger'];
+
+    reminderConditions.value.technical.conditions = ['macd_golden', 'rsi_oversold'];
+
+    reminderConditions.value.rating_change.conditions = ['rating_upgrade'];
+
+    ElMessage.success('已应用推荐配置');
+};
+
+// 移除选中的条件
+const removeSelectedCondition = (preview) => {
+    const typeData = reminderConditions.value[preview.type];
+    const index = typeData.conditions.indexOf(preview.condition);
+    if (index > -1) {
+        typeData.conditions.splice(index, 1);
+    }
 };
 
 // 删除提醒
@@ -3561,12 +3940,16 @@ watch(showQuantReminderDialog, (newVal) => {
 // 提醒对话框辅助方法
 const getValuePlaceholder = () => {
     switch (reminderForm.value.type) {
-        case 'price':
-            return '例如：15.50';
-        case 'change':
-            return '例如：5.0';
-        case 'volume':
-            return '例如：1000';
+        case 'overall_score':
+            return '例如：8.0';
+        case 'buy_signal':
+            return '例如：90';
+        case 'technical':
+            return '不需要输入数值';
+        case 'rating_change':
+            return '例如：A+级';
+        case 'risk_alert':
+            return '不需要输入数值';
         default:
             return '请输入数值';
     }
@@ -3574,45 +3957,176 @@ const getValuePlaceholder = () => {
 
 const getValueUnit = () => {
     switch (reminderForm.value.type) {
-        case 'price':
-            return '元';
-        case 'change':
-            return '%';
-        case 'volume':
-            return '万手';
+        case 'overall_score':
+            return '分';
+        case 'buy_signal':
+            return '分';
+        case 'technical':
+            return '';
+        case 'rating_change':
+            return '';
+        case 'risk_alert':
+            return '';
         default:
             return '';
     }
 };
 
-const getReminderPreview = () => {
-    if (!reminderForm.value.value) {
-        return '请完善提醒条件设置';
+// 判断是否需要输入数值
+const needsValueInput = () => {
+    const type = reminderForm.value.type;
+    const condition = reminderForm.value.condition;
+
+    // 技术指标和风险提醒的某些条件不需要输入数值
+    if (type === 'technical' && ['macd_golden', 'macd_death', 'rsi_overbought', 'rsi_oversold', 'boll_break'].includes(condition)) {
+        return false;
+    }
+    if (type === 'risk_alert' && ['risk_abnormal', 'volatility_high', 'drawdown_large', 'sharpe_abnormal'].includes(condition)) {
+        return false;
+    }
+    if (type === 'rating_change' && ['rating_upgrade', 'rating_downgrade'].includes(condition)) {
+        return false;
+    }
+    if (type === 'buy_signal' && ['buy_signal_trigger', 'sell_signal_trigger'].includes(condition)) {
+        return false;
     }
 
+    return true;
+};
+
+const getReminderPreview = () => {
     const { stockName, type, condition, value } = reminderForm.value;
     let conditionText = '';
 
-    if (type === 'price') {
-        conditionText = `价格${condition === 'above' ? '突破' : '跌破'} ¥${value}`;
-    } else if (type === 'change') {
-        conditionText = `${condition === 'increase' ? '涨幅' : '跌幅'}超过 ${value}%`;
-    } else if (type === 'volume') {
-        conditionText = `成交量${condition === 'above' ? '超过' : '低于'} ${value}万手`;
+    // 检查是否需要数值输入，如果需要但未输入则提示
+    if (needsValueInput() && !value) {
+        return '请完善提醒条件设置';
     }
 
-    return `当 ${stockName} ${conditionText} 时，系统将发送提醒通知`;
+    switch (type) {
+        case 'overall_score':
+            if (condition === 'score_above') {
+                conditionText = `综合评分上升至 ${value}分`;
+            } else if (condition === 'score_below') {
+                conditionText = `综合评分下降至 ${value}分`;
+            } else if (condition === 'score_change') {
+                conditionText = `综合评分变化超过 ${value}分`;
+            }
+            break;
+        case 'buy_signal':
+            if (condition === 'signal_above') {
+                conditionText = `买入信号强度达到 ${value}分`;
+            } else if (condition === 'signal_below') {
+                conditionText = `买入信号强度低于 ${value}分`;
+            } else if (condition === 'buy_signal_trigger') {
+                conditionText = `出现买入信号`;
+            } else if (condition === 'sell_signal_trigger') {
+                conditionText = `出现卖出信号`;
+            }
+            break;
+        case 'technical':
+            const technicalMap = {
+                'macd_golden': 'MACD出现金叉',
+                'macd_death': 'MACD出现死叉',
+                'rsi_overbought': 'RSI进入超买区域',
+                'rsi_oversold': 'RSI进入超卖区域',
+                'boll_break': '价格突破布林带'
+            };
+            conditionText = technicalMap[condition] || '技术指标变化';
+            break;
+        case 'rating_change':
+            if (condition === 'rating_upgrade') {
+                conditionText = `量化评级上调`;
+            } else if (condition === 'rating_downgrade') {
+                conditionText = `量化评级下调`;
+            } else if (condition === 'rating_reach') {
+                conditionText = `量化评级达到 ${value}`;
+            }
+            break;
+        case 'risk_alert':
+            const riskMap = {
+                'risk_abnormal': '风险指标异常',
+                'volatility_high': '波动率超标',
+                'drawdown_large': '回撤过大',
+                'sharpe_abnormal': '夏普比率异常'
+            };
+            conditionText = riskMap[condition] || '风险指标异常';
+            break;
+        default:
+            conditionText = '未知条件';
+    }
+
+    return `当 ${stockName} ${conditionText} 时，系统将发送量化分析提醒通知`;
 };
 
 const getReminderDescription = (reminder) => {
     let conditionText = '';
-    if (reminder.type === 'price') {
-        conditionText = `价格${reminder.condition === 'above' ? '突破' : '跌破'} ¥${reminder.value}`;
-    } else if (reminder.type === 'change') {
-        conditionText = `${reminder.condition === 'increase' ? '涨幅' : '跌幅'}超过 ${reminder.value}%`;
-    } else if (reminder.type === 'volume') {
-        conditionText = `成交量${reminder.condition === 'above' ? '超过' : '低于'} ${reminder.value}万手`;
+
+    if (reminder.isQuantAnalysis) {
+        // 量化分析提醒描述
+        switch (reminder.type) {
+            case 'overall_score':
+                if (reminder.condition === 'score_above') {
+                    conditionText = `综合评分上升至 ${reminder.value}分`;
+                } else if (reminder.condition === 'score_below') {
+                    conditionText = `综合评分下降至 ${reminder.value}分`;
+                } else if (reminder.condition === 'score_change') {
+                    conditionText = `综合评分变化超过 ${reminder.value}分`;
+                }
+                break;
+            case 'buy_signal':
+                if (reminder.condition === 'signal_above') {
+                    conditionText = `买入信号强度达到 ${reminder.value}分`;
+                } else if (reminder.condition === 'signal_below') {
+                    conditionText = `买入信号强度低于 ${reminder.value}分`;
+                } else if (reminder.condition === 'buy_signal_trigger') {
+                    conditionText = `出现买入信号`;
+                } else if (reminder.condition === 'sell_signal_trigger') {
+                    conditionText = `出现卖出信号`;
+                }
+                break;
+            case 'technical':
+                const technicalMap = {
+                    'macd_golden': 'MACD出现金叉',
+                    'macd_death': 'MACD出现死叉',
+                    'rsi_overbought': 'RSI进入超买区域',
+                    'rsi_oversold': 'RSI进入超卖区域',
+                    'boll_break': '价格突破布林带'
+                };
+                conditionText = technicalMap[reminder.condition] || '技术指标变化';
+                break;
+            case 'rating_change':
+                if (reminder.condition === 'rating_upgrade') {
+                    conditionText = `量化评级上调`;
+                } else if (reminder.condition === 'rating_downgrade') {
+                    conditionText = `量化评级下调`;
+                } else if (reminder.condition === 'rating_reach') {
+                    conditionText = `量化评级达到 ${reminder.value}`;
+                }
+                break;
+            case 'risk_alert':
+                const riskMap = {
+                    'risk_abnormal': '风险指标异常',
+                    'volatility_high': '波动率超标',
+                    'drawdown_large': '回撤过大',
+                    'sharpe_abnormal': '夏普比率异常'
+                };
+                conditionText = riskMap[reminder.condition] || '风险指标异常';
+                break;
+            default:
+                conditionText = '量化指标变化';
+        }
+    } else {
+        // 传统价格提醒描述（保持兼容性）
+        if (reminder.type === 'price') {
+            conditionText = `价格${reminder.condition === 'above' ? '突破' : '跌破'} ¥${reminder.value}`;
+        } else if (reminder.type === 'change') {
+            conditionText = `${reminder.condition === 'increase' ? '涨幅' : '跌幅'}超过 ${reminder.value}%`;
+        } else if (reminder.type === 'volume') {
+            conditionText = `成交量${reminder.condition === 'above' ? '超过' : '低于'} ${reminder.value}万手`;
+        }
     }
+
     return conditionText;
 };
 
@@ -10075,96 +10589,31 @@ body {
     }
 }
 
-/* 量化分析报告操作按钮样式 */
-.quant-analysis-actions {
-    margin-top: 16px;
-    padding: 16px;
-    background: linear-gradient(135deg, #f8f9ff 0%, #e8f2ff 100%);
-    border-radius: 12px;
-    border: 1px solid #e1e8f0;
-}
-
-.analysis-actions-header {
-    margin-bottom: 12px;
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-}
-
-.actions-title {
-    font-size: 14px;
-    font-weight: 600;
-    color: #2c3e50;
+/* 设置提醒按钮样式（与其他股票操作按钮保持一致） */
+.reminder-btn-small {
     display: flex;
     align-items: center;
-    gap: 6px;
-}
-
-.active-reminders-badge {
-    display: flex;
-    align-items: center;
-    gap: 4px;
-    background: linear-gradient(135deg, #fef3c7 0%, #fde68a 100%);
-    padding: 4px 8px;
-    border-radius: 12px;
-    border: 1px solid #f59e0b;
-    font-size: 11px;
-    color: #92400e;
-    font-weight: 500;
-}
-
-.badge-icon {
-    font-size: 12px;
-    animation: pulse 2s infinite;
-}
-
-@keyframes pulse {
-
-    0%,
-    100% {
-        opacity: 1;
-    }
-
-    50% {
-        opacity: 0.6;
-    }
-}
-
-.badge-text {
-    white-space: nowrap;
-}
-
-.analysis-actions-buttons {
-    display: flex;
-    gap: 12px;
-    margin-bottom: 12px;
-    flex-wrap: wrap;
-}
-
-.reminder-btn {
-    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-    border: none;
-    color: white;
-    border-radius: 8px;
-    transition: all 0.3s ease;
-    display: flex;
-    align-items: center;
-    gap: 6px;
-    font-size: 13px;
-    padding: 8px 16px;
-    height: auto;
-}
-
-.reminder-btn {
+    gap: 2px;
+    font-size: 0.7rem;
+    border-radius: 10px;
+    padding: 3px 6px;
+    transition: all 0.2s ease;
     position: relative;
+    white-space: nowrap;
+    flex-shrink: 0;
+    background: #e0e7ff;
+    border-color: #a5b4fc;
+    color: #3730a3;
 }
 
-.reminder-btn:hover {
+.reminder-btn-small:hover {
+    background: #c7d2fe;
+    border-color: #8b5cf6;
+    color: #312e81;
     transform: translateY(-1px);
-    box-shadow: 0 4px 12px rgba(102, 126, 234, 0.4);
 }
 
-.reminder-count-badge {
+.reminder-count-badge-small {
     position: absolute;
     top: -6px;
     right: -6px;
@@ -10184,98 +10633,9 @@ body {
     box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
 }
 
-.records-btn {
-    background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
-    border: none;
-    color: white;
-    border-radius: 8px;
-    transition: all 0.3s ease;
-    display: flex;
-    align-items: center;
-    gap: 6px;
-    font-size: 13px;
-    padding: 8px 16px;
-    height: auto;
-}
-
-.records-btn:hover {
-    transform: translateY(-1px);
-    box-shadow: 0 4px 12px rgba(240, 147, 251, 0.4);
-}
-
-.analysis-tip {
-    display: flex;
-    align-items: center;
-    gap: 8px;
-    padding: 8px 12px;
-    background: rgba(24, 144, 255, 0.05);
-    border-radius: 8px;
-    border-left: 3px solid #1890ff;
-    font-size: 12px;
-    color: #666;
-}
-
-.analysis-tip svg {
-    flex-shrink: 0;
-}
-
-/* 移动端量化分析报告操作按钮优化 */
+/* 移动端提醒徽章优化 */
 @media (max-width: 768px) {
-    .quant-analysis-actions {
-        margin-top: 12px;
-        padding: 10px;
-        border-radius: 8px;
-    }
-
-    .analysis-actions-header {
-        flex-direction: column;
-        align-items: flex-start;
-        gap: 6px;
-        margin-bottom: 10px;
-    }
-
-    .analysis-actions-buttons {
-        gap: 6px;
-        margin-bottom: 8px;
-        flex-direction: row;
-        justify-content: flex-start;
-        flex-wrap: wrap;
-    }
-
-    .reminder-btn,
-    .records-btn {
-        font-size: 11px;
-        padding: 6px 10px;
-        flex: none;
-        min-width: auto;
-        min-height: 32px;
-        border-radius: 5px;
-        gap: 4px;
-    }
-
-    .reminder-btn svg,
-    .records-btn svg {
-        width: 12px;
-        height: 12px;
-    }
-
-    .analysis-tip {
-        font-size: 10px;
-        padding: 6px 8px;
-        line-height: 1.3;
-    }
-
-    .actions-title {
-        font-size: 12px;
-    }
-
-    .active-reminders-badge {
-        font-size: 9px;
-        padding: 2px 5px;
-        border-radius: 8px;
-    }
-
-    .reminder-count-badge {
+    .reminder-count-badge-small {
         top: -3px;
         right: -3px;
         font-size: 8px;
@@ -10298,7 +10658,8 @@ body {
     .buy-stock-btn,
     .buy-stock-btn-secondary,
     .paid-analysis-btn,
-    .quant-analysis-btn {
+    .quant-analysis-btn,
+    .reminder-btn-small {
         font-size: 11px;
         padding: 5px 8px;
         border-radius: 5px;
@@ -10315,7 +10676,8 @@ body {
     .buy-stock-btn svg,
     .buy-stock-btn-secondary svg,
     .paid-analysis-btn svg,
-    .quant-analysis-btn svg {
+    .quant-analysis-btn svg,
+    .reminder-btn-small svg {
         width: 10px;
         height: 10px;
     }
@@ -10392,7 +10754,8 @@ body {
     .buy-stock-btn,
     .buy-stock-btn-secondary,
     .paid-analysis-btn,
-    .quant-analysis-btn {
+    .quant-analysis-btn,
+    .reminder-btn-small {
         font-size: 10px;
         padding: 4px 6px;
         border-radius: 4px;
@@ -10407,7 +10770,8 @@ body {
     .buy-stock-btn svg,
     .buy-stock-btn-secondary svg,
     .paid-analysis-btn svg,
-    .quant-analysis-btn svg {
+    .quant-analysis-btn svg,
+    .reminder-btn-small svg {
         width: 9px;
         height: 9px;
     }
@@ -10460,7 +10824,8 @@ body {
     .buy-stock-btn,
     .buy-stock-btn-secondary,
     .paid-analysis-btn,
-    .quant-analysis-btn {
+    .quant-analysis-btn,
+    .reminder-btn-small {
         font-size: 9px;
         padding: 3px 5px;
         border-radius: 3px;
@@ -10475,7 +10840,8 @@ body {
     .buy-stock-btn svg,
     .buy-stock-btn-secondary svg,
     .paid-analysis-btn svg,
-    .quant-analysis-btn svg {
+    .quant-analysis-btn svg,
+    .reminder-btn-small svg {
         width: 8px;
         height: 8px;
     }
@@ -10535,6 +10901,207 @@ body {
     color: #0f172a;
     font-size: 14px;
     font-weight: 600;
+}
+
+.quant-analysis-summary {
+    margin-bottom: 20px;
+    padding: 16px;
+    background: linear-gradient(135deg, #f0f9ff 0%, #e0f2fe 100%);
+    border-radius: 8px;
+    border-left: 4px solid #0ea5e9;
+}
+
+.quant-analysis-summary h4 {
+    margin: 0 0 12px 0;
+    color: #0f172a;
+    font-size: 14px;
+    font-weight: 600;
+}
+
+.analysis-summary-grid {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 12px;
+}
+
+.summary-item {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 8px 12px;
+    background: rgba(255, 255, 255, 0.7);
+    border-radius: 6px;
+    border: 1px solid rgba(14, 165, 233, 0.2);
+}
+
+.summary-label {
+    font-size: 12px;
+    color: #64748b;
+    font-weight: 500;
+}
+
+.summary-value {
+    font-size: 13px;
+    font-weight: 600;
+}
+
+.summary-value.score {
+    color: #059669;
+}
+
+.summary-value.signal {
+    color: #dc2626;
+}
+
+.summary-value.signal-score {
+    color: #ea580c;
+}
+
+.summary-value.rating {
+    color: #7c3aed;
+}
+
+/* 批量提醒设置样式 */
+.batch-reminder-tip {
+    margin-bottom: 16px;
+}
+
+.quick-select-area {
+    background: #f8fafc;
+    border-radius: 8px;
+    padding: 16px;
+    margin-bottom: 20px;
+}
+
+.quick-select-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 16px;
+}
+
+.quick-select-title {
+    font-size: 14px;
+    font-weight: 600;
+    color: #374151;
+}
+
+.quick-select-actions {
+    display: flex;
+    gap: 8px;
+}
+
+.conditions-grid {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 16px;
+}
+
+.condition-category {
+    background: white;
+    border-radius: 6px;
+    border: 1px solid #e2e8f0;
+    overflow: hidden;
+}
+
+.category-header {
+    background: #f1f5f9;
+    padding: 10px 12px;
+    border-bottom: 1px solid #e2e8f0;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.category-icon {
+    font-size: 14px;
+}
+
+.category-name {
+    font-size: 13px;
+    font-weight: 600;
+    color: #475569;
+}
+
+.category-items {
+    padding: 12px;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+
+.condition-chip {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 8px 10px;
+    border: 1px solid #d1d5db;
+    border-radius: 6px;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    background: white;
+    font-size: 12px;
+}
+
+.condition-chip:hover {
+    border-color: #3b82f6;
+    background: #f0f9ff;
+}
+
+.condition-chip.active {
+    border-color: #3b82f6;
+    background: linear-gradient(135deg, #dbeafe 0%, #bfdbfe 100%);
+    color: #1e40af;
+    font-weight: 500;
+}
+
+.condition-chip span {
+    flex-shrink: 0;
+    white-space: nowrap;
+}
+
+.chip-input {
+    margin-left: 8px;
+    max-width: 80px;
+}
+
+.chip-input .el-input__inner {
+    font-size: 11px;
+    padding: 4px 8px;
+    height: 24px;
+}
+
+.selected-summary {
+    margin-top: 16px;
+    padding: 12px;
+    background: linear-gradient(135deg, #f0f9ff 0%, #e0f2fe 100%);
+    border-radius: 6px;
+    border-left: 3px solid #0ea5e9;
+}
+
+.summary-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 10px;
+}
+
+.summary-title {
+    font-size: 13px;
+    font-weight: 600;
+    color: #0f172a;
+}
+
+.summary-tags {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+}
+
+.summary-tag {
+    font-size: 11px;
+    padding: 2px 6px;
+    border-radius: 4px;
 }
 
 .stock-info-display {
@@ -10725,6 +11292,110 @@ body {
 
     .stock-info-display {
         gap: 6px;
+    }
+
+    .quant-analysis-summary {
+        padding: 12px;
+        margin-bottom: 16px;
+    }
+
+    .analysis-summary-grid {
+        grid-template-columns: 1fr;
+        gap: 8px;
+    }
+
+    .summary-item {
+        padding: 6px 10px;
+    }
+
+    .summary-label {
+        font-size: 11px;
+    }
+
+    .summary-value {
+        font-size: 12px;
+    }
+
+    .quick-select-area {
+        padding: 12px;
+        margin-bottom: 16px;
+    }
+
+    .quick-select-header {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 10px;
+        margin-bottom: 12px;
+    }
+
+    .quick-select-title {
+        font-size: 13px;
+    }
+
+    .quick-select-actions {
+        width: 100%;
+        justify-content: space-between;
+    }
+
+    .conditions-grid {
+        grid-template-columns: 1fr;
+        gap: 12px;
+    }
+
+    .category-header {
+        padding: 8px 10px;
+    }
+
+    .category-icon {
+        font-size: 13px;
+    }
+
+    .category-name {
+        font-size: 12px;
+    }
+
+    .category-items {
+        padding: 10px;
+        gap: 6px;
+    }
+
+    .condition-chip {
+        padding: 6px 8px;
+        font-size: 11px;
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 6px;
+    }
+
+    .chip-input {
+        margin-left: 0;
+        width: 100%;
+        max-width: none;
+    }
+
+    .selected-summary {
+        padding: 10px;
+        margin-top: 12px;
+    }
+
+    .summary-header {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 8px;
+        margin-bottom: 8px;
+    }
+
+    .summary-title {
+        font-size: 12px;
+    }
+
+    .summary-tags {
+        gap: 4px;
+    }
+
+    .summary-tag {
+        font-size: 10px;
+        padding: 1px 4px;
     }
 
     .stock-name {

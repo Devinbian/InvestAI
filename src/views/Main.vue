@@ -200,20 +200,6 @@
                                 已加自选
                             </el-button>
 
-                            <!-- 量化分析按钮（付费） -->
-                            <el-button v-if="!message.isBuyMode" size="small"
-                                @click="showPaidAnalysisDialog(message.stockInfo)" class="paid-analysis-btn">
-                                <svg width="14" height="14" viewBox="0 0 24 24" fill="none">
-                                    <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"
-                                        stroke="currentColor" stroke-width="2" />
-                                </svg>
-                                量化分析
-                                <div class="price-tag-container">
-                                    <span class="price-tag original-price">3智点</span>
-                                    <span class="price-tag promo-price">1智点</span>
-                                </div>
-                            </el-button>
-
                             <!-- AI委托交易按钮（付费） -->
                             <el-button v-if="!message.isBuyMode" size="small"
                                 @click="showQuantAnalysisDialog(message.stockInfo)" class="quant-analysis-btn">
@@ -719,8 +705,8 @@
                                     </el-button>
 
                                     <!-- AI委托交易按钮（付费） -->
-                                    <el-button size="small" @click="showQuantAnalysisDialog(stock)"
-                                        class="quant-analysis-btn">
+                                    <el-button v-if="!message.isBuyMode" size="small"
+                                        @click="showQuantAnalysisDialog(message.stockInfo)" class="quant-analysis-btn">
                                         <svg width="14" height="14" viewBox="0 0 24 24" fill="none">
                                             <path d="M3 3v18h18M7 16l4-4 4 4 4-4" stroke="currentColor" stroke-width="2"
                                                 fill="none" />
@@ -10277,13 +10263,14 @@ body {
     .buy-stock-btn-secondary,
     .paid-analysis-btn,
     .quant-analysis-btn {
-        font-size: 10px;
-        padding: 4px 8px;
-        border-radius: 6px;
-        min-height: 28px;
-        gap: 2px;
+        font-size: 11px;
+        padding: 5px 8px;
+        border-radius: 5px;
+        min-height: 30px;
+        gap: 3px;
         white-space: nowrap;
         flex-shrink: 0;
+        max-width: 120px;
     }
 
     .add-watchlist-btn svg,
@@ -10370,11 +10357,12 @@ body {
     .buy-stock-btn-secondary,
     .paid-analysis-btn,
     .quant-analysis-btn {
-        font-size: 9px;
-        padding: 3px 6px;
+        font-size: 10px;
+        padding: 4px 6px;
         border-radius: 4px;
-        min-height: 26px;
-        gap: 1px;
+        min-height: 28px;
+        gap: 2px;
+        max-width: 100px;
     }
 
     .add-watchlist-btn svg,
@@ -10437,11 +10425,12 @@ body {
     .buy-stock-btn-secondary,
     .paid-analysis-btn,
     .quant-analysis-btn {
-        font-size: 8px;
-        padding: 2px 5px;
+        font-size: 9px;
+        padding: 3px 5px;
         border-radius: 3px;
-        min-height: 24px;
+        min-height: 26px;
         gap: 1px;
+        max-width: 90px;
     }
 
     .add-watchlist-btn svg,

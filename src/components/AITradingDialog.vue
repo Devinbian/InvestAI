@@ -1,5 +1,7 @@
 <template>
-    <el-dialog v-model="dialogVisible" title="AI委托交易设置" width="750px" class="ai-trading-dialog">
+    <el-dialog v-model="dialogVisible" title="AI委托交易设置" :width="isMobile ? '95vw' : '750px'"
+        :top="isMobile ? '5vh' : '15vh'" class="ai-trading-dialog" :class="{ 'mobile-dialog': isMobile }"
+        destroy-on-close append-to-body>
         <div v-if="stock" class="ai-trading-content">
             <!-- 股票信息头部 -->
             <div class="stock-header">
@@ -17,111 +19,114 @@
                 </div>
             </div>
 
-            <!-- 交易设置表单 -->
-            <el-form :model="form" class="ai-trading-form simple">
-                <!-- 基本交易参数 -->
-                <div class="form-section compact">
-                    <h4 class="section-title">交易设置</h4>
-                    <div class="simple-grid">
-                        <div class="param-item">
-                            <label class="param-label">交易方向</label>
-                            <el-select v-model="form.action" class="param-input">
-                                <el-option label="买入" value="buy" />
-                                <el-option label="卖出" value="sell" />
-                            </el-select>
-                        </div>
-                        <div class="param-item">
-                            <label class="param-label">交易数量</label>
-                            <el-input-number v-model="form.quantity" :min="100" :step="100" class="param-input"
-                                controls-position="right" />
-                        </div>
-                    </div>
-                </div>
-
-                <!-- 风控设置 -->
-                <div class="form-section compact">
-                    <h4 class="section-title">风控设置</h4>
-
-                    <div class="risk-controls">
-                        <div class="risk-item">
-                            <el-checkbox v-model="form.enableStopLoss" class="risk-checkbox">
-                                止损保护
-                            </el-checkbox>
-                            <div v-if="form.enableStopLoss" class="risk-input">
-                                <el-input-number v-model="form.stopLossPercentage" :min="1" :max="20"
-                                    class="risk-number" controls-position="right" />
-                                <span class="risk-unit">%</span>
+            <!-- 滚动内容区域 -->
+            <div class="dialog-scroll-content">
+                <!-- 交易设置表单 -->
+                <el-form :model="form" class="ai-trading-form simple">
+                    <!-- 基本交易参数 -->
+                    <div class="form-section compact">
+                        <h4 class="section-title">交易设置</h4>
+                        <div class="simple-grid">
+                            <div class="param-item">
+                                <label class="param-label">交易方向</label>
+                                <el-select v-model="form.action" class="param-input">
+                                    <el-option label="买入" value="buy" />
+                                    <el-option label="卖出" value="sell" />
+                                </el-select>
                             </div>
-                        </div>
-
-                        <div class="risk-item">
-                            <el-checkbox v-model="form.enableTakeProfit" class="risk-checkbox">
-                                止盈目标
-                            </el-checkbox>
-                            <div v-if="form.enableTakeProfit" class="risk-input">
-                                <el-input-number v-model="form.takeProfitPercentage" :min="1" :max="50"
-                                    class="risk-number" controls-position="right" />
-                                <span class="risk-unit">%</span>
-                            </div>
-                        </div>
-                    </div>
-
-                    <!-- AI策略预览 -->
-                    <div class="strategy-preview">
-                        <div class="strategy-info">
-                            <span class="strategy-label">AI策略：</span>
-                            <span class="strategy-value">{{ getStrategyText(form.strategy) }}</span>
-                            <span class="strategy-risk">({{ getRiskLevelText(form.riskLevel) }})</span>
-                        </div>
-                        <div class="strategy-desc">
-                            根据您的投资偏好自动配置，AI将24小时智能监控并执行最佳交易时机
-                        </div>
-                    </div>
-                </div>
-
-                <!-- 高级设置（可折叠） -->
-                <div class="form-section compact" v-if="form.showAdvanced">
-                    <h4 class="section-title">高级设置</h4>
-
-                    <div class="advanced-simple">
-                        <div class="advanced-row">
-                            <label class="param-label">委托类型</label>
-                            <el-select v-model="form.orderType" class="param-input-small">
-                                <el-option label="限价单" value="limit" />
-                                <el-option label="市价单" value="market" />
-                            </el-select>
-                        </div>
-
-                        <div class="advanced-row">
-                            <label class="param-label">委托时效</label>
-                            <el-select v-model="form.timeInForce" class="param-input-small">
-                                <el-option label="好价成交" value="GTC" />
-                                <el-option label="当日有效" value="DAY" />
-                            </el-select>
-                        </div>
-
-                        <div class="advanced-row">
-                            <label class="param-label">最大亏损</label>
-                            <div class="input-with-unit-small">
-                                <el-input-number v-model="form.maxLossAmount" :min="100" class="param-input-small"
+                            <div class="param-item">
+                                <label class="param-label">交易数量</label>
+                                <el-input-number v-model="form.quantity" :min="100" :step="100" class="param-input"
                                     controls-position="right" />
-                                <span class="input-unit">元</span>
                             </div>
                         </div>
                     </div>
-                </div>
 
-                <!-- 高级设置切换 -->
-                <div class="advanced-toggle">
-                    <el-button link @click="form.showAdvanced = !form.showAdvanced">
-                        {{ form.showAdvanced ? '收起高级设置' : '展开高级设置' }}
-                        <el-icon>
-                            <ArrowDown v-if="!form.showAdvanced" />
-                            <ArrowUp v-else />
-                        </el-icon>
-                    </el-button>
-                </div>
-            </el-form>
+                    <!-- 风控设置 -->
+                    <div class="form-section compact">
+                        <h4 class="section-title">风控设置</h4>
+
+                        <div class="risk-controls">
+                            <div class="risk-item">
+                                <el-checkbox v-model="form.enableStopLoss" class="risk-checkbox">
+                                    止损保护
+                                </el-checkbox>
+                                <div v-if="form.enableStopLoss" class="risk-input">
+                                    <el-input-number v-model="form.stopLossPercentage" :min="1" :max="20"
+                                        class="risk-number" controls-position="right" />
+                                    <span class="risk-unit">%</span>
+                                </div>
+                            </div>
+
+                            <div class="risk-item">
+                                <el-checkbox v-model="form.enableTakeProfit" class="risk-checkbox">
+                                    止盈目标
+                                </el-checkbox>
+                                <div v-if="form.enableTakeProfit" class="risk-input">
+                                    <el-input-number v-model="form.takeProfitPercentage" :min="1" :max="50"
+                                        class="risk-number" controls-position="right" />
+                                    <span class="risk-unit">%</span>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- AI策略预览 -->
+                        <div class="strategy-preview">
+                            <div class="strategy-info">
+                                <span class="strategy-label">AI策略：</span>
+                                <span class="strategy-value">{{ getStrategyText(form.strategy) }}</span>
+                                <span class="strategy-risk">({{ getRiskLevelText(form.riskLevel) }})</span>
+                            </div>
+                            <div class="strategy-desc">
+                                根据您的投资偏好自动配置，AI将24小时智能监控并执行最佳交易时机
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- 高级设置（可折叠） -->
+                    <div class="form-section compact" v-if="form.showAdvanced">
+                        <h4 class="section-title">高级设置</h4>
+
+                        <div class="advanced-simple">
+                            <div class="advanced-row">
+                                <label class="param-label">委托类型</label>
+                                <el-select v-model="form.orderType" class="param-input-small">
+                                    <el-option label="限价单" value="limit" />
+                                    <el-option label="市价单" value="market" />
+                                </el-select>
+                            </div>
+
+                            <div class="advanced-row">
+                                <label class="param-label">委托时效</label>
+                                <el-select v-model="form.timeInForce" class="param-input-small">
+                                    <el-option label="好价成交" value="GTC" />
+                                    <el-option label="当日有效" value="DAY" />
+                                </el-select>
+                            </div>
+
+                            <div class="advanced-row">
+                                <label class="param-label">最大亏损</label>
+                                <div class="input-with-unit-small">
+                                    <el-input-number v-model="form.maxLossAmount" :min="100" class="param-input-small"
+                                        controls-position="right" />
+                                    <span class="input-unit">元</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- 高级设置切换 -->
+                    <div class="advanced-toggle">
+                        <el-button link @click="form.showAdvanced = !form.showAdvanced">
+                            {{ form.showAdvanced ? '收起高级设置' : '展开高级设置' }}
+                            <el-icon>
+                                <ArrowDown v-if="!form.showAdvanced" />
+                                <ArrowUp v-else />
+                            </el-icon>
+                        </el-button>
+                    </div>
+                </el-form>
+            </div>
         </div>
 
         <template #footer>
@@ -161,6 +166,12 @@ const userStore = useUserStore();
 
 // 响应式数据
 const loading = ref(false);
+
+// 检测移动端
+const isMobile = computed(() => {
+    if (typeof window === 'undefined') return false;
+    return window.innerWidth <= 768;
+});
 
 // 计算属性：对话框显示状态
 const dialogVisible = computed({
@@ -522,6 +533,33 @@ watch(() => props.modelValue, (newVal) => {
     }
 }
 
+/* 滚动内容区域 */
+.dialog-scroll-content {
+    max-height: 60vh;
+    overflow-y: auto;
+    padding: 0;
+    -webkit-overflow-scrolling: touch;
+    scrollbar-width: thin;
+}
+
+.dialog-scroll-content::-webkit-scrollbar {
+    width: 4px;
+}
+
+.dialog-scroll-content::-webkit-scrollbar-track {
+    background: #f1f1f1;
+    border-radius: 2px;
+}
+
+.dialog-scroll-content::-webkit-scrollbar-thumb {
+    background: #c1c1c1;
+    border-radius: 2px;
+}
+
+.dialog-scroll-content::-webkit-scrollbar-thumb:hover {
+    background: #a8a8a8;
+}
+
 /* 表单样式 */
 .ai-trading-form {
     padding: 24px;
@@ -529,27 +567,22 @@ watch(() => props.modelValue, (newVal) => {
 
 .form-section {
     margin-bottom: 24px;
-    padding: 20px;
-    background: #f8fafc;
-    border-radius: 12px;
-    border: 1px solid #e2e8f0;
 }
 
 .form-section.compact {
-    padding: 16px;
-    margin-bottom: 20px;
+    margin-bottom: 16px;
 }
 
 .section-title {
-    margin: 0 0 16px 0;
     font-size: 16px;
     font-weight: 600;
     color: #1e293b;
+    margin-bottom: 16px;
 }
 
 .simple-grid {
     display: grid;
-    grid-template-columns: 1fr 1fr;
+    grid-template-columns: repeat(2, 1fr);
     gap: 16px;
 }
 
@@ -561,8 +594,8 @@ watch(() => props.modelValue, (newVal) => {
 
 .param-label {
     font-size: 14px;
+    color: #64748b;
     font-weight: 500;
-    color: #374151;
 }
 
 .param-input {
@@ -574,56 +607,52 @@ watch(() => props.modelValue, (newVal) => {
     display: flex;
     flex-direction: column;
     gap: 16px;
-    margin-bottom: 20px;
 }
 
 .risk-item {
     display: flex;
     align-items: center;
-    justify-content: space-between;
     gap: 16px;
 }
 
 .risk-checkbox {
-    flex: 1;
+    font-size: 14px;
+    color: #1e293b;
 }
 
 .risk-input {
     display: flex;
     align-items: center;
     gap: 8px;
-    min-width: 120px;
 }
 
 .risk-number {
-    width: 80px;
+    width: 120px;
 }
 
 .risk-unit {
     font-size: 14px;
     color: #64748b;
-    font-weight: 500;
 }
 
-/* 策略预览 */
+/* AI策略预览 */
 .strategy-preview {
-    background: white;
-    border: 1px solid #e2e8f0;
-    border-radius: 8px;
+    margin-top: 16px;
     padding: 16px;
+    background: #f1f5f9;
+    border-radius: 8px;
 }
 
 .strategy-info {
-    margin-bottom: 8px;
     display: flex;
     align-items: center;
     gap: 8px;
+    margin-bottom: 8px;
 }
 
 .strategy-label {
     font-size: 14px;
     color: #64748b;
-    font-weight: 500;
 }
 
 .strategy-value {
@@ -634,12 +663,12 @@ watch(() => props.modelValue, (newVal) => {
 
 .strategy-risk {
     font-size: 12px;
-    color: #6b7280;
+    color: #64748b;
 }
 
 .strategy-desc {
-    font-size: 13px;
-    color: #6b7280;
+    font-size: 12px;
+    color: #64748b;
     line-height: 1.5;
 }
 
@@ -653,7 +682,6 @@ watch(() => props.modelValue, (newVal) => {
 .advanced-row {
     display: flex;
     align-items: center;
-    justify-content: space-between;
     gap: 16px;
 }
 
@@ -695,108 +723,419 @@ watch(() => props.modelValue, (newVal) => {
 /* 响应式设计 */
 @media (max-width: 768px) {
     .ai-trading-dialog {
-        width: 95vw !important;
+        width: 92vw !important;
         max-width: none !important;
-        margin: 5vh auto !important;
+        margin: 0 !important;
+        margin-top: 5vh !important;
+        max-height: 85vh !important;
+        height: auto !important;
+        display: flex !important;
+        flex-direction: column !important;
+    }
+
+    .ai-trading-dialog :deep(.el-dialog__body) {
+        flex: 1 !important;
+        overflow: hidden !important;
+        padding: 0 !important;
+        display: flex !important;
+        flex-direction: column !important;
+    }
+
+    .ai-trading-content {
+        display: flex !important;
+        flex-direction: column !important;
+        height: 100% !important;
+    }
+
+    .dialog-scroll-content {
+        flex: 1 !important;
+        overflow-y: auto !important;
+        max-height: calc(85vh - 180px) !important;
+    }
+
+    .ai-trading-dialog :deep(.el-dialog__header) {
+        padding: 12px;
+        position: sticky;
+        top: 0;
+        z-index: 10;
+        flex-shrink: 0;
+    }
+
+    .ai-trading-dialog :deep(.el-dialog__title) {
+        font-size: 15px;
     }
 
     .stock-header {
         flex-direction: column;
         align-items: flex-start;
-        gap: 12px;
-        padding: 16px;
+        gap: 8px;
+        padding: 10px 12px;
     }
 
     .stock-info {
-        flex-direction: column;
-        align-items: flex-start;
-        gap: 8px;
+        flex-direction: row;
+        align-items: center;
+        flex-wrap: wrap;
+        gap: 6px;
+    }
+
+    .stock-info h3 {
+        font-size: 15px;
+        margin-right: 6px;
+    }
+
+    .stock-code {
+        font-size: 11px;
+        padding: 2px 6px;
+    }
+
+    .current-price {
+        font-size: 14px;
     }
 
     .service-cost {
-        align-items: flex-start;
+        align-self: flex-start;
+        margin-top: 4px;
     }
 
     .ai-trading-form {
-        padding: 16px;
+        padding: 10px 12px;
     }
 
     .simple-grid {
         grid-template-columns: 1fr;
-        gap: 12px;
+        gap: 10px;
+    }
+
+    .section-title {
+        font-size: 14px;
+        margin-bottom: 10px;
+    }
+
+    .param-item {
+        gap: 6px;
+    }
+
+    .param-label {
+        font-size: 13px;
+    }
+
+    .risk-controls {
+        gap: 10px;
     }
 
     .risk-item {
-        flex-direction: column;
-        align-items: flex-start;
         gap: 8px;
     }
 
-    .risk-input {
-        align-self: flex-end;
+    .risk-checkbox {
+        font-size: 13px;
+    }
+
+    .risk-number {
+        width: 100px;
+    }
+
+    .strategy-preview {
+        padding: 10px;
+        margin-top: 10px;
+    }
+
+    .strategy-info {
+        gap: 6px;
+    }
+
+    .strategy-label,
+    .strategy-value,
+    .strategy-desc {
+        font-size: 12px;
+    }
+
+    .advanced-simple {
+        gap: 10px;
     }
 
     .advanced-row {
-        flex-direction: column;
-        align-items: flex-start;
+        flex-direction: row;
+        align-items: center;
         gap: 8px;
     }
 
     .param-input-small {
-        width: 100%;
+        width: 120px;
     }
 
-    /* 移动端按钮优化 */
+    .advanced-toggle {
+        padding: 10px 0;
+        margin-top: 12px;
+    }
+
     .dialog-footer {
-        padding: 12px 16px 16px 16px;
-        justify-content: center;
-        gap: 10px;
+        padding: 10px 12px;
+        position: sticky;
+        bottom: 0;
+        z-index: 10;
+        background: #f9fafb;
+        margin-top: 0;
+        flex-shrink: 0;
+        border-top: 1px solid #e5e7eb;
     }
 
     .dialog-footer .el-button {
         flex: 1;
-        max-width: 120px;
-        min-height: 36px;
+        max-width: 110px;
+        height: 34px;
         font-size: 13px;
-        padding: 8px 16px;
-        border-radius: 6px;
+        padding: 6px 12px;
     }
 }
 
+/* 小屏幕优化 */
 @media (max-width: 480px) {
     .ai-trading-dialog {
-        width: 98vw !important;
-        margin: 2vh auto !important;
+        width: 96vw !important;
+        margin: 0 !important;
+        margin-top: 2vh !important;
+        max-height: 90vh !important;
+        height: auto !important;
+    }
+
+    .dialog-scroll-content {
+        max-height: calc(90vh - 160px) !important;
+    }
+
+    .ai-trading-dialog :deep(.el-dialog__header) {
+        padding: 10px;
+    }
+
+    .ai-trading-dialog :deep(.el-dialog__title) {
+        font-size: 14px;
+    }
+
+    .stock-header {
+        padding: 8px 10px;
+    }
+
+    .stock-info h3 {
+        font-size: 14px;
+    }
+
+    .stock-code {
+        font-size: 10px;
+        padding: 2px 4px;
+    }
+
+    .current-price {
+        font-size: 13px;
+    }
+
+    .ai-trading-form {
+        padding: 8px 10px;
+    }
+
+    .section-title {
+        font-size: 13px;
+        margin-bottom: 8px;
+    }
+
+    .param-label {
+        font-size: 12px;
+    }
+
+    .risk-checkbox {
+        font-size: 12px;
+    }
+
+    .risk-number {
+        width: 90px;
     }
 
     .dialog-footer {
-        padding: 10px 12px 14px 12px;
-        gap: 8px;
+        padding: 8px 10px;
     }
 
     .dialog-footer .el-button {
-        flex: 1;
         max-width: 100px;
-        min-height: 38px;
-        font-size: 13px;
-        padding: 8px 12px;
-        border-radius: 6px;
+        height: 32px;
+        font-size: 12px;
+        padding: 5px 10px;
     }
 }
 
+/* 超小屏幕优化 */
 @media (max-width: 320px) {
+    .ai-trading-dialog {
+        width: 98vw !important;
+        margin: 0 !important;
+        margin-top: 1vh !important;
+        max-height: 95vh !important;
+        height: auto !important;
+    }
+
+    .dialog-scroll-content {
+        max-height: calc(95vh - 140px) !important;
+    }
+
+    .ai-trading-dialog :deep(.el-dialog__header) {
+        padding: 8px;
+    }
+
+    .ai-trading-dialog :deep(.el-dialog__title) {
+        font-size: 13px;
+    }
+
+    .stock-header {
+        padding: 6px 8px;
+    }
+
+    .stock-info h3 {
+        font-size: 13px;
+    }
+
+    .stock-code {
+        font-size: 9px;
+        padding: 1px 4px;
+    }
+
+    .current-price {
+        font-size: 12px;
+    }
+
+    .ai-trading-form {
+        padding: 6px 8px;
+    }
+
+    .section-title {
+        font-size: 12px;
+        margin-bottom: 6px;
+    }
+
+    .param-label {
+        font-size: 11px;
+    }
+
+    .risk-checkbox {
+        font-size: 11px;
+    }
+
+    .risk-number {
+        width: 80px;
+    }
+
     .dialog-footer {
-        padding: 8px 10px 12px 10px;
-        gap: 6px;
+        padding: 6px 8px;
     }
 
     .dialog-footer .el-button {
-        flex: 1;
         max-width: 90px;
-        min-height: 36px;
-        font-size: 12px;
-        padding: 6px 10px;
-        border-radius: 5px;
+        height: 30px;
+        font-size: 11px;
+        padding: 4px 8px;
     }
+}
+
+/* 移动端专用优化 */
+@media (max-width: 768px) and (orientation: portrait) {
+    .ai-trading-dialog {
+        margin-top: 10px !important;
+        border-radius: 12px 12px 0 0 !important;
+    }
+
+    .ai-trading-dialog :deep(.el-dialog__header) {
+        border-radius: 12px 12px 0 0;
+    }
+
+    .stock-header {
+        border-radius: 0;
+    }
+
+    /* 触摸友好的按钮 */
+    .risk-checkbox :deep(.el-checkbox__input) {
+        transform: scale(1.2);
+    }
+
+    .param-input,
+    .risk-number,
+    .param-input-small {
+        font-size: 16px;
+        /* 防止iOS自动缩放 */
+    }
+
+    /* 改进的滚动指示器 */
+    .dialog-scroll-content {
+        scroll-behavior: smooth;
+    }
+}
+
+/* 移动端专用样式类 - 最高优先级 */
+.mobile-dialog {
+    max-height: 85vh !important;
+    height: auto !important;
+    margin: 0 !important;
+    border-radius: 16px 16px 0 0 !important;
+}
+
+.mobile-dialog :deep(.el-dialog__body) {
+    padding: 0 !important;
+    max-height: calc(85vh - 120px) !important;
+    overflow: hidden !important;
+    display: flex !important;
+    flex-direction: column !important;
+}
+
+.mobile-dialog .ai-trading-content {
+    display: flex !important;
+    flex-direction: column !important;
+    height: 100% !important;
+    max-height: calc(85vh - 120px) !important;
+}
+
+.mobile-dialog .dialog-scroll-content {
+    flex: 1 !important;
+    overflow-y: auto !important;
+    max-height: calc(85vh - 220px) !important;
+    -webkit-overflow-scrolling: touch !important;
+}
+
+.mobile-dialog .stock-header {
+    flex-shrink: 0 !important;
+    padding: 12px 16px !important;
+    background: #f8fafc !important;
+    border-bottom: 1px solid #e2e8f0 !important;
+}
+
+.mobile-dialog .ai-trading-form {
+    padding: 16px !important;
+}
+
+.mobile-dialog .simple-grid {
+    grid-template-columns: 1fr !important;
+    gap: 12px !important;
+}
+
+.mobile-dialog .section-title {
+    font-size: 15px !important;
+    margin-bottom: 12px !important;
+}
+
+.mobile-dialog .param-label {
+    font-size: 14px !important;
+}
+
+.mobile-dialog .risk-number {
+    width: 100px !important;
+}
+
+.mobile-dialog .dialog-footer {
+    flex-shrink: 0 !important;
+    padding: 12px 16px !important;
+    background: #f9fafb !important;
+    border-top: 1px solid #e5e7eb !important;
+}
+
+.mobile-dialog .dialog-footer .el-button {
+    flex: 1 !important;
+    height: 40px !important;
+    font-size: 16px !important;
 }
 </style>

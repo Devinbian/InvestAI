@@ -20,7 +20,6 @@
                                 <el-dropdown-item command="profile">个人中心</el-dropdown-item>
                                 <el-dropdown-item command="settings">偏好设置</el-dropdown-item>
                                 <el-dropdown-item command="records">记录中心</el-dropdown-item>
-                                <el-dropdown-item command="reset-guide">重新引导</el-dropdown-item>
                                 <el-dropdown-item divided command="logout">退出登录</el-dropdown-item>
                             </el-dropdown-menu>
                         </template>
@@ -1857,9 +1856,6 @@ const handleCommand = (command) => {
             break;
         case 'records':
             showRecordsCenter.value = true;
-            break;
-        case 'reset-guide':
-            resetOnboarding();
             break;
         case 'logout':
             userStore.logout();
@@ -4193,33 +4189,6 @@ const handleOnboardingAction = async (action) => {
         default:
             console.log('未知操作类型:', type);
     }
-};
-
-// 重置个性化引导
-const resetOnboarding = () => {
-    ElMessageBox.confirm(
-        '重新开始个性化引导将清除之前的设置，是否继续？',
-        '重置引导',
-        {
-            confirmButtonText: '确定',
-            cancelButtonText: '取消',
-            type: 'warning',
-        }
-    ).then(() => {
-        // 清除本地存储的引导完成标记和用户偏好
-        localStorage.removeItem('onboardingCompleted');
-        localStorage.removeItem('userPreferences');
-
-        // 重置相关状态
-        showOnboarding.value = true;
-        isChatMode.value = false;
-        chatHistory.value = [];
-        inputMessage.value = '';
-
-        ElMessage.success('已重置个性化引导，请重新设置您的投资偏好');
-    }).catch(() => {
-        ElMessage.info('已取消重置');
-    });
 };
 
 // 快捷操作点击处理

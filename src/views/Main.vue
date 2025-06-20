@@ -1817,17 +1817,15 @@ const showLogin = (isRegister) => {
 // 处理登录成功事件
 const handleLoginSuccess = ({ isNewUser, userInfo }) => {
     if (isNewUser) {
-        // 新用户注册成功，引导设置投资偏好
+        // 新用户注册成功，显示引导流程
         setTimeout(() => {
-            preferencesDialogVisible.value = true;
+            showOnboarding.value = true;
         }, 500);
     } else {
-        // 老用户登录成功
+        // 老用户登录成功，直接进入主界面，不进入引导流程
         dismissGuide();
-        // 检查老用户是否已设置偏好，如果没有则引导设置
-        setTimeout(() => {
-            checkUserStatus();
-        }, 500);
+        // 如果没有偏好设置，可以通过菜单中的"偏好设置"手动设置
+        ElMessage.success('欢迎回来！');
     }
 };
 
@@ -3315,7 +3313,7 @@ const handleMobileKeyboard = () => {
 
 onMounted(() => {
     scrollToBottom();
-    checkUserStatus();
+    // 移除自动检查用户状态，避免老用户登录后进入引导流程
 
     // 检测移动端视图
     checkMobileView();

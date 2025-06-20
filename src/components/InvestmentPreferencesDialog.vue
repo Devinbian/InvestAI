@@ -1,38 +1,64 @@
 <template>
-    <el-dialog v-model="visible" :show-close="false" :close-on-click-modal="false" :lock-scroll="false" width="1000px"
-        class="preferences-dialog" top="10vh">
+    <el-dialog v-model="visible" :show-close="false" :close-on-click-modal="false" :lock-scroll="false"
+        :width="dialogWidth" class="preferences-dialog">
         <template #header>
             <div></div>
         </template>
 
-        <InvestmentPreferencesForm v-if="visible" :currentStep="currentStep" :preferencesForm="localPreferences"
-            @update:preferencesForm="handlePreferencesUpdate"
-            @update:currentStep="(newStep) => currentStep = newStep" />
+        <div class="preferences-container">
+            <!-- LOGO和标题区域 -->
+            <div class="preferences-header">
+                <div class="preferences-logo">
+                    <img src="/logo.png" alt="InvestAI Logo" class="logo-image" />
+                </div>
+                <h1 class="preferences-title">完善投资偏好</h1>
+                <p class="preferences-subtitle">帮助我们为您提供更精准的投资建议</p>
 
-        <div class="preferences-actions">
-            <el-button v-if="currentStep > 0" class="preferences-back-btn" @click="previousStep">
-                上一步
-            </el-button>
+                <!-- 步骤指示器 -->
+                <div class="step-indicator">
+                    <div v-for="(step, index) in totalSteps" :key="index" class="step-dot" :class="{
+                        active: currentStep === index,
+                        completed: currentStep > index,
+                    }">
+                        <span v-if="currentStep > index">✓</span>
+                        <span v-else>{{ index + 1 }}</span>
+                    </div>
+                </div>
+            </div>
 
-            <el-button v-if="currentStep < totalSteps - 1" class="preferences-next-btn" type="primary" @click="nextStep"
-                :disabled="!isStepValid">
-                下一步
-            </el-button>
+            <!-- 表单内容区域 -->
+            <div class="preferences-form-wrapper">
+                <InvestmentPreferencesForm v-if="visible" :currentStep="currentStep" :preferencesForm="localPreferences"
+                    @update:preferencesForm="handlePreferencesUpdate"
+                    @update:currentStep="(newStep) => currentStep = newStep" />
+            </div>
 
-            <el-button v-if="currentStep === totalSteps - 1" class="preferences-submit-btn" type="primary"
-                @click="handlePreferencesSubmit" :loading="preferencesLoading" :disabled="!isStepValid">
-                完成设置
-            </el-button>
+            <!-- 底部操作按钮 -->
+            <div class="preferences-actions">
+                <el-button v-if="currentStep > 0" class="preferences-back-btn" @click="previousStep">
+                    上一步
+                </el-button>
 
-            <el-button class="preferences-skip-btn" @click="skipPreferences">
-                跳过
-            </el-button>
+                <el-button v-if="currentStep < totalSteps - 1" class="preferences-next-btn" type="primary"
+                    @click="nextStep" :disabled="!isStepValid">
+                    下一步
+                </el-button>
+
+                <el-button v-if="currentStep === totalSteps - 1" class="preferences-submit-btn" type="primary"
+                    @click="handlePreferencesSubmit" :loading="preferencesLoading" :disabled="!isStepValid">
+                    完成设置
+                </el-button>
+
+                <el-button class="preferences-skip-btn" @click="skipPreferences">
+                    跳过
+                </el-button>
+            </div>
         </div>
     </el-dialog>
 </template>
 
 <script setup>
-import { ref, reactive, computed, watch } from 'vue';
+import { ref, reactive, computed, watch, onMounted, onUnmounted } from 'vue';
 import { ElMessage } from 'element-plus';
 import { useUserStore } from '@/store/user';
 import InvestmentPreferencesForm from './InvestmentPreferencesForm.vue';
@@ -50,6 +76,31 @@ const emit = defineEmits(['update:modelValue', 'preferences-completed', 'prefere
 
 // Store
 const userStore = useUserStore();
+
+// 响应式检测
+const windowWidth = ref(window.innerWidth);
+const isMobile = computed(() => windowWidth.value < 768);
+const isTablet = computed(() => windowWidth.value >= 768 && windowWidth.value < 1024);
+
+// 对话框响应式配置
+const dialogWidth = computed(() => {
+    if (isMobile.value) return '95%';
+    if (isTablet.value) return '85%';
+    return '900px';
+});
+
+// 窗口大小监听
+const handleResize = () => {
+    windowWidth.value = window.innerWidth;
+};
+
+onMounted(() => {
+    window.addEventListener('resize', handleResize);
+});
+
+onUnmounted(() => {
+    window.removeEventListener('resize', handleResize);
+});
 
 // Reactive data
 const visible = computed({
@@ -201,42 +252,255 @@ if (visible.value) {
 </script>
 
 <style scoped>
-/* Scoped styles for the dialog container and buttons */
-.preferences-dialog :deep(.el-dialog) {
+/* 投资偏好弹窗样式 - 参考登录弹窗设计 */
+:deep(.preferences-dialog) {
     border-radius: 16px;
     overflow: hidden;
     box-shadow: 0 8px 32px rgba(0, 0, 0, 0.12);
     border: 1px solid #e5e7eb;
-    max-height: 90vh;
 }
 
-.preferences-dialog :deep(.el-dialog__header) {
+:deep(.preferences-dialog .el-dialog__header) {
     padding: 0;
     margin: 0;
 }
 
-.preferences-dialog :deep(.el-dialog__body) {
+:deep(.preferences-dialog .el-dialog__body) {
     padding: 0;
+    overflow: hidden;
+}
+
+/* 移动端弹窗优化 - 减少间距，充分利用屏幕空间 */
+@media (max-width: 767px) {
+    :deep(.preferences-dialog) {
+        margin: 8px !important;
+        width: calc(100vw - 16px) !important;
+        max-width: none !important;
+        max-height: calc(100vh - 16px) !important;
+        border-radius: 12px;
+    }
+}
+
+/* PC端弹窗居中但稍微向上 */
+@media (min-width: 768px) {
+    :deep(.preferences-dialog) {
+        margin-top: 8vh !important;
+        margin-bottom: 8vh !important;
+        max-height: 84vh !important;
+        width: 90% !important;
+        max-width: 1200px !important;
+    }
+}
+
+.preferences-container {
+    padding: 20px 16px;
+    background: white;
+    display: flex;
+    flex-direction: column;
+    height: 100%;
+    overflow: hidden;
+}
+
+/* 移动端进一步优化内边距 */
+@media (max-width: 767px) {
+    .preferences-container {
+        padding: 16px 12px;
+    }
+}
+
+/* PC端增加内容宽度，减少左右边距 */
+@media (min-width: 768px) {
+    .preferences-container {
+        padding: 24px 20px;
+        max-width: none;
+    }
+}
+
+.preferences-header {
+    text-align: center;
+    margin-bottom: 16px;
+    padding-bottom: 12px;
+    border-bottom: 1px solid #f3f4f6;
+    flex-shrink: 0;
+}
+
+/* 移动端header优化 */
+@media (max-width: 767px) {
+    .preferences-header {
+        margin-bottom: 12px;
+        padding-bottom: 8px;
+    }
+}
+
+.preferences-logo {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    margin-bottom: 8px;
+}
+
+/* 移动端logo优化 */
+@media (max-width: 767px) {
+    .preferences-logo {
+        margin-bottom: 6px;
+    }
+}
+
+.logo-image {
+    width: 48px;
+    height: 48px;
+    object-fit: contain;
+    border-radius: 12px;
+    background: rgba(255, 255, 255, 0.95);
+    padding: 6px;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+}
+
+/* 移动端logo尺寸优化 */
+@media (max-width: 767px) {
+    .logo-image {
+        width: 40px;
+        height: 40px;
+        border-radius: 10px;
+        padding: 4px;
+    }
+}
+
+.preferences-title {
+    font-size: 1.5rem;
+    font-weight: 600;
+    margin: 0 0 6px 0;
+    color: #18181b;
+    letter-spacing: -0.025em;
+}
+
+/* 移动端标题优化 */
+@media (max-width: 767px) {
+    .preferences-title {
+        font-size: 1.25rem;
+        margin: 0 0 4px 0;
+    }
+}
+
+.preferences-subtitle {
+    font-size: 0.875rem;
+    margin: 0 0 12px 0;
+    color: #6b7280;
+    font-weight: 400;
+    line-height: 1.4;
+}
+
+/* 移动端副标题优化 */
+@media (max-width: 767px) {
+    .preferences-subtitle {
+        font-size: 0.8rem;
+        margin: 0 0 8px 0;
+    }
+}
+
+/* 步骤指示器 - 改为黑色主题 */
+.step-indicator {
+    display: flex;
+    justify-content: center;
+    gap: 10px;
+    margin: 0;
+}
+
+/* 移动端指示器优化 */
+@media (max-width: 767px) {
+    .step-indicator {
+        gap: 8px;
+    }
+}
+
+.step-dot {
+    width: 32px;
+    height: 32px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 0.75rem;
+    font-weight: 600;
+    transition: all 0.3s ease;
+    border: 2px solid #e5e7eb;
+    background: #f9fafb;
+    color: #9ca3af;
+}
+
+/* 移动端步骤圆点优化 */
+@media (max-width: 767px) {
+    .step-dot {
+        width: 28px;
+        height: 28px;
+        font-size: 0.7rem;
+    }
+}
+
+.step-dot.active {
+    background: #18181b;
+    border-color: #18181b;
+    color: white;
+    transform: scale(1.05);
+}
+
+.step-dot.completed {
+    background: #374151;
+    border-color: #374151;
+    color: white;
+}
+
+.preferences-form-wrapper {
+    flex: 1;
+    overflow: hidden;
+    display: flex;
+    flex-direction: column;
+    min-height: 0;
 }
 
 .preferences-actions {
     display: flex;
     justify-content: center;
-    gap: 16px;
-    padding: 16px 24px 24px;
+    gap: 12px;
+    padding: 12px 0 0 0;
     border-top: 1px solid #f3f4f6;
-    background-color: white;
+    margin-top: 12px;
+    flex-shrink: 0;
+}
+
+/* 移动端操作按钮优化 */
+@media (max-width: 767px) {
+    .preferences-actions {
+        padding: 10px 0 0 0;
+        margin-top: 10px;
+        gap: 8px;
+    }
 }
 
 .preferences-back-btn,
 .preferences-next-btn,
 .preferences-submit-btn,
 .preferences-skip-btn {
-    min-width: 90px;
-    height: 38px;
+    min-width: 80px;
+    height: 40px;
     border-radius: 8px;
     font-weight: 500;
+    font-size: 0.9rem;
     transition: all 0.2s ease;
+}
+
+/* 移动端按钮优化 */
+@media (max-width: 767px) {
+
+    .preferences-back-btn,
+    .preferences-next-btn,
+    .preferences-submit-btn,
+    .preferences-skip-btn {
+        min-width: 70px;
+        height: 36px;
+        font-size: 0.85rem;
+        border-radius: 6px;
+    }
 }
 
 .preferences-back-btn {
@@ -254,9 +518,8 @@ if (visible.value) {
 .preferences-next-btn,
 .preferences-submit-btn {
     background: #18181b;
-    border: 2px solid #18181b;
+    border-color: #18181b;
     color: white;
-    font-weight: 600;
 }
 
 .preferences-next-btn:hover,
@@ -264,27 +527,17 @@ if (visible.value) {
     background: #000000;
     border-color: #000000;
     transform: translateY(-1px);
-    box-shadow: 0 4px 12px rgba(24, 24, 27, 0.25);
-}
-
-.preferences-next-btn:disabled,
-.preferences-submit-btn:disabled {
-    background: #e5e7eb;
-    border-color: #e5e7eb;
-    color: #9ca3af;
-    cursor: not-allowed;
-    transform: none;
-    box-shadow: none;
+    box-shadow: 0 4px 12px rgba(24, 24, 27, 0.4);
 }
 
 .preferences-skip-btn {
     background: transparent;
-    border: none;
-    color: #6b7280;
+    border: 2px solid transparent;
+    color: #9ca3af;
 }
 
 .preferences-skip-btn:hover {
-    background: #f3f4f6;
-    color: #374151;
+    color: #6b7280;
+    background: #f9fafb;
 }
 </style>

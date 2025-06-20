@@ -1,37 +1,19 @@
 <template>
-    <div class="preferences-container">
-        <div class="preferences-header">
-            <div class="preferences-logo">
-                <img src="/logo.png" alt="InvestAI Logo" class="logo-image" />
-            </div>
-            <h1 class="preferences-title">完善投资偏好</h1>
-            <p class="preferences-subtitle">帮助我们为您提供更精准的投资建议</p>
+    <div class="preferences-form-container">
+        <!-- 步骤1: 投资经验 -->
+        <div v-if="currentStep === 0" class="step-content">
+            <h3 class="step-title">{{ preferenceSteps[0].title }}</h3>
+            <p class="step-desc">{{ preferenceSteps[0].desc }}</p>
 
-            <!-- 步骤指示器 -->
-            <div class="step-indicator">
-                <div v-for="(step, index) in preferenceSteps" :key="index" class="step-dot" :class="{
-                    active: currentStep === index,
-                    completed: currentStep > index,
-                }">
-                    <span v-if="currentStep > index">✓</span>
-                    <span v-else>{{ index + 1 }}</span>
-                </div>
-            </div>
-        </div>
-
-        <div class="preferences-form-wrapper">
-            <!-- 步骤1: 投资经验 -->
-            <div v-if="currentStep === 0" class="step-content">
-                <h3 class="step-title">{{ preferenceSteps[0].title }}</h3>
-                <p class="step-desc">{{ preferenceSteps[0].desc }}</p>
-
+            <div class="step-content-scrollable">
                 <div class="experience-options">
                     <div v-for="option in experienceOptions" :key="option.value" class="experience-option"
                         :class="{ selected: localPreferencesForm.experience === option.value }"
                         @click="localPreferencesForm.experience = option.value">
                         <div class="option-radio">
                             <div class="radio-dot"
-                                :class="{ checked: localPreferencesForm.experience === option.value }"></div>
+                                :class="{ checked: localPreferencesForm.experience === option.value }">
+                            </div>
                         </div>
                         <div class="experience-content">
                             <div class="experience-header">
@@ -44,12 +26,14 @@
                     </div>
                 </div>
             </div>
+        </div>
 
-            <!-- 步骤2: 选择投资风格 -->
-            <div v-if="currentStep === 1" class="step-content">
-                <h3 class="step-title">{{ preferenceSteps[1].title }}</h3>
-                <p class="step-desc">{{ preferenceSteps[1].desc }}</p>
+        <!-- 步骤2: 选择投资风格 -->
+        <div v-if="currentStep === 1" class="step-content">
+            <h3 class="step-title">{{ preferenceSteps[1].title }}</h3>
+            <p class="step-desc">{{ preferenceSteps[1].desc }}</p>
 
+            <div class="step-content-scrollable">
                 <div class="risk-options">
                     <div v-for="option in riskOptions" :key="option.value" class="risk-option"
                         :class="{ selected: localPreferencesForm.riskLevel === option.value }"
@@ -90,12 +74,14 @@
                     </div>
                 </div>
             </div>
+        </div>
 
-            <!-- 步骤3: 用户特征 -->
-            <div v-if="currentStep === 2" class="step-content">
-                <h3 class="step-title">{{ preferenceSteps[2].title }}</h3>
-                <p class="step-desc">{{ preferenceSteps[2].desc }}</p>
+        <!-- 步骤3: 用户特征 -->
+        <div v-if="currentStep === 2" class="step-content">
+            <h3 class="step-title">{{ preferenceSteps[2].title }}</h3>
+            <p class="step-desc">{{ preferenceSteps[2].desc }}</p>
 
+            <div class="step-content-scrollable">
                 <div class="traits-container">
                     <div class="traits-hint">
                         <div class="hint-icon">💡</div>
@@ -143,12 +129,14 @@
                     </div>
                 </div>
             </div>
+        </div>
 
-            <!-- 步骤4: 关注板块 -->
-            <div v-if="currentStep === 3" class="step-content">
-                <h3 class="step-title">{{ preferenceSteps[3].title }}</h3>
-                <p class="step-desc">{{ preferenceSteps[3].desc }}</p>
+        <!-- 步骤4: 关注板块 -->
+        <div v-if="currentStep === 3" class="step-content">
+            <h3 class="step-title">{{ preferenceSteps[3].title }}</h3>
+            <p class="step-desc">{{ preferenceSteps[3].desc }}</p>
 
+            <div class="step-content-scrollable">
                 <div class="sectors-container-compact">
                     <!-- 顶部搜索和统计 -->
                     <div class="sectors-header">
@@ -198,70 +186,115 @@
                                     </div>
                                 </div>
                             </div>
-                        </div>
 
-                        <!-- 无搜索结果 -->
-                        <div v-else-if="sectorSearchQuery && filteredSubSectors.length === 0" class="no-results">
-                            <div class="no-results-content">
+                            <!-- 无搜索结果 -->
+                            <div v-if="sectorSearchQuery && filteredSubSectors.length === 0" class="no-results">
                                 <div class="no-results-icon">🔍</div>
                                 <div class="no-results-text">未找到匹配的行业</div>
+                                <div class="no-results-hint">请尝试其他关键词，如"科技"、"医药"、"消费"等</div>
                             </div>
                         </div>
 
-                        <!-- 正常模式：左右分栏 -->
-                        <div v-else class="normal-layout">
-                            <!-- 左侧：大分类 -->
-                            <div class="left-section">
-                                <div class="section-title">📊 选择大分类 (最多2个)</div>
-                                <div class="major-grid">
-                                    <div v-for="major in majorSectorOptions" :key="major.value" class="major-card"
-                                        :class="{
-                                            selected: localPreferencesForm.sectors.majorCategories.includes(major.value),
-                                            disabled: !localPreferencesForm.sectors.majorCategories.includes(major.value) && localPreferencesForm.sectors.majorCategories.length >= 2,
-                                        }" @click="toggleMajorSector(major.value)">
-                                        <div class="major-icon" :style="{ color: major.color }">
-                                            {{ major.icon }}
-                                        </div>
-                                        <div class="major-name">{{ major.label }}</div>
-                                        <div class="major-check"
-                                            v-if="localPreferencesForm.sectors.majorCategories.includes(major.value)">
-                                            ✓
+                        <!-- 选择模式 -->
+                        <div v-else class="selection-mode">
+                            <!-- PC端左右分栏布局 -->
+                            <div class="desktop-layout" v-if="!isMobile && !isTablet">
+                                <div class="left-panel">
+                                    <div class="section-title">📊 选择关注的大分类 (最多2个)</div>
+                                    <div class="major-grid-desktop">
+                                        <div v-for="major in majorSectors" :key="major.value" class="major-card-desktop"
+                                            :class="{
+                                                selected: localPreferencesForm.sectors.majorCategories.includes(major.value),
+                                                disabled: !localPreferencesForm.sectors.majorCategories.includes(major.value) && localPreferencesForm.sectors.majorCategories.length >= 2
+                                            }" @click="toggleMajorSector(major.value)">
+                                            <div class="major-icon">{{ major.icon }}</div>
+                                            <div class="major-name">{{ major.label }}</div>
+                                            <div class="major-check"
+                                                v-if="localPreferencesForm.sectors.majorCategories.includes(major.value)">
+                                                ✓
+                                            </div>
                                         </div>
                                     </div>
                                 </div>
-                            </div>
 
-                            <!-- 右侧：细分行业 -->
-                            <div class="right-section">
-                                <div v-if="localPreferencesForm.sectors.majorCategories.length > 0">
-                                    <div class="section-title">🎯 选择细分行业 (最多4个)</div>
-                                    <div class="sub-grid">
-                                        <div v-for="majorCategory in localPreferencesForm.sectors.majorCategories"
-                                            :key="majorCategory" class="sub-group">
-                                            <div class="group-header">
-                                                {{ getMajorSectorIcon(majorCategory) }}
-                                                {{ getMajorSectorLabel(majorCategory) }}
+                                <div class="right-panel">
+                                    <div class="section-title">🎯 选择具体关注的行业 (最多4个)</div>
+                                    <div v-if="availableSubSectors.length > 0" class="sub-grid-desktop">
+                                        <div v-for="group in groupedSubSectors" :key="group.major"
+                                            class="sub-group-desktop">
+                                            <div class="group-header-desktop">{{ getMajorSectorLabel(group.major) }}
                                             </div>
-                                            <div class="sub-cards">
-                                                <div v-for="sub in getSubSectorsByParent(majorCategory)"
-                                                    :key="sub.value" class="sub-card" :class="{
-                                                        selected: localPreferencesForm.sectors.subCategories.includes(sub.value),
-                                                        disabled: !localPreferencesForm.sectors.subCategories.includes(sub.value) && localPreferencesForm.sectors.subCategories.length >= 4,
-                                                    }" @click="toggleSubSector(sub.value)">
-                                                    <div class="sub-icon">{{ sub.icon }}</div>
-                                                    <div class="sub-name">{{ sub.label }}</div>
+                                            <div class="sub-cards-desktop">
+                                                <div v-for="sector in group.sectors" :key="sector.value"
+                                                    class="sub-card-desktop" :class="{
+                                                        selected: localPreferencesForm.sectors.subCategories.includes(sector.value),
+                                                        disabled: !localPreferencesForm.sectors.subCategories.includes(sector.value) && localPreferencesForm.sectors.subCategories.length >= 4
+                                                    }" @click="toggleSubSector(sector.value)">
+                                                    <div class="sub-icon">{{ sector.icon }}</div>
+                                                    <div class="sub-name">{{ sector.label }}</div>
                                                     <div class="sub-check"
-                                                        v-if="localPreferencesForm.sectors.subCategories.includes(sub.value)">
+                                                        v-if="localPreferencesForm.sectors.subCategories.includes(sector.value)">
                                                         ✓
                                                     </div>
                                                 </div>
                                             </div>
                                         </div>
                                     </div>
+                                    <div v-else class="selection-hint-desktop">
+                                        <div class="hint-icon">👆</div>
+                                        <div class="hint-text">请先选择左侧的大分类</div>
+                                    </div>
                                 </div>
-                                <div v-else class="selection-hint">
-                                    <div class="hint-icon">💡</div>
-                                    <div class="hint-text">请先在左侧选择大分类</div>
+                            </div>
+
+                            <!-- 移动端和平板端垂直布局 -->
+                            <div class="mobile-layout" v-else>
+                                <!-- 大分类选择 -->
+                                <div class="major-section">
+                                    <div class="section-title">📊 选择关注的大分类 (最多2个)</div>
+                                    <div class="major-grid">
+                                        <div v-for="major in majorSectors" :key="major.value" class="major-card" :class="{
+                                            selected: localPreferencesForm.sectors.majorCategories.includes(major.value),
+                                            disabled: !localPreferencesForm.sectors.majorCategories.includes(major.value) && localPreferencesForm.sectors.majorCategories.length >= 2
+                                        }" @click="toggleMajorSector(major.value)">
+                                            <div class="major-icon">{{ major.icon }}</div>
+                                            <div class="major-name">{{ major.label }}</div>
+                                            <div class="major-check"
+                                                v-if="localPreferencesForm.sectors.majorCategories.includes(major.value)">
+                                                ✓
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <!-- 细分行业选择 -->
+                                <div class="sub-section">
+                                    <div class="section-title">🎯 选择具体关注的行业 (最多4个)</div>
+                                    <div v-if="availableSubSectors.length > 0" class="sub-grid">
+                                        <div v-for="group in groupedSubSectors" :key="group.major" class="sub-group">
+                                            <div class="group-header">{{ getMajorSectorLabel(group.major) }}</div>
+                                            <div class="sub-cards">
+                                                <div v-for="sector in group.sectors" :key="sector.value"
+                                                    class="sub-card" :class="{
+                                                        selected: localPreferencesForm.sectors.subCategories.includes(sector.value),
+                                                        disabled: !localPreferencesForm.sectors.subCategories.includes(sector.value) && localPreferencesForm.sectors.subCategories.length >= 4
+                                                    }" @click="toggleSubSector(sector.value)">
+                                                    <div class="sub-icon">{{ sector.icon }}</div>
+                                                    <div class="sub-name">{{ sector.label }}</div>
+                                                    <div class="sub-check"
+                                                        v-if="localPreferencesForm.sectors.subCategories.includes(sector.value)">
+                                                        ✓
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                    <!-- 选择提示 -->
+                                    <div v-else class="selection-hint">
+                                        <div class="hint-icon">👆</div>
+                                        <div class="hint-text">请先选择上方的大分类，然后选择具体关注的行业</div>
+                                    </div>
                                 </div>
                             </div>
                         </div>
@@ -269,21 +302,11 @@
                 </div>
             </div>
         </div>
-
-        <!-- Action Buttons -->
-        <div v-if="showActions" class="form-actions">
-            <el-button @click="handlePrevious" class="action-btn secondary" :disabled="currentStep === 0">
-                上一步
-            </el-button>
-            <el-button @click="handleNext" type="primary" class="action-btn primary" :disabled="!isStepValid">
-                {{ isLastStep ? '完成' : '下一步' }}
-            </el-button>
-        </div>
     </div>
 </template>
 
 <script setup>
-import { ref, reactive, computed, watch } from 'vue';
+import { ref, reactive, computed, watch, onMounted, onUnmounted } from 'vue';
 import { ElMessage } from 'element-plus';
 import { useUserStore } from '@/store/user';
 // import InvestmentPreferencesForm from './InvestmentPreferencesForm.vue'; // Self import is not needed
@@ -309,6 +332,11 @@ const emit = defineEmits(['update:preferencesForm', 'previous', 'next', 'complet
 
 const sectorSearchQuery = ref('');
 const filteredSubSectors = ref([]);
+
+// 响应式检测
+const windowWidth = ref(window.innerWidth);
+const isMobile = computed(() => windowWidth.value < 768);
+const isTablet = computed(() => windowWidth.value >= 768 && windowWidth.value < 1024);
 
 // Store
 const userStore = useUserStore();
@@ -566,7 +594,7 @@ const userTraits = [
 ];
 
 // 大分类配置
-const majorSectorOptions = [
+const majorSectors = [
     {
         value: 'technology',
         label: '科技板块',
@@ -612,7 +640,7 @@ const majorSectorOptions = [
 ];
 
 // 子分类配置
-const subSectorOptions = [
+const subSectors = [
     // 科技板块下的小分类
     {
         value: 'internet',
@@ -770,6 +798,27 @@ const subSectorOptions = [
     }
 ];
 
+// 计算属性
+const availableSubSectors = computed(() => {
+    return subSectors.filter(sub =>
+        localPreferencesForm.sectors.majorCategories.includes(sub.parent)
+    );
+});
+
+const groupedSubSectors = computed(() => {
+    const groups = {};
+    availableSubSectors.value.forEach(sector => {
+        if (!groups[sector.parent]) {
+            groups[sector.parent] = {
+                major: sector.parent,
+                sectors: []
+            };
+        }
+        groups[sector.parent].sectors.push(sector);
+    });
+    return Object.values(groups);
+});
+
 // Methods
 const getCurrentTraitDescription = (traitId) => {
     const trait = userTraits.find(t => t.id === traitId);
@@ -784,7 +833,7 @@ const toggleMajorSector = (value) => {
     const index = localPreferencesForm.sectors.majorCategories.indexOf(value);
     if (index > -1) {
         localPreferencesForm.sectors.majorCategories.splice(index, 1);
-        const subSectorsToRemove = subSectorOptions
+        const subSectorsToRemove = subSectors
             .filter(sub => sub.parent === value)
             .map(sub => sub.value);
         localPreferencesForm.sectors.subCategories = localPreferencesForm.sectors.subCategories
@@ -808,17 +857,17 @@ const toggleSubSector = (value) => {
 };
 
 const getMajorSectorIcon = (value) => {
-    const sector = majorSectorOptions.find(s => s.value === value);
+    const sector = majorSectors.find(s => s.value === value);
     return sector ? sector.icon : '';
 };
 
 const getMajorSectorLabel = (value) => {
-    const sector = majorSectorOptions.find(s => s.value === value);
+    const sector = majorSectors.find(s => s.value === value);
     return sector ? sector.label : '';
 };
 
 const getSubSectorsByParent = (parentValue) => {
-    return subSectorOptions.filter(sub => sub.parent === parentValue);
+    return subSectors.filter(sub => sub.parent === parentValue);
 };
 
 const handleSectorSearch = () => {
@@ -828,7 +877,7 @@ const handleSectorSearch = () => {
     }
 
     const query = sectorSearchQuery.value.toLowerCase().trim();
-    filteredSubSectors.value = subSectorOptions.filter(sector => {
+    filteredSubSectors.value = subSectors.filter(sector => {
         return sector.label.toLowerCase().includes(query) ||
             sector.desc.toLowerCase().includes(query) ||
             sector.examples.toLowerCase().includes(query);
@@ -866,68 +915,37 @@ const getRiskLevelText = (level) => {
     return map[level] || '未设置';
 };
 
+// 窗口大小监听
+const handleResize = () => {
+    windowWidth.value = window.innerWidth;
+};
+
+onMounted(() => {
+    window.addEventListener('resize', handleResize);
+});
+
+onUnmounted(() => {
+    window.removeEventListener('resize', handleResize);
+});
+
 </script>
 
 <style scoped>
-/* All original styles are kept here, as they define the form's appearance. */
-.preferences-container {
-    padding: 16px 24px;
-    background: white;
-    min-height: auto;
+/* ===== 基础容器样式 ===== */
+.preferences-form-container {
     display: flex;
     flex-direction: column;
-    max-width: 100%;
-    overflow-x: hidden;
-}
-
-.preferences-header {
-    text-align: center;
-    margin-bottom: 16px;
-}
-
-.preferences-logo {
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-    margin-bottom: 8px;
-}
-
-.preferences-logo .logo-image {
-    width: 32px;
-    height: 32px;
-    object-fit: contain;
-    border-radius: 8px;
-    padding: 4px;
-    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
-}
-
-.preferences-title {
-    font-size: 1.25rem;
-    font-weight: 600;
-    margin: 0 0 4px 0;
-}
-
-.preferences-subtitle {
-    font-size: 0.8rem;
-    margin: 0;
-    color: #6b7280;
-}
-
-.preferences-form-wrapper {
-    flex: 1;
-    display: flex;
-    flex-direction: column;
-    max-width: 100%;
-    margin: 0 auto;
-    width: 100%;
+    height: 100%;
+    overflow: hidden;
+    background: transparent;
+    padding: 0;
 }
 
 .step-content {
-    flex: 1;
     display: flex;
     flex-direction: column;
-    justify-content: center;
-    text-align: center;
+    height: 100%;
+    overflow: hidden;
     padding: 0;
 }
 
@@ -935,82 +953,74 @@ const getRiskLevelText = (level) => {
     font-size: 1.25rem;
     font-weight: 600;
     color: #18181b;
-    margin: 0 0 4px 0;
+    margin: 0 0 8px 0;
+    text-align: center;
+    line-height: 1.3;
 }
 
 .step-desc {
-    font-size: 0.85rem;
+    font-size: 0.9rem;
     color: #6b7280;
-    margin: 0 0 16px 0;
+    margin: 0 0 20px 0;
+    text-align: center;
+    line-height: 1.4;
 }
 
-/* 步骤指示器 */
-.step-indicator {
-    display: flex;
-    justify-content: center;
-    gap: 8px;
-    margin-top: 12px;
+/* ===== PC端样式优化 - 充分利用宽度 ===== */
+@media (min-width: 768px) {
+    .preferences-form-container {
+        padding: 0;
+        max-width: none;
+        width: 100%;
+    }
+
+    .step-content {
+        padding: 0 16px;
+        width: 100%;
+        max-width: none;
+    }
+
+    .step-title {
+        font-size: 1.4rem;
+        margin-bottom: 12px;
+    }
+
+    .step-desc {
+        font-size: 1rem;
+        margin-bottom: 24px;
+    }
 }
 
-.step-dot {
-    width: 24px;
-    height: 24px;
-    border-radius: 50%;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    font-size: 0.875rem;
-    font-weight: 600;
-    transition: all 0.3s ease;
-    border: 2px solid #e5e7eb;
-    background: white;
-    color: #9ca3af;
-}
-
-.step-dot.active {
-    border-color: #18181b;
-    background: #18181b;
-    color: white;
-}
-
-.step-dot.completed {
-    border-color: #10b981;
-    background: #10b981;
-    color: white;
-}
-
-/* 风险偏好选项 */
-.risk-options {
+/* ===== 经验选项样式 - 完整的卡片设计 ===== */
+.experience-options {
     display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
-    gap: 10px;
-    max-width: 900px;
+    grid-template-columns: repeat(auto-fit, minmax(350px, 1fr));
+    gap: 16px;
+    max-width: 800px;
     margin: 0 auto;
-    padding: 0 10px;
 }
 
-.risk-option {
+.experience-option {
     border: 2px solid #e5e7eb;
     border-radius: 12px;
-    padding: 10px;
+    padding: 16px;
     transition: all 0.3s ease;
     cursor: pointer;
     display: flex;
     align-items: flex-start;
-    gap: 10px;
-    text-align: left;
+    gap: 16px;
     min-height: auto;
-    box-sizing: border-box;
+    text-align: left;
 }
 
-.risk-option:hover {
+.experience-option:hover {
     border-color: #d1d5db;
     background: #f9fafb;
     transform: translateY(-2px);
     box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
 }
 
-.risk-option.selected {
+.experience-option.selected {
     border-color: #18181b;
     background: #f8fafc;
     box-shadow: 0 4px 16px rgba(24, 24, 27, 0.15);
@@ -1045,6 +1055,77 @@ const getRiskLevelText = (level) => {
     height: 8px;
     background: white;
     border-radius: 50%;
+}
+
+.experience-content {
+    flex: 1;
+}
+
+.experience-header {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin-bottom: 6px;
+}
+
+.experience-icon {
+    font-size: 1.2rem;
+}
+
+.experience-title {
+    font-size: 1.05rem;
+    font-weight: 600;
+    color: #18181b;
+}
+
+.experience-label {
+    font-size: 0.9rem;
+    font-weight: 500;
+    color: #374151;
+    margin-bottom: 6px;
+}
+
+.experience-desc {
+    font-size: 0.825rem;
+    color: #6b7280;
+    line-height: 1.4;
+}
+
+/* ===== 风险选项样式 - 完整的卡片设计 ===== */
+.risk-options {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+    gap: 10px;
+    max-width: 900px;
+    margin: 0 auto;
+    padding: 0 10px;
+}
+
+.risk-option {
+    border: 2px solid #e5e7eb;
+    border-radius: 12px;
+    padding: 10px;
+    transition: all 0.3s ease;
+    cursor: pointer;
+    display: flex;
+    align-items: flex-start;
+    gap: 10px;
+    text-align: left;
+    min-height: auto;
+    box-sizing: border-box;
+}
+
+.risk-option:hover {
+    border-color: #d1d5db;
+    background: #f9fafb;
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+}
+
+.risk-option.selected {
+    border-color: #18181b;
+    background: #f8fafc;
+    box-shadow: 0 4px 16px rgba(24, 24, 27, 0.15);
 }
 
 .option-content {
@@ -1167,76 +1248,7 @@ const getRiskLevelText = (level) => {
     margin-top: 2px;
 }
 
-/* 投资经验选项 */
-.experience-options {
-    display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(350px, 1fr));
-    gap: 16px;
-    max-width: 800px;
-    margin: 0 auto;
-}
-
-.experience-option {
-    border: 2px solid #e5e7eb;
-    border-radius: 12px;
-    padding: 16px;
-    transition: all 0.3s ease;
-    cursor: pointer;
-    display: flex;
-    align-items: flex-start;
-    gap: 16px;
-    min-height: auto;
-    text-align: left;
-}
-
-.experience-option:hover {
-    border-color: #d1d5db;
-    background: #f9fafb;
-    transform: translateY(-2px);
-    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
-}
-
-.experience-option.selected {
-    border-color: #18181b;
-    background: #f8fafc;
-    box-shadow: 0 4px 16px rgba(24, 24, 27, 0.15);
-}
-
-.experience-content {
-    flex: 1;
-}
-
-.experience-header {
-    display: flex;
-    align-items: center;
-    gap: 8px;
-    margin-bottom: 6px;
-}
-
-.experience-icon {
-    font-size: 1.2rem;
-}
-
-.experience-title {
-    font-size: 1.05rem;
-    font-weight: 600;
-    color: #18181b;
-}
-
-.experience-label {
-    font-size: 0.9rem;
-    font-weight: 500;
-    color: #374151;
-    margin-bottom: 6px;
-}
-
-.experience-desc {
-    font-size: 0.825rem;
-    color: #6b7280;
-    line-height: 1.4;
-}
-
-/* 用户特征样式 */
+/* ===== 用户特征样式 - 完整的滑块设计 ===== */
 .traits-container {
     max-width: 1000px;
     margin: 0 auto;
@@ -1430,7 +1442,7 @@ const getRiskLevelText = (level) => {
     line-height: 1.2;
 }
 
-/* 紧凑的左右分栏板块选择布局 */
+/* ===== 板块选择样式 - 完整的卡片布局 ===== */
 .sectors-container-compact {
     width: 100%;
     max-width: 900px;
@@ -1468,8 +1480,8 @@ const getRiskLevelText = (level) => {
 }
 
 :deep(.compact-search.is-focus .el-input__wrapper) {
-    border-color: #3b82f6 !important;
-    box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.15) !important;
+    border-color: #18181b !important;
+    box-shadow: 0 0 0 3px rgba(24, 24, 27, 0.15) !important;
 }
 
 :deep(.compact-search .el-input__inner::placeholder) {
@@ -1509,7 +1521,7 @@ const getRiskLevelText = (level) => {
 }
 
 .search-header {
-    background: #3b82f6;
+    background: #18181b;
     color: white;
     padding: 4px 8px;
     font-size: 0.8rem;
@@ -1545,9 +1557,9 @@ const getRiskLevelText = (level) => {
 }
 
 .sector-card.selected {
-    background: rgba(59, 130, 246, 0.05);
-    border-color: #3b82f6;
-    box-shadow: 0 0 0 1px rgba(59, 130, 246, 0.2);
+    background: rgba(24, 24, 27, 0.05);
+    border-color: #18181b;
+    box-shadow: 0 0 0 1px rgba(24, 24, 27, 0.2);
 }
 
 .sector-card.disabled {
@@ -1594,7 +1606,7 @@ const getRiskLevelText = (level) => {
 .card-check {
     width: 20px;
     height: 20px;
-    background: #3b82f6;
+    background: #18181b;
     color: white;
     border-radius: 50%;
     display: flex;
@@ -1844,6 +1856,164 @@ const getRiskLevelText = (level) => {
     font-size: 0.85rem;
 }
 
+/* PC端左右分栏布局 */
+.desktop-layout {
+    display: flex;
+    height: 100%;
+    gap: 16px;
+    overflow: hidden;
+}
+
+.left-panel {
+    flex: 0 0 40%;
+    display: flex;
+    flex-direction: column;
+    border-right: 1px solid #e5e7eb;
+    padding-right: 16px;
+    overflow: hidden;
+}
+
+.right-panel {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+    min-height: 0;
+}
+
+.major-grid-desktop {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 8px;
+    flex-shrink: 0;
+}
+
+.major-card-desktop {
+    position: relative;
+    padding: 12px;
+    border: 2px solid #e5e7eb;
+    border-radius: 8px;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    text-align: center;
+    background: white;
+    min-height: 80px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+}
+
+.major-card-desktop:hover:not(.disabled) {
+    border-color: #cbd5e1;
+    transform: translateY(-1px);
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+}
+
+.major-card-desktop.selected {
+    border-color: #18181b;
+    background: #f8fafc;
+    box-shadow: 0 4px 16px rgba(24, 24, 27, 0.15);
+}
+
+.major-card-desktop.disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+}
+
+.sub-grid-desktop {
+    flex: 1;
+    overflow-y: auto;
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    min-height: 0;
+}
+
+.sub-group-desktop {
+    border: 1px solid #e5e7eb;
+    border-radius: 8px;
+    overflow: hidden;
+    background: #fafafa;
+    flex-shrink: 0;
+}
+
+.group-header-desktop {
+    background: #f1f5f9;
+    padding: 8px 12px;
+    font-size: 0.875rem;
+    font-weight: 600;
+    color: #475569;
+    border-bottom: 1px solid #e2e8f0;
+}
+
+.sub-cards-desktop {
+    padding: 8px;
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(120px, 1fr));
+    gap: 6px;
+}
+
+.sub-card-desktop {
+    position: relative;
+    padding: 8px;
+    border: 1px solid #e5e7eb;
+    border-radius: 6px;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    text-align: center;
+    background: white;
+    min-height: 60px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+}
+
+.sub-card-desktop:hover:not(.disabled) {
+    border-color: #cbd5e1;
+    transform: translateY(-1px);
+    box-shadow: 0 1px 4px rgba(0, 0, 0, 0.1);
+}
+
+.sub-card-desktop.selected {
+    border-color: #18181b;
+    background: #f8fafc;
+    box-shadow: 0 2px 8px rgba(24, 24, 27, 0.1);
+}
+
+.sub-card-desktop.disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+}
+
+.selection-hint-desktop {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    height: 150px;
+    flex-direction: column;
+    gap: 8px;
+    color: #6b7280;
+}
+
+/* 移动端布局 */
+.mobile-layout {
+    display: flex;
+    flex-direction: column;
+    height: 100%;
+    overflow-y: auto;
+}
+
+/* 滚动容器 */
+.step-content-scrollable {
+    flex: 1;
+    overflow-y: auto;
+    overflow-x: hidden;
+    min-height: 0;
+    padding: 0 4px;
+}
+
 /* 搜索高亮 */
 :deep(.search-highlight) {
     background: #fef3c7;
@@ -1853,26 +2023,151 @@ const getRiskLevelText = (level) => {
     font-weight: 600;
 }
 
-/* Form Actions */
-.form-actions {
-    display: flex;
-    justify-content: center;
-    gap: 16px;
-    padding-top: 24px;
-    margin-top: 16px;
-    border-top: 1px solid #f3f4f6;
+/* 移动端响应式优化 - 保持内容展示 */
+@media (max-width: 767px) {
+    .preferences-form-container {
+        padding: 0;
+        background: transparent;
+    }
+
+    .step-content {
+        padding: 0;
+        background: transparent;
+    }
+
+    .step-title {
+        font-size: 1.125rem;
+        margin: 0 0 6px 0;
+    }
+
+    .step-desc {
+        font-size: 0.875rem;
+        margin: 0 0 16px 0;
+    }
+
+    /* 经验选项移动端 - 保持卡片设计 */
+    .experience-options {
+        grid-template-columns: 1fr;
+        gap: 12px;
+        max-width: none;
+    }
+
+    .experience-option {
+        gap: 12px;
+        padding: 16px;
+        min-height: 80px;
+    }
+
+    .experience-icon {
+        font-size: 1rem;
+    }
+
+    .experience-title {
+        font-size: 0.85rem;
+    }
+
+    .experience-label {
+        font-size: 0.7rem;
+        margin-bottom: 3px;
+    }
+
+    .experience-desc {
+        font-size: 0.6rem;
+        line-height: 1.3;
+    }
+
+    /* 风险选项移动端 - 保持卡片设计 */
+    .risk-options {
+        grid-template-columns: 1fr;
+        gap: 12px;
+        max-width: none;
+        padding: 0;
+    }
+
+    .risk-option {
+        gap: 14px;
+        padding: 16px;
+        min-height: 100px;
+    }
+
+    /* 用户特征移动端 - 保持滑块设计 */
+    .traits-list {
+        grid-template-columns: 1fr;
+        gap: 10px;
+        max-width: none;
+    }
+
+    .trait-item-compact {
+        padding: 12px;
+        min-height: 60px;
+    }
+
+    /* 板块选择移动端 - 保持卡片设计 */
+    .sectors-container-compact {
+        max-width: none;
+        margin: 0;
+    }
+
+    .sectors-header {
+        flex-direction: column;
+        gap: 8px;
+        padding: 10px;
+    }
+
+    .search-section {
+        max-width: none;
+        width: 100%;
+    }
+
+    .stats-section {
+        justify-content: center;
+    }
+
+    .major-grid {
+        grid-template-columns: repeat(3, 1fr);
+    }
+
+    .sub-cards {
+        grid-template-columns: repeat(3, 1fr);
+    }
+
+    .search-grid {
+        grid-template-columns: 1fr;
+    }
 }
 
-.action-btn {
-    min-width: 120px;
-    height: 44px;
-    border-radius: 10px;
-    font-size: 1rem;
+/* 平板端优化 */
+@media (min-width: 768px) and (max-width: 1023px) {
+
+    .experience-options,
+    .risk-options {
+        grid-template-columns: 1fr;
+        gap: 16px;
+        max-width: 600px;
+    }
+
+    .major-grid {
+        grid-template-columns: repeat(4, 1fr);
+    }
+
+    .sub-cards {
+        grid-template-columns: repeat(3, 1fr);
+    }
+
+    .search-grid {
+        grid-template-columns: repeat(2, 1fr);
+    }
 }
 
-.action-btn.secondary {
-    background-color: #f1f5f9;
-    border-color: #e2e8f0;
-    color: #334155;
+/* 大屏优化 */
+@media (min-width: 1400px) {
+    .preferences-form-container {
+        max-width: 1200px;
+        margin: 0 auto;
+    }
+
+    .sectors-container-compact {
+        max-width: 1000px;
+    }
 }
 </style>

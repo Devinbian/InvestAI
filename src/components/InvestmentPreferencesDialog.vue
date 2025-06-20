@@ -145,21 +145,59 @@ const skipPreferences = () => {
     emit('preferences-skipped');
 };
 
-// Reset state when dialog is closed
+// Initialize with existing user preferences when dialog opens
+const initializePreferences = () => {
+    const existingPreferences = userStore.userInfo?.preferences;
+    console.log('Loading existing preferences:', existingPreferences);
+
+    if (existingPreferences) {
+        // Load existing preferences
+        Object.assign(localPreferences, {
+            riskLevel: existingPreferences.riskLevel || '',
+            experience: existingPreferences.experience || '',
+            userTraits: {
+                risk_tolerance: existingPreferences.userTraits?.risk_tolerance || 3,
+                active_participation: existingPreferences.userTraits?.active_participation || 3,
+                learning_willingness: existingPreferences.userTraits?.learning_willingness || 3,
+                strategy_dependency: existingPreferences.userTraits?.strategy_dependency || 2,
+                trading_frequency: existingPreferences.userTraits?.trading_frequency || 2,
+                innovation_trial: existingPreferences.userTraits?.innovation_trial || 3
+            },
+            sectors: {
+                majorCategories: existingPreferences.sectors?.majorCategories || [],
+                subCategories: existingPreferences.sectors?.subCategories || []
+            }
+        });
+        console.log('Loaded preferences:', localPreferences);
+    } else {
+        // Initialize with default values for new users
+        Object.assign(localPreferences, {
+            riskLevel: '',
+            experience: '',
+            userTraits: { risk_tolerance: 3, active_participation: 3, learning_willingness: 3, strategy_dependency: 2, trading_frequency: 2, innovation_trial: 3 },
+            sectors: { majorCategories: [], subCategories: [] }
+        });
+        console.log('No existing preferences found, using defaults');
+    }
+};
+
+// Watch for dialog open/close
 watch(visible, (newValue) => {
-    if (!newValue) {
-        // Only reset if the dialog is being hidden
+    if (newValue) {
+        // Dialog is opening - load existing preferences
+        initializePreferences();
+    } else {
+        // Dialog is closing - reset step
         setTimeout(() => {
             currentStep.value = 0;
-            Object.assign(localPreferences, {
-                riskLevel: '',
-                experience: '',
-                userTraits: { risk_tolerance: 3, active_participation: 3, learning_willingness: 3, strategy_dependency: 2, trading_frequency: 2, innovation_trial: 3 },
-                sectors: { majorCategories: [], subCategories: [] }
-            });
         }, 200); // Delay to allow fade-out animation
     }
 });
+
+// Initialize preferences on component mount if dialog is already visible
+if (visible.value) {
+    initializePreferences();
+}
 </script>
 
 <style scoped>

@@ -1,7 +1,7 @@
 <template>
     <div class="preferences-form-container">
         <!-- 步骤1: 投资经验 -->
-        <div v-if="currentStep === 0" class="step-content">
+        <div v-if="currentStep === 0" class="step-content" data-step="0">
             <h3 class="step-title">{{ preferenceSteps[0].title }}</h3>
             <p class="step-desc">{{ preferenceSteps[0].desc }}</p>
 
@@ -29,7 +29,7 @@
         </div>
 
         <!-- 步骤2: 选择投资风格 -->
-        <div v-if="currentStep === 1" class="step-content">
+        <div v-if="currentStep === 1" class="step-content" data-step="1">
             <h3 class="step-title">{{ preferenceSteps[1].title }}</h3>
             <p class="step-desc">{{ preferenceSteps[1].desc }}</p>
 
@@ -77,7 +77,7 @@
         </div>
 
         <!-- 步骤3: 用户特征 -->
-        <div v-if="currentStep === 2" class="step-content">
+        <div v-if="currentStep === 2" class="step-content" data-step="2">
             <h3 class="step-title">{{ preferenceSteps[2].title }}</h3>
             <p class="step-desc">{{ preferenceSteps[2].desc }}</p>
 
@@ -132,7 +132,7 @@
         </div>
 
         <!-- 步骤4: 关注板块 -->
-        <div v-if="currentStep === 3" class="step-content">
+        <div v-if="currentStep === 3" class="step-content" data-step="3">
             <h3 class="step-title">{{ preferenceSteps[3].title }}</h3>
             <p class="step-desc">{{ preferenceSteps[3].desc }}</p>
 
@@ -299,6 +299,16 @@
                     </div>
                 </div>
             </div>
+        </div>
+
+        <!-- 操作按钮 -->
+        <div v-if="showActions" class="action-buttons">
+            <el-button v-if="currentStep > 0" class="action-btn" @click="handlePrevious">
+                上一步
+            </el-button>
+            <el-button class="action-btn primary" @click="handleNext" :disabled="!isStepValid">
+                {{ isLastStep ? '完成' : '下一步' }}
+            </el-button>
         </div>
     </div>
 </template>
@@ -986,6 +996,12 @@ onUnmounted(() => {
     .step-desc {
         font-size: 1rem;
         margin-bottom: 24px;
+    }
+
+    /* PC端特别增加滚动容器的底部间距 */
+    .step-content-scrollable {
+        padding: 0 4px 32px 4px;
+        /* PC端增加更多底部间距 */
     }
 }
 
@@ -2019,7 +2035,8 @@ onUnmounted(() => {
     overflow-y: auto;
     overflow-x: hidden;
     min-height: 0;
-    padding: 0 4px;
+    padding: 0 4px 24px 4px;
+    /* 添加底部24px padding */
 }
 
 /* 搜索高亮 */
@@ -2031,95 +2048,445 @@ onUnmounted(() => {
     font-weight: 600;
 }
 
-/* 移动端响应式优化 - 保持内容展示 */
+/* 操作按钮区域 - PC端 */
+.action-buttons {
+    display: flex;
+    justify-content: center;
+    /* 按钮居中显示 */
+    align-items: center;
+    gap: 16px;
+    /* 增加按钮间距 */
+    padding: 24px 20px;
+    /* 添加左右安全间隔 */
+    border-top: 1px solid #e5e7eb;
+    /* 添加顶部分割线 */
+    margin-top: 32px;
+    /* 增加与内容的间距 */
+    flex-shrink: 0;
+    position: static;
+    /* 移除固定定位 */
+    background: transparent;
+}
+
+.action-btn {
+    height: 44px;
+    font-size: 1rem;
+    border-radius: 8px;
+    min-width: 120px;
+    transition: all 0.2s ease;
+    border: 1px solid #d1d5db;
+    background: white;
+    color: #374151;
+}
+
+.action-btn:hover {
+    background: #f9fafb;
+    border-color: #9ca3af;
+}
+
+.action-btn.primary {
+    background: #18181b;
+    border-color: #18181b;
+    color: white;
+}
+
+.action-btn.primary:hover {
+    background: #374151;
+    border-color: #374151;
+}
+
+/* 移动端响应式优化 - 增强用户体验 */
 @media (max-width: 767px) {
     .preferences-form-container {
         padding: 0;
         background: transparent;
+        min-height: auto;
+        height: auto;
     }
 
     .step-content {
         padding: 0;
         background: transparent;
+        height: auto;
+        min-height: auto;
+        display: flex;
+        flex-direction: column;
     }
 
     .step-title {
-        font-size: 1.125rem;
-        margin: 0 0 6px 0;
+        font-size: 1.2rem;
+        margin: 0 0 8px 0;
+        font-weight: 600;
+        color: #1f2937;
+        text-align: center;
+        padding: 0 16px;
     }
 
     .step-desc {
-        font-size: 0.875rem;
-        margin: 0 0 16px 0;
+        font-size: 0.9rem;
+        margin: 0 0 20px 0;
+        color: #6b7280;
+        text-align: center;
+        line-height: 1.5;
+        padding: 0 16px;
     }
 
-    /* 经验选项移动端 - 保持卡片设计 */
+    /* 滚动容器优化 */
+    .step-content-scrollable {
+        flex: 1;
+        overflow-y: auto;
+        overflow-x: hidden;
+        -webkit-overflow-scrolling: touch;
+        padding: 0 12px 30px 12px;
+        /* 增加底部留白 */
+        min-height: 0;
+        height: auto;
+        /* 内容高度自适应，移除最大高度限制 */
+        scroll-behavior: smooth;
+    }
+
+    /* 针对内容较少的步骤（如投资经验）进行特殊处理 */
+    .step-content[data-step="0"] .step-content-scrollable,
+    .step-content[data-step="1"] .step-content-scrollable {
+        display: block;
+        /* 移除flex布局，让内容自然堆叠 */
+    }
+
+    /* 针对内容较多的步骤（如板块选择）也保持自适应高度 */
+    .step-content[data-step="3"] .step-content-scrollable {
+        max-height: none;
+        /* 移除高度限制 */
+        overflow-y: visible;
+        /* 允许内容正常显示 */
+    }
+
+    /* 确保经验选项容器不会被拉伸 */
+    .step-content[data-step="0"] {
+        min-height: auto;
+        height: auto;
+        justify-content: flex-start;
+    }
+
+    .step-content[data-step="0"] .experience-options {
+        margin-bottom: 20px;
+    }
+
+    /* 风险选项容器高度优化 */
+    .step-content[data-step="1"] {
+        min-height: auto;
+        height: auto;
+        justify-content: flex-start;
+    }
+
+    .step-content[data-step="1"] .risk-options {
+        margin-bottom: 20px;
+    }
+
+    /* 经验选项移动端 - 增强卡片设计 */
     .experience-options {
         grid-template-columns: 1fr;
-        gap: 12px;
+        gap: 16px;
         max-width: none;
+        padding: 0;
+        /* 确保内容自适应高度 */
+        height: auto;
+        min-height: auto;
     }
 
     .experience-option {
-        gap: 12px;
-        padding: 16px;
-        min-height: 80px;
+        gap: 16px;
+        padding: 20px;
+        min-height: 100px;
+        border-radius: 16px;
+        border: 2px solid #e5e7eb;
+        background: #ffffff;
+        transition: all 0.3s ease;
+        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04);
+        /* 触摸优化 */
+        -webkit-tap-highlight-color: transparent;
+        touch-action: manipulation;
+    }
+
+    .experience-option:active {
+        transform: scale(0.98);
+        box-shadow: 0 1px 4px rgba(0, 0, 0, 0.1);
+    }
+
+    .experience-option.selected {
+        border-color: #18181b;
+        background: #f8fafc;
+        box-shadow: 0 4px 12px rgba(24, 24, 27, 0.1);
+    }
+
+    .experience-content {
+        flex: 1;
+    }
+
+    .experience-header {
+        margin-bottom: 12px;
     }
 
     .experience-icon {
-        font-size: 1rem;
+        font-size: 1.2rem;
+        margin-right: 12px;
     }
 
     .experience-title {
-        font-size: 0.85rem;
+        font-size: 1rem;
+        font-weight: 600;
+        color: #1f2937;
     }
 
     .experience-label {
-        font-size: 0.7rem;
-        margin-bottom: 3px;
+        font-size: 0.75rem;
+        margin-bottom: 6px;
+        color: #6b7280;
+        font-weight: 500;
     }
 
     .experience-desc {
-        font-size: 0.6rem;
-        line-height: 1.3;
+        font-size: 0.8rem;
+        line-height: 1.4;
+        color: #6b7280;
     }
 
-    /* 风险选项移动端 - 保持卡片设计 */
+    /* 风险选项移动端 - 增强卡片设计 */
     .risk-options {
         grid-template-columns: 1fr;
-        gap: 12px;
+        gap: 16px;
         max-width: none;
         padding: 0;
     }
 
     .risk-option {
-        gap: 14px;
-        padding: 16px;
-        min-height: 100px;
+        gap: 16px;
+        padding: 20px;
+        min-height: 140px;
+        border-radius: 16px;
+        border: 2px solid #e5e7eb;
+        background: #ffffff;
+        transition: all 0.3s ease;
+        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04);
+        /* 触摸优化 */
+        -webkit-tap-highlight-color: transparent;
+        touch-action: manipulation;
     }
 
-    /* 用户特征移动端 - 保持滑块设计 */
+    .risk-option:active {
+        transform: scale(0.98);
+        box-shadow: 0 1px 4px rgba(0, 0, 0, 0.1);
+    }
+
+    .risk-option.selected {
+        border-color: #18181b;
+        background: #f8fafc;
+        box-shadow: 0 4px 12px rgba(24, 24, 27, 0.1);
+    }
+
+    .option-header {
+        margin-bottom: 12px;
+    }
+
+    .option-title {
+        font-size: 1rem;
+        font-weight: 600;
+        color: #1f2937;
+        margin-bottom: 8px;
+    }
+
+    .option-icon {
+        font-size: 1.2rem;
+        margin-right: 8px;
+    }
+
+    .risk-level-indicator {
+        margin-bottom: 8px;
+    }
+
+    .risk-dot {
+        width: 8px;
+        height: 8px;
+        margin-right: 4px;
+    }
+
+    .option-desc {
+        font-size: 0.8rem;
+        color: #6b7280;
+        line-height: 1.4;
+        margin-bottom: 12px;
+    }
+
+    .simple-desc {
+        font-size: 0.75rem;
+        color: #9ca3af;
+        margin-bottom: 12px;
+    }
+
+    .option-metrics {
+        gap: 8px;
+        margin-bottom: 10px;
+    }
+
+    .metric-item {
+        flex: 1;
+        padding: 8px;
+        border-radius: 8px;
+        background: #f9fafb;
+    }
+
+    .metric-label {
+        font-size: 0.7rem;
+        display: block;
+        margin-bottom: 2px;
+    }
+
+    .metric-value {
+        font-size: 0.8rem;
+        font-weight: 600;
+    }
+
+    .option-examples {
+        margin-top: 8px;
+    }
+
+    .examples-label {
+        font-size: 0.75rem;
+        margin-right: 6px;
+    }
+
+    .examples-text {
+        font-size: 0.75rem;
+        color: #6b7280;
+    }
+
+    /* 用户特征移动端 - 增强滑块设计 */
+    .traits-container {
+        padding: 0;
+    }
+
+    .traits-hint {
+        padding: 16px;
+        margin-bottom: 20px;
+        border-radius: 12px;
+        background: #f0f9ff;
+        border: 1px solid #bae6fd;
+    }
+
     .traits-list {
         grid-template-columns: 1fr;
-        gap: 10px;
+        gap: 16px;
         max-width: none;
     }
 
     .trait-item-compact {
-        padding: 12px;
-        min-height: 60px;
+        padding: 20px;
+        min-height: 80px;
+        border-radius: 16px;
+        border: 2px solid #e5e7eb;
+        background: #ffffff;
+        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04);
     }
 
-    /* 板块选择移动端 - 保持卡片设计 */
+    .trait-header-compact {
+        margin-bottom: 16px;
+    }
+
+    .trait-left {
+        gap: 12px;
+    }
+
+    .trait-icon {
+        font-size: 1.2rem;
+    }
+
+    .trait-title {
+        font-size: 1rem;
+        font-weight: 600;
+        color: #1f2937;
+        margin-bottom: 4px;
+    }
+
+    .trait-desc {
+        font-size: 0.8rem;
+        color: #6b7280;
+        line-height: 1.3;
+    }
+
+    .trait-current-value {
+        font-size: 1.1rem;
+        font-weight: 700;
+        color: #18181b;
+        background: #f1f5f9;
+        padding: 6px 12px;
+        border-radius: 8px;
+        min-width: 50px;
+        text-align: center;
+    }
+
+    .trait-slider-container {
+        margin-bottom: 12px;
+    }
+
+    .slider-track {
+        height: 6px;
+        border-radius: 3px;
+        margin-bottom: 12px;
+    }
+
+    .slider-options {
+        gap: 12px;
+    }
+
+    .slider-option {
+        flex: 1;
+        padding: 12px 6px;
+        border-radius: 8px;
+        transition: all 0.2s ease;
+        /* 触摸优化 */
+        -webkit-tap-highlight-color: transparent;
+        touch-action: manipulation;
+        min-height: 48px;
+    }
+
+    .slider-option:active {
+        transform: scale(0.95);
+    }
+
+    .option-dot {
+        width: 12px;
+        height: 12px;
+        margin-bottom: 4px;
+    }
+
+    .option-label {
+        font-size: 0.9rem;
+        font-weight: 600;
+    }
+
+    .trait-description {
+        font-size: 0.8rem;
+        color: #6b7280;
+        text-align: center;
+        padding: 8px 12px;
+        background: #f9fafb;
+        border-radius: 8px;
+    }
+
+    /* 板块选择移动端 - 增强卡片设计 */
     .sectors-container-compact {
         max-width: none;
         margin: 0;
+        padding: 0;
     }
 
     .sectors-header {
         flex-direction: column;
-        gap: 8px;
-        padding: 10px;
+        gap: 12px;
+        padding: 16px;
+        background: #ffffff;
+        border-radius: 16px;
+        margin-bottom: 16px;
+        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04);
     }
 
     .search-section {
@@ -2127,20 +2494,256 @@ onUnmounted(() => {
         width: 100%;
     }
 
+    .compact-search {
+        border-radius: 12px;
+    }
+
+    .compact-search :deep(.el-input__wrapper) {
+        border-radius: 12px;
+        border: 2px solid #e5e7eb;
+        height: 44px;
+        transition: all 0.2s ease;
+    }
+
+    .compact-search :deep(.el-input__wrapper:focus-within) {
+        border-color: #18181b;
+        box-shadow: 0 0 0 3px rgba(24, 24, 27, 0.1);
+    }
+
     .stats-section {
         justify-content: center;
+        gap: 12px;
+    }
+
+    .stat-chip {
+        padding: 6px 12px;
+        border-radius: 8px;
+        font-size: 0.8rem;
+        font-weight: 500;
+    }
+
+    .sectors-content {
+        padding: 0;
+    }
+
+    .selection-mode {
+        background: transparent;
+        padding: 0;
+    }
+
+    .selection-layout {
+        flex-direction: column;
+        gap: 16px;
+    }
+
+    .major-selector {
+        width: 100%;
+        margin-bottom: 16px;
     }
 
     .major-grid {
-        grid-template-columns: repeat(3, 1fr);
+        grid-template-columns: repeat(2, 1fr);
+        gap: 12px;
+    }
+
+    .major-card {
+        padding: 16px;
+        border-radius: 12px;
+        min-height: 80px;
+        /* 触摸优化 */
+        -webkit-tap-highlight-color: transparent;
+        touch-action: manipulation;
+    }
+
+    .major-card:active {
+        transform: scale(0.98);
+    }
+
+    .sub-selector {
+        width: 100%;
     }
 
     .sub-cards {
-        grid-template-columns: repeat(3, 1fr);
+        grid-template-columns: repeat(2, 1fr);
+        gap: 8px;
+    }
+
+    .sub-card {
+        padding: 12px;
+        border-radius: 10px;
+        min-height: 60px;
+        font-size: 0.8rem;
+        /* 触摸优化 */
+        -webkit-tap-highlight-color: transparent;
+        touch-action: manipulation;
+    }
+
+    .sub-card:active {
+        transform: scale(0.98);
+    }
+
+    .search-mode {
+        padding: 0;
+    }
+
+    .search-header {
+        padding: 16px;
+        margin-bottom: 16px;
+        background: #f8fafc;
+        border-radius: 12px;
+        font-size: 0.9rem;
+        font-weight: 600;
+        color: #374151;
+        text-align: center;
     }
 
     .search-grid {
         grid-template-columns: 1fr;
+        gap: 12px;
+    }
+
+    .sector-card {
+        padding: 16px;
+        border-radius: 12px;
+        min-height: 80px;
+        /* 触摸优化 */
+        -webkit-tap-highlight-color: transparent;
+        touch-action: manipulation;
+    }
+
+    .sector-card:active {
+        transform: scale(0.98);
+    }
+
+    .card-icon {
+        font-size: 1.2rem;
+        margin-bottom: 8px;
+    }
+
+    .card-title {
+        font-size: 1rem;
+        font-weight: 600;
+        margin-bottom: 4px;
+    }
+
+    .card-desc {
+        font-size: 0.8rem;
+        color: #6b7280;
+        margin-bottom: 6px;
+    }
+
+    .card-parent {
+        font-size: 0.7rem;
+        color: #9ca3af;
+    }
+
+    .card-check {
+        font-size: 1.2rem;
+        color: #059669;
+        font-weight: bold;
+    }
+
+    .no-results {
+        padding: 40px 20px;
+        text-align: center;
+    }
+
+    .no-results-icon {
+        font-size: 3rem;
+        margin-bottom: 16px;
+        opacity: 0.5;
+    }
+
+    .no-results-text {
+        font-size: 1.1rem;
+        font-weight: 600;
+        color: #374151;
+        margin-bottom: 8px;
+    }
+
+    .no-results-hint {
+        font-size: 0.9rem;
+        color: #6b7280;
+        line-height: 1.4;
+    }
+
+    /* 操作按钮移动端优化 */
+    .action-buttons {
+        display: flex;
+        justify-content: center;
+        /* 移动端按钮也居中显示 */
+        align-items: center;
+        gap: 10px;
+        /* 精细调整按钮间距 */
+        padding: 18px 16px;
+        /* 减少上下padding */
+        background: transparent;
+        border-top: 1px solid #e5e7eb;
+        /* 添加顶部分割线 */
+        position: static;
+        /* 移除固定定位 */
+        margin-top: 28px;
+        /* 移动端增加与内容的间距 */
+        margin-left: 0;
+        /* 确保贴边 */
+        margin-right: 0;
+        /* 确保贴边 */
+        flex-shrink: 0;
+        /* 安全区域适配 */
+        padding-bottom: calc(18px + env(safe-area-inset-bottom, 0px));
+    }
+
+    .action-buttons .action-btn {
+        height: 42px;
+        /* 减小按钮高度 */
+        font-size: 0.9rem;
+        /* 减小字体 */
+        border-radius: 10px;
+        /* 减小圆角 */
+        min-width: 100px;
+        /* 减小最小宽度 */
+        padding: 0 16px;
+        /* 添加水平内边距 */
+        font-weight: 500;
+        /* 调整字重 */
+        /* 触摸优化 */
+        -webkit-tap-highlight-color: transparent;
+        touch-action: manipulation;
+    }
+
+    .action-buttons .action-btn:active {
+        transform: scale(0.98);
+    }
+
+    .action-buttons .action-btn.primary {
+        background: #18181b;
+        border-color: #18181b;
+        color: #ffffff;
+        box-shadow: 0 2px 8px rgba(24, 24, 27, 0.15);
+        /* 添加细微阴影 */
+    }
+
+    .action-buttons .action-btn.primary:hover {
+        background: #374151;
+        border-color: #374151;
+        box-shadow: 0 3px 12px rgba(24, 24, 27, 0.2);
+        /* 悬停时增强阴影 */
+    }
+
+    /* 移动端二级按钮样式优化 */
+    .action-buttons .action-btn:not(.primary) {
+        border: 1px solid #d1d5db;
+        background: #ffffff;
+        color: #6b7280;
+        box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+        /* 添加轻微阴影 */
+    }
+
+    .action-buttons .action-btn:not(.primary):hover {
+        background: #f9fafb;
+        border-color: #9ca3af;
+        box-shadow: 0 2px 6px rgba(0, 0, 0, 0.1);
+        /* 悬停时增强阴影 */
     }
 }
 

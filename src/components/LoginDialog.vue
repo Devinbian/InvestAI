@@ -52,7 +52,7 @@
                 <div class="third-party-login">
                     <el-button class="wechat-login-btn" @click="handleWechatLogin" :loading="wechatLoginLoading">
                         <div class="wechat-icon">
-                            <svg width="20" height="20" viewBox="0 0 1024 1024" fill="currentColor">
+                            <svg width="40" height="40" viewBox="0 0 1024 1024" fill="currentColor">
                                 <path
                                     d="M690.1 377.4c5.9 0 11.8 0.2 17.6 0.5-15.8-73.3-102.2-127.9-204.1-127.9-114.9 0-208.7 77.3-208.7 172.5 0 55.4 30.2 100.8 80.7 136.1l-20.2 60.5 70.4-35.2c25.1 5 45.2 10.1 70.4 10.1 6.5 0 13-0.3 19.4-0.8-4.1-14.1-6.4-28.9-6.4-44.2 0-88.8 75.1-160.6 180.9-160.6z m-114.3-41.9c15.1 0 25.1 10.1 25.1 25.1 0 15-10.1 25.1-25.1 25.1-15.1 0-30.2-10.1-30.2-25.1 0-15 15.1-25.1 30.2-25.1z m-125.7 50.2c-15.1 0-30.2-10.1-30.2-25.1 0-15 15.1-25.1 30.2-25.1 15 0 25.1 10.1 25.1 25.1 0 15-10.1 25.1-25.1 25.1z" />
                                 <path
@@ -177,53 +177,67 @@ const handleLogin = async () => {
     await loginFormRef.value.validate(async (valid) => {
         if (valid) {
             loginLoading.value = true;
-            let res = {};
-            let isNewUser = false;
-            if(isRegisterMode.value){
-                // 注册操作
-                res = await register({
-                    account: loginForm.username.trim(),
-                    password: loginForm.password.trim(),
-                    confirmPassword: loginForm.confirmPassword.trim(),
-                    phone: loginForm.phone.trim()
-                });
-                isNewUser = true;
-            }else{
-                // 登录操作
-                res = await login({
-                    account: loginForm.username.trim(),
-                    password: loginForm.password.trim()
-                });
+            try {
+                let res = {};
+                let isNewUser = false;
+                if (isRegisterMode.value) {
+                    // 注册操作
+                    res = await register({
+                        account: loginForm.username.trim(),
+                        password: loginForm.password.trim(),
+                        confirmPassword: loginForm.confirmPassword.trim(),
+                        phone: loginForm.phone.trim()
+                    });
+                    isNewUser = true;
+                } else {
+                    // 登录操作
+                    res = await login({
+                        account: loginForm.username.trim(),
+                        password: loginForm.password.trim()
+                    });
+                }
+
+                if (res && res.data && res.data.success) {
+                    let userPortrait = res.data.data.userPortrait || {};
+                    let userInfo = {
+                        nickname: res.data.data.nickname,
+                        isNewUser: isNewUser,
+                        preferences: {
+                            investStyle: userPortrait.investStyle,
+                            investExperience: userPortrait.investExperience,
+                            riskTolerance: userPortrait.riskTolerance,
+                            involveLevel: userPortrait.involveLevel,
+                            learnIntention: userPortrait.learnIntention,
+                            strategyComplexity: userPortrait.strategyComplexity,
+                            tradeFrequency: userPortrait.tradeFrequency,
+                            innovationAcceptance: userPortrait.innovationAcceptance,
+                            focusIndustry: userPortrait.focusIndustry
+                        }
+                    };
+                    userStore.setUserInfo(userInfo);
+                    userStore.setToken(res.data.data.token);
+
+                    closeDialog();
+
+                    emit('login-success', {
+                        isNewUser: isNewUser,
+                        userInfo: userInfo
+                    });
+                } else {
+                    // 处理登录/注册失败的情况
+                    ElMessage.error(res?.message || (isRegisterMode.value ? '注册失败，请重试' : '登录失败，请检查用户名和密码'));
+                }
+            } catch (error) {
+                // 处理网络错误或其他异常
+                console.error('登录/注册错误:', error);
+                if (error.message && error.message.includes('CORS')) {
+                    ElMessage.error('网络连接错误，请联系管理员解决跨域问题');
+                } else {
+                    ElMessage.error(isRegisterMode.value ? '注册失败，请重试' : '登录失败，请重试');
+                }
+            } finally {
+                loginLoading.value = false;
             }
-
-            if(res && res.data && res.data.success){
-                let userPortrait = res.data.data.userPortrait || {};
-                let userInfo = {
-                    nickname: res.data.data.nickname,
-                    isNewUser: isNewUser,
-                    preferences:{
-                        investStyle: userPortrait.investStyle,
-                        investExperience: userPortrait.investExperience,
-                        riskTolerance: userPortrait.riskTolerance,
-                        involveLevel: userPortrait.involveLevel,
-                        learnIntention: userPortrait.learnIntention,
-                        strategyComplexity: userPortrait.strategyComplexity,
-                        tradeFrequency: userPortrait.tradeFrequency,
-                        innovationAcceptance: userPortrait.innovationAcceptance,
-                        focusIndustry: userPortrait.focusIndustry
-                    }
-                };
-                userStore.setUserInfo(userInfo);
-                userStore.setToken(res.data.data.token);
-
-                closeDialog();
-
-                emit('login-success', {
-                    isNewUser: isNewUser,
-                    userInfo: userInfo
-                });
-            }
-            loginLoading.value = false; 
         }
     });
 };
@@ -236,14 +250,28 @@ const handleWechatLogin = async () => {
 
         // 模拟微信登录API调用
         setTimeout(() => {
+            const openid = 'mock_openid_' + Date.now();
             const token = 'mock-wechat-token-' + Date.now();
+
+            // 检查是否是第一次微信登录
+            // 通过检查本地存储中是否有该openid的记录来判断
+            const wechatLoginHistory = JSON.parse(localStorage.getItem('wechat_login_history') || '[]');
+            const isNewUser = !wechatLoginHistory.includes(openid);
+
             const userInfo = {
                 username: 'wechat_user_' + Date.now(),
                 nickname: '微信用户',
                 avatar: '/logo.png',
                 loginType: 'wechat',
-                openid: 'mock_openid_' + Date.now()
+                openid: openid,
+                isNewUser: isNewUser
             };
+
+            // 如果是第一次登录，记录该openid
+            if (isNewUser) {
+                wechatLoginHistory.push(openid);
+                localStorage.setItem('wechat_login_history', JSON.stringify(wechatLoginHistory));
+            }
 
             userStore.setToken(token);
             userStore.setUserInfo(userInfo);
@@ -252,9 +280,9 @@ const handleWechatLogin = async () => {
             wechatLoginLoading.value = false;
             closeDialog();
 
-            // 触发登录成功事件
+            // 触发登录成功事件，传递是否为新用户的标识
             emit('login-success', {
-                isNewUser: false,
+                isNewUser: isNewUser,
                 userInfo
             });
         }, 2000);

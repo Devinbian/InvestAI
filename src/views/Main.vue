@@ -1850,12 +1850,16 @@ const handleRecoverySuccess = () => {
 
 
 const handleCommand = (command) => {
+    console.log('Menu command clicked:', command); // 添加调试日志
     switch (command) {
         case 'profile':
             showUserProfile.value = true;
             break;
         case 'settings':
+            console.log('Setting preferencesDialogVisible to true'); // 添加调试日志
+            console.log('preferencesDialogVisible before:', preferencesDialogVisible.value); // 查看之前的值
             preferencesDialogVisible.value = true;
+            console.log('preferencesDialogVisible after:', preferencesDialogVisible.value); // 查看之后的值
             break;
         case 'records':
             showRecordsCenter.value = true;
@@ -7683,6 +7687,10 @@ body {
     border-radius: 18px;
 }
 
+:deep(.el-dialog.preferences-dialog) {
+    border-radius: 24px !important;
+}
+
 :deep(.el-form-item__content) {
     align-items: center;
 }
@@ -7698,11 +7706,19 @@ body {
 
 /* 投资偏好设置对话框样式 */
 :deep(.preferences-dialog) {
-    border-radius: 16px;
+    border-radius: 24px !important;
     overflow: hidden;
     box-shadow: 0 8px 32px rgba(0, 0, 0, 0.12);
     border: 1px solid #e5e7eb;
     max-height: 90vh;
+}
+
+:deep(.preferences-dialog .el-dialog) {
+    border-radius: 24px !important;
+}
+
+:deep(.el-dialog.preferences-dialog) {
+    border-radius: 24px !important;
 }
 
 :deep(.preferences-dialog .el-dialog__header) {
@@ -7724,7 +7740,7 @@ body {
     flex-direction: column;
     max-width: 100%;
     overflow-x: hidden;
-    border-radius: 16px;
+    border-radius: 24px;
 }
 
 .preferences-header {

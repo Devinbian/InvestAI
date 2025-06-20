@@ -1,6 +1,6 @@
 <template>
     <el-dialog v-model="visible" :show-close="false" :close-on-click-modal="false" :lock-scroll="false"
-        :width="dialogWidth" class="preferences-dialog">
+        :width="dialogWidth" class="preferences-dialog" append-to-body>
         <template #header>
             <div></div>
         </template>
@@ -58,7 +58,7 @@
 </template>
 
 <script setup>
-import { ref, reactive, computed, watch, onMounted, onUnmounted } from 'vue';
+import { ref, reactive, computed, watch, onMounted, onUnmounted, nextTick } from 'vue';
 import { ElMessage } from 'element-plus';
 import { useUserStore } from '@/store/user';
 import InvestmentPreferencesForm from './InvestmentPreferencesForm.vue';
@@ -89,9 +89,45 @@ const dialogWidth = computed(() => {
     return '900px';
 });
 
+// Reactive data - 首先定义所有响应式变量
+const visible = computed({
+    get: () => {
+        console.log('InvestmentPreferencesDialog visible getter:', props.modelValue);
+        return props.modelValue;
+    },
+    set: (value) => {
+        console.log('InvestmentPreferencesDialog visible setter:', value);
+        emit('update:modelValue', value);
+    }
+});
+
+// 调整弹窗位置的函数（简化版）
+const adjustDialogPosition = () => {
+    // 简化处理，主要依靠CSS
+    if (!visible.value) return;
+
+    nextTick(() => {
+        const dialogElement = document.querySelector('.preferences-dialog');
+        if (dialogElement) {
+            // 简单的动态调整，确保弹窗在视口内
+            const rect = dialogElement.getBoundingClientRect();
+            const viewportHeight = window.innerHeight;
+
+            if (rect.height > viewportHeight * 0.9) {
+                dialogElement.style.marginTop = '20px';
+                dialogElement.style.marginBottom = '20px';
+            }
+        }
+    });
+};
+
 // 窗口大小监听
 const handleResize = () => {
     windowWidth.value = window.innerWidth;
+    // 延迟调整弹窗位置，确保DOM更新完成
+    nextTick(() => {
+        adjustDialogPosition();
+    });
 };
 
 onMounted(() => {
@@ -102,16 +138,29 @@ onUnmounted(() => {
     window.removeEventListener('resize', handleResize);
 });
 
-// Reactive data
-const visible = computed({
-    get: () => props.modelValue,
-    set: (value) => emit('update:modelValue', value)
-});
-
+// 定义所有基本响应式变量
 const preferencesLoading = ref(false);
 const currentStep = ref(0);
 const totalSteps = 4; // Total number of steps in the form
 
+// 监听弹窗显示状态
+watch(visible, (newValue) => {
+    console.log('Dialog visibility changed:', newValue);
+    if (newValue) {
+        // 弹窗打开时初始化偏好设置
+        initializePreferences();
+        setTimeout(() => {
+            adjustDialogPosition();
+        }, 100);
+    } else {
+        // 弹窗关闭时重置步骤
+        setTimeout(() => {
+            currentStep.value = 0;
+        }, 200);
+    }
+});
+
+// 定义偏好设置数据
 const localPreferences = reactive({
     riskLevel: '',
     experience: '',
@@ -129,10 +178,6 @@ const localPreferences = reactive({
     }
 });
 
-function handlePreferencesUpdate(newPrefs) {
-    Object.assign(localPreferences, newPrefs);
-}
-
 // Computed property to check if the current step is valid for proceeding
 const isStepValid = computed(() => {
     switch (currentStep.value) {
@@ -149,6 +194,53 @@ const isStepValid = computed(() => {
             return false;
     }
 });
+
+// 监听步骤变化
+watch(currentStep, () => {
+    setTimeout(() => {
+        adjustDialogPosition();
+    }, 100);
+});
+
+// Initialize with existing user preferences when dialog opens
+const initializePreferences = () => {
+    const existingPreferences = userStore.userInfo?.preferences;
+    console.log('Loading existing preferences:', existingPreferences);
+
+    if (existingPreferences) {
+        // Load existing preferences
+        Object.assign(localPreferences, {
+            riskLevel: existingPreferences.riskLevel || '',
+            experience: existingPreferences.experience || '',
+            userTraits: {
+                risk_tolerance: existingPreferences.userTraits?.risk_tolerance || 3,
+                active_participation: existingPreferences.userTraits?.active_participation || 3,
+                learning_willingness: existingPreferences.userTraits?.learning_willingness || 3,
+                strategy_dependency: existingPreferences.userTraits?.strategy_dependency || 2,
+                trading_frequency: existingPreferences.userTraits?.trading_frequency || 2,
+                innovation_trial: existingPreferences.userTraits?.innovation_trial || 3
+            },
+            sectors: {
+                majorCategories: existingPreferences.sectors?.majorCategories || [],
+                subCategories: existingPreferences.sectors?.subCategories || []
+            }
+        });
+        console.log('Loaded preferences:', localPreferences);
+    } else {
+        // Initialize with default values for new users
+        Object.assign(localPreferences, {
+            riskLevel: '',
+            experience: '',
+            userTraits: { risk_tolerance: 3, active_participation: 3, learning_willingness: 3, strategy_dependency: 2, trading_frequency: 2, innovation_trial: 3 },
+            sectors: { majorCategories: [], subCategories: [] }
+        });
+        console.log('No existing preferences found, using defaults');
+    }
+};
+
+function handlePreferencesUpdate(newPrefs) {
+    Object.assign(localPreferences, newPrefs);
+}
 
 // Methods
 const nextStep = () => {
@@ -196,42 +288,6 @@ const skipPreferences = () => {
     emit('preferences-skipped');
 };
 
-// Initialize with existing user preferences when dialog opens
-const initializePreferences = () => {
-    const existingPreferences = userStore.userInfo?.preferences;
-    console.log('Loading existing preferences:', existingPreferences);
-
-    if (existingPreferences) {
-        // Load existing preferences
-        Object.assign(localPreferences, {
-            riskLevel: existingPreferences.riskLevel || '',
-            experience: existingPreferences.experience || '',
-            userTraits: {
-                risk_tolerance: existingPreferences.userTraits?.risk_tolerance || 3,
-                active_participation: existingPreferences.userTraits?.active_participation || 3,
-                learning_willingness: existingPreferences.userTraits?.learning_willingness || 3,
-                strategy_dependency: existingPreferences.userTraits?.strategy_dependency || 2,
-                trading_frequency: existingPreferences.userTraits?.trading_frequency || 2,
-                innovation_trial: existingPreferences.userTraits?.innovation_trial || 3
-            },
-            sectors: {
-                majorCategories: existingPreferences.sectors?.majorCategories || [],
-                subCategories: existingPreferences.sectors?.subCategories || []
-            }
-        });
-        console.log('Loaded preferences:', localPreferences);
-    } else {
-        // Initialize with default values for new users
-        Object.assign(localPreferences, {
-            riskLevel: '',
-            experience: '',
-            userTraits: { risk_tolerance: 3, active_participation: 3, learning_willingness: 3, strategy_dependency: 2, trading_frequency: 2, innovation_trial: 3 },
-            sectors: { majorCategories: [], subCategories: [] }
-        });
-        console.log('No existing preferences found, using defaults');
-    }
-};
-
 // Watch for dialog open/close
 watch(visible, (newValue) => {
     if (newValue) {
@@ -244,20 +300,29 @@ watch(visible, (newValue) => {
         }, 200); // Delay to allow fade-out animation
     }
 });
-
-// Initialize preferences on component mount if dialog is already visible
-if (visible.value) {
-    initializePreferences();
-}
 </script>
 
 <style scoped>
 /* 投资偏好弹窗样式 - 参考登录弹窗设计 */
 :deep(.preferences-dialog) {
-    border-radius: 16px;
+    border-radius: 24px !important;
     overflow: hidden;
     box-shadow: 0 8px 32px rgba(0, 0, 0, 0.12);
     border: 1px solid #e5e7eb;
+}
+
+/* 强制覆盖Element Plus的默认样式 */
+:deep(.el-dialog.preferences-dialog) {
+    border-radius: 24px !important;
+}
+
+:deep(.preferences-dialog.el-dialog) {
+    border-radius: 24px !important;
+}
+
+/* 针对Element Plus的具体DOM结构 */
+:deep(.el-overlay .preferences-dialog) {
+    border-radius: 24px !important;
 }
 
 :deep(.preferences-dialog .el-dialog__header) {
@@ -270,25 +335,31 @@ if (visible.value) {
     overflow: hidden;
 }
 
-/* 移动端弹窗优化 - 减少间距，充分利用屏幕空间 */
+/* 移动端弹窗优化 */
 @media (max-width: 767px) {
     :deep(.preferences-dialog) {
-        margin: 8px !important;
-        width: calc(100vw - 16px) !important;
-        max-width: none !important;
-        max-height: calc(100vh - 16px) !important;
-        border-radius: 12px;
+        width: calc(100vw - 20px) !important;
+        max-height: calc(100vh - 20px) !important;
+        margin: 10px auto !important;
+        border-radius: 20px !important;
+    }
+
+    :deep(.el-dialog.preferences-dialog) {
+        border-radius: 20px !important;
+    }
+
+    :deep(.preferences-dialog.el-dialog) {
+        border-radius: 20px !important;
     }
 }
 
-/* PC端弹窗居中但稍微向上 */
+/* PC端弹窗 */
 @media (min-width: 768px) {
     :deep(.preferences-dialog) {
-        margin-top: 8vh !important;
-        margin-bottom: 8vh !important;
-        max-height: 84vh !important;
         width: 90% !important;
         max-width: 1200px !important;
+        max-height: calc(100vh - 40px) !important;
+        margin: 20px auto !important;
     }
 }
 
@@ -354,6 +425,19 @@ if (visible.value) {
     background: rgba(255, 255, 255, 0.95);
     padding: 6px;
     box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+}
+
+/* 确保对话框显示在最顶层 */
+:deep(.el-dialog) {
+    z-index: 9999 !important;
+}
+
+:deep(.el-overlay) {
+    z-index: 9998 !important;
+}
+
+.preferences-dialog {
+    z-index: 10000 !important;
 }
 
 /* 移动端logo尺寸优化 */
@@ -539,5 +623,26 @@ if (visible.value) {
 .preferences-skip-btn:hover {
     color: #6b7280;
     background: #f9fafb;
+}
+</style>
+
+<!-- 全局样式来强制覆盖Element Plus -->
+<style>
+.preferences-dialog {
+    border-radius: 24px !important;
+}
+
+.el-dialog.preferences-dialog {
+    border-radius: 24px !important;
+}
+
+@media (max-width: 767px) {
+    .preferences-dialog {
+        border-radius: 20px !important;
+    }
+
+    .el-dialog.preferences-dialog {
+        border-radius: 20px !important;
+    }
 }
 </style>

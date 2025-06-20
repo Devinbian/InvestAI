@@ -1101,6 +1101,16 @@ onUnmounted(() => {
     padding: 0 10px;
 }
 
+/* PC端3栏布局 */
+@media (min-width: 768px) {
+    .risk-options {
+        grid-template-columns: repeat(3, 1fr);
+        gap: 16px;
+        max-width: 1200px;
+        padding: 0 16px;
+    }
+}
+
 .risk-option {
     border: 2px solid #e5e7eb;
     border-radius: 12px;

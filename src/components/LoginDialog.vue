@@ -178,6 +178,7 @@ const handleLogin = async () => {
         if (valid) {
             loginLoading.value = true;
             let res = {};
+            let isNewUser = false;
             if(isRegisterMode.value){
                 // 注册操作
                 res = await register({
@@ -186,6 +187,7 @@ const handleLogin = async () => {
                     confirmPassword: loginForm.confirmPassword.trim(),
                     phone: loginForm.phone.trim()
                 });
+                isNewUser = true;
             }else{
                 // 登录操作
                 res = await login({
@@ -198,6 +200,7 @@ const handleLogin = async () => {
                 let userPortrait = res.data.data.userPortrait || {};
                 let userInfo = {
                     nickname: res.data.data.nickname,
+                    isNewUser: isNewUser,
                     preferences:{
                         investStyle: userPortrait.investStyle,
                         investExperience: userPortrait.investExperience,
@@ -216,7 +219,7 @@ const handleLogin = async () => {
                 closeDialog();
 
                 emit('login-success', {
-                    isNewUser: false,
+                    isNewUser: isNewUser,
                     userInfo: userInfo
                 });
             }

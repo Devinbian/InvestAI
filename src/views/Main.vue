@@ -602,12 +602,33 @@
                                                     </span>
                                                 </div>
                                                 <span class="recommend-score">{{ stock.recommendIndex }}/5.0</span>
-                                                <el-tooltip content="推荐指数说明：
-5.0：强烈推荐 - 投资价值极高
-4.0-4.9：推荐 - 具备较好投资价值
-3.0-3.9：中性 - 可持续观察
-2.0-2.9：谨慎 - 建议控制仓位
-1.0-1.9：不推荐 - 建议回避" placement="top" effect="dark" :show-after="100">
+                                                <el-tooltip placement="top" effect="dark" :show-after="100"
+                                                    popper-class="recommend-tooltip">
+                                                    <template #content>
+                                                        <div class="recommend-index-tooltip">
+                                                            <div class="tooltip-title">推荐指数说明：</div>
+                                                            <div class="tooltip-item">
+                                                                <span class="score">5.0：</span>
+                                                                <span class="desc">强烈推荐 - 投资价值极高</span>
+                                                            </div>
+                                                            <div class="tooltip-item">
+                                                                <span class="score">4.0-4.9：</span>
+                                                                <span class="desc">推荐 - 具备较好投资价值</span>
+                                                            </div>
+                                                            <div class="tooltip-item">
+                                                                <span class="score">3.0-3.9：</span>
+                                                                <span class="desc">中性 - 可持续观察</span>
+                                                            </div>
+                                                            <div class="tooltip-item">
+                                                                <span class="score">2.0-2.9：</span>
+                                                                <span class="desc">谨慎 - 建议控制仓位</span>
+                                                            </div>
+                                                            <div class="tooltip-item">
+                                                                <span class="score">1.0-1.9：</span>
+                                                                <span class="desc">不推荐 - 建议回避</span>
+                                                            </div>
+                                                        </div>
+                                                    </template>
                                                     <el-icon class="help-icon">
                                                         <QuestionFilled />
                                                     </el-icon>
@@ -629,44 +650,26 @@
                                     </div>
 
                                     <div class="stock-details">
-                                        <div class="detail-row">
-                                            <span class="detail-label">目标价：</span>
+                                        <div class="detail-group">
+                                            <span class="detail-label">目标价</span>
                                             <span class="detail-value target-price">¥{{ stock.targetPrice }}</span>
-                                            <span class="detail-label">预期收益：</span>
+                                        </div>
+                                        <div class="detail-group">
+                                            <span class="detail-label">预期收益</span>
                                             <span class="detail-value expected-return">{{ stock.expectedReturn }}</span>
                                         </div>
-                                        <div class="detail-row">
-                                            <span class="detail-label">风险等级：</span>
+                                        <div class="detail-group">
+                                            <span class="detail-label">风险等级</span>
                                             <span class="detail-value risk-level">{{ stock.riskLevel }}</span>
-                                            <span class="detail-label">所属行业：</span>
+                                        </div>
+                                        <div class="detail-group">
+                                            <span class="detail-label">所属行业</span>
                                             <span class="detail-value industry">{{ stock.industry }}</span>
                                         </div>
                                         <div class="stock-reason">
                                             <span class="reason-label">推荐理由：</span>
-                                            <span class="reason-text">{{ stock.reason }}</span>
-                                        </div>
-                                        <div class="recommend-index">
-                                            <div class="recommend-stars">
-                                                <span v-for="i in 5" :key="i" :class="['star', i <= Math.floor(stock.recommendIndex) ? 'filled' :
-                                                    i <= stock.recommendIndex ? 'half' : 'empty']">
-                                                    ★
-                                                </span>
-                                            </div>
-                                            <span class="recommend-score">{{ stock.recommendIndex }}/5.0</span>
-                                            <el-tooltip content="推荐指数说明：
-5.0：强烈推荐 - 投资价值极高
-4.0-4.9：推荐 - 具备较好投资价值
-3.0-3.9：中性 - 可持续观察
-2.0-2.9：谨慎 - 建议控制仓位
-1.0-1.9：不推荐 - 建议回避" placement="top" effect="dark" :show-after="100">
-                                                <el-icon class="help-icon">
-                                                    <QuestionFilled />
-                                                </el-icon>
-                                            </el-tooltip>
-                                            <span
-                                                :class="['recommend-level', getRecommendLevelClass(stock.recommendLevel)]">
-                                                {{ stock.recommendLevel }}
-                                            </span>
+                                            <span class="reason-text" v-if="stock.reason">{{ stock.reason }}</span>
+                                            <span class="reason-text" v-else>暂无推荐理由</span>
                                         </div>
                                     </div>
                                 </div>
@@ -5078,6 +5081,11 @@ body.onboarding-mode {
     font-weight: 600;
     padding: 2px 6px;
     border-radius: 4px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    text-align: center;
+    line-height: 1.2;
 }
 
 .recommend-level.strong-recommend {
@@ -5098,6 +5106,47 @@ body.onboarding-mode {
 .recommend-level.caution {
     background: #fee2e2;
     color: #dc2626;
+}
+
+/* Tooltip样式 */
+.recommend-index-tooltip {
+    padding: 8px 0;
+    max-width: 280px;
+}
+
+.tooltip-title {
+    font-size: 0.875rem;
+    font-weight: 600;
+    color: #fff;
+    margin-bottom: 8px;
+    padding-bottom: 6px;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.2);
+}
+
+.tooltip-item {
+    display: flex;
+    align-items: flex-start;
+    gap: 8px;
+    margin-bottom: 6px;
+    line-height: 1.4;
+}
+
+.tooltip-item:last-child {
+    margin-bottom: 0;
+}
+
+.tooltip-item .score {
+    font-size: 0.8rem;
+    font-weight: 600;
+    color: #fbbf24;
+    min-width: 50px;
+    flex-shrink: 0;
+}
+
+.tooltip-item .desc {
+    font-size: 0.8rem;
+    color: #e5e7eb;
+    line-height: 1.4;
 }
 
 .stock-price-change {
@@ -5133,6 +5182,16 @@ body.onboarding-mode {
     display: flex;
     flex-direction: column;
     gap: 8px;
+}
+
+/* 为移动端股票卡片专门的样式覆盖 */
+.stock-item .stock-details {
+    display: grid !important;
+    grid-template-columns: minmax(0, 1fr) minmax(0, 1fr) !important;
+    gap: 6px 8px !important;
+    width: 100% !important;
+    box-sizing: border-box !important;
+    overflow: hidden !important;
 }
 
 .detail-row {
@@ -5241,22 +5300,35 @@ body.onboarding-mode {
 }
 
 .stock-reason {
-    margin-top: 8px;
-    padding-top: 8px;
-    border-top: 1px solid #e2e8f0;
+    margin-top: 12px;
+    padding: 8px;
+    background: #fff3cd;
+    border-radius: 4px;
+    border: 1px solid #ffeaa7;
+    display: flex;
+    align-items: flex-start;
+    gap: 6px;
+    grid-column: 1 / -1;
+    position: relative;
+    min-height: 32px;
 }
 
 .reason-label {
     font-size: 0.875rem;
-    color: #64748b;
-    font-weight: 500;
+    color: #856404;
+    font-weight: bold;
+    white-space: nowrap;
+    flex-shrink: 0;
 }
 
 .reason-text {
     font-size: 0.875rem;
-    color: #475569;
+    color: #533f03;
     line-height: 1.4;
-    margin-left: 8px;
+    white-space: normal;
+    word-wrap: break-word;
+    word-break: break-all;
+    flex: 1;
 }
 
 .stock-item-actions {
@@ -5467,13 +5539,425 @@ body.onboarding-mode {
     }
 
     .stock-item {
-        padding: 12px;
+        padding: 8px;
+        margin: 4px 0;
+        border-radius: 8px;
+        display: flex;
+        flex-direction: column;
+        gap: 6px;
+        min-height: auto;
+    }
+
+    .stock-item:hover {
+        transform: none;
+        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+    }
+
+    .stock-info {
+        margin-bottom: 0;
+    }
+
+    .stock-header {
+        display: flex;
+        flex-direction: row;
+        justify-content: space-between;
+        align-items: flex-start;
+        gap: 8px;
+        margin-bottom: 4px;
+    }
+
+    .stock-name-code {
+        flex: 1;
+        min-width: 0;
+    }
+
+    .name-code-row {
+        display: flex;
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 2px;
+        margin-bottom: 4px;
+    }
+
+    .stock-name {
+        font-size: 0.85rem;
+        font-weight: 600;
+        line-height: 1.2;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        max-width: 100%;
+    }
+
+    .stock-code {
+        font-size: 0.7rem;
+        color: #64748b;
+        line-height: 1;
+    }
+
+    .recommend-index {
+        display: flex;
+        align-items: center;
+        gap: 4px;
+        flex-wrap: wrap;
+    }
+
+    .recommend-stars {
+        display: flex;
+        align-items: center;
+        gap: 1px;
+    }
+
+    .star {
+        font-size: 0.75rem;
+    }
+
+    .recommend-score {
+        font-size: 0.65rem;
+        color: #64748b;
+        margin-left: 2px;
+    }
+
+    .help-icon {
+        font-size: 0.75rem;
+        margin-left: 2px;
+    }
+
+    .recommend-level {
+        font-size: 0.6rem;
+        padding: 1px 3px;
+        margin-left: 2px;
+    }
+
+    .stock-price-change {
+        display: flex;
+        flex-direction: column;
+        align-items: flex-end;
+        gap: 2px;
+        flex-shrink: 0;
+    }
+
+    .current-price {
+        font-size: 0.9rem;
+        font-weight: 700;
+        line-height: 1;
+    }
+
+    .price-change {
+        font-size: 0.7rem;
+        padding: 1px 4px;
+        border-radius: 3px;
+        line-height: 1;
+    }
+
+    /* 优化详细信息显示 - 两行两列布局，平分宽度 */
+    .stock-item .stock-info .stock-details {
+        margin-top: 6px !important;
+        padding: 6px 8px !important;
+        background: #f8fafc !important;
+        border-radius: 6px !important;
+        border: 1px solid #e2e8f0 !important;
+        display: grid !important;
+        grid-template-columns: minmax(0, 1fr) minmax(0, 1fr) !important;
+        gap: 6px 8px !important;
+        align-items: center !important;
+        width: 100% !important;
+        box-sizing: border-box !important;
+        overflow: hidden !important;
+    }
+
+    .detail-row {
+        display: contents;
+    }
+
+    .detail-group {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        gap: 3px;
+        padding: 6px 4px;
+        border-radius: 6px;
+        background: rgba(255, 255, 255, 0.8);
+        border: 1px solid rgba(226, 232, 240, 0.5);
+        min-height: 40px !important;
+        height: 40px !important;
+        width: 100% !important;
+        box-sizing: border-box !important;
+        overflow: hidden !important;
+    }
+
+    .detail-label {
+        font-size: 0.65rem;
+        color: #64748b;
+        white-space: nowrap;
+        font-weight: 500;
+        line-height: 1;
+        text-align: center;
+    }
+
+    .detail-value {
+        font-size: 0.75rem;
+        font-weight: 600;
+        text-align: center;
+        line-height: 1.2;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        max-width: 100%;
+        color: #1f2937;
+    }
+
+    /* 推荐理由横向显示，限制1行 */
+    /* 推荐理由独占一行，居中分割线 */
+    .stock-reason {
+        margin-top: 8px !important;
+        padding: 8px !important;
+        background: #fff3cd !important;
+        border-radius: 4px !important;
+        border: 1px solid #ffeaa7 !important;
+        display: flex !important;
+        align-items: flex-start !important;
+        gap: 6px !important;
+        min-height: 32px !important;
+        grid-column: 1 / -1 !important;
+        position: relative !important;
+    }
+
+
+    .reason-label {
+        font-size: 0.7rem !important;
+        color: #856404 !important;
+        white-space: nowrap !important;
+        flex-shrink: 0 !important;
+        font-weight: bold !important;
+    }
+
+    .reason-text {
+        font-size: 0.7rem !important;
+        line-height: 1.4 !important;
+        color: #533f03 !important;
+        white-space: normal !important;
+        word-wrap: break-word !important;
+        word-break: break-all !important;
+        flex: 1 !important;
+    }
+
+    .stock-item-actions {
+        margin-top: 6px;
+        padding: 8px;
+        background: #f8fafc;
+        border-radius: 6px;
+        border: 1px solid #e2e8f0;
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 6px;
+        align-items: center;
+        justify-items: center;
+    }
+
+    .stock-item-actions .el-button {
+        font-size: 0.7rem;
+        padding: 6px 8px;
+        height: 32px;
+        border-radius: 4px;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        min-width: 0;
+        width: 100%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 3px;
+        line-height: 1;
+        box-sizing: border-box;
+        margin: 0;
+    }
+
+    .stock-item-actions .el-button svg {
+        width: 12px;
+        height: 12px;
+        flex-shrink: 0;
+    }
+
+    /* 三个按钮的情况，第三个按钮跨列 */
+    .stock-item-actions .el-button:nth-child(3):last-child {
+        grid-column: 1 / -1;
+        max-width: none;
+    }
+
+    /* 四个按钮的情况，使用2x2布局 */
+    .stock-item-actions .el-button:nth-child(4) {
+        grid-column: auto;
+    }
+
+    /* 确保所有按钮高度一致并消除默认边距 */
+    .stock-item-actions .el-button.el-button--primary,
+    .stock-item-actions .el-button.el-button--success,
+    .stock-item-actions .el-button.el-button--default {
+        height: 32px !important;
+        min-height: 32px !important;
+        margin: 0 !important;
+        vertical-align: top;
     }
 
     /* 移动端股票列表间距优化 */
     .stock-list {
-        gap: 8px;
-        margin-top: 12px;
+        gap: 6px;
+        margin-top: 8px;
+    }
+}
+
+/* 小屏手机进一步优化 */
+/* 小屏手机进一步优化 - 极简横向布局 */
+@media (max-width: 480px) {
+    .stock-item {
+        padding: 6px;
+        margin: 3px 0;
+        gap: 4px;
+    }
+
+    .stock-header {
+        gap: 6px;
+        margin-bottom: 3px;
+    }
+
+    .name-code-row {
+        gap: 1px;
+        margin-bottom: 3px;
+    }
+
+    .stock-name {
+        font-size: 0.8rem;
+        max-width: 120px;
+    }
+
+    .stock-code {
+        font-size: 0.65rem;
+    }
+
+    .recommend-index {
+        gap: 3px;
+    }
+
+    .star {
+        font-size: 0.7rem;
+    }
+
+    .recommend-score {
+        font-size: 0.6rem;
+        margin-left: 1px;
+    }
+
+    .help-icon {
+        font-size: 0.7rem;
+        margin-left: 1px;
+    }
+
+    .recommend-level {
+        font-size: 0.55rem;
+        padding: 1px 2px;
+        margin-left: 1px;
+    }
+
+    .current-price {
+        font-size: 0.85rem;
+    }
+
+    .price-change {
+        font-size: 0.65rem;
+        padding: 1px 3px;
+    }
+
+    .stock-item .stock-info .stock-details {
+        margin-top: 3px !important;
+        padding: 4px 6px !important;
+        gap: 4px 6px !important;
+        grid-template-columns: minmax(0, 1fr) minmax(0, 1fr) !important;
+        width: 100% !important;
+        box-sizing: border-box !important;
+        overflow: hidden !important;
+    }
+
+    .detail-label {
+        font-size: 0.65rem;
+    }
+
+    .detail-value {
+        font-size: 0.65rem;
+    }
+
+    .stock-reason {
+        margin-top: 6px !important;
+        padding: 6px !important;
+        background: #fff3cd !important;
+        border: 1px solid #ffeaa7 !important;
+        border-radius: 4px !important;
+        display: flex !important;
+        align-items: center !important;
+        gap: 4px !important;
+        min-height: 28px !important;
+        grid-column: 1 / -1 !important;
+        position: relative !important;
+    }
+
+    .reason-label {
+        font-size: 0.65rem !important;
+        color: #856404 !important;
+        font-weight: bold !important;
+        flex-shrink: 0 !important;
+    }
+
+    .reason-text {
+        font-size: 0.65rem !important;
+        line-height: 1.3 !important;
+        color: #533f03 !important;
+        white-space: normal !important;
+        word-wrap: break-word !important;
+        word-break: break-all !important;
+        flex: 1 !important;
+    }
+
+    .stock-item-actions {
+        margin-top: 4px;
+        padding: 6px;
+        gap: 4px;
+        grid-template-columns: 1fr 1fr;
+        align-items: center;
+        justify-items: center;
+    }
+
+    .stock-item-actions .el-button {
+        font-size: 0.65rem;
+        padding: 4px 6px;
+        height: 28px;
+        border-radius: 3px;
+        margin: 0;
+        box-sizing: border-box;
+        width: 100%;
+    }
+
+    .stock-item-actions .el-button svg {
+        width: 10px;
+        height: 10px;
+    }
+
+    /* 小屏幕按钮高度统一 */
+    .stock-item-actions .el-button.el-button--primary,
+    .stock-item-actions .el-button.el-button--success,
+    .stock-item-actions .el-button.el-button--default {
+        height: 28px !important;
+        min-height: 28px !important;
+        margin: 0 !important;
+    }
+
+    /* 三个按钮时的特殊布局 */
+    .stock-item-actions .el-button:nth-child(3):last-child {
+        grid-column: 1 / -1;
+        font-size: 0.6rem;
+        padding: 3px 5px;
+        height: 26px;
     }
 }
 
@@ -11604,5 +12088,20 @@ body {
         padding: 6px 10px;
         border-radius: 5px;
     }
+}
+</style>
+
+<!-- 全局tooltip样式 -->
+<style>
+.recommend-tooltip {
+    max-width: 300px !important;
+}
+
+.recommend-tooltip .el-popper__content {
+    padding: 12px 16px !important;
+    background: rgba(55, 65, 81, 0.95) !important;
+    backdrop-filter: blur(8px) !important;
+    border-radius: 8px !important;
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.15) !important;
 }
 </style>

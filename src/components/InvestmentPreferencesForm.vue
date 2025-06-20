@@ -247,7 +247,7 @@
                                 </div>
                             </div>
 
-                            <!-- 移动端和平板端垂直布局 -->
+                            <!-- 移动端布局 -->
                             <div class="mobile-layout" v-else>
                                 <!-- 大分类选择 -->
                                 <div class="major-section">
@@ -267,31 +267,29 @@
                                     </div>
                                 </div>
 
-                                <!-- 细分行业选择 -->
-                                <div class="sub-section">
+                                <!-- 子分类选择 -->
+                                <div class="sub-section" v-if="availableSubSectors.length > 0">
                                     <div class="section-title">🎯 选择具体关注的行业 (最多4个)</div>
-                                    <div v-if="availableSubSectors.length > 0" class="sub-grid">
-                                        <div v-for="group in groupedSubSectors" :key="group.major" class="sub-group">
-                                            <div class="group-header">{{ getMajorSectorLabel(group.major) }}</div>
-                                            <div class="sub-cards">
-                                                <div v-for="sector in group.sectors" :key="sector.value"
-                                                    class="sub-card" :class="{
-                                                        selected: localPreferencesForm.sectors.subCategories.includes(sector.value),
-                                                        disabled: !localPreferencesForm.sectors.subCategories.includes(sector.value) && localPreferencesForm.sectors.subCategories.length >= 4
-                                                    }" @click="toggleSubSector(sector.value)">
-                                                    <div class="sub-icon">{{ sector.icon }}</div>
-                                                    <div class="sub-name">{{ sector.label }}</div>
-                                                    <div class="sub-check"
-                                                        v-if="localPreferencesForm.sectors.subCategories.includes(sector.value)">
-                                                        ✓
-                                                    </div>
+                                    <div v-for="group in groupedSubSectors" :key="group.major" class="sub-group">
+                                        <div class="group-header">{{ getMajorSectorLabel(group.major) }}</div>
+                                        <div class="sub-cards">
+                                            <div v-for="sector in group.sectors" :key="sector.value" class="sub-card"
+                                                :class="{
+                                                    selected: localPreferencesForm.sectors.subCategories.includes(sector.value),
+                                                    disabled: !localPreferencesForm.sectors.subCategories.includes(sector.value) && localPreferencesForm.sectors.subCategories.length >= 4
+                                                }" @click="toggleSubSector(sector.value)">
+                                                <div class="sub-icon">{{ sector.icon }}</div>
+                                                <div class="sub-name">{{ sector.label }}</div>
+                                                <div class="sub-check"
+                                                    v-if="localPreferencesForm.sectors.subCategories.includes(sector.value)">
+                                                    ✓
                                                 </div>
                                             </div>
                                         </div>
                                     </div>
 
                                     <!-- 选择提示 -->
-                                    <div v-else class="selection-hint">
+                                    <div v-if="availableSubSectors.length === 0" class="selection-hint">
                                         <div class="hint-icon">👆</div>
                                         <div class="hint-text">请先选择上方的大分类，然后选择具体关注的行业</div>
                                     </div>

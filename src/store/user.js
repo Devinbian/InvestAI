@@ -77,7 +77,13 @@ export const useUserStore = defineStore("user", {
 
     setUserInfo(userInfo) {
       this.userInfo = userInfo;
-      localStorage.setItem("userInfo", JSON.stringify(userInfo));
+      try {
+        localStorage.setItem("userInfo", JSON.stringify(userInfo));
+      } catch (error) {
+        console.error("Failed to save user info to localStorage:", error);
+        // This can happen if localStorage is full.
+        // The app state will be updated, but it won't persist across reloads.
+      }
     },
 
     logout() {

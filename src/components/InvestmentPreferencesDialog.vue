@@ -1,6 +1,6 @@
 <template>
-    <el-dialog v-model="visible" :show-close="false" :close-on-click-modal="false" :lock-scroll="false" width="1200px"
-        class="preferences-dialog">
+    <el-dialog v-model="visible" :show-close="false" :close-on-click-modal="false" :lock-scroll="false" width="1000px"
+        class="preferences-dialog" top="10vh">
         <template #header>
             <div></div>
         </template>
@@ -905,8 +905,13 @@ const skipPreferences = () => {
 </script>
 
 <style scoped>
-/* 投资偏好设置对话框样式 */
-:deep(.preferences-dialog) {
+:deep(.preferences-dialog .el-dialog) {
+    margin-top: 50vh !important;
+    transform: translateY(-50%) !important;
+}
+
+/* Base styles for the container */
+.preferences-dialog {
     border-radius: 16px;
     overflow: hidden;
     box-shadow: 0 8px 32px rgba(0, 0, 0, 0.12);
@@ -922,13 +927,13 @@ const skipPreferences = () => {
 :deep(.preferences-dialog .el-dialog__body) {
     padding: 0;
     overflow-y: auto;
-    max-height: calc(90vh - 60px);
+    max-height: calc(90vh - 20px);
 }
 
 .preferences-container {
-    padding: 40px 32px;
+    padding: 16px 24px;
     background: white;
-    min-height: 500px;
+    min-height: auto;
     display: flex;
     flex-direction: column;
     max-width: 100%;
@@ -937,35 +942,33 @@ const skipPreferences = () => {
 
 .preferences-header {
     text-align: center;
-    margin-bottom: 40px;
+    margin-bottom: 16px;
 }
 
 .preferences-logo {
     display: inline-flex;
     align-items: center;
     justify-content: center;
-    margin-bottom: 16px;
+    margin-bottom: 8px;
 }
 
 .preferences-logo .logo-image {
-    width: 48px;
-    height: 48px;
+    width: 32px;
+    height: 32px;
     object-fit: contain;
-    border-radius: 12px;
-    background: rgba(255, 255, 255, 0.95);
-    padding: 8px;
-    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+    border-radius: 8px;
+    padding: 4px;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
 }
 
 .preferences-title {
-    font-size: 1.5rem;
+    font-size: 1.25rem;
     font-weight: 600;
-    margin: 0 0 8px 0;
-    color: #18181b;
+    margin: 0 0 4px 0;
 }
 
 .preferences-subtitle {
-    font-size: 0.875rem;
+    font-size: 0.8rem;
     margin: 0;
     color: #6b7280;
 }
@@ -985,33 +988,33 @@ const skipPreferences = () => {
     flex-direction: column;
     justify-content: center;
     text-align: center;
-    padding: 20px 0;
+    padding: 0;
 }
 
 .step-title {
-    font-size: 1.5rem;
+    font-size: 1.25rem;
     font-weight: 600;
     color: #18181b;
-    margin: 0 0 8px 0;
+    margin: 0 0 4px 0;
 }
 
 .step-desc {
-    font-size: 1rem;
+    font-size: 0.85rem;
     color: #6b7280;
-    margin: 0 0 40px 0;
+    margin: 0 0 16px 0;
 }
 
 /* 步骤指示器 */
 .step-indicator {
     display: flex;
     justify-content: center;
-    gap: 12px;
-    margin-top: 24px;
+    gap: 8px;
+    margin-top: 12px;
 }
 
 .step-dot {
-    width: 32px;
-    height: 32px;
+    width: 24px;
+    height: 24px;
     border-radius: 50%;
     display: flex;
     align-items: center;
@@ -1040,23 +1043,23 @@ const skipPreferences = () => {
 .risk-options {
     display: grid;
     grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
-    gap: 20px;
-    max-width: 1100px;
+    gap: 10px;
+    max-width: 900px;
     margin: 0 auto;
-    padding: 0 20px;
+    padding: 0 10px;
 }
 
 .risk-option {
     border: 2px solid #e5e7eb;
     border-radius: 12px;
-    padding: 20px;
+    padding: 10px;
     transition: all 0.3s ease;
     cursor: pointer;
     display: flex;
     align-items: flex-start;
-    gap: 16px;
+    gap: 10px;
     text-align: left;
-    min-height: 280px;
+    min-height: auto;
     box-sizing: border-box;
 }
 
@@ -1112,20 +1115,20 @@ const skipPreferences = () => {
     display: flex;
     justify-content: space-between;
     align-items: center;
-    margin-bottom: 8px;
+    margin-bottom: 4px;
 }
 
 .option-title {
     font-weight: 600;
     color: #18181b;
-    font-size: 1.1rem;
+    font-size: 1rem;
     display: flex;
     align-items: center;
-    gap: 8px;
+    gap: 6px;
 }
 
 .option-icon {
-    font-size: 1.2rem;
+    font-size: 1.1rem;
 }
 
 .risk-level-indicator {
@@ -1135,8 +1138,8 @@ const skipPreferences = () => {
 }
 
 .risk-dot {
-    width: 8px;
-    height: 8px;
+    width: 7px;
+    height: 7px;
     border-radius: 50%;
     background: #e5e7eb;
     transition: all 0.2s ease;
@@ -1147,29 +1150,29 @@ const skipPreferences = () => {
 }
 
 .option-desc {
-    font-size: 0.9rem;
+    font-size: 0.8rem;
     color: #6b7280;
-    line-height: 1.4;
-    margin-bottom: 8px;
+    line-height: 1.3;
+    margin-bottom: 4px;
 }
 
 .simple-desc {
-    font-size: 0.9rem;
+    font-size: 0.8rem;
     color: #059669;
     font-weight: 600;
     background: #f0fdf4;
-    padding: 10px 12px;
-    border-radius: 6px;
-    margin-bottom: 12px;
+    padding: 4px 6px;
+    border-radius: 4px;
+    margin-bottom: 6px;
     border-left: 3px solid #10b981;
-    line-height: 1.3;
+    line-height: 1.25;
 }
 
 .option-metrics {
     display: flex;
     flex-direction: column;
-    gap: 8px;
-    margin-bottom: 12px;
+    gap: 2px;
+    margin-bottom: 6px;
 }
 
 .metric-item {
@@ -1180,16 +1183,16 @@ const skipPreferences = () => {
 }
 
 .metric-label {
-    font-size: 0.85rem;
+    font-size: 0.75rem;
     color: #6b7280;
     font-weight: 500;
     flex: 1;
 }
 
 .metric-value {
-    font-size: 0.85rem;
+    font-size: 0.8rem;
     font-weight: 600;
-    padding: 4px 8px;
+    padding: 3px 6px;
     border-radius: 4px;
     white-space: nowrap;
 }
@@ -1205,19 +1208,19 @@ const skipPreferences = () => {
 }
 
 .option-examples {
-    margin-top: 8px;
-    padding-top: 8px;
+    margin-top: 6px;
+    padding-top: 4px;
     border-top: 1px solid #f3f4f6;
 }
 
 .examples-label {
-    font-size: 0.8rem;
+    font-size: 0.75rem;
     color: #6b7280;
     font-weight: 500;
 }
 
 .examples-text {
-    font-size: 0.8rem;
+    font-size: 0.75rem;
     color: #6b7280;
     line-height: 1.3;
     display: block;
@@ -1228,7 +1231,7 @@ const skipPreferences = () => {
 .experience-options {
     display: grid;
     grid-template-columns: repeat(auto-fit, minmax(350px, 1fr));
-    gap: 24px;
+    gap: 16px;
     max-width: 800px;
     margin: 0 auto;
 }
@@ -1236,13 +1239,13 @@ const skipPreferences = () => {
 .experience-option {
     border: 2px solid #e5e7eb;
     border-radius: 12px;
-    padding: 24px;
+    padding: 16px;
     transition: all 0.3s ease;
     cursor: pointer;
     display: flex;
     align-items: flex-start;
     gap: 16px;
-    min-height: 120px;
+    min-height: auto;
     text-align: left;
 }
 
@@ -1267,7 +1270,7 @@ const skipPreferences = () => {
     display: flex;
     align-items: center;
     gap: 8px;
-    margin-bottom: 8px;
+    margin-bottom: 6px;
 }
 
 .experience-icon {
@@ -1275,20 +1278,20 @@ const skipPreferences = () => {
 }
 
 .experience-title {
-    font-size: 1.1rem;
+    font-size: 1.05rem;
     font-weight: 600;
     color: #18181b;
 }
 
 .experience-label {
-    font-size: 0.95rem;
+    font-size: 0.9rem;
     font-weight: 500;
     color: #374151;
     margin-bottom: 6px;
 }
 
 .experience-desc {
-    font-size: 0.85rem;
+    font-size: 0.825rem;
     color: #6b7280;
     line-height: 1.4;
 }
@@ -1301,39 +1304,38 @@ const skipPreferences = () => {
 
 .traits-hint {
     display: flex;
-    align-items: flex-start;
-    gap: 12px;
+    align-items: center;
+    gap: 6px;
     background: #f0f9ff;
     border: 1px solid #bae6fd;
-    border-radius: 8px;
-    padding: 16px;
-    margin-bottom: 32px;
+    border-radius: 6px;
+    padding: 4px 6px;
+    margin-bottom: 10px;
 }
 
 .hint-icon {
-    font-size: 1.2rem;
+    font-size: 0.8rem;
     flex-shrink: 0;
-    margin-top: 2px;
 }
 
 .hint-text {
-    font-size: 0.9rem;
+    font-size: 0.7rem;
     color: #0c4a6e;
-    line-height: 1.4;
+    line-height: 1.25;
 }
 
 .traits-list {
-    display: flex;
-    flex-direction: column;
-    gap: 24px;
-    max-width: 800px;
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 12px;
+    max-width: 900px;
     margin: 0 auto;
 }
 
 .trait-item-compact {
     border: 2px solid #f3f4f6;
-    border-radius: 12px;
-    padding: 20px;
+    border-radius: 10px;
+    padding: 8px;
     background: #fafafa;
     transition: all 0.2s ease;
 }
@@ -1347,18 +1349,18 @@ const skipPreferences = () => {
     display: flex;
     align-items: center;
     justify-content: space-between;
-    margin-bottom: 16px;
+    margin-bottom: 4px;
 }
 
 .trait-left {
     display: flex;
     align-items: center;
-    gap: 12px;
+    gap: 8px;
     flex: 1;
 }
 
 .trait-icon {
-    font-size: 1.3rem;
+    font-size: 1rem;
     flex-shrink: 0;
 }
 
@@ -1367,48 +1369,52 @@ const skipPreferences = () => {
 }
 
 .trait-title {
-    font-size: 1rem;
+    font-size: 0.9rem;
     font-weight: 600;
     color: #18181b;
-    margin-bottom: 2px;
+    margin-bottom: 0;
 }
 
 .trait-desc {
-    font-size: 0.85rem;
+    font-size: 0.75rem;
     color: #6b7280;
-    line-height: 1.3;
+    line-height: 1.2;
 }
 
 .trait-current-value {
-    font-size: 1.1rem;
-    font-weight: 700;
+    font-size: 0.9rem;
+    font-weight: 600;
     color: #18181b;
-    background: #f0f9ff;
-    border: 1px solid #0ea5e9;
-    border-radius: 20px;
-    padding: 4px 12px;
-    min-width: 50px;
+    background: #e0f2fe;
+    border: none;
+    border-radius: 16px;
+    padding: 1px 8px;
+    min-width: auto;
     text-align: center;
 }
 
 .trait-slider-container {
     position: relative;
-    margin-bottom: 15px;
-    height: 50px;
+    margin-bottom: 2px;
+    height: 35px;
 }
 
 .slider-track {
-    height: 6px;
+    height: 2px;
     background: #e5e7eb;
-    border-radius: 3px;
-    position: relative;
-    margin: 20px 0;
+    border-radius: 1px;
+    position: absolute;
+    left: 10px;
+    right: 10px;
+    top: 50%;
+    transform: translateY(-50%);
+    margin: 0;
 }
 
 .slider-progress {
     height: 100%;
     background: linear-gradient(90deg, #10b981 0%, #0ea5e9 50%, #8b5cf6 100%);
-    border-radius: 3px;
+    border-radius: 1px;
     transition: width 0.3s ease;
 }
 
@@ -1432,34 +1438,38 @@ const skipPreferences = () => {
 }
 
 .option-dot {
-    width: 16px;
-    height: 16px;
-    border: 2px solid #d1d5db;
+    width: 12px;
+    height: 12px;
+    border: 1px solid #d1d5db;
     border-radius: 50%;
     background: white;
     position: absolute;
-    top: -5px;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
     transition: all 0.2s ease;
     z-index: 2;
 }
 
 .slider-option:hover .option-dot {
     border-color: #18181b;
-    transform: scale(1.1);
+    transform: translate(-50%, -50%) scale(1.1);
 }
 
 .slider-option.active .option-dot {
     border-color: #18181b;
     background: #18181b;
-    transform: scale(1.2);
+    transform: translate(-50%, -50%) scale(1.2);
 }
 
 .option-label {
-    font-size: 0.75rem;
+    font-size: 0.7rem;
     font-weight: 600;
     color: #6b7280;
     position: absolute;
-    top: 20px;
+    top: calc(50% + 10px);
+    left: 50%;
+    transform: translateX(-50%);
     white-space: nowrap;
     transition: color 0.2s ease;
 }
@@ -1469,14 +1479,15 @@ const skipPreferences = () => {
 }
 
 .trait-description {
-    font-size: 0.85rem;
+    font-size: 0.75rem;
     color: #4b5563;
     background: #f8fafc;
     border: 1px solid #e5e7eb;
-    border-radius: 8px;
-    padding: 12px;
+    border-radius: 6px;
+    padding: 4px 6px;
     text-align: center;
     font-style: italic;
+    line-height: 1.2;
 }
 
 /* 紧凑的左右分栏板块选择布局 */
@@ -1491,9 +1502,9 @@ const skipPreferences = () => {
     display: flex;
     align-items: center;
     justify-content: space-between;
-    gap: 16px;
-    margin-bottom: 16px;
-    padding: 12px 16px;
+    gap: 12px;
+    margin-bottom: 8px;
+    padding: 6px 10px;
     background: linear-gradient(135deg, #f8fafc 0%, #f1f5f9 100%);
     border: 1px solid #e2e8f0;
     border-radius: 10px;
@@ -1545,7 +1556,7 @@ const skipPreferences = () => {
 
 /* 主要内容区域 */
 .sectors-content {
-    min-height: 320px;
+    min-height: auto;
     border: 1px solid #e5e7eb;
     border-radius: 10px;
     background: white;
@@ -1554,35 +1565,36 @@ const skipPreferences = () => {
 
 /* 搜索模式 */
 .search-mode {
-    padding: 16px;
+    padding: 8px;
 }
 
 .search-header {
     background: #3b82f6;
     color: white;
-    padding: 8px 12px;
-    font-size: 0.875rem;
+    padding: 4px 8px;
+    font-size: 0.8rem;
     font-weight: 500;
-    border-radius: 6px;
-    margin-bottom: 12px;
+    border-radius: 4px;
+    margin-bottom: 6px;
 }
 
 .search-grid {
     display: grid;
     grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
-    gap: 12px;
+    gap: 6px;
 }
 
 .sector-card {
     display: flex;
     align-items: center;
-    gap: 12px;
-    padding: 12px;
+    gap: 6px;
+    padding: 6px;
     border: 1px solid #e5e7eb;
-    border-radius: 8px;
+    border-radius: 6px;
     cursor: pointer;
     transition: all 0.2s ease;
     background: white;
+    min-height: auto;
 }
 
 .sector-card:hover:not(.disabled) {
@@ -1680,27 +1692,27 @@ const skipPreferences = () => {
 .normal-layout {
     display: flex;
     height: 100%;
-    min-height: 320px;
+    min-height: auto;
 }
 
 .left-section {
     flex: 0 0 45%;
-    padding: 16px;
+    padding: 8px;
     border-right: 1px solid #e5e7eb;
     background: #fafafa;
 }
 
 .right-section {
     flex: 1;
-    padding: 16px;
+    padding: 8px;
     background: white;
 }
 
 .section-title {
-    font-size: 0.875rem;
+    font-size: 0.75rem;
     font-weight: 600;
     color: #374151;
-    margin-bottom: 12px;
+    margin-bottom: 6px;
     display: flex;
     align-items: center;
     gap: 6px;
@@ -1710,19 +1722,19 @@ const skipPreferences = () => {
 .major-grid {
     display: grid;
     grid-template-columns: repeat(auto-fill, minmax(120px, 1fr));
-    gap: 8px;
+    gap: 4px;
 }
 
 .major-card {
     position: relative;
-    padding: 12px 8px;
+    padding: 6px;
     border: 2px solid #e5e7eb;
     border-radius: 8px;
     cursor: pointer;
     transition: all 0.2s ease;
     text-align: center;
     background: white;
-    min-height: 80px;
+    min-height: 65px;
     display: flex;
     flex-direction: column;
     align-items: center;
@@ -1747,12 +1759,12 @@ const skipPreferences = () => {
 }
 
 .major-icon {
-    font-size: 1.5rem;
-    margin-bottom: 4px;
+    font-size: 1.3rem;
+    margin-bottom: 2px;
 }
 
 .major-name {
-    font-size: 0.75rem;
+    font-size: 0.7rem;
     font-weight: 500;
     color: #374151;
     line-height: 1.2;
@@ -1780,7 +1792,7 @@ const skipPreferences = () => {
 .sub-grid {
     display: flex;
     flex-direction: column;
-    gap: 16px;
+    gap: 8px;
 }
 
 .sub-group {
@@ -1792,30 +1804,30 @@ const skipPreferences = () => {
 
 .group-header {
     background: #f1f5f9;
-    padding: 8px 12px;
-    font-size: 0.8rem;
+    padding: 4px 8px;
+    font-size: 0.7rem;
     font-weight: 600;
     color: #475569;
     border-bottom: 1px solid #e2e8f0;
 }
 
 .sub-cards {
-    padding: 8px;
+    padding: 6px;
     display: grid;
     grid-template-columns: repeat(auto-fill, minmax(100px, 1fr));
-    gap: 6px;
+    gap: 4px;
 }
 
 .sub-card {
     position: relative;
-    padding: 8px 6px;
+    padding: 4px;
     border: 1px solid #e5e7eb;
     border-radius: 6px;
     cursor: pointer;
     transition: all 0.2s ease;
     text-align: center;
     background: white;
-    min-height: 60px;
+    min-height: 50px;
     display: flex;
     flex-direction: column;
     align-items: center;
@@ -1840,12 +1852,12 @@ const skipPreferences = () => {
 }
 
 .sub-icon {
-    font-size: 1.1rem;
-    margin-bottom: 2px;
+    font-size: 1rem;
+    margin-bottom: 1px;
 }
 
 .sub-name {
-    font-size: 0.7rem;
+    font-size: 0.65rem;
     font-weight: 500;
     color: #374151;
     line-height: 1.1;
@@ -1881,12 +1893,12 @@ const skipPreferences = () => {
 }
 
 .hint-icon {
-    font-size: 2rem;
+    font-size: 1rem;
     opacity: 0.5;
 }
 
 .hint-text {
-    font-size: 0.875rem;
+    font-size: 0.85rem;
 }
 
 /* 搜索高亮 */
@@ -1903,14 +1915,14 @@ const skipPreferences = () => {
     display: flex;
     justify-content: center;
     gap: 16px;
-    margin-top: 40px;
-    padding-top: 24px;
+    margin-top: 12px;
+    padding-top: 10px;
     border-top: 1px solid #f3f4f6;
 }
 
 .preferences-back-btn {
-    min-width: 100px;
-    height: 44px;
+    min-width: 90px;
+    height: 38px;
     border: 2px solid #e5e7eb;
     background: white;
     color: #6b7280;
@@ -1927,8 +1939,8 @@ const skipPreferences = () => {
 
 .preferences-next-btn,
 .preferences-submit-btn {
-    min-width: 100px;
-    height: 44px;
+    min-width: 90px;
+    height: 38px;
     background: #18181b;
     border: 2px solid #18181b;
     color: white;
@@ -1956,8 +1968,8 @@ const skipPreferences = () => {
 }
 
 .preferences-skip-btn {
-    min-width: 80px;
-    height: 44px;
+    min-width: 70px;
+    height: 38px;
     background: transparent;
     border: none;
     color: #6b7280;

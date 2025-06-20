@@ -91,6 +91,7 @@
 import { ref, reactive, computed, watch } from 'vue';
 import { ElMessage } from 'element-plus';
 import { useUserStore } from '@/store/user';
+import { login, register } from '@/api/api';
 
 // Props
 const props = defineProps({
@@ -173,37 +174,53 @@ const visible = computed({
 const handleLogin = async () => {
     if (!loginFormRef.value) return;
 
-    await loginFormRef.value.validate((valid) => {
+    await loginFormRef.value.validate(async (valid) => {
         if (valid) {
             loginLoading.value = true;
+            let res = {};
+            if(isRegisterMode.value){
+                // 注册操作
+                res = await register({
+                    account: loginForm.username.trim(),
+                    password: loginForm.password.trim(),
+                    confirmPassword: loginForm.confirmPassword.trim(),
+                    phone: loginForm.phone.trim()
+                });
+            }else{
+                // 登录操作
+                res = await login({
+                    account: loginForm.username.trim(),
+                    password: loginForm.password.trim()
+                });
+            }
 
-            // 模拟API调用
-            setTimeout(() => {
-                const token = 'mock-token-' + Date.now();
-                const userInfo = {
-                    username: loginForm.username,
-                    nickname: loginForm.username,
-                    isNewUser: isRegisterMode.value
+            if(res && res.data && res.data.success){
+                let userPortrait = res.data.data.userPortrait || {};
+                let userInfo = {
+                    nickname: res.data.data.nickname,
+                    preferences:{
+                        investStyle: userPortrait.investStyle,
+                        investExperience: userPortrait.investExperience,
+                        riskTolerance: userPortrait.riskTolerance,
+                        involveLevel: userPortrait.involveLevel,
+                        learnIntention: userPortrait.learnIntention,
+                        strategyComplexity: userPortrait.strategyComplexity,
+                        tradeFrequency: userPortrait.tradeFrequency,
+                        innovationAcceptance: userPortrait.innovationAcceptance,
+                        focusIndustry: userPortrait.focusIndustry
+                    }
                 };
-
-                userStore.setToken(token);
                 userStore.setUserInfo(userInfo);
+                userStore.setToken(res.data.data.token);
 
-                if (isRegisterMode.value) {
-                    ElMessage.success('注册成功！');
-                } else {
-                    ElMessage.success('登录成功！');
-                }
-
-                loginLoading.value = false;
                 closeDialog();
 
-                // 触发登录成功事件
                 emit('login-success', {
-                    isNewUser: isRegisterMode.value,
-                    userInfo
+                    isNewUser: false,
+                    userInfo: userInfo
                 });
-            }, 1000);
+            }
+            loginLoading.value = false; 
         }
     });
 };

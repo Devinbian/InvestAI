@@ -186,6 +186,24 @@
                     <div class="chat-message-content">
                         <div v-if="message.content" class="message-text">{{ message.content }}</div>
 
+                        <!-- 互动建议（资讯推送、智能复盘等） -->
+                        <div v-if="message.hasInteractionButtons && message.interactionData"
+                            class="interaction-suggestions">
+                            <div class="suggestion-intro">
+                                💡 <span class="intro-text">{{ message.isNewsUpdate ? '基于这些资讯，我建议您可以：' :
+                                    '基于复盘结果，我建议您可以：'
+                                }}</span>
+                            </div>
+                            <div class="suggestion-items">
+                                <div v-for="action in message.interactionData.recommendActions" :key="action.id"
+                                    @click="handleInteractionAction(action, message)" class="suggestion-item">
+                                    <span class="suggestion-icon">{{ action.icon }}</span>
+                                    <span class="suggestion-text">{{ action.description }}</span>
+                                    <span class="suggestion-arrow">→</span>
+                                </div>
+                            </div>
+                        </div>
+
                         <!-- 单只股票操作按钮 -->
                         <div v-if="message.hasStockInfo && message.stockInfo" class="stock-actions">
                             <!-- 购买按钮（购买模式时优先显示） -->
@@ -4253,6 +4271,135 @@ const getReminderPreview = () => {
     return `当 ${stockName} ${conditionText} 时，系统将发送量化分析提醒通知`;
 };
 
+// 处理交互操作按钮点击
+const handleInteractionAction = async (action, message) => {
+    console.log('交互操作按钮被点击:', action, message);
+
+    let analysisPrompt = '';
+
+    if (message.isNewsUpdate) {
+        // 资讯推送相关的交互操作
+        switch (action.actionType) {
+            case 'analysis':
+                analysisPrompt = `基于今日财经资讯分析对我的持仓影响：
+                
+${message.interactionData.newsItems.map(news => `- ${news.title}: ${news.summary}`).join('\n')}
+
+请详细分析：
+1. 这些资讯对我持仓股票的具体影响
+2. 哪些持仓可能受到正面/负面影响
+3. 建议调整的仓位和原因
+4. 短期和中期的应对策略
+5. 风险提示和机会识别
+
+请结合我的实际持仓情况给出个性化建议。`;
+                break;
+            case 'opportunity':
+                analysisPrompt = `基于今日财经资讯寻找投资机会：
+
+相关资讯：
+${message.interactionData.newsItems.map(news => `- ${news.title}: ${news.summary}`).join('\n')}
+
+受益板块：${message.interactionData.affectedSectors.join('、')}
+
+请分析：
+1. 这些资讯催生的具体投资机会
+2. 推荐关注的个股和理由
+3. 最佳买入时机和价位
+4. 预期收益和风险评估
+5. 资金配置建议
+
+请为我筛选出3-5只最有潜力的投资标的。`;
+                break;
+            case 'risk':
+                analysisPrompt = `基于今日财经资讯进行风险排查：
+
+相关资讯：
+${message.interactionData.newsItems.map(news => `- ${news.title}: ${news.summary}`).join('\n')}
+
+请帮我排查：
+1. 我的持仓中哪些股票可能面临风险
+2. 宏观政策变化的影响程度
+3. 行业轮动对投资组合的影响
+4. 需要设置止损的股票和位置
+5. 资产配置优化建议
+
+请制定详细的风险控制方案。`;
+                break;
+        }
+    } else if (message.isReview) {
+        // 智能复盘相关的交互操作
+        switch (action.actionType) {
+            case 'portfolio':
+                analysisPrompt = `基于智能复盘结果优化投资组合：
+
+市场表现：
+- 上证指数：${message.interactionData.marketPerformance.shangzheng.value}点 (${message.interactionData.marketPerformance.shangzheng.change > 0 ? '+' : ''}${message.interactionData.marketPerformance.shangzheng.change}%)
+- 深证成指：${message.interactionData.marketPerformance.shenzhen.value}点 (${message.interactionData.marketPerformance.shenzhen.change > 0 ? '+' : ''}${message.interactionData.marketPerformance.shenzhen.change}%)
+- 创业板指：${message.interactionData.marketPerformance.chuangye.value}点 (${message.interactionData.marketPerformance.chuangye.change > 0 ? '+' : ''}${message.interactionData.marketPerformance.chuangye.change}%)
+
+请基于复盘结果提供：
+1. 投资组合优化建议
+2. 仓位调整方案
+3. 行业配置建议
+4. 个股替换建议
+5. 风险控制措施`;
+                break;
+            case 'hotspot':
+                analysisPrompt = `基于复盘结果分析热点板块投资机会：
+
+当前热点：新能源汽车、人工智能、医药生物
+
+请分析：
+1. 各热点板块的投资逻辑
+2. 推荐的龙头股票和理由
+3. 最佳介入时机和策略
+4. 预期收益和风险评估
+5. 资金分配建议
+
+请为我制定热点跟进策略。`;
+                break;
+            case 'risk':
+                analysisPrompt = `基于复盘结果制定风险控制策略：
+
+请帮我制定：
+1. 今日交易风险控制方案
+2. 止损止盈位设置建议
+3. 仓位管理优化方案
+4. 市场异常情况应对策略
+5. 风险预警机制设置
+
+请提供具体可执行的风控措施。`;
+                break;
+            case 'strategy':
+                analysisPrompt = `基于复盘结果制定投资策略：
+
+请帮我规划：
+1. 短期（1周）投资策略
+2. 中期（1个月）投资策略
+3. 长期（3个月）投资策略
+4. 资产配置优化方案
+5. 投资节奏控制建议
+
+请提供完整的策略执行方案。`;
+                break;
+        }
+    }
+
+    if (analysisPrompt) {
+        // 发送分析请求
+        const res = await mockApi.sendMessage(analysisPrompt);
+        chatHistory.value.push(
+            { role: 'user', content: `${action.label}：${action.description}` },
+            res.data
+        );
+
+        await nextTick();
+        scrollToBottom();
+        ElMessage.success(`${action.label}分析已生成`);
+    }
+};
+
 const getReminderDescription = (reminder) => {
     let conditionText = '';
 
@@ -5149,6 +5296,97 @@ body.onboarding-mode {
 
 .message-text:last-child {
     margin-bottom: 0;
+}
+
+/* 互动建议样式 */
+.interaction-suggestions {
+    margin-top: 16px;
+    padding: 12px;
+    background: linear-gradient(135deg, #f8fafc 0%, #f1f5f9 100%);
+    border-radius: 12px;
+    border: 1px dashed #cbd5e1;
+}
+
+.suggestion-intro {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    margin-bottom: 12px;
+    font-size: 0.85rem;
+    color: #475569;
+}
+
+.intro-text {
+    font-weight: 500;
+}
+
+.suggestion-items {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+
+.suggestion-item {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 8px 12px;
+    background: rgba(255, 255, 255, 0.7);
+    border-radius: 8px;
+    border: 1px solid transparent;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    font-size: 0.85rem;
+}
+
+.suggestion-item:hover {
+    background: rgba(59, 130, 246, 0.08);
+    border-color: rgba(59, 130, 246, 0.2);
+    transform: translateX(4px);
+}
+
+.suggestion-icon {
+    font-size: 1rem;
+    flex-shrink: 0;
+}
+
+.suggestion-text {
+    flex: 1;
+    color: #374151;
+    line-height: 1.4;
+}
+
+.suggestion-arrow {
+    color: #94a3b8;
+    font-weight: bold;
+    transition: all 0.2s ease;
+    flex-shrink: 0;
+}
+
+.suggestion-item:hover .suggestion-arrow {
+    color: #3b82f6;
+    transform: translateX(2px);
+}
+
+/* 移动端适配 */
+@media (max-width: 768px) {
+    .interaction-suggestions {
+        padding: 10px;
+        margin-top: 12px;
+    }
+
+    .suggestion-intro {
+        font-size: 0.8rem;
+    }
+
+    .suggestion-item {
+        padding: 6px 10px;
+        font-size: 0.8rem;
+    }
+
+    .suggestion-icon {
+        font-size: 0.9rem;
+    }
 }
 
 /* 股票操作按钮样式 */

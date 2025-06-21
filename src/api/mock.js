@@ -179,6 +179,45 @@ export const mockApi = {
 *以上分析基于公开市场数据，仅供参考，投资有风险，决策需谨慎*`,
         hasStockInfo: false,
         isReview: true,
+        hasInteractionButtons: true,
+        interactionData: {
+          reviewType: "smart_review",
+          marketPerformance: {
+            shangzheng: { value: 3245.68, change: 1.23 },
+            shenzhen: { value: 10892.34, change: 0.87 },
+            chuangye: { value: 2156.78, change: 2.15 },
+          },
+          recommendActions: [
+            {
+              id: "adjust_portfolio",
+              label: "调整持仓",
+              icon: "⚖️",
+              description: "基于复盘结果优化投资组合",
+              actionType: "portfolio",
+            },
+            {
+              id: "follow_hotspot",
+              label: "跟进热点",
+              icon: "🔥",
+              description: "分析热点板块投资机会",
+              actionType: "hotspot",
+            },
+            {
+              id: "risk_control",
+              label: "风险控制",
+              icon: "🛡️",
+              description: "制定今日风控策略",
+              actionType: "risk",
+            },
+            {
+              id: "strategy_plan",
+              label: "策略规划",
+              icon: "📋",
+              description: "制定未来投资策略",
+              actionType: "strategy",
+            },
+          ],
+        },
       };
     } else if (isSmartRecommendation) {
       // 智能荐股响应 - 返回多只股票的推荐列表
@@ -425,6 +464,34 @@ ${newsContent}
 💡 **温馨提示**：以上资讯仅供参考，投资决策请结合个人风险偏好。`,
         hasStockInfo: false,
         isNewsUpdate: true,
+        hasInteractionButtons: true,
+        interactionData: {
+          newsItems: newsItems,
+          affectedSectors: ["银行", "地产", "新能源", "人工智能"],
+          recommendActions: [
+            {
+              id: "analyze_impact",
+              label: "立即分析",
+              icon: "🔍",
+              description: "分析这些资讯对我的持仓影响",
+              actionType: "analysis",
+            },
+            {
+              id: "find_opportunity",
+              label: "寻找机会",
+              icon: "💡",
+              description: "基于资讯寻找投资机会",
+              actionType: "opportunity",
+            },
+            {
+              id: "risk_check",
+              label: "风险排查",
+              icon: "⚠️",
+              description: "检查持仓风险并给出建议",
+              actionType: "risk",
+            },
+          ],
+        },
       };
     } else if (isAssetAnalysis) {
       // 我的资产分析响应

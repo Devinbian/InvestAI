@@ -155,7 +155,7 @@
                                 <ArrowRight />
                             </el-icon>
                         </div>
-                        <div class="settings-item">
+                        <div class="settings-item" @click="showNotificationSettings = true">
                             <div class="settings-item-left">
                                 <el-icon class="settings-item-icon">
                                     <Bell />
@@ -166,7 +166,7 @@
                                 <ArrowRight />
                             </el-icon>
                         </div>
-                        <div class="settings-item">
+                        <div class="settings-item" @click="showSecuritySettings = true">
                             <div class="settings-item-left">
                                 <el-icon class="settings-item-icon">
                                     <Lock />
@@ -177,7 +177,7 @@
                                 <ArrowRight />
                             </el-icon>
                         </div>
-                        <div class="settings-item">
+                        <div class="settings-item" @click="showHelpFeedback = true">
                             <div class="settings-item-left">
                                 <el-icon class="settings-item-icon">
                                     <QuestionFilled />
@@ -389,7 +389,7 @@
                                     <div class="account-balance">
                                         <div class="balance-amount points-balance">
                                             <span class="amount">{{ (userStore.smartPointsBalance || 0).toFixed(0)
-                                            }}</span>
+                                                }}</span>
                                             <span class="currency">智点</span>
                                         </div>
                                         <div class="balance-actions">
@@ -496,8 +496,8 @@
                 </el-tabs>
             </div>
 
-            <!-- 编辑资料对话框 -->
-            <el-dialog v-model="showEditProfile" title="编辑个人资料" width="500px" class="profile-dialog">
+            <!-- 编辑资料对话框 - PC端 -->
+            <el-dialog v-model="showEditProfilePC" title="编辑个人资料" width="500px" class="profile-dialog pc-only">
                 <el-form :model="editForm" :rules="editRules" ref="editFormRef" label-width="80px">
                     <el-form-item label="昵称" prop="nickname">
                         <el-input v-model="editForm.nickname" placeholder="请输入昵称" class="profile-input" />
@@ -516,8 +516,78 @@
                 </template>
             </el-dialog>
 
-            <!-- 修改密码对话框 -->
-            <el-dialog v-model="showChangePassword" title="修改密码" width="400px" class="profile-dialog">
+            <!-- 编辑资料原生弹窗 - 移动端 -->
+            <div class="mobile-settings-overlay" v-if="showEditProfile" @click="showEditProfile = false">
+                <div class="mobile-settings-container" @click.stop>
+                    <!-- 头部 -->
+                    <div class="mobile-settings-header">
+                        <h3>编辑资料</h3>
+                        <button class="mobile-close-btn" @click="showEditProfile = false">
+                            <el-icon>
+                                <Close />
+                            </el-icon>
+                        </button>
+                    </div>
+
+                    <!-- 内容 -->
+                    <div class="mobile-settings-content">
+                        <div class="mobile-profile-section">
+                            <div class="mobile-profile-item" @click="showEditField('nickname')">
+                                <div class="profile-item-left">
+                                    <span class="profile-item-label">昵称</span>
+                                    <span class="profile-item-value">{{ editForm.nickname || '请输入昵称' }}</span>
+                                </div>
+                                <el-icon class="profile-item-arrow">
+                                    <ArrowRight />
+                                </el-icon>
+                            </div>
+                            <div class="mobile-profile-item" @click="showEditField('phone')">
+                                <div class="profile-item-left">
+                                    <span class="profile-item-label">手机号</span>
+                                    <span class="profile-item-value">{{ editForm.phone || '请输入手机号' }}</span>
+                                </div>
+                                <el-icon class="profile-item-arrow">
+                                    <ArrowRight />
+                                </el-icon>
+                            </div>
+                            <div class="mobile-profile-item" @click="showEditField('email')">
+                                <div class="profile-item-left">
+                                    <span class="profile-item-label">邮箱</span>
+                                    <span class="profile-item-value">{{ editForm.email || '请输入邮箱' }}</span>
+                                </div>
+                                <el-icon class="profile-item-arrow">
+                                    <ArrowRight />
+                                </el-icon>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 单个字段编辑弹窗 -->
+            <div class="mobile-field-overlay" v-if="showFieldEdit" @click="showFieldEdit = false">
+                <div class="mobile-field-container" @click.stop>
+                    <!-- 头部 -->
+                    <div class="mobile-field-header">
+                        <button class="mobile-field-cancel" @click="cancelFieldEdit">取消</button>
+                        <h3>{{ getFieldTitle() }}</h3>
+                        <button class="mobile-field-save" @click="saveFieldEdit" :disabled="!isFieldValid()">保存</button>
+                    </div>
+
+                    <!-- 内容 -->
+                    <div class="mobile-field-content">
+                        <div class="mobile-field-input-wrapper">
+                            <input v-model="currentFieldValue" :type="getFieldInputType()"
+                                :placeholder="getFieldPlaceholder()" class="mobile-field-input" ref="fieldInputRef"
+                                @input="validateField" />
+                        </div>
+                        <div v-if="fieldError" class="mobile-field-error">{{ fieldError }}</div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 修改密码对话框 - PC端 -->
+            <el-dialog v-model="showChangePasswordPC" title="修改密码" width="400px" class="profile-dialog pc-only">
                 <el-form :model="passwordForm" :rules="passwordRules" ref="passwordFormRef" label-width="100px">
                     <el-form-item label="当前密码" prop="currentPassword">
                         <el-input v-model="passwordForm.currentPassword" type="password" show-password
@@ -538,6 +608,78 @@
                         class="dialog-submit-btn">确认修改</el-button>
                 </template>
             </el-dialog>
+
+            <!-- 修改密码原生弹窗 - 移动端 -->
+            <div class="mobile-settings-overlay" v-if="showChangePassword" @click="showChangePassword = false">
+                <div class="mobile-settings-container" @click.stop>
+                    <!-- 头部 -->
+                    <div class="mobile-settings-header">
+                        <h3>修改密码</h3>
+                        <button class="mobile-close-btn" @click="showChangePassword = false">
+                            <el-icon>
+                                <Close />
+                            </el-icon>
+                        </button>
+                    </div>
+
+                    <!-- 内容 -->
+                    <div class="mobile-settings-content">
+                        <div class="mobile-password-section">
+                            <div class="mobile-password-item">
+                                <label class="mobile-password-label">当前密码</label>
+                                <div class="mobile-password-input-wrapper">
+                                    <input v-model="passwordForm.currentPassword"
+                                        :type="showCurrentPassword ? 'text' : 'password'" placeholder="请输入当前密码"
+                                        class="mobile-password-input" />
+                                    <button class="mobile-password-toggle"
+                                        @click="showCurrentPassword = !showCurrentPassword">
+                                        <el-icon>
+                                            <component :is="showCurrentPassword ? 'Hide' : 'View'" />
+                                        </el-icon>
+                                    </button>
+                                </div>
+                            </div>
+                            <div class="mobile-password-item">
+                                <label class="mobile-password-label">新密码</label>
+                                <div class="mobile-password-input-wrapper">
+                                    <input v-model="passwordForm.newPassword"
+                                        :type="showNewPassword ? 'text' : 'password'" placeholder="请输入新密码"
+                                        class="mobile-password-input" />
+                                    <button class="mobile-password-toggle" @click="showNewPassword = !showNewPassword">
+                                        <el-icon>
+                                            <component :is="showNewPassword ? 'Hide' : 'View'" />
+                                        </el-icon>
+                                    </button>
+                                </div>
+                            </div>
+                            <div class="mobile-password-item">
+                                <label class="mobile-password-label">确认密码</label>
+                                <div class="mobile-password-input-wrapper">
+                                    <input v-model="passwordForm.confirmPassword"
+                                        :type="showConfirmPassword ? 'text' : 'password'" placeholder="请再次输入新密码"
+                                        class="mobile-password-input" />
+                                    <button class="mobile-password-toggle"
+                                        @click="showConfirmPassword = !showConfirmPassword">
+                                        <el-icon>
+                                            <component :is="showConfirmPassword ? 'Hide' : 'View'" />
+                                        </el-icon>
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- 底部按钮 -->
+                    <div class="mobile-settings-footer">
+                        <button class="mobile-cancel-btn" @click="showChangePassword = false">取消</button>
+                        <button class="mobile-confirm-btn" @click="changePassword" :disabled="changingPassword"
+                            :class="{ loading: changingPassword }">
+                            <span v-if="changingPassword">修改中...</span>
+                            <span v-else>确认修改</span>
+                        </button>
+                    </div>
+                </div>
+            </div>
 
             <!-- 股票账户充值原生弹窗 -->
             <div class="mobile-recharge-overlay" v-if="showStockRecharge" @click="showStockRecharge = false">
@@ -622,7 +764,7 @@
                             <div class="summary-row">
                                 <span>充值后余额</span>
                                 <span class="amount">¥{{ ((userStore.balance || 0) + getFinalAmount()).toFixed(2)
-                                }}</span>
+                                    }}</span>
                             </div>
                         </div>
                     </div>
@@ -661,7 +803,7 @@
                             <div class="balance-row">
                                 <span class="balance-label">当前智点</span>
                                 <span class="balance-value">{{ (userStore.smartPointsBalance || 0).toFixed(0)
-                                }}智点</span>
+                                    }}智点</span>
                             </div>
                             <div class="balance-row">
                                 <span class="balance-label">账户余额</span>
@@ -733,27 +875,286 @@
                     </div>
                 </div>
             </div>
+
+            <!-- 消息通知设置原生弹窗 -->
+            <div class="mobile-settings-overlay" v-if="showNotificationSettings"
+                @click="showNotificationSettings = false">
+                <div class="mobile-settings-container" @click.stop>
+                    <!-- 头部 -->
+                    <div class="mobile-settings-header">
+                        <h3>消息通知</h3>
+                        <button class="mobile-close-btn" @click="showNotificationSettings = false">
+                            <el-icon>
+                                <Close />
+                            </el-icon>
+                        </button>
+                    </div>
+
+                    <!-- 内容 -->
+                    <div class="mobile-settings-content">
+                        <div class="mobile-notification-section">
+                            <div class="mobile-notification-item">
+                                <div class="notification-info">
+                                    <div class="notification-title">价格提醒</div>
+                                    <div class="notification-desc">股票价格变动通知</div>
+                                </div>
+                                <div class="notification-switch" :class="{ active: notificationSettings.priceAlert }"
+                                    @click="notificationSettings.priceAlert = !notificationSettings.priceAlert">
+                                    <div class="switch-handle"></div>
+                                </div>
+                            </div>
+                            <div class="mobile-notification-item">
+                                <div class="notification-info">
+                                    <div class="notification-title">交易提醒</div>
+                                    <div class="notification-desc">买入卖出交易通知</div>
+                                </div>
+                                <div class="notification-switch" :class="{ active: notificationSettings.tradeAlert }"
+                                    @click="notificationSettings.tradeAlert = !notificationSettings.tradeAlert">
+                                    <div class="switch-handle"></div>
+                                </div>
+                            </div>
+                            <div class="mobile-notification-item">
+                                <div class="notification-info">
+                                    <div class="notification-title">新闻推送</div>
+                                    <div class="notification-desc">相关财经新闻推送</div>
+                                </div>
+                                <div class="notification-switch" :class="{ active: notificationSettings.newsAlert }"
+                                    @click="notificationSettings.newsAlert = !notificationSettings.newsAlert">
+                                    <div class="switch-handle"></div>
+                                </div>
+                            </div>
+                            <div class="mobile-notification-item">
+                                <div class="notification-info">
+                                    <div class="notification-title">系统通知</div>
+                                    <div class="notification-desc">系统维护、更新通知</div>
+                                </div>
+                                <div class="notification-switch" :class="{ active: notificationSettings.systemAlert }"
+                                    @click="notificationSettings.systemAlert = !notificationSettings.systemAlert">
+                                    <div class="switch-handle"></div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- 底部按钮 -->
+                    <div class="mobile-settings-footer">
+                        <button class="mobile-confirm-btn full-width" @click="saveNotificationSettings">
+                            保存设置
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 安全设置原生弹窗 -->
+            <div class="mobile-settings-overlay" v-if="showSecuritySettings" @click="showSecuritySettings = false">
+                <div class="mobile-settings-container" @click.stop>
+                    <!-- 头部 -->
+                    <div class="mobile-settings-header">
+                        <h3>安全设置</h3>
+                        <button class="mobile-close-btn" @click="showSecuritySettings = false">
+                            <el-icon>
+                                <Close />
+                            </el-icon>
+                        </button>
+                    </div>
+
+                    <!-- 内容 -->
+                    <div class="mobile-settings-content">
+                        <div class="mobile-security-section">
+                            <div class="mobile-security-item"
+                                @click="showChangePassword = true; showSecuritySettings = false">
+                                <div class="security-info">
+                                    <el-icon class="security-icon">
+                                        <Lock />
+                                    </el-icon>
+                                    <div class="security-text">
+                                        <div class="security-title">修改密码</div>
+                                        <div class="security-desc">定期修改密码保障账户安全</div>
+                                    </div>
+                                </div>
+                                <el-icon class="security-arrow">
+                                    <ArrowRight />
+                                </el-icon>
+                            </div>
+                            <div class="mobile-security-item">
+                                <div class="security-info">
+                                    <el-icon class="security-icon">
+                                        <Phone />
+                                    </el-icon>
+                                    <div class="security-text">
+                                        <div class="security-title">手机绑定</div>
+                                        <div class="security-desc">已绑定：{{ userStore.userInfo?.phone || '未绑定' }}</div>
+                                    </div>
+                                </div>
+                                <el-icon class="security-arrow">
+                                    <ArrowRight />
+                                </el-icon>
+                            </div>
+                            <div class="mobile-security-item">
+                                <div class="security-info">
+                                    <el-icon class="security-icon">
+                                        <Message />
+                                    </el-icon>
+                                    <div class="security-text">
+                                        <div class="security-title">邮箱绑定</div>
+                                        <div class="security-desc">已绑定：{{ userStore.userInfo?.email || '未绑定' }}</div>
+                                    </div>
+                                </div>
+                                <el-icon class="security-arrow">
+                                    <ArrowRight />
+                                </el-icon>
+                            </div>
+                            <div class="mobile-security-item">
+                                <div class="security-info">
+                                    <el-icon class="security-icon">
+                                        <UserFilled />
+                                    </el-icon>
+                                    <div class="security-text">
+                                        <div class="security-title">实名认证</div>
+                                        <div class="security-desc">已完成实名认证</div>
+                                    </div>
+                                </div>
+                                <div class="security-status verified">已认证</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 帮助与反馈原生弹窗 -->
+            <div class="mobile-settings-overlay" v-if="showHelpFeedback" @click="showHelpFeedback = false">
+                <div class="mobile-settings-container" @click.stop>
+                    <!-- 头部 -->
+                    <div class="mobile-settings-header">
+                        <h3>帮助与反馈</h3>
+                        <button class="mobile-close-btn" @click="showHelpFeedback = false">
+                            <el-icon>
+                                <Close />
+                            </el-icon>
+                        </button>
+                    </div>
+
+                    <!-- 内容 -->
+                    <div class="mobile-settings-content">
+                        <div class="mobile-help-section">
+                            <div class="mobile-help-item" @click="openHelp('faq')">
+                                <div class="help-info">
+                                    <el-icon class="help-icon">
+                                        <QuestionFilled />
+                                    </el-icon>
+                                    <div class="help-text">
+                                        <div class="help-title">常见问题</div>
+                                        <div class="help-desc">查看常见问题解答</div>
+                                    </div>
+                                </div>
+                                <el-icon class="help-arrow">
+                                    <ArrowRight />
+                                </el-icon>
+                            </div>
+                            <div class="mobile-help-item" @click="openHelp('tutorial')">
+                                <div class="help-info">
+                                    <el-icon class="help-icon">
+                                        <VideoPlay />
+                                    </el-icon>
+                                    <div class="help-text">
+                                        <div class="help-title">使用教程</div>
+                                        <div class="help-desc">观看操作指导视频</div>
+                                    </div>
+                                </div>
+                                <el-icon class="help-arrow">
+                                    <ArrowRight />
+                                </el-icon>
+                            </div>
+                            <div class="mobile-help-item" @click="openHelp('contact')">
+                                <div class="help-info">
+                                    <el-icon class="help-icon">
+                                        <ChatDotSquare />
+                                    </el-icon>
+                                    <div class="help-text">
+                                        <div class="help-title">联系客服</div>
+                                        <div class="help-desc">在线客服为您解答</div>
+                                    </div>
+                                </div>
+                                <el-icon class="help-arrow">
+                                    <ArrowRight />
+                                </el-icon>
+                            </div>
+                            <div class="mobile-help-item" @click="openHelp('feedback')">
+                                <div class="help-info">
+                                    <el-icon class="help-icon">
+                                        <EditPen />
+                                    </el-icon>
+                                    <div class="help-text">
+                                        <div class="help-title">意见反馈</div>
+                                        <div class="help-desc">提交您的宝贵意见</div>
+                                    </div>
+                                </div>
+                                <el-icon class="help-arrow">
+                                    <ArrowRight />
+                                </el-icon>
+                            </div>
+                        </div>
+
+                        <!-- 版本信息 -->
+                        <div class="mobile-version-section">
+                            <div class="version-item">
+                                <span class="version-label">当前版本</span>
+                                <span class="version-value">v1.0.0</span>
+                            </div>
+                            <div class="version-item">
+                                <span class="version-label">更新时间</span>
+                                <span class="version-value">2024-01-15</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
         </div>
     </div>
 </template>
 
 <script setup>
-import { ref, reactive, onMounted } from 'vue';
+import { ref, reactive, computed, onMounted } from 'vue';
 import { useUserStore } from '../store/user';
 import { ElMessage } from 'element-plus';
-import { Edit, Close, CircleCheck, Warning, TrendCharts, Star, Plus, Switch, List } from '@element-plus/icons-vue';
+import { Edit, Close, CircleCheck, Warning, TrendCharts, Star, Plus, Switch, List, Bell, Lock, QuestionFilled, ArrowRight, Phone, Message, UserFilled, VideoPlay, ChatDotSquare, EditPen, View, Hide } from '@element-plus/icons-vue';
 
 // 定义emit事件
 const emit = defineEmits(['close']);
 
 const userStore = useUserStore();
 
+// 检测是否为移动端
+const isMobile = () => {
+    return window.innerWidth <= 768;
+};
+
 // 响应式数据
 const activeTab = ref('basic');
 const showEditProfile = ref(false);
+
+// 计算属性：PC端弹窗显示控制
+const showEditProfilePC = computed(() => {
+    return showEditProfile.value && !isMobile();
+});
+
+const showChangePasswordPC = computed(() => {
+    return showChangePassword.value && !isMobile();
+});
 const showChangePassword = ref(false);
 const showBindPhone = ref(false);
 const showBindEmail = ref(false);
+const showNotificationSettings = ref(false);
+const showSecuritySettings = ref(false);
+const showHelpFeedback = ref(false);
+const showFieldEdit = ref(false);
+const currentEditField = ref('');
+const currentFieldValue = ref('');
+const fieldError = ref('');
+const fieldInputRef = ref(null);
+const showCurrentPassword = ref(false);
+const showNewPassword = ref(false);
+const showConfirmPassword = ref(false);
 const saving = ref(false);
 const changingPassword = ref(false);
 const showStockRecharge = ref(false);
@@ -994,6 +1395,134 @@ const getPortfolioValue = () => {
     return userStore.portfolio.reduce((total, position) => {
         return total + position.quantity * parseFloat(position.price || position.avgPrice);
     }, 0);
+};
+
+// 保存通知设置
+const saveNotificationSettings = () => {
+    ElMessage.success('通知设置保存成功');
+    showNotificationSettings.value = false;
+};
+
+// 打开帮助功能
+const openHelp = (type) => {
+    switch (type) {
+        case 'faq':
+            ElMessage.info('打开常见问题页面');
+            break;
+        case 'tutorial':
+            ElMessage.info('打开使用教程页面');
+            break;
+        case 'contact':
+            ElMessage.info('打开客服对话');
+            break;
+        case 'feedback':
+            ElMessage.info('打开意见反馈页面');
+            break;
+        default:
+            ElMessage.info('功能开发中...');
+    }
+    showHelpFeedback.value = false;
+};
+
+// 字段编辑相关方法
+const showEditField = (field) => {
+    currentEditField.value = field;
+    currentFieldValue.value = editForm[field] || '';
+    fieldError.value = '';
+    showFieldEdit.value = true;
+    showEditProfile.value = false;
+
+    // 延迟聚焦输入框
+    setTimeout(() => {
+        if (fieldInputRef.value) {
+            fieldInputRef.value.focus();
+        }
+    }, 300);
+};
+
+const cancelFieldEdit = () => {
+    showFieldEdit.value = false;
+    showEditProfile.value = true;
+    currentEditField.value = '';
+    currentFieldValue.value = '';
+    fieldError.value = '';
+};
+
+const saveFieldEdit = () => {
+    if (!isFieldValid()) return;
+
+    editForm[currentEditField.value] = currentFieldValue.value;
+    showFieldEdit.value = false;
+    showEditProfile.value = true;
+    currentEditField.value = '';
+    currentFieldValue.value = '';
+    fieldError.value = '';
+
+    ElMessage.success('修改成功');
+};
+
+const getFieldTitle = () => {
+    const titles = {
+        nickname: '编辑昵称',
+        phone: '编辑手机号',
+        email: '编辑邮箱'
+    };
+    return titles[currentEditField.value] || '';
+};
+
+const getFieldInputType = () => {
+    const types = {
+        nickname: 'text',
+        phone: 'tel',
+        email: 'email'
+    };
+    return types[currentEditField.value] || 'text';
+};
+
+const getFieldPlaceholder = () => {
+    const placeholders = {
+        nickname: '请输入昵称',
+        phone: '请输入手机号',
+        email: '请输入邮箱'
+    };
+    return placeholders[currentEditField.value] || '';
+};
+
+const validateField = () => {
+    fieldError.value = '';
+    const value = currentFieldValue.value.trim();
+
+    if (!value) {
+        fieldError.value = '不能为空';
+        return false;
+    }
+
+    switch (currentEditField.value) {
+        case 'nickname':
+            if (value.length < 2 || value.length > 20) {
+                fieldError.value = '昵称长度在 2 到 20 个字符';
+                return false;
+            }
+            break;
+        case 'phone':
+            if (!/^1[3-9]\d{9}$/.test(value)) {
+                fieldError.value = '请输入有效的手机号';
+                return false;
+            }
+            break;
+        case 'email':
+            if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(value)) {
+                fieldError.value = '请输入有效的邮箱地址';
+                return false;
+            }
+            break;
+    }
+
+    return true;
+};
+
+const isFieldValid = () => {
+    return currentFieldValue.value.trim() && !fieldError.value;
 };
 
 onMounted(() => {
@@ -2774,5 +3303,599 @@ onMounted(() => {
 
 .amount-item.active .amount-points {
     opacity: 1;
+}
+
+/* 移动端设置弹窗样式 */
+.mobile-settings-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: rgba(0, 0, 0, 0.5);
+    z-index: 3000;
+    display: none;
+}
+
+.mobile-settings-container {
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    background: white;
+    border-radius: 20px 20px 0 0;
+    max-height: 85vh;
+    display: flex;
+    flex-direction: column;
+    animation: slideUp 0.3s ease-out;
+}
+
+.mobile-settings-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 16px 20px;
+    border-bottom: 1px solid #f3f4f6;
+    flex-shrink: 0;
+}
+
+.mobile-settings-header h3 {
+    margin: 0;
+    font-size: 1.125rem;
+    font-weight: 600;
+    color: #18181b;
+}
+
+.mobile-settings-content {
+    flex: 1;
+    overflow-y: auto;
+    padding: 0;
+}
+
+.mobile-settings-footer {
+    padding: 16px 20px;
+    border-top: 1px solid #f3f4f6;
+    display: flex;
+    gap: 12px;
+    flex-shrink: 0;
+}
+
+.mobile-settings-footer .mobile-confirm-btn.full-width {
+    flex: 1;
+    margin: 0;
+}
+
+/* 表单样式 */
+.mobile-form-section {
+    padding: 20px;
+}
+
+.mobile-form-item {
+    margin-bottom: 20px;
+}
+
+.mobile-form-item:last-child {
+    margin-bottom: 0;
+}
+
+.mobile-form-label {
+    display: block;
+    font-size: 0.875rem;
+    font-weight: 500;
+    color: #374151;
+    margin-bottom: 8px;
+}
+
+.mobile-form-input {
+    width: 100%;
+    height: 44px;
+    padding: 0 16px;
+    border: 1px solid #d1d5db;
+    border-radius: 8px;
+    font-size: 1rem;
+    background: white;
+    transition: all 0.2s ease;
+    box-sizing: border-box;
+}
+
+.mobile-form-input:focus {
+    outline: none;
+    border-color: #3b82f6;
+    box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+}
+
+/* 通知设置样式 */
+.mobile-notification-section {
+    padding: 20px;
+}
+
+.mobile-notification-item {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 16px 0;
+    border-bottom: 1px solid #f3f4f6;
+}
+
+.mobile-notification-item:last-child {
+    border-bottom: none;
+}
+
+.notification-info {
+    flex: 1;
+}
+
+.notification-title {
+    font-size: 1rem;
+    font-weight: 500;
+    color: #18181b;
+    margin-bottom: 4px;
+}
+
+.notification-desc {
+    font-size: 0.875rem;
+    color: #6b7280;
+}
+
+.notification-switch {
+    width: 50px;
+    height: 30px;
+    background: #d1d5db;
+    border-radius: 15px;
+    position: relative;
+    cursor: pointer;
+    transition: all 0.3s ease;
+}
+
+.notification-switch.active {
+    background: #3b82f6;
+}
+
+.switch-handle {
+    width: 26px;
+    height: 26px;
+    background: white;
+    border-radius: 50%;
+    position: absolute;
+    top: 2px;
+    left: 2px;
+    transition: all 0.3s ease;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+.notification-switch.active .switch-handle {
+    transform: translateX(20px);
+}
+
+/* 安全设置样式 */
+.mobile-security-section {
+    padding: 20px;
+}
+
+.mobile-security-item {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 16px 0;
+    border-bottom: 1px solid #f3f4f6;
+    cursor: pointer;
+    transition: background 0.2s ease;
+}
+
+.mobile-security-item:last-child {
+    border-bottom: none;
+}
+
+.mobile-security-item:active {
+    background: #f9fafb;
+}
+
+.security-info {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    flex: 1;
+}
+
+.security-icon {
+    width: 24px;
+    height: 24px;
+    color: #6b7280;
+}
+
+.security-text {
+    flex: 1;
+}
+
+.security-title {
+    font-size: 1rem;
+    font-weight: 500;
+    color: #18181b;
+    margin-bottom: 4px;
+}
+
+.security-desc {
+    font-size: 0.875rem;
+    color: #6b7280;
+}
+
+.security-arrow {
+    width: 20px;
+    height: 20px;
+    color: #9ca3af;
+}
+
+.security-status {
+    padding: 4px 8px;
+    border-radius: 4px;
+    font-size: 0.75rem;
+    font-weight: 500;
+}
+
+.security-status.verified {
+    background: #dcfce7;
+    color: #166534;
+}
+
+/* 帮助与反馈样式 */
+.mobile-help-section {
+    padding: 20px;
+}
+
+.mobile-help-item {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 16px 0;
+    border-bottom: 1px solid #f3f4f6;
+    cursor: pointer;
+    transition: background 0.2s ease;
+}
+
+.mobile-help-item:last-child {
+    border-bottom: none;
+}
+
+.mobile-help-item:active {
+    background: #f9fafb;
+}
+
+.help-info {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    flex: 1;
+}
+
+.help-icon {
+    width: 24px;
+    height: 24px;
+    color: #6b7280;
+}
+
+.help-text {
+    flex: 1;
+}
+
+.help-title {
+    font-size: 1rem;
+    font-weight: 500;
+    color: #18181b;
+    margin-bottom: 4px;
+}
+
+.help-desc {
+    font-size: 0.875rem;
+    color: #6b7280;
+}
+
+.help-arrow {
+    width: 20px;
+    height: 20px;
+    color: #9ca3af;
+}
+
+.mobile-version-section {
+    padding: 20px;
+    border-top: 8px solid #f9fafb;
+}
+
+.version-item {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 12px 0;
+}
+
+.version-label {
+    font-size: 0.875rem;
+    color: #6b7280;
+}
+
+.version-value {
+    font-size: 0.875rem;
+    font-weight: 500;
+    color: #18181b;
+}
+
+/* 编辑资料列表样式 */
+.mobile-profile-section {
+    padding: 0;
+}
+
+.mobile-profile-item {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 16px 20px;
+    border-bottom: 1px solid #f3f4f6;
+    cursor: pointer;
+    transition: background 0.2s ease;
+}
+
+.mobile-profile-item:last-child {
+    border-bottom: none;
+}
+
+.mobile-profile-item:active {
+    background: #f9fafb;
+}
+
+.profile-item-left {
+    flex: 1;
+}
+
+.profile-item-label {
+    display: block;
+    font-size: 1rem;
+    font-weight: 500;
+    color: #18181b;
+    margin-bottom: 4px;
+}
+
+.profile-item-value {
+    font-size: 0.875rem;
+    color: #6b7280;
+}
+
+.profile-item-arrow {
+    width: 20px;
+    height: 20px;
+    color: #9ca3af;
+}
+
+/* 字段编辑弹窗样式 */
+.mobile-field-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: rgba(0, 0, 0, 0.5);
+    z-index: 3100;
+    display: none;
+}
+
+.mobile-field-container {
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: white;
+    display: flex;
+    flex-direction: column;
+    animation: slideInFromRight 0.3s ease-out;
+}
+
+@keyframes slideInFromRight {
+    from {
+        transform: translateX(100%);
+    }
+
+    to {
+        transform: translateX(0);
+    }
+}
+
+.mobile-field-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 12px 20px;
+    border-bottom: 1px solid #f3f4f6;
+    background: #f9fafb;
+    flex-shrink: 0;
+}
+
+.mobile-field-header h3 {
+    margin: 0;
+    font-size: 1.125rem;
+    font-weight: 600;
+    color: #18181b;
+}
+
+.mobile-field-cancel,
+.mobile-field-save {
+    background: none;
+    border: none;
+    font-size: 1rem;
+    font-weight: 500;
+    padding: 8px 0;
+    cursor: pointer;
+    transition: opacity 0.2s ease;
+}
+
+.mobile-field-cancel {
+    color: #6b7280;
+}
+
+.mobile-field-save {
+    color: #18181b;
+}
+
+.mobile-field-save:disabled {
+    color: #d1d5db;
+    cursor: not-allowed;
+}
+
+.mobile-field-content {
+    flex: 1;
+    padding: 20px;
+}
+
+.mobile-field-input-wrapper {
+    margin-bottom: 12px;
+}
+
+.mobile-field-input {
+    width: 100%;
+    height: 44px;
+    padding: 0 16px;
+    border: 1px solid #d1d5db;
+    border-radius: 8px;
+    font-size: 1rem;
+    background: white;
+    transition: all 0.2s ease;
+    box-sizing: border-box;
+}
+
+.mobile-field-input:focus {
+    outline: none;
+    border-color: #18181b;
+    box-shadow: 0 0 0 3px rgba(24, 24, 27, 0.1);
+}
+
+.mobile-field-error {
+    font-size: 0.875rem;
+    color: #ef4444;
+    margin-top: 8px;
+}
+
+/* 主题黑色样式修改 */
+.mobile-confirm-btn {
+    background: #18181b !important;
+    color: white !important;
+    border: 1px solid #18181b !important;
+}
+
+.mobile-confirm-btn:hover {
+    background: #374151 !important;
+    border-color: #374151 !important;
+}
+
+.mobile-confirm-btn:disabled {
+    background: #9ca3af !important;
+    border-color: #9ca3af !important;
+    color: white !important;
+}
+
+.mobile-confirm-btn.loading {
+    background: #9ca3af !important;
+    border-color: #9ca3af !important;
+    color: white !important;
+}
+
+/* 通知开关主题黑色 */
+.notification-switch.active {
+    background: #18181b !important;
+}
+
+/* 密码表单样式 */
+.mobile-password-section {
+    padding: 20px;
+}
+
+.mobile-password-item {
+    margin-bottom: 20px;
+}
+
+.mobile-password-item:last-child {
+    margin-bottom: 0;
+}
+
+.mobile-password-label {
+    display: block;
+    font-size: 0.875rem;
+    font-weight: 500;
+    color: #374151;
+    margin-bottom: 8px;
+}
+
+.mobile-password-input-wrapper {
+    position: relative;
+}
+
+.mobile-password-input {
+    width: 100%;
+    height: 44px;
+    padding: 0 48px 0 16px;
+    border: 1px solid #d1d5db;
+    border-radius: 8px;
+    font-size: 1rem;
+    background: white;
+    transition: all 0.2s ease;
+    box-sizing: border-box;
+}
+
+.mobile-password-input:focus {
+    outline: none;
+    border-color: #18181b;
+    box-shadow: 0 0 0 3px rgba(24, 24, 27, 0.1);
+}
+
+.mobile-password-toggle {
+    position: absolute;
+    right: 12px;
+    top: 50%;
+    transform: translateY(-50%);
+    background: none;
+    border: none;
+    color: #6b7280;
+    cursor: pointer;
+    padding: 4px;
+    border-radius: 4px;
+    transition: color 0.2s ease;
+}
+
+.mobile-password-toggle:hover {
+    color: #18181b;
+}
+
+.mobile-password-toggle .el-icon {
+    width: 20px;
+    height: 20px;
+}
+
+/* 移动端显示设置弹窗 */
+@media (max-width: 768px) {
+
+    .mobile-settings-overlay,
+    .mobile-field-overlay {
+        display: block;
+    }
+
+    /* 完全隐藏PC端弹窗 */
+    .pc-only,
+    .pc-only .el-dialog,
+    .pc-only .el-dialog__wrapper,
+    .profile-dialog.pc-only,
+    .el-dialog.profile-dialog.pc-only,
+    .el-overlay.pc-only {
+        display: none !important;
+        visibility: hidden !important;
+        opacity: 0 !important;
+        z-index: -1 !important;
+        pointer-events: none !important;
+    }
+
+    /* 确保Element Plus的遮罩层也被隐藏 */
+    .el-overlay:has(.profile-dialog.pc-only) {
+        display: none !important;
+        visibility: hidden !important;
+        opacity: 0 !important;
+        z-index: -1 !important;
+        pointer-events: none !important;
+    }
 }
 </style>

@@ -6,13 +6,6 @@
             <div class="history-header">
                 <div class="header-title">
                     <div class="greeting-section">
-                        <div class="greeting-avatar">
-                            <svg width="24" height="24" viewBox="0 0 24 24" fill="none">
-                                <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2" stroke="currentColor"
-                                    stroke-width="2" />
-                                <circle cx="12" cy="7" r="4" stroke="currentColor" stroke-width="2" />
-                            </svg>
-                        </div>
                         <div class="greeting-text">
                             <h3>{{ getGreeting() }}</h3>
                             <p>{{ getGreetingSubtext() }}</p>
@@ -545,19 +538,6 @@ setInterval(updateChatHistoryList, 1000);
 .greeting-section {
     display: flex;
     align-items: center;
-    gap: 12px;
-}
-
-.greeting-avatar {
-    width: 40px;
-    height: 40px;
-    background: linear-gradient(135deg, #3b82f6 0%, #1d4ed8 100%);
-    border-radius: 50%;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    color: white;
-    box-shadow: 0 4px 12px rgba(59, 130, 246, 0.3);
 }
 
 .greeting-text h3 {
@@ -628,6 +608,9 @@ setInterval(updateChatHistoryList, 1000);
 
 .search-wrapper {
     position: relative;
+    background: #f8fafc;
+    border-radius: 14px;
+    padding: 2px;
 }
 
 .focus-border-input :deep(.el-input__wrapper) {
@@ -635,7 +618,7 @@ setInterval(updateChatHistoryList, 1000);
     border: 2px solid #e5e7eb;
     box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
     transition: all 0.3s ease;
-    background: #ffffff;
+    background: #f8fafc !important;
 }
 
 .focus-border-input:focus-within :deep(.el-input__wrapper) {

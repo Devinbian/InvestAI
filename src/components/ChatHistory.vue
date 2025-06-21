@@ -5,11 +5,19 @@
             <!-- 头部 -->
             <div class="history-header">
                 <div class="header-title">
-                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none">
-                        <path d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" stroke="currentColor" stroke-width="2"
-                            stroke-linecap="round" stroke-linejoin="round" />
-                    </svg>
-                    <span>聊天记录</span>
+                    <div class="greeting-section">
+                        <div class="greeting-avatar">
+                            <svg width="24" height="24" viewBox="0 0 24 24" fill="none">
+                                <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2" stroke="currentColor"
+                                    stroke-width="2" />
+                                <circle cx="12" cy="7" r="4" stroke="currentColor" stroke-width="2" />
+                            </svg>
+                        </div>
+                        <div class="greeting-text">
+                            <h3>{{ getGreeting() }}</h3>
+                            <p>{{ getGreetingSubtext() }}</p>
+                        </div>
+                    </div>
                 </div>
                 <div class="header-actions">
                     <el-button class="new-chat-btn" size="small" @click="createNewChat" title="新建聊天">
@@ -27,143 +35,180 @@
                 </div>
             </div>
 
-            <!-- 搜索框 -->
+            <!-- 搜索框 - 聚焦边框特效 -->
             <div class="search-container">
-                <el-input v-model="searchKeyword" placeholder="搜索股票名称、关键词或日期..." size="small" clearable>
-                    <template #prefix>
-                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none">
-                            <circle cx="11" cy="11" r="8" stroke="currentColor" stroke-width="2" />
-                            <path d="m21 21-4.35-4.35" stroke="currentColor" stroke-width="2" />
-                        </svg>
-                    </template>
-                </el-input>
+                <div class="search-wrapper">
+                    <el-input v-model="searchKeyword" placeholder="搜索股票名称、关键词或日期..." size="small" clearable
+                        class="focus-border-input" @focus="onSearchFocus" @blur="onSearchBlur">
+                        <template #prefix>
+                            <svg width="14" height="14" viewBox="0 0 24 24" fill="none">
+                                <circle cx="11" cy="11" r="8" stroke="currentColor" stroke-width="2" />
+                                <path d="m21 21-4.35-4.35" stroke="currentColor" stroke-width="2" />
+                            </svg>
+                        </template>
+                    </el-input>
+                </div>
             </div>
 
-            <!-- 历史记录列表 -->
-            <div class="history-list">
-                <!-- 今天 -->
-                <div v-if="todayChats.length > 0" class="history-group">
-                    <div class="group-title">今天</div>
-                    <div v-for="chat in todayChats" :key="chat.id"
-                        :class="['history-item', { 'active': chat.id === currentChatId }]">
-                        <div class="chat-info" @click="loadChat(chat)" @touchstart="handleTouchStart(chat)">
-                            <div class="chat-title">{{ chat.title }}</div>
-                            <div class="chat-time">{{ formatTime(chat.lastMessage) }}</div>
+            <!-- 分频线 -->
+            <div class="section-divider">
+                <span class="divider-text">对话历史</span>
+            </div>
+
+            <!-- 历史记录列表 - 双区域布局 -->
+            <div class="history-list-container">
+                <div class="history-list">
+                    <!-- 今天 -->
+                    <div v-if="todayChats.length > 0" class="history-group">
+                        <div class="group-title">
+                            <span class="title-icon">📅</span>
+                            今天
+                            <span class="count-badge">{{ todayChats.length }}</span>
                         </div>
-                        <div class="chat-actions" @click.stop>
-                            <el-dropdown @command="(command) => handleChatAction(command, chat)" trigger="click">
-                                <span class="action-trigger">
-                                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none">
-                                        <circle cx="12" cy="12" r="1" stroke="currentColor" stroke-width="2" />
-                                        <circle cx="19" cy="12" r="1" stroke="currentColor" stroke-width="2" />
-                                        <circle cx="5" cy="12" r="1" stroke="currentColor" stroke-width="2" />
-                                    </svg>
-                                </span>
-                                <template #dropdown>
-                                    <el-dropdown-menu>
-                                        <el-dropdown-item command="rename">重命名</el-dropdown-item>
-                                        <el-dropdown-item command="delete" divided>删除</el-dropdown-item>
-                                    </el-dropdown-menu>
-                                </template>
-                            </el-dropdown>
+                        <div v-for="chat in todayChats" :key="chat.id"
+                            :class="['history-item', { 'active': chat.id === currentChatId }]">
+                            <div class="chat-info" @click="handleClick(chat)"
+                                @touchstart="handleTouchStart(chat, $event)" @touchmove="handleTouchMove($event)"
+                                @touchend="handleTouchEnd($event)">
+                                <div class="chat-title">{{ chat.title }}</div>
+                                <div class="chat-time">{{ formatTime(chat.lastMessage) }}</div>
+                            </div>
+                            <div class="chat-actions" @click.stop>
+                                <el-dropdown @command="(command) => handleChatAction(command, chat)" trigger="click">
+                                    <span class="action-trigger">
+                                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none">
+                                            <circle cx="12" cy="12" r="1" stroke="currentColor" stroke-width="2" />
+                                            <circle cx="19" cy="12" r="1" stroke="currentColor" stroke-width="2" />
+                                            <circle cx="5" cy="12" r="1" stroke="currentColor" stroke-width="2" />
+                                        </svg>
+                                    </span>
+                                    <template #dropdown>
+                                        <el-dropdown-menu>
+                                            <el-dropdown-item command="rename">重命名</el-dropdown-item>
+                                            <el-dropdown-item command="delete" divided>删除</el-dropdown-item>
+                                        </el-dropdown-menu>
+                                    </template>
+                                </el-dropdown>
+                            </div>
                         </div>
                     </div>
-                </div>
 
-                <!-- 昨天 -->
-                <div v-if="yesterdayChats.length > 0" class="history-group">
-                    <div class="group-title">昨天</div>
-                    <div v-for="chat in yesterdayChats" :key="chat.id"
-                        :class="['history-item', { 'active': chat.id === currentChatId }]">
-                        <div class="chat-info" @click="loadChat(chat)" @touchstart="handleTouchStart(chat)">
-                            <div class="chat-title">{{ chat.title }}</div>
-                            <div class="chat-time">{{ formatTime(chat.lastMessage) }}</div>
+                    <!-- 昨天 -->
+                    <div v-if="yesterdayChats.length > 0" class="history-group">
+                        <div class="group-title">
+                            <span class="title-icon">📋</span>
+                            昨天
+                            <span class="count-badge">{{ yesterdayChats.length }}</span>
                         </div>
-                        <div class="chat-actions" @click.stop>
-                            <el-dropdown @command="(command) => handleChatAction(command, chat)" trigger="click">
-                                <span class="action-trigger">
-                                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none">
-                                        <circle cx="12" cy="12" r="1" stroke="currentColor" stroke-width="2" />
-                                        <circle cx="19" cy="12" r="1" stroke="currentColor" stroke-width="2" />
-                                        <circle cx="5" cy="12" r="1" stroke="currentColor" stroke-width="2" />
-                                    </svg>
-                                </span>
-                                <template #dropdown>
-                                    <el-dropdown-menu>
-                                        <el-dropdown-item command="rename">重命名</el-dropdown-item>
-                                        <el-dropdown-item command="delete" divided>删除</el-dropdown-item>
-                                    </el-dropdown-menu>
-                                </template>
-                            </el-dropdown>
+                        <div v-for="chat in yesterdayChats" :key="chat.id"
+                            :class="['history-item', { 'active': chat.id === currentChatId }]">
+                            <div class="chat-info" @click="handleClick(chat)"
+                                @touchstart="handleTouchStart(chat, $event)" @touchmove="handleTouchMove($event)"
+                                @touchend="handleTouchEnd($event)">
+                                <div class="chat-title">{{ chat.title }}</div>
+                                <div class="chat-time">{{ formatTime(chat.lastMessage) }}</div>
+                            </div>
+                            <div class="chat-actions" @click.stop>
+                                <el-dropdown @command="(command) => handleChatAction(command, chat)" trigger="click">
+                                    <span class="action-trigger">
+                                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none">
+                                            <circle cx="12" cy="12" r="1" stroke="currentColor" stroke-width="2" />
+                                            <circle cx="19" cy="12" r="1" stroke="currentColor" stroke-width="2" />
+                                            <circle cx="5" cy="12" r="1" stroke="currentColor" stroke-width="2" />
+                                        </svg>
+                                    </span>
+                                    <template #dropdown>
+                                        <el-dropdown-menu>
+                                            <el-dropdown-item command="rename">重命名</el-dropdown-item>
+                                            <el-dropdown-item command="delete" divided>删除</el-dropdown-item>
+                                        </el-dropdown-menu>
+                                    </template>
+                                </el-dropdown>
+                            </div>
                         </div>
                     </div>
-                </div>
 
-                <!-- 本周 -->
-                <div v-if="thisWeekChats.length > 0" class="history-group">
-                    <div class="group-title">本周</div>
-                    <div v-for="chat in thisWeekChats" :key="chat.id"
-                        :class="['history-item', { 'active': chat.id === currentChatId }]">
-                        <div class="chat-info" @click="loadChat(chat)" @touchstart="handleTouchStart(chat)">
-                            <div class="chat-title">{{ chat.title }}</div>
-                            <div class="chat-time">{{ formatTime(chat.lastMessage) }}</div>
+                    <!-- 本周 -->
+                    <div v-if="thisWeekChats.length > 0" class="history-group">
+                        <div class="group-title">
+                            <span class="title-icon">📊</span>
+                            本周
+                            <span class="count-badge">{{ thisWeekChats.length }}</span>
                         </div>
-                        <div class="chat-actions" @click.stop>
-                            <el-dropdown @command="(command) => handleChatAction(command, chat)" trigger="click">
-                                <span class="action-trigger">
-                                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none">
-                                        <circle cx="12" cy="12" r="1" stroke="currentColor" stroke-width="2" />
-                                        <circle cx="19" cy="12" r="1" stroke="currentColor" stroke-width="2" />
-                                        <circle cx="5" cy="12" r="1" stroke="currentColor" stroke-width="2" />
-                                    </svg>
-                                </span>
-                                <template #dropdown>
-                                    <el-dropdown-menu>
-                                        <el-dropdown-item command="rename">重命名</el-dropdown-item>
-                                        <el-dropdown-item command="delete" divided>删除</el-dropdown-item>
-                                    </el-dropdown-menu>
-                                </template>
-                            </el-dropdown>
+                        <div v-for="chat in thisWeekChats" :key="chat.id"
+                            :class="['history-item', { 'active': chat.id === currentChatId }]">
+                            <div class="chat-info" @click="handleClick(chat)"
+                                @touchstart="handleTouchStart(chat, $event)" @touchmove="handleTouchMove($event)"
+                                @touchend="handleTouchEnd($event)">
+                                <div class="chat-title">{{ chat.title }}</div>
+                                <div class="chat-time">{{ formatTime(chat.lastMessage) }}</div>
+                            </div>
+                            <div class="chat-actions" @click.stop>
+                                <el-dropdown @command="(command) => handleChatAction(command, chat)" trigger="click">
+                                    <span class="action-trigger">
+                                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none">
+                                            <circle cx="12" cy="12" r="1" stroke="currentColor" stroke-width="2" />
+                                            <circle cx="19" cy="12" r="1" stroke="currentColor" stroke-width="2" />
+                                            <circle cx="5" cy="12" r="1" stroke="currentColor" stroke-width="2" />
+                                        </svg>
+                                    </span>
+                                    <template #dropdown>
+                                        <el-dropdown-menu>
+                                            <el-dropdown-item command="rename">重命名</el-dropdown-item>
+                                            <el-dropdown-item command="delete" divided>删除</el-dropdown-item>
+                                        </el-dropdown-menu>
+                                    </template>
+                                </el-dropdown>
+                            </div>
                         </div>
                     </div>
-                </div>
 
-                <!-- 更早 -->
-                <div v-if="olderChats.length > 0" class="history-group">
-                    <div class="group-title">更早</div>
-                    <div v-for="chat in olderChats" :key="chat.id"
-                        :class="['history-item', { 'active': chat.id === currentChatId }]">
-                        <div class="chat-info" @click="loadChat(chat)" @touchstart="handleTouchStart(chat)">
-                            <div class="chat-title">{{ chat.title }}</div>
-                            <div class="chat-time">{{ formatDate(chat.lastMessage) }}</div>
+                    <!-- 更早 -->
+                    <div v-if="olderChats.length > 0" class="history-group">
+                        <div class="group-title">
+                            <span class="title-icon">🗂️</span>
+                            更早
+                            <span class="count-badge">{{ olderChats.length }}</span>
                         </div>
-                        <div class="chat-actions" @click.stop>
-                            <el-dropdown @command="(command) => handleChatAction(command, chat)" trigger="click">
-                                <span class="action-trigger">
-                                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none">
-                                        <circle cx="12" cy="12" r="1" stroke="currentColor" stroke-width="2" />
-                                        <circle cx="19" cy="12" r="1" stroke="currentColor" stroke-width="2" />
-                                        <circle cx="5" cy="12" r="1" stroke="currentColor" stroke-width="2" />
-                                    </svg>
-                                </span>
-                                <template #dropdown>
-                                    <el-dropdown-menu>
-                                        <el-dropdown-item command="rename">重命名</el-dropdown-item>
-                                        <el-dropdown-item command="delete" divided>删除</el-dropdown-item>
-                                    </el-dropdown-menu>
-                                </template>
-                            </el-dropdown>
+                        <div v-for="chat in olderChats" :key="chat.id"
+                            :class="['history-item', { 'active': chat.id === currentChatId }]">
+                            <div class="chat-info" @click="handleClick(chat)"
+                                @touchstart="handleTouchStart(chat, $event)" @touchmove="handleTouchMove($event)"
+                                @touchend="handleTouchEnd($event)">
+                                <div class="chat-title">{{ chat.title }}</div>
+                                <div class="chat-time">{{ formatDate(chat.lastMessage) }}</div>
+                            </div>
+                            <div class="chat-actions" @click.stop>
+                                <el-dropdown @command="(command) => handleChatAction(command, chat)" trigger="click">
+                                    <span class="action-trigger">
+                                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none">
+                                            <circle cx="12" cy="12" r="1" stroke="currentColor" stroke-width="2" />
+                                            <circle cx="19" cy="12" r="1" stroke="currentColor" stroke-width="2" />
+                                            <circle cx="5" cy="12" r="1" stroke="currentColor" stroke-width="2" />
+                                        </svg>
+                                    </span>
+                                    <template #dropdown>
+                                        <el-dropdown-menu>
+                                            <el-dropdown-item command="rename">重命名</el-dropdown-item>
+                                            <el-dropdown-item command="delete" divided>删除</el-dropdown-item>
+                                        </el-dropdown-menu>
+                                    </template>
+                                </el-dropdown>
+                            </div>
                         </div>
                     </div>
-                </div>
 
-                <!-- 空状态 -->
-                <div v-if="filteredChats.length === 0" class="empty-state">
-                    <svg width="48" height="48" viewBox="0 0 24 24" fill="none">
-                        <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z" stroke="#d1d5db"
-                            stroke-width="2" />
-                    </svg>
-                    <p>{{ searchKeyword ? '没有找到相关聊天记录' : '暂无聊天记录' }}</p>
+                    <!-- 空状态 -->
+                    <div v-if="filteredChats.length === 0" class="empty-state">
+                        <div class="empty-icon">
+                            <svg width="48" height="48" viewBox="0 0 24 24" fill="none">
+                                <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z" stroke="#d1d5db"
+                                    stroke-width="2" />
+                            </svg>
+                        </div>
+                        <p class="empty-text">{{ searchKeyword ? '没有找到相关聊天记录' : '暂无聊天记录' }}</p>
+                        <p class="empty-subtext">{{ searchKeyword ? '试试其他关键词' : '开始一个新的对话吧' }}</p>
+                    </div>
                 </div>
             </div>
         </div>
@@ -203,9 +248,51 @@ const searchKeyword = ref('');
 const renameDialogVisible = ref(false);
 const renameTitle = ref('');
 const renamingChat = ref(null);
+const isSearchFocused = ref(false);
 
 // 从localStorage获取聊天历史
 const chatHistoryList = ref(JSON.parse(localStorage.getItem('chatHistoryList') || '[]'));
+
+// 触摸事件状态管理
+const touchState = ref({
+    startX: 0,
+    startY: 0,
+    startTime: 0,
+    isDragging: false,
+    currentChat: null
+});
+
+// 问候语功能
+const getGreeting = () => {
+    const hour = new Date().getHours();
+    if (hour < 6) return '夜深了';
+    if (hour < 9) return '早上好';
+    if (hour < 12) return '上午好';
+    if (hour < 14) return '中午好';
+    if (hour < 18) return '下午好';
+    if (hour < 22) return '晚上好';
+    return '夜深了';
+};
+
+const getGreetingSubtext = () => {
+    const hour = new Date().getHours();
+    if (hour < 6) return '休息时间也在关注投资，真棒！';
+    if (hour < 9) return '开始新的投资之旅吧';
+    if (hour < 12) return '今天的市场如何？';
+    if (hour < 14) return '午间休息，回顾一下？';
+    if (hour < 18) return '下午时光，分析一下';
+    if (hour < 22) return '晚间总结时间';
+    return '深夜思考投资，很专业！';
+};
+
+// 搜索框焦点事件
+const onSearchFocus = () => {
+    isSearchFocused.value = true;
+};
+
+const onSearchBlur = () => {
+    isSearchFocused.value = false;
+};
 
 // 计算属性 - 过滤后的聊天记录
 const filteredChats = computed(() => {
@@ -277,30 +364,74 @@ const closePanel = () => {
     emit('close-panel');
 };
 
-const loadChat = (chat) => {
+const loadChat = (chat, forceLoad = false) => {
     // 先触发加载聊天事件
     emit('load-chat', chat);
 
-    // 移动端点击后立即触发关闭面板事件
+    // 移动端需要判断是否为真正的点击操作
     if (window.innerWidth <= 768) {
-        // 立即关闭面板，不需要延迟
-        emit('close-panel');
-        console.log('移动端点击历史记录，触发关闭面板');
+        // 如果是强制加载或者不是拖拽状态，则关闭面板
+        if (forceLoad || !touchState.value.isDragging) {
+            // 立即关闭面板，不需要延迟
+            emit('close-panel');
+            console.log('移动端点击历史记录，触发关闭面板');
+        }
     }
 };
 
-// 处理移动端触摸事件
-const handleTouchStart = (chat) => {
-    // 在移动端，直接触发 loadChat
+// 处理移动端触摸开始事件
+const handleTouchStart = (chat, event) => {
     if (window.innerWidth <= 768) {
-        loadChat(chat);
+        const touch = event.touches[0];
+        touchState.value = {
+            startX: touch.clientX,
+            startY: touch.clientY,
+            startTime: Date.now(),
+            isDragging: false,
+            currentChat: chat
+        };
     }
 };
 
-// 处理触摸结束事件（备用方法）
-const handleTouchEnd = (chat) => {
-    // 在移动端，直接触发 loadChat
-    if (window.innerWidth <= 768) {
+// 处理移动端触摸移动事件
+const handleTouchMove = (event) => {
+    if (window.innerWidth <= 768 && touchState.value.currentChat) {
+        const touch = event.touches[0];
+        const deltaX = Math.abs(touch.clientX - touchState.value.startX);
+        const deltaY = Math.abs(touch.clientY - touchState.value.startY);
+
+        // 如果移动距离超过阈值，则认为是拖拽操作
+        if (deltaX > 10 || deltaY > 10) {
+            touchState.value.isDragging = true;
+        }
+    }
+};
+
+// 处理移动端触摸结束事件
+const handleTouchEnd = (event) => {
+    if (window.innerWidth <= 768 && touchState.value.currentChat) {
+        const currentTime = Date.now();
+        const timeDiff = currentTime - touchState.value.startTime;
+
+        // 如果是短时间的触摸且没有拖拽，则认为是点击
+        if (timeDiff < 300 && !touchState.value.isDragging) {
+            loadChat(touchState.value.currentChat, true);
+        }
+
+        // 重置触摸状态
+        touchState.value = {
+            startX: 0,
+            startY: 0,
+            startTime: 0,
+            isDragging: false,
+            currentChat: null
+        };
+    }
+};
+
+// 处理鼠标点击事件（PC端）
+const handleClick = (chat) => {
+    if (window.innerWidth > 768) {
         loadChat(chat);
     }
 };
@@ -378,7 +509,7 @@ setInterval(updateChatHistoryList, 1000);
 .chat-history-container {
     width: 320px;
     height: calc(100vh - 56px);
-    background: #ffffff;
+    background: linear-gradient(145deg, #ffffff 0%, #f8fafc 100%);
     border-right: 1px solid #e5e7eb;
     position: fixed;
     top: 56px;
@@ -401,14 +532,47 @@ setInterval(updateChatHistoryList, 1000);
 }
 
 .history-header {
-    padding: 12px 16px;
+    padding: 20px 16px;
     border-bottom: 1px solid #f0f0f0;
     display: flex;
     align-items: center;
     justify-content: space-between;
     flex-shrink: 0;
-    height: 56px;
+    background: linear-gradient(135deg, #ffffff 0%, #f8fafc 100%);
     box-sizing: border-box;
+}
+
+.greeting-section {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+}
+
+.greeting-avatar {
+    width: 40px;
+    height: 40px;
+    background: linear-gradient(135deg, #3b82f6 0%, #1d4ed8 100%);
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: white;
+    box-shadow: 0 4px 12px rgba(59, 130, 246, 0.3);
+}
+
+.greeting-text h3 {
+    margin: 0;
+    font-size: 16px;
+    font-weight: 600;
+    color: #1f2937;
+    line-height: 1.3;
+}
+
+.greeting-text p {
+    margin: 2px 0 0 0;
+    font-size: 12px;
+    color: #6b7280;
+    line-height: 1.3;
 }
 
 .header-title {
@@ -458,20 +622,63 @@ setInterval(updateChatHistoryList, 1000);
 }
 
 .search-container {
-    padding: 10px 10px 0 16px;
+    padding: 16px;
     flex-shrink: 0;
 }
 
-.search-container :deep(.el-input__wrapper) {
-    border-radius: 8px;
-    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+.search-wrapper {
+    position: relative;
 }
 
-.search-container :deep(.el-input__inner::placeholder) {
-    color: #c1c7cd !important;
-    font-size: 0.8rem !important;
+.focus-border-input :deep(.el-input__wrapper) {
+    border-radius: 12px;
+    border: 2px solid #e5e7eb;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
+    transition: all 0.3s ease;
+    background: #ffffff;
+}
+
+.focus-border-input:focus-within :deep(.el-input__wrapper) {
+    border-color: #3b82f6;
+    box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1), 0 4px 12px rgba(59, 130, 246, 0.15);
+    transform: translateY(-1px);
+}
+
+.focus-border-input :deep(.el-input__inner) {
+    color: #1f2937;
+    font-weight: 500;
+}
+
+.focus-border-input :deep(.el-input__inner::placeholder) {
+    color: #9ca3af !important;
+    font-size: 14px !important;
     font-weight: 400 !important;
-    opacity: 0.75 !important;
+}
+
+.section-divider {
+    margin: 12px 16px;
+    padding: 8px 0;
+    border-bottom: 2px solid #f3f4f6;
+    position: relative;
+}
+
+.divider-text {
+    font-size: 13px;
+    font-weight: 600;
+    color: #6b7280;
+    text-transform: uppercase;
+    letter-spacing: 0.8px;
+    background: linear-gradient(135deg, #6b7280 0%, #9ca3af 100%);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+}
+
+.history-list-container {
+    flex: 1;
+    overflow: hidden;
+    display: flex;
+    flex-direction: column;
 }
 
 .history-list {
@@ -502,12 +709,30 @@ setInterval(updateChatHistoryList, 1000);
 }
 
 .group-title {
-    font-size: 12px;
+    font-size: 13px;
+    color: #4b5563;
+    font-weight: 600;
+    padding: 12px 12px 8px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    text-transform: none;
+    letter-spacing: 0.3px;
+}
+
+.title-icon {
+    font-size: 16px;
+}
+
+.count-badge {
+    background: #f3f4f6;
     color: #6b7280;
+    font-size: 11px;
     font-weight: 500;
-    padding: 8px 12px 4px;
-    text-transform: uppercase;
-    letter-spacing: 0.5px;
+    padding: 2px 6px;
+    border-radius: 10px;
+    margin-left: auto;
+    border: 1px solid #e5e7eb;
 }
 
 .history-item {
@@ -595,6 +820,24 @@ setInterval(updateChatHistoryList, 1000);
     color: #6b7280;
 }
 
+.empty-icon {
+    margin-bottom: 16px;
+    opacity: 0.6;
+}
+
+.empty-text {
+    font-size: 16px;
+    font-weight: 500;
+    color: #4b5563;
+    margin: 0 0 8px 0;
+}
+
+.empty-subtext {
+    font-size: 14px;
+    color: #9ca3af;
+    margin: 0;
+}
+
 .empty-state p {
     margin-top: 16px;
     font-size: 14px;
@@ -633,11 +876,25 @@ setInterval(updateChatHistoryList, 1000);
         -moz-user-select: none;
         -ms-user-select: none;
         user-select: none;
-        touch-action: manipulation;
+        touch-action: pan-y;
+        /* 允许垂直滑动，但限制其他手势 */
+        min-height: 44px;
+        /* 增加触摸目标的最小高度 */
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
     }
 
     .history-item {
         -webkit-tap-highlight-color: transparent;
+        min-height: 56px;
+        /* 确保足够的点击区域 */
+    }
+
+    .history-list {
+        /* 改善滚动体验 */
+        -webkit-overflow-scrolling: touch;
+        overscroll-behavior: contain;
     }
 }
 </style>

@@ -70,7 +70,20 @@
             <!-- 初始状态：标题、描述和输入区域作为一个整体 -->
             <div class="center-container chat-area" v-else-if="!isChatMode">
                 <div class="welcome-section">
-                    <div class="modern-title">👋 您好，我是智投小助</div>
+                    <div class="greeting-container">
+                        <div class="greeting-avatar-large">
+                            <svg width="32" height="32" viewBox="0 0 24 24" fill="none">
+                                <path d="M9.663 17h4.673M12 3a6 6 0 0 1 6 6c0 3-2 4-2 4h-8s-2-1-2-4a6 6 0 0 1 6-6z"
+                                    stroke="currentColor" stroke-width="2" />
+                                <path d="M12 17v4" stroke="currentColor" stroke-width="2" />
+                                <circle cx="12" cy="12" r="1" fill="currentColor" />
+                            </svg>
+                        </div>
+                        <div class="greeting-message">
+                            <div class="modern-title">{{ getGreetingTitle() }}</div>
+                            <div class="modern-subtitle">{{ getGreetingSubtitle() }}</div>
+                        </div>
+                    </div>
                     <div class="modern-desc">
                         您的AI投资管家——自动分析、个性推荐、智能交易，全程陪伴，让赚钱更轻松
                         <div class="quick-examples">
@@ -2214,6 +2227,34 @@ const isWechatBrowser = () => {
 const wxVoiceLocalId = ref('');
 const isWxVoiceSupported = ref(false);
 const isWechatEnv = ref(false); // 微信环境检测
+
+// 问候语功能
+const getGreetingTitle = () => {
+    const hour = new Date().getHours();
+    const userName = userStore.userInfo?.nickname;
+    const greeting = hour < 6 ? '夜深了' :
+        hour < 9 ? '早上好' :
+            hour < 12 ? '上午好' :
+                hour < 14 ? '中午好' :
+                    hour < 18 ? '下午好' :
+                        hour < 22 ? '晚上好' : '夜深了';
+
+    if (userName) {
+        return `${greeting}，${userName}`;
+    }
+    return `${greeting}，我是智投小助`;
+};
+
+const getGreetingSubtitle = () => {
+    const hour = new Date().getHours();
+    if (hour < 6) return '深夜时分也在关注投资，很专业！';
+    if (hour < 9) return '开始新的投资之旅吧';
+    if (hour < 12) return '今天的市场如何？一起来分析';
+    if (hour < 14) return '午间休息，回顾一下投资情况';
+    if (hour < 18) return '下午时光，继续投资分析';
+    if (hour < 22) return '晚间总结时间，看看今日收获';
+    return '夜深了，适度休息也很重要哦';
+};
 
 // 初始化微信JS-SDK语音功能
 const initWechatVoice = () => {
@@ -4625,12 +4666,62 @@ body.onboarding-mode {
     margin-bottom: 40px;
 }
 
+.greeting-container {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 16px;
+    margin-bottom: 20px;
+}
+
+.greeting-avatar-large {
+    width: 60px;
+    height: 60px;
+    background: linear-gradient(135deg, #3b82f6 0%, #1d4ed8 100%);
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: white;
+    box-shadow: 0 8px 24px rgba(59, 130, 246, 0.3);
+    animation: gentle-pulse 3s ease-in-out infinite;
+}
+
+@keyframes gentle-pulse {
+
+    0%,
+    100% {
+        transform: scale(1);
+        box-shadow: 0 8px 24px rgba(59, 130, 246, 0.3);
+    }
+
+    50% {
+        transform: scale(1.05);
+        box-shadow: 0 12px 32px rgba(59, 130, 246, 0.4);
+    }
+}
+
+.greeting-message {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    text-align: left;
+}
+
 .modern-title {
     font-size: 2.8rem;
     font-weight: 800;
     color: #18181b;
-    margin-bottom: 12px;
+    margin: 0;
     letter-spacing: -1px;
+    line-height: 1.2;
+}
+
+.modern-subtitle {
+    font-size: 1rem;
+    color: #6b7280;
+    margin: 4px 0 0 0;
+    font-weight: 400;
 }
 
 .modern-desc {
@@ -4745,6 +4836,31 @@ body.onboarding-mode {
 
 /* 响应式设计 */
 @media (max-width: 768px) {
+    .greeting-container {
+        flex-direction: column;
+        gap: 12px;
+        margin-bottom: 16px;
+    }
+
+    .greeting-avatar-large {
+        width: 50px;
+        height: 50px;
+    }
+
+    .greeting-message {
+        align-items: center;
+        text-align: center;
+    }
+
+    .modern-title {
+        font-size: 2rem;
+    }
+
+    .modern-subtitle {
+        font-size: 0.9rem;
+        text-align: center;
+    }
+
     .examples-content {
         gap: 6px;
     }
@@ -7025,15 +7141,11 @@ body.onboarding-mode {
 .ai-input-row {
     background: #f8f9fa;
     border-radius: 16px;
-    /* 减少圆角 */
     box-shadow: 0 1px 4px 0 rgba(0, 0, 0, 0.03);
-    /* 减少阴影 */
     padding: 12px 16px;
-    /* 减少padding */
     display: flex;
     flex-direction: column;
     gap: 8px;
-    /* 减少间距 */
 }
 
 .ai-buttons-row {

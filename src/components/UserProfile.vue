@@ -34,16 +34,15 @@
                         <div class="balance-item">
                             <div class="balance-amount">¥{{ (userStore.balance || 0).toFixed(2) }}</div>
                             <div class="balance-label">股票账户</div>
-                            <el-button type="primary" size="small" @click="showStockRecharge = true"
-                                class="balance-btn">
+                            <el-button size="small" @click="showStockRecharge = true" class="balance-btn charge-btn">
                                 充值
                             </el-button>
                         </div>
                         <div class="balance-item">
                             <div class="balance-amount">{{ (userStore.smartPointsBalance || 0).toFixed(0) }}</div>
                             <div class="balance-label">智点余额</div>
-                            <el-button type="success" size="small" @click="showSmartPointsRecharge = true"
-                                class="balance-btn">
+                            <el-button size="small" @click="showSmartPointsRecharge = true"
+                                class="balance-btn purchase-btn">
                                 购买
                             </el-button>
                         </div>
@@ -681,8 +680,87 @@
                 </div>
             </div>
 
-            <!-- 股票账户充值原生弹窗 -->
-            <div class="mobile-recharge-overlay" v-if="showStockRecharge" @click="showStockRecharge = false">
+            <!-- PC端股票账户充值对话框 -->
+            <el-dialog v-if="!isMobile()" v-model="showStockRecharge" title="股票账户充值" width="500px"
+                class="recharge-dialog pc-dialog">
+                <div class="recharge-content">
+                    <!-- 当前余额 -->
+                    <div class="balance-info">
+                        <span class="balance-label">当前余额：</span>
+                        <span class="balance-value">¥{{ (userStore.balance || 0).toFixed(2) }}</span>
+                    </div>
+
+                    <!-- 充值金额选择 -->
+                    <div class="form-section">
+                        <h4 class="section-title">选择充值金额</h4>
+                        <div class="amount-grid">
+                            <div v-for="amount in rechargeAmounts" :key="amount" class="amount-item"
+                                :class="{ active: selectedAmount === amount }"
+                                @click="selectedAmount = amount; customAmount = null">
+                                ¥{{ amount }}
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- 自定义金额 -->
+                    <div class="form-section">
+                        <h4 class="section-title">自定义金额</h4>
+                        <el-input v-model="customAmount" type="number" placeholder="请输入充值金额"
+                            @input="selectedAmount = null" class="custom-input">
+                            <template #prefix>¥</template>
+                        </el-input>
+                    </div>
+
+                    <!-- 支付方式 -->
+                    <div class="form-section">
+                        <h4 class="section-title">支付方式</h4>
+                        <el-radio-group v-model="selectedPayment" class="payment-group">
+                            <el-radio value="alipay" class="payment-radio">
+                                <div class="payment-option">
+                                    <div class="payment-icon alipay">支</div>
+                                    <span>支付宝</span>
+                                </div>
+                            </el-radio>
+                            <el-radio value="wechat" class="payment-radio">
+                                <div class="payment-option">
+                                    <div class="payment-icon wechat">微</div>
+                                    <span>微信支付</span>
+                                </div>
+                            </el-radio>
+                            <el-radio value="bank" class="payment-radio">
+                                <div class="payment-option">
+                                    <div class="payment-icon bank">银</div>
+                                    <span>银行卡</span>
+                                </div>
+                            </el-radio>
+                        </el-radio-group>
+                    </div>
+
+                    <!-- 充值摘要 -->
+                    <div class="summary-section" v-if="getFinalAmount() > 0">
+                        <div class="summary-row">
+                            <span>充值金额：</span>
+                            <span class="amount">¥{{ getFinalAmount() }}</span>
+                        </div>
+                        <div class="summary-row">
+                            <span>充值后余额：</span>
+                            <span class="amount">¥{{ ((userStore.balance || 0) + getFinalAmount()).toFixed(2) }}</span>
+                        </div>
+                    </div>
+                </div>
+                <template #footer>
+                    <el-button @click="showStockRecharge = false">取消</el-button>
+                    <el-button type="primary" @click="handleStockRecharge"
+                        :disabled="getFinalAmount() <= 0 || !selectedPayment || stockRecharging"
+                        :loading="stockRecharging">
+                        确认充值 ¥{{ getFinalAmount() }}
+                    </el-button>
+                </template>
+            </el-dialog>
+
+            <!-- 移动端股票账户充值原生弹窗 -->
+            <div class="mobile-recharge-overlay" v-if="showStockRecharge && isMobile()"
+                @click="showStockRecharge = false">
                 <div class="mobile-recharge-container" @click.stop>
                     <!-- 头部 -->
                     <div class="mobile-recharge-header">
@@ -782,8 +860,85 @@
                 </div>
             </div>
 
-            <!-- 智点购买原生弹窗 -->
-            <div class="mobile-recharge-overlay" v-if="showSmartPointsRecharge"
+            <!-- PC端智点购买对话框 -->
+            <el-dialog v-if="!isMobile()" v-model="showSmartPointsRecharge" title="购买智点" width="500px"
+                class="recharge-dialog pc-dialog">
+                <div class="recharge-content">
+                    <!-- 当前余额 -->
+                    <div class="balance-info">
+                        <div class="balance-row">
+                            <span class="balance-label">当前智点：</span>
+                            <span class="balance-value">{{ (userStore.smartPointsBalance || 0).toFixed(0) }}智点</span>
+                        </div>
+                        <div class="balance-row">
+                            <span class="balance-label">账户余额：</span>
+                            <span class="balance-value">¥{{ (userStore.balance || 0).toFixed(2) }}</span>
+                        </div>
+                    </div>
+
+                    <!-- 兑换说明 -->
+                    <div class="form-section">
+                        <h4 class="section-title">兑换说明</h4>
+                        <div class="exchange-info">
+                            <p>• 1元人民币 = 1智点</p>
+                            <p>• 用于购买AI分析、专业报告等服务</p>
+                            <p>• 智点不可提现，仅限平台内消费</p>
+                        </div>
+                    </div>
+
+                    <!-- 购买金额选择 -->
+                    <div class="form-section">
+                        <h4 class="section-title">选择购买金额</h4>
+                        <div class="points-grid">
+                            <div v-for="amount in smartPointsAmounts" :key="amount" class="points-item"
+                                :class="{ active: selectedSmartPointsAmount === amount }"
+                                @click="selectedSmartPointsAmount = amount; customSmartPointsAmount = null">
+                                <div class="points-cash">¥{{ amount }}</div>
+                                <div class="points-amount">{{ amount }}智点</div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- 自定义金额 -->
+                    <div class="form-section">
+                        <h4 class="section-title">自定义金额</h4>
+                        <el-input v-model="customSmartPointsAmount" type="number" placeholder="请输入购买金额"
+                            @input="selectedSmartPointsAmount = null" class="custom-input">
+                            <template #prefix>¥</template>
+                            <template #suffix>= {{ (customSmartPointsAmount || 0) }}智点</template>
+                        </el-input>
+                    </div>
+
+                    <!-- 购买摘要 -->
+                    <div class="summary-section" v-if="getSmartPointsFinalAmount() > 0">
+                        <div class="summary-row">
+                            <span>购买金额：</span>
+                            <span class="amount">¥{{ getSmartPointsFinalAmount() }}</span>
+                        </div>
+                        <div class="summary-row">
+                            <span>获得智点：</span>
+                            <span class="amount">{{ getSmartPointsFinalAmount() }}智点</span>
+                        </div>
+                        <div class="summary-row">
+                            <span>购买后余额：</span>
+                            <span class="amount">{{ ((userStore.smartPointsBalance || 0) +
+                                getSmartPointsFinalAmount()).toFixed(0)
+                            }}智点</span>
+                        </div>
+                    </div>
+                </div>
+                <template #footer>
+                    <el-button @click="showSmartPointsRecharge = false">取消</el-button>
+                    <el-button type="success" @click="handleSmartPointsPurchase"
+                        :disabled="getSmartPointsFinalAmount() <= 0 || userStore.balance < getSmartPointsFinalAmount() || smartPointsPurchasing"
+                        :loading="smartPointsPurchasing">
+                        确认购买 {{ getSmartPointsFinalAmount() }}智点
+                    </el-button>
+                </template>
+            </el-dialog>
+
+            <!-- 移动端智点购买原生弹窗 -->
+            <div class="mobile-recharge-overlay" v-if="showSmartPointsRecharge && isMobile()"
                 @click="showSmartPointsRecharge = false">
                 <div class="mobile-recharge-container" @click.stop>
                     <!-- 头部 -->
@@ -1686,19 +1841,391 @@ onMounted(() => {
 
 .recharge-btn {
     margin-top: 8px;
+    border-radius: 8px;
+    font-weight: 600;
+    font-size: 0.875rem;
+    padding: 8px 16px;
+    height: auto;
+    min-width: 68px;
+    transition: all 0.2s ease;
+}
+
+/* PC端统计区域按钮样式 */
+.stat-item .recharge-btn {
+    width: 66px;
+    height: 32px;
+    padding: 4px 8px;
+    font-size: 0.875rem;
+    font-weight: 500;
+    border-radius: 6px;
+    transition: all 0.2s ease;
+}
+
+.stat-item:first-child .recharge-btn {
     background: #3b82f6;
     border-color: #3b82f6;
     color: white;
-    border-radius: 6px;
-    font-weight: 500;
-    font-size: 0.75rem;
-    padding: 4px 12px;
-    height: auto;
 }
 
-.recharge-btn:hover {
+.stat-item:first-child .recharge-btn:hover {
     background: #2563eb;
     border-color: #2563eb;
+    transform: translateY(-1px);
+    box-shadow: 0 2px 8px rgba(59, 130, 246, 0.3);
+}
+
+.stat-item:nth-child(2) .recharge-btn {
+    background: #10b981;
+    border-color: #10b981;
+    color: white;
+}
+
+.stat-item:nth-child(2) .recharge-btn:hover {
+    background: #059669;
+    border-color: #059669;
+    transform: translateY(-1px);
+    box-shadow: 0 2px 8px rgba(16, 185, 129, 0.3);
+}
+
+
+
+/* PC端充值对话框样式 */
+.recharge-dialog .recharge-content {
+    padding: 16px 0;
+}
+
+.recharge-dialog .balance-info {
+    background: #f8fafc;
+    border: 1px solid #e2e8f0;
+    border-radius: 8px;
+    padding: 16px;
+    margin-bottom: 20px;
+}
+
+.recharge-dialog .balance-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 8px;
+}
+
+.recharge-dialog .balance-row:last-child {
+    margin-bottom: 0;
+}
+
+.recharge-dialog .balance-label {
+    font-size: 0.875rem;
+    color: #64748b;
+    font-weight: 500;
+}
+
+.recharge-dialog .balance-value {
+    font-size: 0.875rem;
+    font-weight: 600;
+    color: #1e293b;
+}
+
+.recharge-dialog .form-section {
+    margin-bottom: 24px;
+}
+
+.recharge-dialog .section-title {
+    font-size: 1rem;
+    font-weight: 600;
+    color: #1e293b;
+    margin: 0 0 12px 0;
+}
+
+.recharge-dialog .amount-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 12px;
+}
+
+.recharge-dialog .amount-item {
+    padding: 12px;
+    border: 2px solid #e2e8f0;
+    border-radius: 8px;
+    text-align: center;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    font-weight: 500;
+    color: #475569;
+}
+
+.recharge-dialog .amount-item:hover {
+    border-color: #3b82f6;
+    background: #f0f9ff;
+}
+
+.recharge-dialog .amount-item.active {
+    border-color: #3b82f6;
+    background: #3b82f6;
+    color: white;
+}
+
+.recharge-dialog .points-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 12px;
+}
+
+.recharge-dialog .points-item {
+    padding: 12px;
+    border: 2px solid #e2e8f0;
+    border-radius: 8px;
+    text-align: center;
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+.recharge-dialog .points-item:hover {
+    border-color: #10b981;
+    background: #f0fdf4;
+}
+
+.recharge-dialog .points-item.active {
+    border-color: #10b981;
+    background: #10b981;
+    color: white;
+}
+
+.recharge-dialog .points-cash {
+    font-size: 0.875rem;
+    font-weight: 600;
+    margin-bottom: 4px;
+}
+
+.recharge-dialog .points-amount {
+    font-size: 0.75rem;
+    opacity: 0.8;
+}
+
+.recharge-dialog .points-item.active .points-amount {
+    opacity: 1;
+}
+
+.recharge-dialog .custom-input {
+    width: 100%;
+}
+
+.recharge-dialog .payment-group {
+    display: flex;
+    flex-direction: row;
+    gap: 12px;
+    flex-wrap: wrap;
+}
+
+.recharge-dialog .payment-radio {
+    flex: 1;
+    min-width: 130px;
+    max-width: 150px;
+    margin: 0;
+    height: auto;
+    position: relative;
+}
+
+.recharge-dialog .payment-radio .el-radio__input {
+    margin-right: 0;
+    position: absolute;
+    left: 8px;
+    top: 8px;
+    z-index: 1;
+}
+
+.recharge-dialog .payment-radio .el-radio__label {
+    padding-left: 28px;
+    width: 100%;
+    margin: 0;
+}
+
+.recharge-dialog .payment-option {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 8px 12px;
+    border: 1px solid #e2e8f0;
+    border-radius: 8px;
+    width: 100%;
+    box-sizing: border-box;
+    transition: all 0.2s ease;
+    cursor: pointer;
+    text-align: center;
+    justify-content: center;
+}
+
+.recharge-dialog .payment-radio:hover .payment-option {
+    background: #f8fafc;
+    border-color: #cbd5e1;
+}
+
+.recharge-dialog .payment-radio.is-checked .payment-option {
+    border-color: #3b82f6;
+    background: #f0f9ff;
+    box-shadow: 0 0 0 1px #3b82f6;
+}
+
+/* 覆盖Element Plus Radio的默认样式 */
+.recharge-dialog .el-radio {
+    display: flex;
+    align-items: center;
+    width: 100%;
+    margin: 0;
+    color: inherit;
+}
+
+.recharge-dialog .el-radio__input {
+    white-space: nowrap;
+    cursor: pointer;
+    outline: none;
+    line-height: 1;
+    position: relative;
+    vertical-align: middle;
+}
+
+.recharge-dialog .el-radio__inner {
+    border: 1px solid #dcdfe6;
+    border-radius: 50%;
+    width: 14px;
+    height: 14px;
+    background-color: #fff;
+    position: relative;
+    cursor: pointer;
+    display: inline-block;
+    box-sizing: border-box;
+}
+
+.recharge-dialog .el-radio__input.is-checked .el-radio__inner {
+    border-color: #3b82f6;
+    background: #3b82f6;
+}
+
+.recharge-dialog .el-radio__input.is-checked .el-radio__inner::after {
+    transform: translate(-50%, -50%) scale(1);
+    background-color: #fff;
+    border-radius: 50%;
+    content: "";
+    position: absolute;
+    left: 50%;
+    top: 50%;
+    width: 4px;
+    height: 4px;
+}
+
+.recharge-dialog .el-radio__label {
+    padding-left: 0;
+    font-size: 14px;
+    color: inherit;
+    width: 100%;
+}
+
+.recharge-dialog .payment-icon {
+    width: 24px;
+    height: 24px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 0.75rem;
+    font-weight: 600;
+    color: white;
+    flex-shrink: 0;
+}
+
+.recharge-dialog .payment-icon.alipay {
+    background: #1677ff;
+}
+
+.recharge-dialog .payment-icon.wechat {
+    background: #07c160;
+}
+
+.recharge-dialog .payment-icon.bank {
+    background: #ff6b35;
+}
+
+.recharge-dialog .summary-section {
+    background: #f8fafc;
+    border: 1px solid #e2e8f0;
+    border-radius: 8px;
+    padding: 16px;
+}
+
+.recharge-dialog .summary-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 8px;
+    font-size: 0.875rem;
+}
+
+.recharge-dialog .summary-row:last-child {
+    margin-bottom: 0;
+    font-weight: 600;
+    color: #1e293b;
+}
+
+.recharge-dialog .summary-row .amount {
+    font-weight: 600;
+    color: #3b82f6;
+}
+
+.recharge-dialog .exchange-info {
+    background: #f0f9ff;
+    border: 1px solid #bae6fd;
+    border-radius: 6px;
+    padding: 12px;
+}
+
+.recharge-dialog .exchange-info p {
+    margin: 0 0 4px 0;
+    font-size: 0.875rem;
+    color: #0369a1;
+    line-height: 1.4;
+}
+
+.recharge-dialog .exchange-info p:last-child {
+    margin-bottom: 0;
+}
+
+/* 移动端按钮样式 */
+.balance-btn {
+    width: 70px;
+    height: 32px;
+    border-radius: 8px;
+    font-weight: 600;
+    font-size: 0.75rem;
+    padding: 6px 12px;
+    transition: all 0.2s ease;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.balance-btn.charge-btn {
+    background: #3b82f6;
+    border-color: #3b82f6;
+    color: white;
+}
+
+.balance-btn.charge-btn:hover {
+    background: #2563eb;
+    border-color: #2563eb;
+    transform: translateY(-1px);
+    box-shadow: 0 2px 8px rgba(59, 130, 246, 0.3);
+}
+
+.balance-btn.purchase-btn {
+    background: #10b981;
+    border-color: #10b981;
+    color: white;
+}
+
+.balance-btn.purchase-btn:hover {
+    background: #059669;
+    border-color: #059669;
+    transform: translateY(-1px);
+    box-shadow: 0 2px 8px rgba(16, 185, 129, 0.3);
 }
 
 .header-actions {
@@ -3315,6 +3842,12 @@ onMounted(() => {
     background: rgba(0, 0, 0, 0.5);
     z-index: 3000;
     display: none;
+}
+
+@media (max-width: 768px) {
+    .mobile-settings-overlay {
+        display: block;
+    }
 }
 
 .mobile-settings-container {

@@ -1,8 +1,52 @@
 <template>
     <div class="ai-trading-records">
+        <!-- 筛选器 -->
+        <div class="records-filters">
+            <div class="filters-row">
+                <div class="filter-group">
+                    <label class="filter-label">交易类型</label>
+                    <el-select v-model="filterType" placeholder="交易类型" clearable size="small" class="filter-select">
+                        <el-option label="全部类型" value="" />
+                        <el-option label="买入" value="buy" />
+                        <el-option label="卖出" value="sell" />
+                    </el-select>
+                </div>
+                <div class="filter-group">
+                    <label class="filter-label">交易状态</label>
+                    <el-select v-model="filterStatus" placeholder="交易状态" clearable size="small" class="filter-select">
+                        <el-option label="全部状态" value="" />
+                        <el-option label="待成交" value="pending" />
+                        <el-option label="已成交" value="completed" />
+                        <el-option label="已撤单" value="cancelled" />
+                        <el-option label="交易失败" value="failed" />
+                    </el-select>
+                </div>
+                <div class="filter-group">
+                    <label class="filter-label">时间范围</label>
+                    <el-date-picker v-model="filterDateRange" type="daterange" range-separator="至"
+                        start-placeholder="开始日期" end-placeholder="结束日期" size="small" format="YYYY-MM-DD"
+                        value-format="YYYY-MM-DD" class="filter-date" />
+                </div>
+                <div class="filter-group">
+                    <label class="filter-label">股票搜索</label>
+                    <el-input v-model="filterKeyword" placeholder="搜索股票名称或代码" size="small" clearable
+                        class="filter-search">
+                        <template #prefix>
+                            <el-icon>
+                                <Search />
+                            </el-icon>
+                        </template>
+                    </el-input>
+                </div>
+                <div class="filter-group">
+                    <el-button @click="resetFilters" class="pc-filter-btn">重置</el-button>
+                </div>
+            </div>
+        </div>
+
         <!-- 记录列表 -->
-        <div v-if="records.length > 0" class="records-list">
-            <div v-for="record in records" :key="record.id" class="record-item">
+        <div v-if="filteredRecords.length > 0" class="records-list">
+            <div v-for="record in paginatedRecords" :key="record.id" class="record-item">
                 <div class="record-header">
                     <div class="stock-info">
                         <div class="stock-name">{{ record.stockInfo.name }}</div>
@@ -73,7 +117,7 @@
                         </div>
                     </div>
                     <div v-if="record.status === 'pending'" class="actions">
-                        <el-button size="small" type="danger" @click="cancelOrder(record.id)">
+                        <el-button type="danger" @click="cancelOrder(record.id)" class="pc-cancel-btn">
                             撤单
                         </el-button>
                     </div>
@@ -81,8 +125,14 @@
             </div>
         </div>
 
+        <!-- 分页 -->
+        <div class="records-pagination" v-if="filteredRecords.length > pageSize">
+            <el-pagination v-model:current-page="currentPage" :page-size="pageSize" :total="filteredRecords.length"
+                layout="total, prev, pager, next, jumper" small />
+        </div>
+
         <!-- 空状态 -->
-        <div v-else class="empty-state">
+        <div v-if="filteredRecords.length === 0" class="empty-state">
             <div class="empty-icon">
                 <svg width="64" height="64" viewBox="0 0 24 24" fill="none">
                     <path d="M12 2v20M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6" stroke="#d1d5db"
@@ -90,29 +140,29 @@
                 </svg>
             </div>
             <div class="empty-text">
-                <h3>暂无AI委托交易记录</h3>
-                <p>您的AI委托交易记录将在这里显示</p>
+                <h3>{{ allRecords.length === 0 ? '暂无AI委托交易记录' : '暂无符合条件的记录' }}</h3>
+                <p>{{ allRecords.length === 0 ? '您的AI委托交易记录将在这里显示' : '请尝试调整筛选条件' }}</p>
             </div>
         </div>
 
         <!-- 统计信息 -->
-        <div v-if="records.length > 0" class="records-stats">
+        <div v-if="filteredRecords.length > 0" class="records-stats">
             <div class="stat-item">
                 <div class="stat-label">总交易次数</div>
-                <div class="stat-value">{{ records.length }}</div>
+                <div class="stat-value">{{ filteredRecords.length }}</div>
             </div>
             <div class="stat-item">
                 <div class="stat-label">成功交易</div>
-                <div class="stat-value">{{ completedCount }}</div>
+                <div class="stat-value">{{ filteredCompletedCount }}</div>
             </div>
             <div class="stat-item">
                 <div class="stat-label">待成交</div>
-                <div class="stat-value">{{ pendingCount }}</div>
+                <div class="stat-value">{{ filteredPendingCount }}</div>
             </div>
             <div class="stat-item">
                 <div class="stat-label">总盈亏</div>
-                <div class="stat-value" :class="{ 'profit': totalProfit > 0, 'loss': totalProfit < 0 }">
-                    {{ totalProfit > 0 ? '+' : '' }}¥{{ totalProfit.toFixed(2) }}
+                <div class="stat-value" :class="{ 'profit': filteredTotalProfit > 0, 'loss': filteredTotalProfit < 0 }">
+                    {{ filteredTotalProfit > 0 ? '+' : '' }}¥{{ filteredTotalProfit.toFixed(2) }}
                 </div>
             </div>
         </div>
@@ -120,29 +170,90 @@
 </template>
 
 <script setup>
-import { computed } from 'vue';
+import { ref, computed } from 'vue';
 import { useUserStore } from '../store/user';
 import { ElButton, ElMessage } from 'element-plus';
+import { Search } from '@element-plus/icons-vue';
 
 const userStore = useUserStore();
 
+// 响应式数据
+const filterType = ref('');
+const filterStatus = ref('');
+const filterDateRange = ref('');
+const filterKeyword = ref('');
+const currentPage = ref(1);
+const pageSize = ref(10);
+
 // 获取AI交易记录
-const records = computed(() => userStore.aiTradingRecords || []);
+const allRecords = computed(() => userStore.aiTradingRecords || []);
 
-// 计算统计数据
-const completedCount = computed(() =>
-    records.value.filter(record => record.status === 'completed').length
+// 筛选后的记录
+const filteredRecords = computed(() => {
+    let filtered = allRecords.value;
+
+    // 按交易类型筛选
+    if (filterType.value) {
+        filtered = filtered.filter(record => record.type === filterType.value);
+    }
+
+    // 按交易状态筛选
+    if (filterStatus.value) {
+        filtered = filtered.filter(record => record.status === filterStatus.value);
+    }
+
+    // 按日期范围筛选
+    if (filterDateRange.value && filterDateRange.value.length === 2) {
+        const [startDate, endDate] = filterDateRange.value;
+        filtered = filtered.filter(record => {
+            const recordDate = new Date(record.createdAt).toISOString().split('T')[0];
+            return recordDate >= startDate && recordDate <= endDate;
+        });
+    }
+
+    // 按关键词筛选
+    if (filterKeyword.value) {
+        const keyword = filterKeyword.value.toLowerCase();
+        filtered = filtered.filter(record =>
+            record.stockInfo.name.toLowerCase().includes(keyword) ||
+            record.stockInfo.code.toLowerCase().includes(keyword)
+        );
+    }
+
+    // 按创建时间倒序排列
+    return filtered.sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
+});
+
+// 分页后的记录
+const paginatedRecords = computed(() => {
+    const start = (currentPage.value - 1) * pageSize.value;
+    const end = start + pageSize.value;
+    return filteredRecords.value.slice(start, end);
+});
+
+// 计算筛选后的统计数据
+const filteredCompletedCount = computed(() =>
+    filteredRecords.value.filter(record => record.status === 'completed').length
 );
 
-const pendingCount = computed(() =>
-    records.value.filter(record => record.status === 'pending').length
+const filteredPendingCount = computed(() =>
+    filteredRecords.value.filter(record => record.status === 'pending').length
 );
 
-const totalProfit = computed(() => {
-    return records.value
+const filteredTotalProfit = computed(() => {
+    return filteredRecords.value
         .filter(record => record.profit !== undefined)
         .reduce((total, record) => total + record.profit, 0);
 });
+
+// 重置筛选条件
+const resetFilters = () => {
+    filterType.value = '';
+    filterStatus.value = '';
+    filterDateRange.value = '';
+    filterKeyword.value = '';
+    currentPage.value = 1;
+};
 
 // 获取状态文本
 const getStatusText = (status) => {
@@ -202,7 +313,49 @@ const cancelOrder = (tradeId) => {
     height: 100%;
     display: flex;
     flex-direction: column;
-    gap: 24px;
+    overflow: hidden;
+}
+
+.records-filters {
+    margin-bottom: 24px;
+    flex-shrink: 0;
+}
+
+.filters-row {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 16px;
+    align-items: end;
+    padding: 20px;
+    background: #f8fafc;
+    border-radius: 12px;
+    border: 1px solid #e2e8f0;
+}
+
+.filter-group {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    min-width: 0;
+}
+
+.filter-label {
+    font-size: 0.875rem;
+    font-weight: 500;
+    color: #475569;
+    margin-bottom: 2px;
+}
+
+.filter-select {
+    width: 120px;
+}
+
+.filter-date {
+    width: 280px;
+}
+
+.filter-search {
+    width: 200px;
 }
 
 .records-list {
@@ -211,6 +364,7 @@ const cancelOrder = (tradeId) => {
     display: flex;
     flex-direction: column;
     gap: 16px;
+    margin-bottom: 16px;
 }
 
 .record-item {
@@ -383,6 +537,14 @@ const cancelOrder = (tradeId) => {
     margin-bottom: 2px;
 }
 
+.records-pagination {
+    display: flex;
+    justify-content: center;
+    padding-top: 16px;
+    border-top: 1px solid #f3f4f6;
+    flex-shrink: 0;
+}
+
 .empty-state {
     flex: 1;
     display: flex;
@@ -419,6 +581,7 @@ const cancelOrder = (tradeId) => {
     background: #f8fafc;
     border-radius: 12px;
     border: 1px solid #e2e8f0;
+    flex-shrink: 0;
 }
 
 .stat-item {
@@ -445,10 +608,74 @@ const cancelOrder = (tradeId) => {
     color: #dc2626;
 }
 
+/* PC端按钮样式 */
+.pc-filter-btn {
+    padding: 8px 16px;
+    font-size: 0.875rem;
+    font-weight: 500;
+    border-radius: 6px;
+    height: auto;
+    background: #f8fafc;
+    border-color: #e2e8f0;
+    color: #475569;
+    transition: all 0.2s ease;
+}
+
+.pc-filter-btn:hover {
+    background: #f1f5f9;
+    border-color: #cbd5e1;
+    color: #334155;
+    transform: translateY(-1px);
+}
+
+.pc-cancel-btn {
+    padding: 6px 12px;
+    font-size: 0.875rem;
+    font-weight: 500;
+    border-radius: 6px;
+    height: auto;
+    transition: all 0.2s ease;
+}
+
+.pc-cancel-btn:hover {
+    transform: translateY(-1px);
+    box-shadow: 0 2px 8px rgba(239, 68, 68, 0.3);
+}
+
 /* 响应式设计 */
+@media (max-width: 1200px) {
+    .filters-row {
+        flex-direction: column;
+        align-items: stretch;
+    }
+
+    .filter-group {
+        flex-direction: row;
+        align-items: center;
+        gap: 12px;
+    }
+
+    .filter-label {
+        min-width: 80px;
+        margin-bottom: 0;
+    }
+
+    .filter-select,
+    .filter-date,
+    .filter-search {
+        flex: 1;
+        width: auto;
+    }
+}
+
 @media (max-width: 768px) {
     .ai-trading-records {
         padding: 16px;
+    }
+
+    .filters-row {
+        padding: 16px;
+        gap: 12px;
     }
 
     .record-header {
@@ -476,6 +703,15 @@ const cancelOrder = (tradeId) => {
 }
 
 @media (max-width: 480px) {
+    .filter-group {
+        flex-direction: column;
+        align-items: stretch;
+    }
+
+    .filter-label {
+        min-width: auto;
+    }
+
     .stock-info {
         flex-direction: column;
         align-items: flex-start;

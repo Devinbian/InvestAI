@@ -7,13 +7,8 @@
                 <p>系统自动保留最近3个月的报告，超期自动清理</p>
             </div>
             <div class="header-right">
-                <el-button @click="cleanExpiredReports" size="small">
-                    <el-icon>
-                        <Delete />
-                    </el-icon>
-                    清理过期报告
-                </el-button>
-                <el-button @click="exportAllReports" type="primary" size="small" :disabled="reports.length === 0">
+                <el-button @click="exportAllReports" type="primary" :disabled="reports.length === 0"
+                    class="pc-action-btn">
                     <el-icon>
                         <Download />
                     </el-icon>
@@ -24,33 +19,37 @@
 
         <!-- 筛选器 -->
         <div class="reports-filters">
-            <el-row :gutter="16">
-                <el-col :span="6">
-                    <el-select v-model="filterType" placeholder="报告类型" clearable size="small">
+            <div class="filters-row">
+                <div class="filter-group">
+                    <label class="filter-label">报告类型</label>
+                    <el-select v-model="filterType" placeholder="报告类型" clearable size="small" class="filter-select">
                         <el-option label="全部类型" value="" />
                         <el-option label="量化分析" value="quant-analysis" />
                         <el-option label="AI委托交易" value="ai-trading" />
                         <el-option label="股票分析" value="stock-analysis" />
                     </el-select>
-                </el-col>
-                <el-col :span="6">
+                </div>
+                <div class="filter-group">
+                    <label class="filter-label">时间范围</label>
                     <el-date-picker v-model="filterDateRange" type="daterange" range-separator="至"
                         start-placeholder="开始日期" end-placeholder="结束日期" size="small" format="YYYY-MM-DD"
-                        value-format="YYYY-MM-DD" />
-                </el-col>
-                <el-col :span="8">
-                    <el-input v-model="filterKeyword" placeholder="搜索股票名称或代码" size="small" clearable>
+                        value-format="YYYY-MM-DD" class="filter-date" />
+                </div>
+                <div class="filter-group">
+                    <label class="filter-label">关键词搜索</label>
+                    <el-input v-model="filterKeyword" placeholder="搜索股票名称或代码" size="small" clearable
+                        class="filter-search">
                         <template #prefix>
                             <el-icon>
                                 <Search />
                             </el-icon>
                         </template>
                     </el-input>
-                </el-col>
-                <el-col :span="4">
-                    <el-button @click="resetFilters" size="small">重置</el-button>
-                </el-col>
-            </el-row>
+                </div>
+                <div class="filter-group">
+                    <el-button @click="resetFilters" class="pc-filter-btn">重置</el-button>
+                </div>
+            </div>
         </div>
 
         <!-- 报告列表 -->
@@ -182,7 +181,7 @@
 import { ref, computed, onMounted } from 'vue';
 import { useUserStore } from '../store/user';
 import { ElMessage, ElMessageBox } from 'element-plus';
-import { Delete, Download, Search, More, CircleCheck } from '@element-plus/icons-vue';
+import { Download, Search, More, CircleCheck } from '@element-plus/icons-vue';
 
 const userStore = useUserStore();
 
@@ -318,25 +317,6 @@ const deleteReport = async (report) => {
     }
 };
 
-const cleanExpiredReports = async () => {
-    try {
-        await ElMessageBox.confirm(
-            '确定要清理3个月前的过期报告吗？清理后无法恢复。',
-            '清理过期报告',
-            {
-                confirmButtonText: '确定清理',
-                cancelButtonText: '取消',
-                type: 'warning',
-            }
-        );
-
-        const expiredCount = userStore.cleanExpiredReports();
-        ElMessage.success(`已清理 ${expiredCount} 个过期报告`);
-    } catch {
-        // 用户取消清理
-    }
-};
-
 const exportAllReports = () => {
     if (filteredReports.value.length === 0) {
         ElMessage.warning('没有可导出的报告');
@@ -350,11 +330,6 @@ const exportAllReports = () => {
         ElMessage.success('批量导出完成');
     }, 3000);
 };
-
-onMounted(() => {
-    // 组件加载时自动清理过期报告
-    userStore.cleanExpiredReports();
-});
 </script>
 
 <style scoped>
@@ -397,6 +372,43 @@ onMounted(() => {
     flex-shrink: 0;
 }
 
+.filters-row {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 16px;
+    align-items: end;
+    padding: 20px;
+    background: #f8fafc;
+    border-radius: 12px;
+    border: 1px solid #e2e8f0;
+}
+
+.filter-group {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    min-width: 0;
+}
+
+.filter-label {
+    font-size: 0.875rem;
+    font-weight: 500;
+    color: #475569;
+    margin-bottom: 2px;
+}
+
+.filter-select {
+    width: 160px;
+}
+
+.filter-date {
+    width: 280px;
+}
+
+.filter-search {
+    width: 240px;
+}
+
 .reports-list {
     flex: 1;
     overflow-y: auto;
@@ -410,6 +422,7 @@ onMounted(() => {
     justify-content: center;
     height: 300px;
     color: #6b7280;
+    text-align: center;
 }
 
 .empty-icon {
@@ -418,15 +431,22 @@ onMounted(() => {
     opacity: 0.6;
 }
 
+.empty-text {
+    text-align: center;
+    width: 100%;
+}
+
 .empty-text h4 {
     margin: 0 0 8px 0;
     font-size: 1.125rem;
     color: #374151;
+    text-align: center;
 }
 
 .empty-text p {
     margin: 0;
     font-size: 0.875rem;
+    text-align: center;
 }
 
 .reports-grid {
@@ -601,7 +621,66 @@ onMounted(() => {
     white-space: pre-wrap;
 }
 
+/* PC端按钮样式 */
+.pc-action-btn {
+    padding: 10px 20px;
+    font-size: 0.875rem;
+    font-weight: 600;
+    border-radius: 8px;
+    height: auto;
+    transition: all 0.2s ease;
+}
+
+.pc-action-btn:hover {
+    transform: translateY(-1px);
+    box-shadow: 0 2px 8px rgba(59, 130, 246, 0.3);
+}
+
+.pc-filter-btn {
+    padding: 8px 16px;
+    font-size: 0.875rem;
+    font-weight: 500;
+    border-radius: 6px;
+    height: auto;
+    background: #f8fafc;
+    border-color: #e2e8f0;
+    color: #475569;
+    transition: all 0.2s ease;
+}
+
+.pc-filter-btn:hover {
+    background: #f1f5f9;
+    border-color: #cbd5e1;
+    color: #334155;
+    transform: translateY(-1px);
+}
+
 /* 响应式设计 */
+@media (max-width: 1200px) {
+    .filters-row {
+        flex-direction: column;
+        align-items: stretch;
+    }
+
+    .filter-group {
+        flex-direction: row;
+        align-items: center;
+        gap: 12px;
+    }
+
+    .filter-label {
+        min-width: 80px;
+        margin-bottom: 0;
+    }
+
+    .filter-select,
+    .filter-date,
+    .filter-search {
+        flex: 1;
+        width: auto;
+    }
+}
+
 @media (max-width: 768px) {
     .quant-reports {
         padding: 16px;
@@ -617,12 +696,28 @@ onMounted(() => {
         justify-content: flex-end;
     }
 
+    .filters-row {
+        padding: 16px;
+        gap: 12px;
+    }
+
     .reports-grid {
         grid-template-columns: 1fr;
     }
 
     .detail-info {
         grid-template-columns: 1fr;
+    }
+}
+
+@media (max-width: 480px) {
+    .filter-group {
+        flex-direction: column;
+        align-items: stretch;
+    }
+
+    .filter-label {
+        min-width: auto;
     }
 }
 </style>

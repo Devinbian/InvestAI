@@ -1,7 +1,7 @@
 <template>
     <div class="ai-trading-records">
         <!-- 筛选器 -->
-        <div class="records-filters">
+        <div class="trading-filters">
             <div class="filters-row">
                 <div class="filter-group">
                     <label class="filter-label">交易类型</label>
@@ -46,80 +46,71 @@
 
         <!-- 记录列表 -->
         <div v-if="filteredRecords.length > 0" class="records-list">
-            <div v-for="record in paginatedRecords" :key="record.id" class="record-item">
-                <div class="record-header">
-                    <div class="stock-info">
-                        <div class="stock-name">{{ record.stockInfo.name }}</div>
-                        <div class="stock-code">{{ record.stockInfo.code }}</div>
-                    </div>
-                    <div class="trade-status" :class="record.status">
-                        <span class="status-dot"></span>
-                        {{ getStatusText(record.status) }}
-                    </div>
-                </div>
-
-                <div class="record-content">
-                    <div class="trade-details">
-                        <div class="detail-row">
-                            <span class="label">交易类型：</span>
-                            <span class="value" :class="record.type">
+            <div class="records-grid">
+                <div v-for="record in paginatedRecords" :key="record.id" class="record-card"
+                    @click="viewRecord(record)">
+                    <div class="record-header">
+                        <div class="trade-type">
+                            <el-tag :type="record.type === 'buy' ? 'danger' : 'success'" size="small">
                                 {{ record.type === 'buy' ? '买入' : '卖出' }}
-                            </span>
+                            </el-tag>
                         </div>
-                        <div class="detail-row">
-                            <span class="label">数量：</span>
-                            <span class="value">{{ record.quantity }}股</span>
-                        </div>
-                        <div class="detail-row">
-                            <span class="label">预期价格：</span>
-                            <span class="value">¥{{ record.expectedPrice }}</span>
-                        </div>
-                        <div v-if="record.executedPrice" class="detail-row">
-                            <span class="label">成交价格：</span>
-                            <span class="value">¥{{ record.executedPrice }}</span>
-                        </div>
-                        <div class="detail-row">
-                            <span class="label">总金额：</span>
-                            <span class="value amount">¥{{ record.totalAmount.toLocaleString() }}</span>
-                        </div>
-                        <div v-if="record.fee" class="detail-row">
-                            <span class="label">手续费：</span>
-                            <span class="value">¥{{ record.fee }}</span>
-                        </div>
-                        <div v-if="record.profit !== undefined" class="detail-row">
-                            <span class="label">盈亏：</span>
-                            <span class="value" :class="{ 'profit': record.profit > 0, 'loss': record.profit < 0 }">
-                                {{ record.profit > 0 ? '+' : '' }}¥{{ record.profit }}
-                            </span>
+                        <div class="record-actions" @click.stop>
+                            <el-dropdown @command="(command) => handleRecordAction(command, record)">
+                                <el-button size="small" text>
+                                    <el-icon>
+                                        <More />
+                                    </el-icon>
+                                </el-button>
+                                <template #dropdown>
+                                    <el-dropdown-menu>
+                                        <el-dropdown-item command="view">查看详情</el-dropdown-item>
+                                        <el-dropdown-item v-if="record.status === 'pending'" command="cancel"
+                                            divided>撤单</el-dropdown-item>
+                                    </el-dropdown-menu>
+                                </template>
+                            </el-dropdown>
                         </div>
                     </div>
 
-                    <div v-if="record.analysis" class="ai-analysis">
-                        <div class="analysis-header">
-                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none">
-                                <path
-                                    d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z"
-                                    stroke="currentColor" stroke-width="2" />
-                            </svg>
-                            AI分析
+                    <div class="record-content">
+                        <h4 class="record-title">{{ record.stockInfo.name }}({{ record.stockInfo.code }})</h4>
+                        <div class="record-info">
+                            <div class="info-item">
+                                <span class="label">数量：</span>
+                                <span class="value">{{ record.quantity }}股</span>
+                            </div>
+                            <div class="info-item">
+                                <span class="label">预期价格：</span>
+                                <span class="value">¥{{ record.expectedPrice }}</span>
+                            </div>
+                            <div class="info-item">
+                                <span class="label">总金额：</span>
+                                <span class="value amount">¥{{ record.totalAmount.toLocaleString() }}</span>
+                            </div>
+                            <div v-if="record.profit !== undefined" class="info-item">
+                                <span class="label">盈亏：</span>
+                                <span class="value" :class="{ 'profit': record.profit > 0, 'loss': record.profit < 0 }">
+                                    {{ record.profit > 0 ? '+' : '' }}¥{{ record.profit }}
+                                </span>
+                            </div>
                         </div>
-                        <div class="analysis-content">{{ record.analysis }}</div>
+                        <div v-if="record.analysis" class="record-summary">
+                            {{ record.analysis }}
+                        </div>
                     </div>
-                </div>
 
-                <div class="record-footer">
-                    <div class="time-info">
-                        <div v-if="record.executedAt" class="executed-time">
-                            成交时间：{{ formatTime(record.executedAt) }}
+                    <div class="record-footer">
+                        <div class="record-status" :class="record.status">
+                            <el-icon class="status-icon">
+                                <CircleCheck v-if="record.status === 'completed'" />
+                                <Clock v-else-if="record.status === 'pending'" />
+                                <CircleClose v-else-if="record.status === 'cancelled'" />
+                                <Warning v-else />
+                            </el-icon>
+                            {{ getStatusText(record.status) }}
                         </div>
-                        <div class="created-time">
-                            委托时间：{{ formatTime(record.createdAt) }}
-                        </div>
-                    </div>
-                    <div v-if="record.status === 'pending'" class="actions">
-                        <el-button type="danger" @click="cancelOrder(record.id)" class="pc-cancel-btn">
-                            撤单
-                        </el-button>
+                        <div class="record-time">{{ formatTime(record.createdAt) }}</div>
                     </div>
                 </div>
             </div>
@@ -173,14 +164,14 @@
 import { ref, computed } from 'vue';
 import { useUserStore } from '../store/user';
 import { ElButton, ElMessage } from 'element-plus';
-import { Search } from '@element-plus/icons-vue';
+import { Search, More, CircleCheck, Clock, CircleClose, Warning } from '@element-plus/icons-vue';
 
 const userStore = useUserStore();
 
 // 响应式数据
 const filterType = ref('');
 const filterStatus = ref('');
-const filterDateRange = ref('');
+const filterDateRange = ref(null);
 const filterKeyword = ref('');
 const currentPage = ref(1);
 const pageSize = ref(10);
@@ -250,7 +241,7 @@ const filteredTotalProfit = computed(() => {
 const resetFilters = () => {
     filterType.value = '';
     filterStatus.value = '';
-    filterDateRange.value = '';
+    filterDateRange.value = null;
     filterKeyword.value = '';
     currentPage.value = 1;
 };
@@ -296,6 +287,24 @@ const formatTime = (dateString) => {
     }
 };
 
+// 查看记录详情
+const viewRecord = (record) => {
+    // 这里可以实现查看详情的逻辑
+    console.log('查看记录详情:', record);
+};
+
+// 处理记录操作
+const handleRecordAction = async (command, record) => {
+    switch (command) {
+        case 'view':
+            viewRecord(record);
+            break;
+        case 'cancel':
+            await cancelOrder(record.id);
+            break;
+    }
+};
+
 // 撤单操作
 const cancelOrder = (tradeId) => {
     const success = userStore.cancelAITradingOrder(tradeId);
@@ -316,8 +325,8 @@ const cancelOrder = (tradeId) => {
     overflow: hidden;
 }
 
-.records-filters {
-    margin-bottom: 24px;
+.trading-filters {
+    margin-bottom: 20px;
     flex-shrink: 0;
 }
 
@@ -361,180 +370,137 @@ const cancelOrder = (tradeId) => {
 .records-list {
     flex: 1;
     overflow-y: auto;
+    margin-bottom: 16px;
+    padding-top: 8px;
+}
+
+.records-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+    gap: 6px;
+}
+
+.record-card {
+    border: 1px solid #e5e7eb;
+    border-radius: 12px;
+    padding: 16px;
+    background: white;
+    cursor: pointer;
+    transition: all 0.2s ease;
     display: flex;
     flex-direction: column;
-    gap: 16px;
-    margin-bottom: 16px;
+    gap: 12px;
 }
 
-.record-item {
-    background: #f8fafc;
-    border-radius: 12px;
-    border: 1px solid #e2e8f0;
-    overflow: hidden;
-    transition: all 0.2s ease;
-}
-
-.record-item:hover {
-    background: #f1f5f9;
-    border-color: #cbd5e1;
-    transform: translateY(-1px);
-    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+.record-card:hover {
+    border-color: #3b82f6;
+    box-shadow: 0 4px 12px rgba(59, 130, 246, 0.15);
+    transform: translateY(-2px);
 }
 
 .record-header {
     display: flex;
     justify-content: space-between;
     align-items: center;
-    padding: 16px;
-    background: white;
-    border-bottom: 1px solid #e2e8f0;
 }
 
-.stock-info {
-    display: flex;
-    align-items: center;
-    gap: 12px;
-}
-
-.stock-name {
-    font-size: 16px;
-    font-weight: 600;
-    color: #1e293b;
-}
-
-.stock-code {
-    font-size: 14px;
-    color: #64748b;
-    background: #f1f5f9;
-    padding: 2px 8px;
-    border-radius: 4px;
-}
-
-.trade-status {
-    display: flex;
-    align-items: center;
-    gap: 6px;
-    font-size: 14px;
-    font-weight: 500;
-    padding: 4px 12px;
-    border-radius: 20px;
-}
-
-.trade-status.pending {
-    color: #d97706;
-    background: #fef3c7;
-}
-
-.trade-status.completed {
-    color: #059669;
-    background: #d1fae5;
-}
-
-.trade-status.cancelled {
+.record-actions .el-button {
     color: #6b7280;
-    background: #f3f4f6;
-}
-
-.trade-status.failed {
-    color: #dc2626;
-    background: #fee2e2;
-}
-
-.status-dot {
-    width: 6px;
-    height: 6px;
-    border-radius: 50%;
-    background: currentColor;
 }
 
 .record-content {
-    padding: 16px;
+    flex: 1;
 }
 
-.trade-details {
-    display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-    gap: 12px;
-    margin-bottom: 16px;
-}
-
-.detail-row {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-}
-
-.label {
-    font-size: 14px;
-    color: #64748b;
-}
-
-.value {
-    font-size: 14px;
-    font-weight: 500;
-    color: #1e293b;
-}
-
-.value.buy {
-    color: #dc2626;
-}
-
-.value.sell {
-    color: #059669;
-}
-
-.value.amount {
+.record-title {
+    margin: 0 0 8px 0;
+    font-size: 1rem;
     font-weight: 600;
+    color: #18181b;
+    line-height: 1.4;
 }
 
-.value.profit {
-    color: #059669;
-}
-
-.value.loss {
-    color: #dc2626;
-}
-
-.ai-analysis {
-    background: #f0f9ff;
-    border: 1px solid #e0f2fe;
-    border-radius: 8px;
-    padding: 12px;
-}
-
-.analysis-header {
-    display: flex;
-    align-items: center;
-    gap: 6px;
-    font-size: 14px;
-    font-weight: 500;
-    color: #0369a1;
+.record-info {
     margin-bottom: 8px;
 }
 
-.analysis-content {
-    font-size: 13px;
-    color: #0f172a;
-    line-height: 1.5;
+.info-item {
+    display: flex;
+    margin-bottom: 4px;
+    font-size: 0.875rem;
+}
+
+.info-item .label {
+    color: #6b7280;
+    min-width: 60px;
+}
+
+.info-item .value {
+    color: #374151;
+}
+
+.info-item .value.amount {
+    color: #374151;
+    font-weight: 600;
+}
+
+.info-item .value.profit {
+    color: #059669;
+    font-weight: 600;
+}
+
+.info-item .value.loss {
+    color: #dc2626;
+    font-weight: 600;
+}
+
+.record-summary {
+    font-size: 0.875rem;
+    color: #6b7280;
+    line-height: 1.4;
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
 }
 
 .record-footer {
     display: flex;
     justify-content: space-between;
     align-items: center;
-    padding: 16px;
-    background: #f8fafc;
-    border-top: 1px solid #e2e8f0;
+    padding-top: 8px;
+    border-top: 1px solid #f3f4f6;
+    font-size: 0.875rem;
 }
 
-.time-info {
-    font-size: 12px;
-    color: #64748b;
+.record-status {
+    display: flex;
+    align-items: center;
+    gap: 4px;
 }
 
-.executed-time {
-    margin-bottom: 2px;
+.record-status.pending {
+    color: #d97706;
+}
+
+.record-status.completed {
+    color: #059669;
+}
+
+.record-status.cancelled {
+    color: #6b7280;
+}
+
+.record-status.failed {
+    color: #dc2626;
+}
+
+.status-icon {
+    font-size: 1rem;
+}
+
+.record-time {
+    color: #6b7280;
 }
 
 .records-pagination {
@@ -678,27 +644,60 @@ const cancelOrder = (tradeId) => {
         gap: 12px;
     }
 
-    .record-header {
-        flex-direction: column;
-        align-items: flex-start;
-        gap: 12px;
-    }
-
-    .trade-details {
+    .records-grid {
         grid-template-columns: 1fr;
-        gap: 8px;
-    }
-
-    .record-footer {
-        flex-direction: column;
-        align-items: flex-start;
-        gap: 12px;
     }
 
     .records-stats {
         grid-template-columns: repeat(2, 1fr);
         gap: 12px;
         padding: 16px;
+        margin: 0 16px;
+    }
+
+    /* 移动端按照分析报告样式精确调整 */
+    .record-card .record-info {
+        margin-bottom: 8px;
+    }
+
+    .record-card .info-item {
+        display: flex;
+        margin-bottom: 4px;
+        font-size: 0.7rem;
+    }
+
+    .record-card .info-item .label {
+        color: #6b7280;
+        min-width: 60px;
+    }
+
+    .record-card .info-item .value {
+        color: #374151;
+    }
+
+    .record-card .info-item .value.amount {
+        color: #374151;
+        font-weight: 600;
+    }
+
+    .record-card .info-item .value.profit {
+        color: #059669;
+        font-weight: 600;
+    }
+
+    .record-card .info-item .value.loss {
+        color: #dc2626;
+        font-weight: 600;
+    }
+
+    .record-card .record-summary {
+        font-size: 0.7rem;
+        color: #6b7280;
+        line-height: 1.4;
+        display: -webkit-box;
+        -webkit-line-clamp: 2;
+        -webkit-box-orient: vertical;
+        overflow: hidden;
     }
 }
 
@@ -712,25 +711,165 @@ const cancelOrder = (tradeId) => {
         min-width: auto;
     }
 
-    .stock-info {
-        flex-direction: column;
-        align-items: flex-start;
-        gap: 4px;
-    }
-
     .records-stats {
-        grid-template-columns: 1fr;
+        margin: 12px 16px;
+        padding: 0;
+        background: transparent;
+        border: none;
+        box-shadow: none;
+        display: flex;
+        flex-direction: row;
+        overflow-x: auto;
+        gap: 6px;
+        -webkit-overflow-scrolling: touch;
+        grid-template-columns: none;
     }
 
     .stat-item {
+        flex: 0 0 auto;
+        min-width: 72px;
+        background: white;
+        border: 1px solid #e5e7eb;
+        border-radius: 6px;
+        padding: 6px 8px;
+        text-align: center;
+        box-shadow: 0 1px 2px rgba(0, 0, 0, 0.03);
         display: flex;
-        justify-content: space-between;
+        flex-direction: column;
+        justify-content: center;
         align-items: center;
-        text-align: left;
     }
 
     .stat-label {
-        margin-bottom: 0;
+        font-size: 9px;
+        color: #6b7280;
+        margin-bottom: 1px;
+        white-space: nowrap;
+        line-height: 1.2;
+    }
+
+    .stat-value {
+        font-size: 11px;
+        font-weight: 600;
+        color: #374151;
+        white-space: nowrap;
+        line-height: 1.2;
+    }
+
+    .stat-value.profit {
+        color: #059669;
+    }
+
+    .stat-value.loss {
+        color: #dc2626;
+    }
+
+
+    .filters-row {
+        display: flex;
+        flex-direction: column;
+        gap: 8px;
+        padding: 0;
+    }
+
+    .filter-group {
+        display: flex;
+        flex-direction: column;
+        gap: 4px;
+    }
+
+    .filter-label {
+        font-size: 0.75rem;
+        color: #6b7280;
+        font-weight: 500;
+    }
+
+    .filter-select,
+    .filter-date,
+    .filter-search {
+        width: 100%;
+    }
+
+    /* 移动端重置按钮样式 */
+    .filter-group .pc-filter-btn {
+        width: 100%;
+        padding: 8px 16px;
+        font-size: 0.875rem;
+        border-radius: 6px;
+        background: #f8fafc;
+        border: 1px solid #e2e8f0;
+        color: #475569;
+        margin-top: 4px;
+    }
+
+    .records-list {
+        padding: 0 16px;
+        margin: 16px 0 0 0;
+    }
+
+    .records-grid {
+        gap: 12px;
+    }
+
+    .record-card {
+        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+        border-radius: 8px;
+    }
+
+    /* 480px以下移动端按照分析报告样式精确调整 */
+    .record-card .record-info {
+        margin-bottom: 8px;
+    }
+
+    .record-card .info-item {
+        display: flex;
+        margin-bottom: 4px;
+        font-size: 0.7rem;
+    }
+
+    .record-card .info-item .label {
+        color: #6b7280;
+        min-width: 60px;
+    }
+
+    .record-card .info-item .value {
+        color: #374151;
+    }
+
+    .record-card .info-item .value.amount {
+        color: #374151;
+        font-weight: 600;
+    }
+
+    .record-card .info-item .value.profit {
+        color: #059669;
+        font-weight: 600;
+    }
+
+    .record-card .info-item .value.loss {
+        color: #dc2626;
+        font-weight: 600;
+    }
+
+    .record-card .record-summary {
+        font-size: 0.7rem;
+        color: #6b7280;
+        line-height: 1.4;
+        display: -webkit-box;
+        -webkit-line-clamp: 2;
+        -webkit-box-orient: vertical;
+        overflow: hidden;
+    }
+
+    .records-pagination {
+        margin: 0 16px;
+        padding-top: 12px;
+    }
+
+    .empty-state {
+        margin: 0 16px;
+        padding: 24px 16px;
+        height: 200px;
     }
 }
 </style>

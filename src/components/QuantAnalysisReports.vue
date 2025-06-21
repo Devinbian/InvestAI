@@ -188,7 +188,7 @@ const userStore = useUserStore();
 // 响应式数据
 const loading = ref(false);
 const filterType = ref('');
-const filterDateRange = ref('');
+const filterDateRange = ref(null);
 const filterKeyword = ref('');
 const currentPage = ref(1);
 const pageSize = ref(12);
@@ -264,7 +264,7 @@ const formatDateTime = (dateTime) => {
 
 const resetFilters = () => {
     filterType.value = '';
-    filterDateRange.value = '';
+    filterDateRange.value = null;
     filterKeyword.value = '';
     currentPage.value = 1;
 };
@@ -718,6 +718,56 @@ const exportAllReports = () => {
 
     .filter-label {
         min-width: auto;
+    }
+
+    .filters-row {
+        display: flex;
+        flex-direction: column;
+        gap: 8px;
+        padding: 0;
+    }
+
+    .filter-group {
+        display: flex;
+        flex-direction: column;
+        gap: 4px;
+    }
+
+    .filter-label {
+        font-size: 0.75rem;
+        color: #6b7280;
+        font-weight: 500;
+    }
+
+    .filter-select,
+    .filter-date,
+    .filter-search {
+        width: 100%;
+    }
+
+    .reports-list {
+        padding: 0 16px;
+        margin: 0;
+    }
+
+    .reports-grid {
+        gap: 12px;
+    }
+
+    .report-card {
+        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+        border-radius: 8px;
+    }
+
+    .reports-pagination {
+        margin: 0 16px;
+        padding-top: 12px;
+    }
+
+    .empty-state {
+        margin: 0 16px;
+        padding: 24px 16px;
+        height: 200px;
     }
 }
 </style>

@@ -1,7 +1,7 @@
 <template>
     <div class="smart-points-records">
         <!-- 筛选器 -->
-        <div class="records-filters">
+        <div class="points-filters">
             <div class="filters-row">
                 <div class="filter-group">
                     <label class="filter-label">记录类型</label>
@@ -108,7 +108,7 @@ const userStore = useUserStore();
 
 // 响应式数据
 const filterType = ref('');
-const filterDateRange = ref('');
+const filterDateRange = ref(null);
 const filterKeyword = ref('');
 const currentPage = ref(1);
 const pageSize = ref(20);
@@ -173,7 +173,7 @@ const filteredNetConsume = computed(() => filteredTotalConsume.value - filteredT
 // 重置筛选条件
 const resetFilters = () => {
     filterType.value = '';
-    filterDateRange.value = '';
+    filterDateRange.value = null;
     filterKeyword.value = '';
     currentPage.value = 1;
 };
@@ -216,8 +216,8 @@ const formatTime = (createdAt) => {
     overflow: hidden;
 }
 
-.records-filters {
-    margin-bottom: 24px;
+.points-filters {
+    margin-bottom: 20px;
     flex-shrink: 0;
 }
 
@@ -263,8 +263,9 @@ const formatTime = (createdAt) => {
     overflow-y: auto;
     display: flex;
     flex-direction: column;
-    gap: 12px;
+    gap: 6px;
     margin-bottom: 16px;
+    padding-top: 8px;
 }
 
 .record-item {
@@ -511,6 +512,111 @@ const formatTime = (createdAt) => {
 
     .stat-label {
         margin-bottom: 0;
+    }
+
+
+    .filters-row {
+        display: flex;
+        flex-direction: column;
+        gap: 8px;
+        padding: 0;
+    }
+
+    .filter-group {
+        display: flex;
+        flex-direction: column;
+        gap: 4px;
+    }
+
+    .filter-label {
+        font-size: 0.75rem;
+        color: #6b7280;
+        font-weight: 500;
+    }
+
+    .filter-select,
+    .filter-date,
+    .filter-search {
+        width: 100%;
+    }
+
+    /* 移动端重置按钮样式 */
+    .filter-group .pc-filter-btn {
+        width: 100%;
+        padding: 8px 16px;
+        font-size: 0.875rem;
+        border-radius: 6px;
+        background: #f8fafc;
+        border: 1px solid #e2e8f0;
+        color: #475569;
+        margin-top: 4px;
+    }
+
+    .records-list {
+        padding: 0 16px;
+        margin: 16px 0 0 0;
+    }
+
+    .record-item {
+        margin-bottom: 8px;
+        border-radius: 8px;
+        box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+        border: 1px solid #e5e7eb;
+        background: white;
+    }
+
+    .records-stats {
+        margin: 12px 16px;
+        padding: 0;
+        background: transparent;
+        border: none;
+        box-shadow: none;
+        display: flex;
+        flex-direction: row;
+        overflow-x: auto;
+        gap: 6px;
+        -webkit-overflow-scrolling: touch;
+    }
+
+    .stat-item {
+        flex: 0 0 auto;
+        min-width: 68px;
+        background: white;
+        border: 1px solid #e5e7eb;
+        border-radius: 6px;
+        padding: 6px 8px;
+        text-align: center;
+        box-shadow: 0 1px 2px rgba(0, 0, 0, 0.03);
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
+        align-items: center;
+    }
+
+    .stat-label {
+        font-size: 9px;
+        color: #6b7280;
+        margin-bottom: 1px;
+        white-space: nowrap;
+        line-height: 1.2;
+    }
+
+    .stat-value {
+        font-size: 11px;
+        font-weight: 600;
+        color: #374151;
+        white-space: nowrap;
+        line-height: 1.2;
+    }
+
+    .records-pagination {
+        margin: 0 16px;
+        padding-top: 12px;
+    }
+
+    .empty-state {
+        margin: 0 16px;
+        padding: 24px 16px;
     }
 }
 </style>

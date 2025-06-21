@@ -43,7 +43,7 @@
 import { useRouter } from 'vue-router';
 import { useUserStore } from '../store/user';
 import { ArrowDown } from '@element-plus/icons-vue';
-import { ElMessageBox } from 'element-plus';
+import { ElMessage, ElMessageBox } from 'element-plus';
 
 const router = useRouter();
 const userStore = useUserStore();
@@ -74,7 +74,7 @@ const goToLogin = () => {
   router.push('/login');
 };
 
-const handleCommand = (command) => {
+const handleCommand = async (command) => {
   switch (command) {
     case 'profile':
       // TODO: 跳转到个人中心
@@ -83,8 +83,37 @@ const handleCommand = (command) => {
       // TODO: 跳转到设置页面
       break;
     case 'logout':
-      userStore.logout();
-      router.push('/');
+      try {
+        // 显示确认对话框
+        await ElMessageBox.confirm(
+          '确定要退出登录吗？退出后将清除所有本地数据。',
+          '退出登录',
+          {
+            confirmButtonText: '确定退出',
+            cancelButtonText: '取消',
+            type: 'warning',
+            center: true
+          }
+        );
+
+        // 用户确认退出，执行退出操作
+        userStore.logout();
+
+        // 显示退出成功提示
+        ElMessage.success('已成功退出登录');
+
+        // 跳转到主页面
+        await router.push('/');
+
+        // 页面刷新，确保完全重置状态
+        setTimeout(() => {
+          window.location.reload();
+        }, 500);
+
+      } catch (error) {
+        // 用户取消退出，不执行任何操作
+        console.log('用户取消退出登录');
+      }
       break;
   }
 };

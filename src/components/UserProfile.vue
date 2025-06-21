@@ -10,7 +10,189 @@
                 </el-button>
             </div>
 
-            <!-- 个人中心头部 -->
+            <!-- 移动端专用头部 -->
+            <div class="mobile-header">
+                <div class="mobile-user-info">
+                    <div class="mobile-avatar">
+                        {{ userStore.userInfo?.nickname?.charAt(0)?.toUpperCase() || 'U' }}
+                    </div>
+                    <div class="mobile-user-details">
+                        <h3>{{ userStore.userInfo?.nickname || '未设置昵称' }}</h3>
+                        <p>{{ getUserLevelText() }} · {{ getRegistrationDate() }}</p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 移动端卡片式内容 -->
+            <div class="mobile-content">
+                <!-- 账户余额卡片 -->
+                <div class="mobile-balance-card">
+                    <div class="balance-header">
+                        <h3 class="balance-title">我的资产</h3>
+                    </div>
+                    <div class="balance-grid">
+                        <div class="balance-item">
+                            <div class="balance-amount">¥{{ (userStore.balance || 0).toFixed(2) }}</div>
+                            <div class="balance-label">股票账户</div>
+                            <el-button type="primary" size="small" @click="showStockRecharge = true"
+                                class="balance-btn">
+                                充值
+                            </el-button>
+                        </div>
+                        <div class="balance-item">
+                            <div class="balance-amount">{{ (userStore.smartPointsBalance || 0).toFixed(0) }}</div>
+                            <div class="balance-label">智点余额</div>
+                            <el-button type="success" size="small" @click="showSmartPointsRecharge = true"
+                                class="balance-btn">
+                                购买
+                            </el-button>
+                        </div>
+                        <div class="balance-item">
+                            <div class="balance-amount">{{ (userStore.watchlist || []).length }}</div>
+                            <div class="balance-label">自选股</div>
+                            <el-button type="text" size="small" @click="viewWatchlist" class="balance-btn view-btn">
+                                查看
+                            </el-button>
+                        </div>
+                        <div class="balance-item">
+                            <div class="balance-amount">{{ (userStore.portfolio || []).length }}</div>
+                            <div class="balance-label">持仓股票</div>
+                            <el-button type="text" size="small" @click="viewPortfolio" class="balance-btn view-btn">
+                                查看
+                            </el-button>
+                        </div>
+                    </div>
+                </div>
+
+
+
+                <!-- 认证状态卡片 -->
+                <div class="mobile-status-card">
+                    <h3 class="status-title">账户认证</h3>
+                    <div class="status-list">
+                        <div class="status-item verified">
+                            <div class="status-item-icon">
+                                <el-icon>
+                                    <CircleCheck />
+                                </el-icon>
+                            </div>
+                            <div class="status-item-info">
+                                <h4 class="status-item-title">实名认证</h4>
+                                <p class="status-item-desc">已完成实名认证</p>
+                            </div>
+                        </div>
+                        <div class="status-item verified">
+                            <div class="status-item-icon">
+                                <el-icon>
+                                    <CircleCheck />
+                                </el-icon>
+                            </div>
+                            <div class="status-item-info">
+                                <h4 class="status-item-title">手机验证</h4>
+                                <p class="status-item-desc">手机号已验证</p>
+                            </div>
+                        </div>
+                        <div class="status-item pending">
+                            <div class="status-item-icon">
+                                <el-icon>
+                                    <Warning />
+                                </el-icon>
+                            </div>
+                            <div class="status-item-info">
+                                <h4 class="status-item-title">邮箱验证</h4>
+                                <p class="status-item-desc">邮箱未验证</p>
+                            </div>
+                            <div class="status-item-action">
+                                <el-button type="primary" size="small">去验证</el-button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 个人信息卡片 -->
+                <div class="mobile-info-card">
+                    <h3 class="info-title">个人信息</h3>
+                    <div class="info-list">
+                        <div class="info-row">
+                            <span class="info-row-label">用户名</span>
+                            <span class="info-row-value">{{ userStore.userInfo?.username || '未设置' }}</span>
+                        </div>
+                        <div class="info-row">
+                            <span class="info-row-label">昵称</span>
+                            <span class="info-row-value">{{ userStore.userInfo?.nickname || '未设置' }}</span>
+                        </div>
+                        <div class="info-row">
+                            <span class="info-row-label">手机号</span>
+                            <span class="info-row-value">{{ userStore.userInfo?.phone || '未绑定' }}</span>
+                        </div>
+                        <div class="info-row">
+                            <span class="info-row-label">邮箱</span>
+                            <span class="info-row-value">{{ userStore.userInfo?.email || '未绑定' }}</span>
+                        </div>
+                        <div class="info-row">
+                            <span class="info-row-label">注册时间</span>
+                            <span class="info-row-value">{{ getRegistrationDate() }}</span>
+                        </div>
+                        <div class="info-row">
+                            <span class="info-row-label">最后登录</span>
+                            <span class="info-row-value">{{ getLastLoginTime() }}</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 设置卡片 -->
+                <div class="mobile-settings-card">
+                    <h3 class="settings-title">设置</h3>
+                    <div class="settings-list">
+                        <div class="settings-item" @click="showEditProfile = true">
+                            <div class="settings-item-left">
+                                <el-icon class="settings-item-icon">
+                                    <Edit />
+                                </el-icon>
+                                <span class="settings-item-text">编辑资料</span>
+                            </div>
+                            <el-icon class="settings-item-arrow">
+                                <ArrowRight />
+                            </el-icon>
+                        </div>
+                        <div class="settings-item">
+                            <div class="settings-item-left">
+                                <el-icon class="settings-item-icon">
+                                    <Bell />
+                                </el-icon>
+                                <span class="settings-item-text">消息通知</span>
+                            </div>
+                            <el-icon class="settings-item-arrow">
+                                <ArrowRight />
+                            </el-icon>
+                        </div>
+                        <div class="settings-item">
+                            <div class="settings-item-left">
+                                <el-icon class="settings-item-icon">
+                                    <Lock />
+                                </el-icon>
+                                <span class="settings-item-text">安全设置</span>
+                            </div>
+                            <el-icon class="settings-item-arrow">
+                                <ArrowRight />
+                            </el-icon>
+                        </div>
+                        <div class="settings-item">
+                            <div class="settings-item-left">
+                                <el-icon class="settings-item-icon">
+                                    <QuestionFilled />
+                                </el-icon>
+                                <span class="settings-item-text">帮助与反馈</span>
+                            </div>
+                            <el-icon class="settings-item-arrow">
+                                <ArrowRight />
+                            </el-icon>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- PC端原有的个人中心头部 -->
             <div class="profile-header">
                 <div class="header-background"></div>
                 <div class="header-content">
@@ -61,7 +243,7 @@
                 </div>
             </div>
 
-            <!-- 个人中心内容 -->
+            <!-- PC端原有的个人中心内容 -->
             <div class="profile-content">
                 <el-tabs v-model="activeTab" class="profile-tabs">
                     <!-- 基本信息 -->
@@ -207,7 +389,7 @@
                                     <div class="account-balance">
                                         <div class="balance-amount points-balance">
                                             <span class="amount">{{ (userStore.smartPointsBalance || 0).toFixed(0)
-                                                }}</span>
+                                            }}</span>
                                             <span class="currency">智点</span>
                                         </div>
                                         <div class="balance-actions">
@@ -357,146 +539,200 @@
                 </template>
             </el-dialog>
 
-            <!-- 股票账户充值对话框 -->
-            <el-dialog v-model="showStockRecharge" title="股票交易账户充值" width="600px"
-                class="profile-dialog recharge-dialog">
-                <div class="recharge-content">
-                    <div class="current-balance">
-                        <span class="balance-label">当前余额：</span>
-                        <span class="balance-value">¥{{ (userStore.balance || 0).toFixed(2) }}</span>
+            <!-- 股票账户充值原生弹窗 -->
+            <div class="mobile-recharge-overlay" v-if="showStockRecharge" @click="showStockRecharge = false">
+                <div class="mobile-recharge-container" @click.stop>
+                    <!-- 头部 -->
+                    <div class="mobile-recharge-header">
+                        <h3>股票账户充值</h3>
+                        <button class="mobile-close-btn" @click="showStockRecharge = false">
+                            <el-icon>
+                                <Close />
+                            </el-icon>
+                        </button>
                     </div>
 
-                    <div class="recharge-row">
-                        <div class="recharge-amounts">
-                            <h4>选择充值金额</h4>
-                            <div class="amount-grid">
-                                <div v-for="amount in rechargeAmounts" :key="amount" class="amount-item"
-                                    :class="{ active: selectedAmount === amount }" @click="selectedAmount = amount">
+                    <!-- 内容 -->
+                    <div class="mobile-recharge-content">
+                        <!-- 当前余额 -->
+                        <div class="mobile-balance-info">
+                            <span class="balance-label">当前余额</span>
+                            <span class="balance-value">¥{{ (userStore.balance || 0).toFixed(2) }}</span>
+                        </div>
+
+                        <!-- 充值金额选择 -->
+                        <div class="mobile-section">
+                            <h4 class="section-title">选择充值金额</h4>
+                            <div class="mobile-amount-grid">
+                                <div v-for="amount in rechargeAmounts" :key="amount" class="mobile-amount-item"
+                                    :class="{ active: selectedAmount === amount }"
+                                    @click="selectedAmount = amount; customAmount = null">
                                     ¥{{ amount }}
                                 </div>
                             </div>
                         </div>
 
-                        <div class="payment-methods">
-                            <h4>支付方式</h4>
-                            <div class="payment-grid">
-                                <div class="payment-item" :class="{ active: selectedPayment === 'alipay' }"
+                        <!-- 自定义金额 -->
+                        <div class="mobile-section">
+                            <h4 class="section-title">自定义金额</h4>
+                            <div class="mobile-input-wrapper">
+                                <span class="input-prefix">¥</span>
+                                <input v-model="customAmount" type="number" placeholder="请输入充值金额"
+                                    class="mobile-amount-input" @input="selectedAmount = null" />
+                            </div>
+                        </div>
+
+                        <!-- 支付方式 -->
+                        <div class="mobile-section">
+                            <h4 class="section-title">支付方式</h4>
+                            <div class="mobile-payment-list">
+                                <div class="mobile-payment-item" :class="{ active: selectedPayment === 'alipay' }"
                                     @click="selectedPayment = 'alipay'">
-                                    <div class="payment-icon alipay">支</div>
-                                    <span>支付宝</span>
+                                    <div class="payment-info">
+                                        <div class="payment-icon alipay">支</div>
+                                        <span class="payment-name">支付宝</span>
+                                    </div>
+                                    <div class="payment-check" v-if="selectedPayment === 'alipay'">✓</div>
                                 </div>
-                                <div class="payment-item" :class="{ active: selectedPayment === 'wechat' }"
+                                <div class="mobile-payment-item" :class="{ active: selectedPayment === 'wechat' }"
                                     @click="selectedPayment = 'wechat'">
-                                    <div class="payment-icon wechat">微</div>
-                                    <span>微信支付</span>
+                                    <div class="payment-info">
+                                        <div class="payment-icon wechat">微</div>
+                                        <span class="payment-name">微信支付</span>
+                                    </div>
+                                    <div class="payment-check" v-if="selectedPayment === 'wechat'">✓</div>
                                 </div>
-                                <div class="payment-item" :class="{ active: selectedPayment === 'bank' }"
+                                <div class="mobile-payment-item" :class="{ active: selectedPayment === 'bank' }"
                                     @click="selectedPayment = 'bank'">
-                                    <div class="payment-icon bank">银</div>
-                                    <span>银行卡</span>
+                                    <div class="payment-info">
+                                        <div class="payment-icon bank">银</div>
+                                        <span class="payment-name">银行卡</span>
+                                    </div>
+                                    <div class="payment-check" v-if="selectedPayment === 'bank'">✓</div>
                                 </div>
                             </div>
                         </div>
+
+                        <!-- 充值摘要 -->
+                        <div class="mobile-summary" v-if="getFinalAmount() > 0">
+                            <div class="summary-row">
+                                <span>充值金额</span>
+                                <span class="amount">¥{{ getFinalAmount() }}</span>
+                            </div>
+                            <div class="summary-row">
+                                <span>充值后余额</span>
+                                <span class="amount">¥{{ ((userStore.balance || 0) + getFinalAmount()).toFixed(2)
+                                }}</span>
+                            </div>
+                        </div>
                     </div>
 
-                    <div class="custom-amount">
-                        <h4>自定义金额</h4>
-                        <el-input v-model="customAmount" placeholder="请输入充值金额" type="number" min="1" max="100000"
-                            class="profile-input" @input="selectedAmount = null">
-                            <template #prepend>¥</template>
-                        </el-input>
-                    </div>
-
-                    <div class="recharge-summary">
-                        <div class="summary-item">
-                            <span>充值金额：</span>
-                            <span class="amount">¥{{ getFinalAmount() }}</span>
-                        </div>
-                        <div class="summary-item">
-                            <span>充值后余额：</span>
-                            <span class="amount">¥{{ ((userStore.balance || 0) + getFinalAmount()).toFixed(2) }}</span>
-                        </div>
+                    <!-- 底部按钮 -->
+                    <div class="mobile-recharge-footer">
+                        <button class="mobile-cancel-btn" @click="showStockRecharge = false">取消</button>
+                        <button class="mobile-confirm-btn" @click="handleStockRecharge"
+                            :disabled="getFinalAmount() <= 0 || !selectedPayment || stockRecharging"
+                            :class="{ loading: stockRecharging }">
+                            <span v-if="stockRecharging">充值中...</span>
+                            <span v-else>确认充值 ¥{{ getFinalAmount() }}</span>
+                        </button>
                     </div>
                 </div>
-                <template #footer>
-                    <el-button @click="showStockRecharge = false" class="dialog-cancel-btn">取消</el-button>
-                    <el-button type="primary" @click="handleStockRecharge" :loading="stockRecharging"
-                        :disabled="getFinalAmount() <= 0" class="dialog-submit-btn">
-                        确认充值 ¥{{ getFinalAmount() }}
-                    </el-button>
-                </template>
-            </el-dialog>
+            </div>
 
-            <!-- 智点购买对话框 -->
-            <el-dialog v-model="showSmartPointsRecharge" title="购买智点" width="600px"
-                class="profile-dialog recharge-dialog">
-                <div class="recharge-content">
-                    <div class="current-balance">
-                        <span class="balance-label">当前智点余额：</span>
-                        <span class="balance-value">{{ (userStore.smartPointsBalance || 0).toFixed(0) }}智点</span>
-                    </div>
-                    <div class="current-balance">
-                        <span class="balance-label">股票账户余额：</span>
-                        <span class="balance-value">¥{{ (userStore.balance || 0).toFixed(2) }}</span>
+            <!-- 智点购买原生弹窗 -->
+            <div class="mobile-recharge-overlay" v-if="showSmartPointsRecharge"
+                @click="showSmartPointsRecharge = false">
+                <div class="mobile-recharge-container" @click.stop>
+                    <!-- 头部 -->
+                    <div class="mobile-recharge-header">
+                        <h3>购买智点</h3>
+                        <button class="mobile-close-btn" @click="showSmartPointsRecharge = false">
+                            <el-icon>
+                                <Close />
+                            </el-icon>
+                        </button>
                     </div>
 
-                    <div class="points-row">
-                        <div class="points-info">
-                            <div class="info-card">
-                                <h4>兑换说明</h4>
-                                <p>• 1元人民币 = 1智点</p>
-                                <p>• 智点用于购买AI分析、专业报告等付费服务</p>
-                                <p>• 智点不可提现，仅限平台内消费</p>
+                    <!-- 内容 -->
+                    <div class="mobile-recharge-content">
+                        <!-- 当前余额 -->
+                        <div class="mobile-balance-info">
+                            <div class="balance-row">
+                                <span class="balance-label">当前智点</span>
+                                <span class="balance-value">{{ (userStore.smartPointsBalance || 0).toFixed(0)
+                                }}智点</span>
+                            </div>
+                            <div class="balance-row">
+                                <span class="balance-label">账户余额</span>
+                                <span class="balance-value">¥{{ (userStore.balance || 0).toFixed(2) }}</span>
                             </div>
                         </div>
 
-                        <div class="recharge-amounts">
-                            <h4>选择购买金额</h4>
-                            <div class="amount-grid">
-                                <div v-for="amount in smartPointsAmounts" :key="amount" class="amount-item"
+                        <!-- 兑换说明 -->
+                        <div class="mobile-section">
+                            <h4 class="section-title">兑换说明</h4>
+                            <div class="mobile-exchange-info">
+                                <div class="exchange-item">• 1元人民币 = 1智点</div>
+                                <div class="exchange-item">• 用于购买AI分析、专业报告等服务</div>
+                                <div class="exchange-item">• 智点不可提现，仅限平台内消费</div>
+                            </div>
+                        </div>
+
+                        <!-- 购买金额选择 -->
+                        <div class="mobile-section">
+                            <h4 class="section-title">选择购买金额</h4>
+                            <div class="mobile-points-grid">
+                                <div v-for="amount in smartPointsAmounts" :key="amount" class="mobile-points-item"
                                     :class="{ active: selectedSmartPointsAmount === amount }"
-                                    @click="selectedSmartPointsAmount = amount">
-                                    <div class="amount-cash">¥{{ amount }}</div>
-                                    <div class="amount-points">{{ amount * 1 }}智点</div>
+                                    @click="selectedSmartPointsAmount = amount; customSmartPointsAmount = null">
+                                    <div class="points-cash">¥{{ amount }}</div>
+                                    <div class="points-amount">{{ amount }}智点</div>
                                 </div>
+                            </div>
+                        </div>
+
+                        <!-- 自定义金额 -->
+                        <div class="mobile-section">
+                            <h4 class="section-title">自定义金额</h4>
+                            <div class="mobile-input-wrapper">
+                                <span class="input-prefix">¥</span>
+                                <input v-model="customSmartPointsAmount" type="number" placeholder="请输入购买金额"
+                                    class="mobile-amount-input" @input="selectedSmartPointsAmount = null" />
+                                <span class="input-suffix">= {{ (customSmartPointsAmount || 0) }}智点</span>
+                            </div>
+                        </div>
+
+                        <!-- 购买摘要 -->
+                        <div class="mobile-summary" v-if="getSmartPointsFinalAmount() > 0">
+                            <div class="summary-row">
+                                <span>购买金额</span>
+                                <span class="amount">¥{{ getSmartPointsFinalAmount() }}</span>
+                            </div>
+                            <div class="summary-row">
+                                <span>获得智点</span>
+                                <span class="amount">{{ getSmartPointsFinalAmount() }}智点</span>
+                            </div>
+                            <div class="summary-row">
+                                <span>购买后余额</span>
+                                <span class="amount">{{ ((userStore.smartPointsBalance || 0) +
+                                    getSmartPointsFinalAmount()).toFixed(0) }}智点</span>
                             </div>
                         </div>
                     </div>
 
-                    <div class="custom-amount">
-                        <h4>自定义金额</h4>
-                        <el-input v-model="customSmartPointsAmount" placeholder="请输入购买金额" type="number" min="1"
-                            max="10000" class="profile-input" @input="selectedSmartPointsAmount = null">
-                            <template #prepend>¥</template>
-                            <template #append>= {{ (customSmartPointsAmount * 1 || 0) }}智点</template>
-                        </el-input>
-                    </div>
-
-                    <div class="recharge-summary">
-                        <div class="summary-item">
-                            <span>购买金额：</span>
-                            <span class="amount">¥{{ getSmartPointsFinalAmount() }}</span>
-                        </div>
-                        <div class="summary-item">
-                            <span>获得智点：</span>
-                            <span class="amount">{{ getSmartPointsFinalAmount() * 1 }}智点</span>
-                        </div>
-                        <div class="summary-item">
-                            <span>购买后余额：</span>
-                            <span class="amount">{{ ((userStore.smartPointsBalance || 0) + getSmartPointsFinalAmount() *
-                                1).toFixed(0) }}智点</span>
-                        </div>
+                    <!-- 底部按钮 -->
+                    <div class="mobile-recharge-footer">
+                        <button class="mobile-cancel-btn" @click="showSmartPointsRecharge = false">取消</button>
+                        <button class="mobile-confirm-btn mobile-points-btn" @click="handleSmartPointsPurchase"
+                            :disabled="getSmartPointsFinalAmount() <= 0 || userStore.balance < getSmartPointsFinalAmount() || smartPointsPurchasing"
+                            :class="{ loading: smartPointsPurchasing }">
+                            <span v-if="smartPointsPurchasing">购买中...</span>
+                            <span v-else>确认购买 {{ getSmartPointsFinalAmount() }}智点</span>
+                        </button>
                     </div>
                 </div>
-                <template #footer>
-                    <el-button @click="showSmartPointsRecharge = false" class="dialog-cancel-btn">取消</el-button>
-                    <el-button type="success" @click="handleSmartPointsPurchase" :loading="smartPointsPurchasing"
-                        :disabled="getSmartPointsFinalAmount() <= 0 || userStore.balance < getSmartPointsFinalAmount()"
-                        class="dialog-submit-btn">
-                        确认购买 {{ getSmartPointsFinalAmount() * 1 }}智点
-                    </el-button>
-                </template>
-            </el-dialog>
+            </div>
         </div>
     </div>
 </template>
@@ -607,6 +843,32 @@ const getRegistrationDate = () => {
 
 const getLastLoginTime = () => {
     return '2024年1月15日 14:30';
+};
+
+// 查看自选股
+const viewWatchlist = () => {
+    if (!userStore.watchlist || userStore.watchlist.length === 0) {
+        ElMessage.info('您还没有添加任何自选股');
+        return;
+    }
+
+    // 这里可以跳转到自选股页面或者打开自选股弹窗
+    ElMessage.success(`您有 ${userStore.watchlist.length} 只自选股`);
+    // 实际项目中可以emit事件或者路由跳转
+    // emit('show-watchlist');
+};
+
+// 查看持仓股票
+const viewPortfolio = () => {
+    if (!userStore.portfolio || userStore.portfolio.length === 0) {
+        ElMessage.info('您还没有任何持仓股票');
+        return;
+    }
+
+    // 这里可以跳转到持仓页面或者打开持仓弹窗
+    ElMessage.success(`您有 ${userStore.portfolio.length} 只持仓股票`);
+    // 实际项目中可以emit事件或者路由跳转
+    // emit('show-portfolio');
 };
 
 const saveProfile = async () => {
@@ -1485,72 +1747,845 @@ onMounted(() => {
     color: #3b82f6;
 }
 
-/* 响应式设计 */
+/* 移动端专属设计 - 采用移动端最佳实践 */
 @media (max-width: 768px) {
     .user-profile {
-        width: 95vw;
-        height: 95vh;
-    }
-
-    .profile-content {
-        padding: 0 16px 24px 16px;
-    }
-
-    .header-content {
-        padding: 0 16px 20px 16px;
+        width: 100vw;
+        height: 100vh;
+        border-radius: 0;
+        background: #f5f5f5;
+        display: flex;
         flex-direction: column;
+    }
+
+    /* 隐藏原有的复杂头部，采用移动端简洁设计 */
+    .profile-header {
+        display: none;
+    }
+
+    /* 显示移动端专用头部 */
+    .mobile-header {
+        position: sticky;
+        top: 0;
+        z-index: 100;
+        background: white;
+        padding: 12px 16px;
+        border-bottom: 1px solid #e5e7eb;
+        display: flex !important;
         align-items: center;
-        text-align: center;
-        gap: 16px;
+        flex-shrink: 0;
     }
 
-    .user-stats {
+    .mobile-user-info {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+    }
+
+    .mobile-avatar {
+        width: 40px;
+        height: 40px;
+        border-radius: 50%;
+        background: #18181b;
+        color: white;
+        display: flex;
+        align-items: center;
         justify-content: center;
-        gap: 20px;
+        font-weight: 600;
+        font-size: 0.9rem;
     }
 
-    .info-grid {
-        grid-template-columns: 1fr;
+    .mobile-user-details {
+        flex: 1;
+        min-width: 0;
     }
 
-    .status-grid {
-        grid-template-columns: 1fr;
+    .mobile-user-details h3 {
+        font-size: 1rem;
+        font-weight: 600;
+        color: #18181b;
+        margin: 0 0 2px 0;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
     }
 
-    .tab-content {
-        max-height: calc(95vh - 280px);
+    .mobile-user-details p {
+        font-size: 0.8rem;
+        color: #6b7280;
+        margin: 0;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
     }
 
-    .accounts-container {
-        grid-template-columns: 1fr;
+    /* 隐藏原有的tabs，显示移动端卡片流 */
+    .profile-tabs {
+        display: none;
     }
 
-    .account-card {
-        margin-bottom: 20px;
-    }
-
-    .amount-grid {
-        grid-template-columns: repeat(2, 1fr);
-    }
-
-    .payment-grid {
-        grid-template-columns: repeat(2, 1fr);
-    }
-
-    .recharge-row {
+    /* 显示移动端卡片式内容 */
+    .mobile-content {
+        flex: 1;
+        overflow-y: auto;
+        padding: 16px;
+        display: flex !important;
         flex-direction: column;
         gap: 16px;
     }
 
-    .points-row {
-        flex-direction: column;
-        gap: 16px;
+    /* 账户余额卡片 */
+    .mobile-balance-card {
+        background: white;
+        border-radius: 10px;
+        padding: 12px;
+        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
     }
 
-    .recharge-dialog {
-        width: 95vw !important;
-        max-width: 500px;
+    .balance-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 8px;
     }
+
+    .balance-title {
+        font-size: 0.9rem;
+        font-weight: 600;
+        color: #18181b;
+        margin: 0;
+    }
+
+    .balance-grid {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 6px;
+    }
+
+    .balance-item {
+        text-align: center;
+        padding: 8px 6px;
+        background: #f8fafc;
+        border-radius: 4px;
+        border: 1px solid #e2e8f0;
+        transition: all 0.2s ease;
+        min-height: 66px;
+        display: flex;
+        flex-direction: column;
+        justify-content: space-between;
+    }
+
+    .balance-item:hover {
+        background: #f1f5f9;
+        border-color: #cbd5e1;
+    }
+
+    .balance-amount {
+        font-size: 0.9rem;
+        font-weight: 700;
+        color: #18181b;
+        margin-bottom: 1px;
+        line-height: 1.1;
+    }
+
+    .balance-label {
+        font-size: 0.65rem;
+        color: #6b7280;
+        margin-bottom: 4px;
+        line-height: 1.1;
+    }
+
+    .balance-btn {
+        width: 100%;
+        height: 22px;
+        font-size: 0.65rem;
+        border-radius: 3px;
+        padding: 0 4px;
+    }
+
+    /* 查看按钮特殊样式 */
+    .balance-btn.view-btn {
+        background: transparent;
+        color: #3b82f6;
+        border: 1px solid #3b82f6;
+        transition: all 0.2s ease;
+        font-weight: 500;
+    }
+
+    .balance-btn.view-btn:hover {
+        background: #3b82f6;
+        color: white;
+    }
+
+    /* 进一步压缩Element Plus按钮的默认样式 */
+    .balance-btn:deep(.el-button) {
+        padding: 0 4px;
+        min-height: 22px;
+        line-height: 1;
+    }
+
+
+
+    /* 认证状态卡片 */
+    .mobile-status-card {
+        background: white;
+        border-radius: 12px;
+        padding: 20px;
+        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
+    }
+
+    .status-title {
+        font-size: 1rem;
+        font-weight: 600;
+        color: #18181b;
+        margin: 0 0 16px 0;
+    }
+
+    .status-list {
+        display: flex;
+        flex-direction: column;
+        gap: 12px;
+    }
+
+    .status-item {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        padding: 12px;
+        background: #f8fafc;
+        border-radius: 8px;
+        border: 1px solid #e2e8f0;
+    }
+
+    .status-item.verified {
+        background: linear-gradient(135deg, #ecfdf5 0%, #f0fdf4 100%);
+        border-color: #10b981;
+    }
+
+    .status-item.pending {
+        background: linear-gradient(135deg, #fffbeb 0%, #fefce8 100%);
+        border-color: #f59e0b;
+    }
+
+    .status-item-icon {
+        width: 32px;
+        height: 32px;
+        border-radius: 6px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        flex-shrink: 0;
+    }
+
+    .status-item.verified .status-item-icon {
+        background: #10b981;
+        color: white;
+    }
+
+    .status-item.pending .status-item-icon {
+        background: #f59e0b;
+        color: white;
+    }
+
+    .status-item-info {
+        flex: 1;
+    }
+
+    .status-item-title {
+        font-size: 0.9rem;
+        font-weight: 600;
+        margin: 0 0 2px 0;
+    }
+
+    .status-item.verified .status-item-title {
+        color: #059669;
+    }
+
+    .status-item.pending .status-item-title {
+        color: #d97706;
+    }
+
+    .status-item-desc {
+        font-size: 0.8rem;
+        color: #6b7280;
+        margin: 0;
+    }
+
+    .status-item-action {
+        flex-shrink: 0;
+    }
+
+    .status-item-action .el-button {
+        height: 28px;
+        font-size: 0.75rem;
+        padding: 0 12px;
+    }
+
+    /* 个人信息卡片 */
+    .mobile-info-card {
+        background: white;
+        border-radius: 12px;
+        padding: 20px;
+        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
+    }
+
+    .info-title {
+        font-size: 1rem;
+        font-weight: 600;
+        color: #18181b;
+        margin: 0 0 16px 0;
+    }
+
+    .info-list {
+        display: flex;
+        flex-direction: column;
+        gap: 0;
+    }
+
+    .info-row {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        padding: 12px 0;
+        border-bottom: 1px solid #f1f5f9;
+    }
+
+    .info-row:last-child {
+        border-bottom: none;
+    }
+
+    .info-row-label {
+        font-size: 0.9rem;
+        color: #6b7280;
+        font-weight: 500;
+    }
+
+    .info-row-value {
+        font-size: 0.9rem;
+        color: #18181b;
+        font-weight: 500;
+        text-align: right;
+        max-width: 60%;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+    }
+
+    /* 设置卡片 */
+    .mobile-settings-card {
+        background: white;
+        border-radius: 12px;
+        padding: 20px;
+        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
+    }
+
+    .settings-title {
+        font-size: 1rem;
+        font-weight: 600;
+        color: #18181b;
+        margin: 0 0 16px 0;
+    }
+
+    .settings-list {
+        display: flex;
+        flex-direction: column;
+        gap: 0;
+    }
+
+    .settings-item {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        padding: 16px 0;
+        border-bottom: 1px solid #f1f5f9;
+        cursor: pointer;
+        transition: all 0.2s ease;
+    }
+
+    .settings-item:last-child {
+        border-bottom: none;
+    }
+
+    .settings-item:active {
+        background: #f8fafc;
+        margin: 0 -20px;
+        padding: 16px 20px;
+        border-radius: 8px;
+    }
+
+    .settings-item-left {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+    }
+
+    .settings-item-icon {
+        width: 20px;
+        height: 20px;
+        color: #6b7280;
+    }
+
+    .settings-item-text {
+        font-size: 0.9rem;
+        color: #18181b;
+        font-weight: 500;
+    }
+
+    .settings-item-arrow {
+        width: 16px;
+        height: 16px;
+        color: #9ca3af;
+    }
+
+    /* 底部安全区域 */
+    .mobile-content::after {
+        content: '';
+        height: 20px;
+        flex-shrink: 0;
+    }
+
+    /* 隐藏PC端的内容区域 */
+    .profile-content {
+        display: none;
+    }
+
+    /* 关闭按钮优化 */
+    .profile-close {
+        position: absolute;
+        top: 12px;
+        right: 16px;
+        z-index: 101;
+    }
+
+    .close-btn {
+        width: 32px;
+        height: 32px;
+        border-radius: 50%;
+        background: rgba(0, 0, 0, 0.5);
+        color: white;
+        border: none;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+    }
+
+    /* 移动端原生充值/购买弹窗样式 */
+    .mobile-recharge-overlay {
+        position: fixed !important;
+        top: 0 !important;
+        left: 0 !important;
+        right: 0 !important;
+        bottom: 0 !important;
+        background: rgba(0, 0, 0, 0.4) !important;
+        z-index: 10001 !important;
+        display: flex !important;
+        align-items: flex-end !important;
+        justify-content: center !important;
+        animation: fadeIn 0.2s ease-out !important;
+    }
+
+    .mobile-recharge-container {
+        width: 100% !important;
+        max-width: 400px !important;
+        max-height: 85vh !important;
+        background: #ffffff !important;
+        border-radius: 16px 16px 0 0 !important;
+        margin: 0 8px 0 8px !important;
+        box-shadow: 0 -4px 20px rgba(0, 0, 0, 0.15) !important;
+        animation: slideUpModal 0.3s ease-out !important;
+        overflow: hidden !important;
+        display: flex !important;
+        flex-direction: column !important;
+    }
+
+    /* 弹窗头部 */
+    .mobile-recharge-header {
+        padding: 16px 20px !important;
+        border-bottom: 1px solid #f1f5f9 !important;
+        display: flex !important;
+        align-items: center !important;
+        justify-content: space-between !important;
+        flex-shrink: 0 !important;
+    }
+
+    .mobile-recharge-header h3 {
+        font-size: 1rem !important;
+        font-weight: 600 !important;
+        color: #18181b !important;
+        margin: 0 !important;
+    }
+
+    .mobile-close-btn {
+        width: 28px !important;
+        height: 28px !important;
+        border-radius: 50% !important;
+        background: #f8fafc !important;
+        border: none !important;
+        display: flex !important;
+        align-items: center !important;
+        justify-content: center !important;
+        color: #6b7280 !important;
+        cursor: pointer !important;
+        transition: all 0.2s ease !important;
+    }
+
+    .mobile-close-btn:active {
+        background: #f1f5f9 !important;
+        transform: scale(0.95) !important;
+    }
+
+    /* 弹窗内容 */
+    .mobile-recharge-content {
+        flex: 1 !important;
+        overflow-y: auto !important;
+        padding: 0 20px 20px 20px !important;
+    }
+
+    /* 余额信息 */
+    .mobile-balance-info {
+        background: #f8fafc !important;
+        border-radius: 8px !important;
+        padding: 12px !important;
+        margin-bottom: 16px !important;
+    }
+
+    .balance-row {
+        display: flex !important;
+        justify-content: space-between !important;
+        align-items: center !important;
+        margin-bottom: 8px !important;
+    }
+
+    .balance-row:last-child {
+        margin-bottom: 0 !important;
+    }
+
+    .balance-label {
+        font-size: 0.85rem !important;
+        color: #6b7280 !important;
+        font-weight: 500 !important;
+    }
+
+    .balance-value {
+        font-size: 0.9rem !important;
+        color: #18181b !important;
+        font-weight: 600 !important;
+    }
+
+    /* 分区样式 */
+    .mobile-section {
+        margin-bottom: 20px !important;
+    }
+
+    .section-title {
+        font-size: 0.9rem !important;
+        font-weight: 600 !important;
+        color: #18181b !important;
+        margin: 0 0 12px 0 !important;
+    }
+
+    /* 金额网格 */
+    .mobile-amount-grid {
+        display: grid !important;
+        grid-template-columns: 1fr 1fr 1fr !important;
+        gap: 8px !important;
+    }
+
+    .mobile-amount-item {
+        padding: 12px 8px !important;
+        background: #f8fafc !important;
+        border: 1px solid #e2e8f0 !important;
+        border-radius: 6px !important;
+        text-align: center !important;
+        font-size: 0.85rem !important;
+        font-weight: 600 !important;
+        color: #374151 !important;
+        cursor: pointer !important;
+        transition: all 0.2s ease !important;
+    }
+
+    .mobile-amount-item:active {
+        transform: scale(0.98) !important;
+    }
+
+    .mobile-amount-item.active {
+        background: #3b82f6 !important;
+        border-color: #3b82f6 !important;
+        color: white !important;
+    }
+
+    /* 智点网格 */
+    .mobile-points-grid {
+        display: grid !important;
+        grid-template-columns: 1fr 1fr !important;
+        gap: 8px !important;
+    }
+
+    .mobile-points-item {
+        padding: 10px 8px !important;
+        background: #f8fafc !important;
+        border: 1px solid #e2e8f0 !important;
+        border-radius: 6px !important;
+        text-align: center !important;
+        cursor: pointer !important;
+        transition: all 0.2s ease !important;
+    }
+
+    .mobile-points-item:active {
+        transform: scale(0.98) !important;
+    }
+
+    .mobile-points-item.active {
+        background: #10b981 !important;
+        border-color: #10b981 !important;
+        color: white !important;
+    }
+
+    .points-cash {
+        font-size: 0.85rem !important;
+        font-weight: 600 !important;
+        margin-bottom: 2px !important;
+    }
+
+    .points-amount {
+        font-size: 0.75rem !important;
+        opacity: 0.8 !important;
+    }
+
+    /* 输入框样式 */
+    .mobile-input-wrapper {
+        display: flex !important;
+        align-items: center !important;
+        background: #f8fafc !important;
+        border: 1px solid #e2e8f0 !important;
+        border-radius: 6px !important;
+        padding: 0 12px !important;
+        min-height: 44px !important;
+    }
+
+    .input-prefix {
+        font-size: 0.9rem !important;
+        color: #6b7280 !important;
+        margin-right: 8px !important;
+    }
+
+    .mobile-amount-input {
+        flex: 1 !important;
+        border: none !important;
+        background: transparent !important;
+        font-size: 0.9rem !important;
+        color: #18181b !important;
+        outline: none !important;
+    }
+
+    .input-suffix {
+        font-size: 0.8rem !important;
+        color: #6b7280 !important;
+        margin-left: 8px !important;
+    }
+
+    /* 兑换说明卡片（仅用于弹窗中的说明） */
+    .mobile-exchange-info {
+        background: #fef3c7 !important;
+        border-radius: 6px !important;
+        padding: 12px !important;
+    }
+
+    .exchange-item {
+        font-size: 0.8rem !important;
+        color: #92400e !important;
+        margin-bottom: 4px !important;
+        line-height: 1.4 !important;
+    }
+
+    .exchange-item:last-child {
+        margin-bottom: 0 !important;
+    }
+
+    /* 支付方式列表 */
+    .mobile-payment-list {
+        display: flex !important;
+        flex-direction: column !important;
+        gap: 8px !important;
+    }
+
+    .mobile-payment-item {
+        display: flex !important;
+        align-items: center !important;
+        justify-content: space-between !important;
+        padding: 12px !important;
+        background: #f8fafc !important;
+        border: 1px solid #e2e8f0 !important;
+        border-radius: 6px !important;
+        cursor: pointer !important;
+        transition: all 0.2s ease !important;
+    }
+
+    .mobile-payment-item:active {
+        transform: scale(0.98) !important;
+    }
+
+    .mobile-payment-item.active {
+        background: #eff6ff !important;
+        border-color: #3b82f6 !important;
+    }
+
+    .payment-info {
+        display: flex !important;
+        align-items: center !important;
+        gap: 12px !important;
+    }
+
+    .payment-icon {
+        width: 28px !important;
+        height: 28px !important;
+        border-radius: 4px !important;
+        display: flex !important;
+        align-items: center !important;
+        justify-content: center !important;
+        font-size: 0.8rem !important;
+        font-weight: 600 !important;
+        color: white !important;
+    }
+
+    .payment-icon.alipay {
+        background: #1677ff !important;
+    }
+
+    .payment-icon.wechat {
+        background: #07c160 !important;
+    }
+
+    .payment-icon.bank {
+        background: #f56565 !important;
+    }
+
+    .payment-name {
+        font-size: 0.9rem !important;
+        font-weight: 500 !important;
+        color: #18181b !important;
+    }
+
+    .payment-check {
+        width: 20px !important;
+        height: 20px !important;
+        border-radius: 50% !important;
+        background: #3b82f6 !important;
+        color: white !important;
+        display: flex !important;
+        align-items: center !important;
+        justify-content: center !important;
+        font-size: 0.7rem !important;
+        font-weight: 600 !important;
+    }
+
+    /* 摘要信息 */
+    .mobile-summary {
+        background: #f8fafc !important;
+        border-radius: 6px !important;
+        padding: 12px !important;
+        margin-top: 16px !important;
+    }
+
+    .summary-row {
+        display: flex !important;
+        justify-content: space-between !important;
+        align-items: center !important;
+        margin-bottom: 8px !important;
+    }
+
+    .summary-row:last-child {
+        margin-bottom: 0 !important;
+    }
+
+    .summary-row span:first-child {
+        font-size: 0.85rem !important;
+        color: #6b7280 !important;
+    }
+
+    .summary-row .amount {
+        font-size: 0.9rem !important;
+        font-weight: 600 !important;
+        color: #18181b !important;
+    }
+
+    /* 底部按钮 */
+    .mobile-recharge-footer {
+        padding: 16px 20px !important;
+        border-top: 1px solid #f1f5f9 !important;
+        display: flex !important;
+        gap: 12px !important;
+        flex-shrink: 0 !important;
+    }
+
+    .mobile-cancel-btn {
+        flex: 1 !important;
+        height: 44px !important;
+        border-radius: 6px !important;
+        border: 1px solid #e2e8f0 !important;
+        background: #f8fafc !important;
+        color: #6b7280 !important;
+        font-size: 0.9rem !important;
+        font-weight: 500 !important;
+        cursor: pointer !important;
+        transition: all 0.2s ease !important;
+    }
+
+    .mobile-cancel-btn:active {
+        background: #f1f5f9 !important;
+        transform: scale(0.98) !important;
+    }
+
+    .mobile-confirm-btn {
+        flex: 2 !important;
+        height: 44px !important;
+        border-radius: 6px !important;
+        border: none !important;
+        background: #3b82f6 !important;
+        color: white !important;
+        font-size: 0.9rem !important;
+        font-weight: 600 !important;
+        cursor: pointer !important;
+        transition: all 0.2s ease !important;
+    }
+
+    .mobile-confirm-btn:active {
+        background: #2563eb !important;
+        transform: scale(0.98) !important;
+    }
+
+    .mobile-confirm-btn:disabled {
+        background: #e5e7eb !important;
+        color: #9ca3af !important;
+        cursor: not-allowed !important;
+        transform: none !important;
+    }
+
+    .mobile-confirm-btn.loading {
+        background: #9ca3af !important;
+        color: white !important;
+        cursor: not-allowed !important;
+    }
+
+    /* 智点购买按钮特殊样式 */
+    .mobile-points-btn {
+        background: #10b981 !important;
+    }
+
+    .mobile-points-btn:active {
+        background: #059669 !important;
+    }
+
+    .mobile-points-btn.loading {
+        background: #9ca3af !important;
+        color: white !important;
+    }
+}
+
+/* 默认隐藏移动端专用元素 */
+.mobile-header,
+.mobile-content {
+    display: none;
 }
 
 /* 账户管理样式 */
@@ -1681,12 +2716,12 @@ onMounted(() => {
     margin-bottom: 0;
 }
 
-.stat-label {
+.stat-row .stat-label {
     font-size: 0.875rem;
     color: #6b7280;
 }
 
-.stat-value {
+.stat-row .stat-value {
     font-size: 0.875rem;
     font-weight: 500;
     color: #18181b;

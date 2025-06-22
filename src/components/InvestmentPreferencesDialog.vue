@@ -1,5 +1,6 @@
 <template>
-    <el-dialog v-model="visible" :show-close="false" :close-on-click-modal="false" :lock-scroll="false"
+    <!-- PC端弹窗 -->
+    <el-dialog v-if="!isMobile" v-model="visible" :show-close="false" :close-on-click-modal="false" :lock-scroll="false"
         :width="dialogWidth" class="preferences-dialog" append-to-body>
         <template #header>
             <div></div>
@@ -55,6 +56,65 @@
             </div>
         </div>
     </el-dialog>
+
+    <!-- 移动端原生弹窗 -->
+    <div v-else-if="visible" class="mobile-preferences-overlay" @click="skipPreferences">
+        <div class="mobile-preferences-container" @click.stop>
+            <!-- 移动端头部 -->
+            <div class="mobile-preferences-header">
+                <div class="header-drag-handle"></div>
+                <div class="header-title-bar">
+                    <h3>完善投资偏好</h3>
+                    <button class="mobile-close-btn" @click="skipPreferences">
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none">
+                            <path d="M18 6L6 18M6 6l12 12" stroke="currentColor" stroke-width="2" />
+                        </svg>
+                    </button>
+                </div>
+                <p class="header-subtitle">帮助我们为您提供更精准的投资建议</p>
+
+                <!-- 步骤指示器 -->
+                <div class="mobile-step-indicator">
+                    <div v-for="(step, index) in totalSteps" :key="index" class="mobile-step-dot" :class="{
+                        active: currentStep === index,
+                        completed: currentStep > index,
+                    }">
+                        <span v-if="currentStep > index">✓</span>
+                        <span v-else>{{ index + 1 }}</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 移动端表单内容区域 -->
+            <div class="mobile-preferences-content">
+                <InvestmentPreferencesForm v-if="visible" :currentStep="currentStep" :preferencesForm="localPreferences"
+                    @update:preferencesForm="handlePreferencesUpdate"
+                    @update:currentStep="(newStep) => currentStep = newStep" />
+            </div>
+
+            <!-- 移动端底部操作按钮 -->
+            <div class="mobile-preferences-actions">
+                <button v-if="currentStep > 0" class="mobile-back-btn" @click="previousStep">
+                    上一步
+                </button>
+
+                <button v-if="currentStep < totalSteps - 1" class="mobile-next-btn" @click="nextStep"
+                    :disabled="!isStepValid">
+                    下一步
+                </button>
+
+                <button v-if="currentStep === totalSteps - 1" class="mobile-submit-btn" @click="handlePreferencesSubmit"
+                    :disabled="!isStepValid || preferencesLoading">
+                    <span v-if="preferencesLoading">提交中...</span>
+                    <span v-else>完成设置</span>
+                </button>
+
+                <button class="mobile-skip-btn" @click="skipPreferences">
+                    跳过
+                </button>
+            </div>
+        </div>
+    </div>
 </template>
 
 <script setup>
@@ -335,21 +395,55 @@ watch(visible, (newValue) => {
     overflow: hidden;
 }
 
-/* 移动端弹窗优化 */
+/* 移动端底部弹出样式 */
 @media (max-width: 767px) {
-    :deep(.preferences-dialog) {
-        width: calc(100vw - 20px) !important;
-        max-height: calc(100vh - 20px) !important;
-        margin: 10px auto !important;
-        border-radius: 20px !important;
+    :deep(.preferences-dialog.mobile-bottom-sheet) {
+        width: 100vw !important;
+        max-width: 100vw !important;
+        height: 85vh !important;
+        max-height: 85vh !important;
+        margin: 0 !important;
+        border-radius: 20px 20px 0 0 !important;
+        position: fixed !important;
+        bottom: 0 !important;
+        top: auto !important;
+        left: 0 !important;
+        right: 0 !important;
+        transform: none !important;
+        animation: slideUpFromBottom 0.3s ease-out !important;
     }
 
-    :deep(.el-dialog.preferences-dialog) {
-        border-radius: 20px !important;
+    :deep(.el-dialog.preferences-dialog.mobile-bottom-sheet) {
+        border-radius: 20px 20px 0 0 !important;
+        margin: 0 !important;
+        position: fixed !important;
+        bottom: 0 !important;
+        top: auto !important;
+        left: 0 !important;
+        transform: none !important;
     }
 
-    :deep(.preferences-dialog.el-dialog) {
-        border-radius: 20px !important;
+    :deep(.preferences-dialog.mobile-bottom-sheet.el-dialog) {
+        border-radius: 20px 20px 0 0 !important;
+    }
+
+    /* 移动端底部弹出动画 */
+    @keyframes slideUpFromBottom {
+        from {
+            transform: translateY(100%);
+            opacity: 0;
+        }
+
+        to {
+            transform: translateY(0);
+            opacity: 1;
+        }
+    }
+
+    /* 移动端遮罩层优化 */
+    :deep(.el-overlay) {
+        backdrop-filter: blur(4px);
+        background-color: rgba(0, 0, 0, 0.4);
     }
 }
 
@@ -363,6 +457,8 @@ watch(visible, (newValue) => {
     }
 }
 
+
+
 .preferences-container {
     padding: 20px 16px;
     background: white;
@@ -375,7 +471,9 @@ watch(visible, (newValue) => {
 /* 移动端进一步优化内边距 */
 @media (max-width: 767px) {
     .preferences-container {
-        padding: 16px 12px;
+        padding: 0 16px 20px 16px;
+        height: 100%;
+        border-radius: 20px 20px 0 0;
     }
 }
 
@@ -399,7 +497,8 @@ watch(visible, (newValue) => {
 @media (max-width: 767px) {
     .preferences-header {
         margin-bottom: 12px;
-        padding-bottom: 8px;
+        padding: 12px 0 12px 0;
+        border-bottom: 1px solid #f3f4f6;
     }
 }
 
@@ -547,56 +646,41 @@ watch(visible, (newValue) => {
     justify-content: center;
     gap: 12px;
     padding: 12px 0 0 0;
-    border-top: 1px solid #f3f4f6;
-    margin-top: 12px;
+    margin-top: auto;
     flex-shrink: 0;
+    border-top: 1px solid #f3f4f6;
 }
 
-/* 移动端操作按钮优化 */
+/* 移动端底部按钮优化 */
 @media (max-width: 767px) {
     .preferences-actions {
-        padding: 10px 0 0 0;
-        margin-top: 10px;
+        padding: 16px 0 0 0;
         gap: 8px;
     }
 }
 
-.preferences-back-btn,
-.preferences-next-btn,
-.preferences-submit-btn,
-.preferences-skip-btn {
-    min-width: 80px;
-    height: 40px;
-    border-radius: 8px;
-    font-weight: 500;
-    font-size: 0.9rem;
-    transition: all 0.2s ease;
-}
-
 /* 移动端按钮优化 */
 @media (max-width: 767px) {
-
-    .preferences-back-btn,
-    .preferences-next-btn,
-    .preferences-submit-btn,
-    .preferences-skip-btn {
-        min-width: 70px;
-        height: 36px;
-        font-size: 0.85rem;
-        border-radius: 6px;
+    .preferences-actions .el-button {
+        flex: 1;
+        min-width: 0;
+        max-width: 120px;
+        padding: 10px 16px;
+        font-size: 0.875rem;
     }
 }
 
 .preferences-back-btn {
-    border: 2px solid #e5e7eb;
-    background: white;
+    background: #f3f4f6;
+    border-color: #e5e7eb;
     color: #6b7280;
+    font-weight: 500;
 }
 
 .preferences-back-btn:hover {
+    background: #e5e7eb;
     border-color: #d1d5db;
-    background: #f9fafb;
-    color: #374151;
+    color: #4b5563;
 }
 
 .preferences-next-btn,
@@ -604,25 +688,253 @@ watch(visible, (newValue) => {
     background: #18181b;
     border-color: #18181b;
     color: white;
+    font-weight: 500;
 }
 
 .preferences-next-btn:hover,
 .preferences-submit-btn:hover {
-    background: #000000;
-    border-color: #000000;
-    transform: translateY(-1px);
-    box-shadow: 0 4px 12px rgba(24, 24, 27, 0.4);
+    background: #374151;
+    border-color: #374151;
 }
 
 .preferences-skip-btn {
     background: transparent;
-    border: 2px solid transparent;
-    color: #9ca3af;
+    border: 1px solid #e5e7eb;
+    color: #6b7280;
+    font-weight: 400;
 }
 
 .preferences-skip-btn:hover {
-    color: #6b7280;
     background: #f9fafb;
+    border-color: #d1d5db;
+    color: #4b5563;
+}
+
+/* 移动端安全区域适配 */
+@media (max-width: 767px) {
+    .preferences-actions {
+        padding-bottom: env(safe-area-inset-bottom, 0);
+    }
+}
+
+/* ================ 移动端原生弹窗样式 ================ */
+.mobile-preferences-overlay {
+    position: fixed !important;
+    top: 0 !important;
+    left: 0 !important;
+    right: 0 !important;
+    bottom: 0 !important;
+    background: rgba(0, 0, 0, 0.4) !important;
+    z-index: 1000 !important;
+    display: flex !important;
+    align-items: flex-end !important;
+    justify-content: center !important;
+    animation: fadeIn 0.2s ease-out !important;
+}
+
+.mobile-preferences-container {
+    width: 100% !important;
+    max-width: 100vw !important;
+    height: 95vh !important;
+    background: #ffffff !important;
+    border-radius: 16px 16px 0 0 !important;
+    overflow: hidden !important;
+    box-shadow: 0 -4px 20px rgba(0, 0, 0, 0.15) !important;
+    animation: slideUpModal 0.3s ease-out !important;
+    display: flex !important;
+    flex-direction: column !important;
+}
+
+/* 移动端头部 */
+.mobile-preferences-header {
+    flex-shrink: 0 !important;
+    padding: 12px 20px 16px 20px !important;
+    background: #ffffff !important;
+    border-bottom: 1px solid #f1f5f9 !important;
+}
+
+.header-drag-handle {
+    width: 40px !important;
+    height: 4px !important;
+    background: #d1d5db !important;
+    border-radius: 2px !important;
+    margin: 0 auto 16px auto !important;
+}
+
+.header-title-bar {
+    display: flex !important;
+    align-items: center !important;
+    justify-content: space-between !important;
+    margin-bottom: 8px !important;
+}
+
+.header-title-bar h3 {
+    font-size: 1.125rem !important;
+    font-weight: 600 !important;
+    color: #18181b !important;
+    margin: 0 !important;
+}
+
+.mobile-close-btn {
+    width: 28px !important;
+    height: 28px !important;
+    border-radius: 50% !important;
+    background: #f8fafc !important;
+    border: none !important;
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    color: #6b7280 !important;
+    cursor: pointer !important;
+    transition: all 0.2s ease !important;
+}
+
+.mobile-close-btn:active {
+    background: #f1f5f9 !important;
+    transform: scale(0.95) !important;
+}
+
+.header-subtitle {
+    font-size: 0.8rem !important;
+    color: #6b7280 !important;
+    margin: 0 0 12px 0 !important;
+    line-height: 1.4 !important;
+}
+
+/* 移动端步骤指示器 */
+.mobile-step-indicator {
+    display: flex !important;
+    justify-content: center !important;
+    gap: 8px !important;
+    margin: 0 !important;
+}
+
+.mobile-step-dot {
+    width: 28px !important;
+    height: 28px !important;
+    border-radius: 50% !important;
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    font-size: 0.7rem !important;
+    font-weight: 600 !important;
+    transition: all 0.3s ease !important;
+    border: 2px solid #e5e7eb !important;
+    background: #f9fafb !important;
+    color: #9ca3af !important;
+}
+
+.mobile-step-dot.active {
+    background: #18181b !important;
+    border-color: #18181b !important;
+    color: white !important;
+    transform: scale(1.05) !important;
+}
+
+.mobile-step-dot.completed {
+    background: #374151 !important;
+    border-color: #374151 !important;
+    color: white !important;
+}
+
+/* 移动端内容区域 */
+.mobile-preferences-content {
+    flex: 1 !important;
+    overflow: hidden !important;
+    display: flex !important;
+    flex-direction: column !important;
+    min-height: 0 !important;
+}
+
+/* 移动端底部按钮 */
+.mobile-preferences-actions {
+    display: flex !important;
+    justify-content: center !important;
+    gap: 8px !important;
+    padding: 16px 20px !important;
+    padding-bottom: calc(16px + env(safe-area-inset-bottom, 0)) !important;
+    margin-top: auto !important;
+    flex-shrink: 0 !important;
+    border-top: 1px solid #f3f4f6 !important;
+    background: #ffffff !important;
+}
+
+.mobile-back-btn,
+.mobile-next-btn,
+.mobile-submit-btn,
+.mobile-skip-btn {
+    flex: 1 !important;
+    max-width: 120px !important;
+    padding: 12px 16px !important;
+    font-size: 0.875rem !important;
+    font-weight: 500 !important;
+    border: none !important;
+    border-radius: 8px !important;
+    cursor: pointer !important;
+    transition: all 0.2s ease !important;
+}
+
+.mobile-back-btn {
+    background: #f3f4f6 !important;
+    color: #6b7280 !important;
+}
+
+.mobile-back-btn:active {
+    background: #e5e7eb !important;
+    transform: scale(0.98) !important;
+}
+
+.mobile-next-btn,
+.mobile-submit-btn {
+    background: #18181b !important;
+    color: white !important;
+}
+
+.mobile-next-btn:active,
+.mobile-submit-btn:active {
+    background: #374151 !important;
+    transform: scale(0.98) !important;
+}
+
+.mobile-next-btn:disabled,
+.mobile-submit-btn:disabled {
+    background: #9ca3af !important;
+    cursor: not-allowed !important;
+    transform: none !important;
+}
+
+.mobile-skip-btn {
+    background: transparent !important;
+    color: #6b7280 !important;
+    border: 1px solid #e5e7eb !important;
+}
+
+.mobile-skip-btn:active {
+    background: #f9fafb !important;
+    transform: scale(0.98) !important;
+}
+
+/* 动画定义 */
+@keyframes fadeIn {
+    from {
+        opacity: 0;
+    }
+
+    to {
+        opacity: 1;
+    }
+}
+
+@keyframes slideUpModal {
+    from {
+        transform: translateY(100%);
+        opacity: 0;
+    }
+
+    to {
+        transform: translateY(0);
+        opacity: 1;
+    }
 }
 </style>
 

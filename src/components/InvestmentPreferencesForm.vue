@@ -1515,6 +1515,39 @@ onUnmounted(() => {
     opacity: 0.75 !important;
 }
 
+/* PC端搜索框图标优化 */
+:deep(.compact-search .el-input__prefix) {
+    padding-left: 12px !important;
+    padding-right: 6px !important;
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+}
+
+:deep(.compact-search .el-input__prefix-inner) {
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    margin-right: 0 !important;
+    color: #6b7280 !important;
+}
+
+/* PC端搜索框清除图标优化 */
+:deep(.compact-search .el-input__suffix) {
+    padding-right: 12px !important;
+    padding-left: 6px !important;
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+}
+
+:deep(.compact-search .el-input__suffix-inner) {
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    margin-left: 0 !important;
+}
+
 .stats-section {
     display: flex;
     gap: 8px;
@@ -1688,7 +1721,7 @@ onUnmounted(() => {
     font-size: 0.75rem;
     font-weight: 600;
     color: #374151;
-    margin-bottom: 6px;
+    margin: 12px 0 8px 0;
     display: flex;
     align-items: center;
     gap: 6px;
@@ -1893,7 +1926,7 @@ onUnmounted(() => {
     display: flex;
     flex-direction: column;
     border-right: 1px solid #e5e7eb;
-    padding-right: 16px;
+    padding: 0 16px 0 12px;
     overflow: hidden;
 }
 
@@ -1903,6 +1936,7 @@ onUnmounted(() => {
     flex-direction: column;
     overflow: hidden;
     min-height: 0;
+    padding-right: 12px;
 }
 
 .major-grid-desktop {
@@ -1952,6 +1986,7 @@ onUnmounted(() => {
     flex-direction: column;
     gap: 12px;
     min-height: 0;
+    margin-bottom: 12px;
 }
 
 .sub-group-desktop {
@@ -1972,22 +2007,24 @@ onUnmounted(() => {
 }
 
 .sub-cards-desktop {
-    padding: 8px;
+    padding: 12px;
     display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(120px, 1fr));
-    gap: 6px;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 8px;
+    justify-content: start;
+    justify-items: stretch;
 }
 
 .sub-card-desktop {
     position: relative;
-    padding: 8px;
+    padding: 12px;
     border: 1px solid #e5e7eb;
-    border-radius: 6px;
+    border-radius: 8px;
     cursor: pointer;
     transition: all 0.2s ease;
     text-align: center;
     background: white;
-    min-height: 60px;
+    min-height: 75px;
     display: flex;
     flex-direction: column;
     align-items: center;
@@ -2510,6 +2547,39 @@ onUnmounted(() => {
         box-shadow: 0 0 0 3px rgba(24, 24, 27, 0.1);
     }
 
+    /* 移动端搜索框图标优化 */
+    .compact-search :deep(.el-input__prefix) {
+        padding-left: 16px !important;
+        padding-right: 8px !important;
+        display: flex !important;
+        align-items: center !important;
+        justify-content: center !important;
+    }
+
+    .compact-search :deep(.el-input__prefix-inner) {
+        display: flex !important;
+        align-items: center !important;
+        justify-content: center !important;
+        margin-right: 0 !important;
+        color: #6b7280 !important;
+    }
+
+    /* 移动端搜索框清除图标优化 */
+    .compact-search :deep(.el-input__suffix) {
+        padding-right: 16px !important;
+        padding-left: 8px !important;
+        display: flex !important;
+        align-items: center !important;
+        justify-content: center !important;
+    }
+
+    .compact-search :deep(.el-input__suffix-inner) {
+        display: flex !important;
+        align-items: center !important;
+        justify-content: center !important;
+        margin-left: 0 !important;
+    }
+
     .stats-section {
         justify-content: center;
         gap: 12px;
@@ -2528,7 +2598,8 @@ onUnmounted(() => {
 
     .selection-mode {
         background: transparent;
-        padding: 0;
+        padding: 8px 6px;
+        overflow-x: hidden;
     }
 
     .selection-layout {
@@ -2538,52 +2609,133 @@ onUnmounted(() => {
 
     .major-selector {
         width: 100%;
-        margin-bottom: 16px;
+        margin-bottom: 20px;
+        padding: 0 2px;
+    }
+
+    /* 移动端标题优化 */
+    .mobile-layout .section-title {
+        margin: 8px 0 12px 0;
+        font-size: 0.85rem;
     }
 
     .major-grid {
-        grid-template-columns: repeat(2, 1fr);
-        gap: 12px;
+        grid-template-columns: repeat(3, 1fr) !important;
+        gap: 4px !important;
     }
 
-    .major-card {
-        padding: 16px;
-        border-radius: 12px;
-        min-height: 80px;
+    /* 移动端大分类卡片精致优化 */
+    .mobile-layout .major-section .major-grid .major-card {
+        padding: 6px 3px !important;
+        border-radius: 8px !important;
+        min-height: 50px !important;
+        max-height: 58px !important;
+        flex-direction: row !important;
+        text-align: left !important;
+        border: 1px solid #e5e7eb !important;
+        background: #ffffff !important;
+        box-shadow: 0 1px 3px rgba(0, 0, 0, 0.06) !important;
+        justify-content: center !important;
+        align-items: center !important;
+        position: relative !important;
+        overflow: visible !important;
         /* 触摸优化 */
         -webkit-tap-highlight-color: transparent;
         touch-action: manipulation;
     }
 
-    .major-card:active {
+    .mobile-layout .major-card:active {
         transform: scale(0.98);
+    }
+
+    /* 移动端大分类勾图标优化 */
+    .mobile-layout .major-section .major-grid .major-card .major-check {
+        width: 14px !important;
+        height: 14px !important;
+        top: -3px !important;
+        right: -3px !important;
+        font-size: 0.65rem !important;
+        border: 1px solid white !important;
+        z-index: 10 !important;
+    }
+
+    /* 移动端大分类图标和文字精致布局 */
+    .mobile-layout .major-section .major-grid .major-card .major-icon {
+        font-size: 0.9rem !important;
+        margin-right: 3px !important;
+        margin-bottom: 0 !important;
+        line-height: 1 !important;
+        flex-shrink: 0 !important;
+    }
+
+    .mobile-layout .major-section .major-grid .major-card .major-name {
+        font-size: 0.6rem !important;
+        line-height: 1 !important;
+        margin: 0 !important;
+        padding: 0 !important;
+        flex-shrink: 0 !important;
+        font-weight: 500 !important;
     }
 
     .sub-selector {
         width: 100%;
     }
 
-    .sub-cards {
-        grid-template-columns: repeat(2, 1fr);
-        gap: 8px;
+    /* 移动端小分类组间隔 */
+    .mobile-layout .sub-section .sub-group {
+        margin-bottom: 12px !important;
     }
 
-    .sub-card {
-        padding: 12px;
-        border-radius: 10px;
-        min-height: 60px;
-        font-size: 0.8rem;
+    .sub-cards {
+        grid-template-columns: repeat(3, 1fr) !important;
+        gap: 4px !important;
+        padding: 6px !important;
+    }
+
+    /* 移动端小分类卡片精致优化 */
+    .mobile-layout .sub-section .sub-group .sub-cards .sub-card {
+        padding: 6px 4px !important;
+        border-radius: 8px !important;
+        min-height: 45px !important;
+        max-height: 55px !important;
+        font-size: 0.75rem !important;
+        flex-direction: row !important;
+        text-align: left !important;
+        border: 1px solid #e5e7eb !important;
+        background: #ffffff !important;
+        box-shadow: 0 1px 2px rgba(0, 0, 0, 0.04) !important;
+        justify-content: center !important;
+        align-items: center !important;
         /* 触摸优化 */
         -webkit-tap-highlight-color: transparent;
         touch-action: manipulation;
     }
 
-    .sub-card:active {
+    .mobile-layout .sub-card:active {
         transform: scale(0.98);
     }
 
+    /* 移动端小分类图标和文字精致布局 */
+    .mobile-layout .sub-section .sub-group .sub-cards .sub-card .sub-icon {
+        font-size: 0.8rem !important;
+        margin-right: 3px !important;
+        margin-bottom: 0 !important;
+        line-height: 1 !important;
+        flex-shrink: 0 !important;
+    }
+
+    .mobile-layout .sub-section .sub-group .sub-cards .sub-card .sub-name {
+        font-size: 0.55rem !important;
+        line-height: 1 !important;
+        margin: 0 !important;
+        padding: 0 !important;
+        flex-shrink: 0 !important;
+        font-weight: 500 !important;
+    }
+
     .search-mode {
-        padding: 0;
+        padding: 8px 8px;
+        overflow-x: hidden;
     }
 
     .search-header {
@@ -2598,14 +2750,20 @@ onUnmounted(() => {
     }
 
     .search-grid {
-        grid-template-columns: 1fr;
-        gap: 12px;
+        grid-template-columns: 1fr !important;
+        gap: 8px !important;
     }
 
-    .sector-card {
-        padding: 16px;
-        border-radius: 12px;
-        min-height: 80px;
+    .search-mode .search-grid .sector-card {
+        padding: 10px 12px !important;
+        border-radius: 12px !important;
+        min-height: 55px !important;
+        max-height: 70px !important;
+        flex-direction: row !important;
+        text-align: left !important;
+        border: 1px solid #e5e7eb !important;
+        background: #ffffff !important;
+        box-shadow: 0 1px 3px rgba(0, 0, 0, 0.06) !important;
         /* 触摸优化 */
         -webkit-tap-highlight-color: transparent;
         touch-action: manipulation;
@@ -2615,21 +2773,34 @@ onUnmounted(() => {
         transform: scale(0.98);
     }
 
-    .card-icon {
-        font-size: 1.2rem;
-        margin-bottom: 8px;
+    .search-mode .search-grid .sector-card .card-icon {
+        font-size: 1.2rem !important;
+        margin-right: 10px !important;
+        margin-bottom: 0 !important;
+        line-height: 1 !important;
+        flex-shrink: 0 !important;
     }
 
-    .card-title {
-        font-size: 1rem;
+    .search-mode .search-grid .sector-card .card-content {
+        flex: 1 !important;
+        display: flex !important;
+        flex-direction: column !important;
+        justify-content: center !important;
+    }
+
+    .search-mode .search-grid .sector-card .card-title {
+        font-size: 0.85rem !important;
         font-weight: 600;
-        margin-bottom: 4px;
+        margin-bottom: 2px !important;
+        line-height: 1.2 !important;
+        color: #1f2937 !important;
     }
 
-    .card-desc {
-        font-size: 0.8rem;
+    .search-mode .search-grid .sector-card .card-desc {
+        font-size: 0.7rem !important;
         color: #6b7280;
-        margin-bottom: 6px;
+        margin-bottom: 0 !important;
+        line-height: 1.1 !important;
     }
 
     .card-parent {
@@ -2744,6 +2915,54 @@ onUnmounted(() => {
         border-color: #9ca3af;
         box-shadow: 0 2px 6px rgba(0, 0, 0, 0.1);
         /* 悬停时增强阴影 */
+    }
+}
+
+/* PC端样式确保不被移动端影响 */
+@media (min-width: 768px) {
+    .desktop-layout .major-grid {
+        grid-template-columns: repeat(auto-fill, minmax(120px, 1fr)) !important;
+        gap: 6px !important;
+    }
+
+    .desktop-layout .major-card {
+        padding: 8px !important;
+        border-radius: 10px !important;
+        min-height: 70px !important;
+        font-size: inherit !important;
+    }
+
+    .desktop-layout .major-icon {
+        font-size: 1.3rem !important;
+        margin-bottom: 4px !important;
+    }
+
+    .desktop-layout .major-name {
+        font-size: 0.75rem !important;
+        line-height: 1.2 !important;
+    }
+
+    .desktop-layout .sub-cards {
+        grid-template-columns: repeat(auto-fill, minmax(110px, 1fr)) !important;
+        gap: 6px !important;
+        padding: 8px !important;
+    }
+
+    .desktop-layout .sub-card {
+        padding: 8px !important;
+        border-radius: 8px !important;
+        min-height: 65px !important;
+        font-size: inherit !important;
+    }
+
+    .desktop-layout .sub-icon {
+        font-size: 1.1rem !important;
+        margin-bottom: 3px !important;
+    }
+
+    .desktop-layout .sub-name {
+        font-size: 0.7rem !important;
+        line-height: 1.2 !important;
     }
 }
 

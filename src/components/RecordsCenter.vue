@@ -170,7 +170,7 @@
 </template>
 
 <script setup>
-import { ref, computed } from 'vue';
+import { ref, computed, onMounted, onUnmounted } from 'vue';
 import { useUserStore } from '../store/user';
 import { Close } from '@element-plus/icons-vue';
 import QuantAnalysisReports from './QuantAnalysisReports.vue';
@@ -199,7 +199,7 @@ const toggleFilters = () => {
     filtersExpanded.value = !filtersExpanded.value;
 };
 
-
+// 暂时移除复杂修复
 
 // 计算各类记录数量
 const reportsCount = computed(() => userStore.quantAnalysisReports?.length || 0);
@@ -415,7 +415,7 @@ const tradingRecordsCount = computed(() => userStore.aiTradingRecords?.length ||
     right: 0 !important;
     bottom: 0 !important;
     background: rgba(0, 0, 0, 0.4) !important;
-    z-index: 10000 !important;
+    z-index: 1000 !important;
     display: flex !important;
     align-items: flex-end !important;
     justify-content: center !important;
@@ -584,7 +584,7 @@ const tradingRecordsCount = computed(() => userStore.aiTradingRecords?.length ||
     overflow: hidden !important;
     transition: max-height 0.3s ease !important;
     position: relative !important;
-    z-index: 5 !important;
+    z-index: 1 !important;
     box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1) !important;
 }
 
@@ -680,11 +680,15 @@ const tradingRecordsCount = computed(() => userStore.aiTradingRecords?.length ||
 /* 移动端时间控件原生化 - 修复显示问题 */
 .mobile-records-container :deep(.filter-date) {
     width: 100% !important;
+    position: static !important;
+    z-index: auto !important;
 }
 
 .mobile-records-container :deep(.filter-date .el-date-editor) {
     width: 100% !important;
     height: 36px !important;
+    position: static !important;
+    z-index: auto !important;
 }
 
 .mobile-records-container :deep(.filter-date .el-input__wrapper) {
@@ -694,6 +698,8 @@ const tradingRecordsCount = computed(() => userStore.aiTradingRecords?.length ||
     padding: 0 10px !important;
     height: 36px !important;
     border-radius: 6px !important;
+    position: static !important;
+    z-index: auto !important;
 }
 
 .mobile-records-container :deep(.filter-date .el-input__inner) {
@@ -722,6 +728,8 @@ const tradingRecordsCount = computed(() => userStore.aiTradingRecords?.length ||
 .mobile-records-container :deep(.filter-select),
 .mobile-records-container :deep(.filter-search) {
     width: 100% !important;
+    position: static !important;
+    z-index: auto !important;
 }
 
 .mobile-records-container :deep(.filter-select .el-input__wrapper),
@@ -732,6 +740,8 @@ const tradingRecordsCount = computed(() => userStore.aiTradingRecords?.length ||
     padding: 0 10px !important;
     height: 36px !important;
     border-radius: 6px !important;
+    position: static !important;
+    z-index: auto !important;
 }
 
 .mobile-records-container :deep(.filter-select .el-input__inner),
@@ -752,38 +762,24 @@ const tradingRecordsCount = computed(() => userStore.aiTradingRecords?.length ||
     color: #9ca3af !important;
 }
 
-/* 下拉菜单优化 */
-.mobile-records-container :deep(.el-select-dropdown) {
-    border: 1px solid #e5e7eb !important;
-    border-radius: 8px !important;
-    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1) !important;
+/* Element Plus 移动端修复 - 简化样式 */
+.mobile-records-container :deep(.el-select),
+.mobile-records-container :deep(.el-date-editor) {
+    position: static !important;
+    z-index: auto !important;
 }
 
-.mobile-records-container :deep(.el-select-dropdown .el-select-dropdown__item) {
-    font-size: 0.8rem !important;
-    padding: 8px 12px !important;
-    color: #374151 !important;
+.mobile-records-container :deep(.el-input__wrapper) {
+    position: static !important;
+    z-index: auto !important;
 }
 
-.mobile-records-container :deep(.el-select-dropdown .el-select-dropdown__item.is-selected) {
-    background: #eff6ff !important;
-    color: #3b82f6 !important;
+/* 移动端筛选器表单项间距 */
+.mobile-records-container :deep(.filter-group) {
+    margin-bottom: 8px !important;
 }
 
-/* 日期选择器弹出层优化 */
-.mobile-records-container :deep(.el-picker-panel) {
-    border-radius: 12px !important;
-    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.12) !important;
-}
-
-.mobile-records-container :deep(.el-picker-panel .el-date-picker__header) {
-    padding: 12px 16px !important;
-    border-bottom: 1px solid #f1f5f9 !important;
-}
-
-.mobile-records-container :deep(.el-picker-panel .el-picker-panel__body) {
-    padding: 12px !important;
-}
+/* 移动端基本修复 */
 
 /* 重置按钮优化 */
 .mobile-records-container :deep(.pc-filter-btn) {
@@ -825,8 +821,16 @@ const tradingRecordsCount = computed(() => userStore.aiTradingRecords?.length ||
     -webkit-overflow-scrolling: touch !important;
     scroll-behavior: smooth !important;
     margin-top: 8px !important;
+    position: static !important;
+}
+
+/* 移动端容器简化 */
+.mobile-records-container {
     position: relative !important;
-    z-index: 1 !important;
+}
+
+.mobile-records-content {
+    position: relative !important;
 }
 
 /* 移动端网格布局优化 */

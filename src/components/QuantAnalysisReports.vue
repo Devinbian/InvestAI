@@ -22,18 +22,34 @@
             <div class="filters-row">
                 <div class="filter-group">
                     <label class="filter-label">报告类型</label>
-                    <el-select v-model="filterType" placeholder="报告类型" clearable size="small" class="filter-select">
+                    <!-- PC端使用Element Plus -->
+                    <el-select v-if="!isMobile" v-model="filterType" placeholder="报告类型" clearable size="small"
+                        class="filter-select">
                         <el-option label="全部类型" value="" />
                         <el-option label="量化分析" value="quant-analysis" />
                         <el-option label="AI委托交易" value="ai-trading" />
                         <el-option label="股票分析" value="stock-analysis" />
                     </el-select>
+                    <!-- 移动端使用原生控件 -->
+                    <select v-else v-model="filterType" class="mobile-select">
+                        <option value="">全部类型</option>
+                        <option value="quant-analysis">量化分析</option>
+                        <option value="ai-trading">AI委托交易</option>
+                        <option value="stock-analysis">股票分析</option>
+                    </select>
                 </div>
                 <div class="filter-group">
                     <label class="filter-label">时间范围</label>
-                    <el-date-picker v-model="filterDateRange" type="daterange" range-separator="至"
+                    <!-- PC端使用Element Plus -->
+                    <el-date-picker v-if="!isMobile" v-model="filterDateRange" type="daterange" range-separator="至"
                         start-placeholder="开始日期" end-placeholder="结束日期" size="small" format="YYYY-MM-DD"
                         value-format="YYYY-MM-DD" class="filter-date" />
+                    <!-- 移动端使用原生控件 -->
+                    <div v-else class="mobile-date-range">
+                        <input type="date" v-model="startDate" class="mobile-date-input" placeholder="开始日期">
+                        <span class="date-separator">至</span>
+                        <input type="date" v-model="endDate" class="mobile-date-input" placeholder="结束日期">
+                    </div>
                 </div>
                 <div class="filter-group">
                     <label class="filter-label">关键词搜索</label>
@@ -178,12 +194,18 @@
 </template>
 
 <script setup>
-import { ref, computed, onMounted } from 'vue';
+import { ref, computed, onMounted, watch } from 'vue';
 import { useUserStore } from '../store/user';
 import { ElMessage, ElMessageBox } from 'element-plus';
 import { Download, Search, More, CircleCheck } from '@element-plus/icons-vue';
 
 const userStore = useUserStore();
+
+// 移动端检测
+const isMobile = computed(() => {
+    if (typeof window === 'undefined') return false;
+    return window.innerWidth <= 768;
+});
 
 // 响应式数据
 const loading = ref(false);
@@ -194,6 +216,30 @@ const currentPage = ref(1);
 const pageSize = ref(12);
 const showReportDetail = ref(false);
 const selectedReport = ref(null);
+
+// 移动端日期范围
+const startDate = ref('');
+const endDate = ref('');
+
+// 监听移动端日期变化，同步到filterDateRange
+watch([startDate, endDate], ([start, end]) => {
+    if (start && end) {
+        filterDateRange.value = [start, end];
+    } else {
+        filterDateRange.value = null;
+    }
+});
+
+// 监听filterDateRange变化，同步到移动端日期
+watch(filterDateRange, (newVal) => {
+    if (newVal && newVal.length === 2) {
+        startDate.value = newVal[0];
+        endDate.value = newVal[1];
+    } else {
+        startDate.value = '';
+        endDate.value = '';
+    }
+});
 
 // 计算属性
 const reports = computed(() => userStore.quantAnalysisReports || []);
@@ -743,6 +789,46 @@ const exportAllReports = () => {
     .filter-date,
     .filter-search {
         width: 100%;
+    }
+
+    /* 移动端原生控件样式 */
+    .mobile-select {
+        width: 100%;
+        padding: 8px 12px;
+        border: 1px solid #e5e7eb;
+        border-radius: 6px;
+        background: #f8fafc;
+        color: #374151;
+        font-size: 0.8rem;
+        appearance: none;
+        background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 20 20'%3e%3cpath stroke='%236b7280' stroke-linecap='round' stroke-linejoin='round' stroke-width='1.5' d='M6 8l4 4 4-4'/%3e%3c/svg%3e");
+        background-position: right 8px center;
+        background-repeat: no-repeat;
+        background-size: 16px;
+        padding-right: 32px;
+    }
+
+    .mobile-date-range {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        width: 100%;
+    }
+
+    .mobile-date-input {
+        flex: 1;
+        padding: 8px 12px;
+        border: 1px solid #e5e7eb;
+        border-radius: 6px;
+        background: #f8fafc;
+        color: #374151;
+        font-size: 0.8rem;
+    }
+
+    .date-separator {
+        color: #9ca3af;
+        font-size: 0.75rem;
+        flex-shrink: 0;
     }
 
     .reports-list {

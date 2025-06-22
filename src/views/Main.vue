@@ -186,12 +186,13 @@
                     <div class="chat-message-content">
                         <div v-if="message.content" class="message-text">{{ message.content }}</div>
 
-                        <!-- 互动建议（资讯推送、智能复盘等） -->
-                        <div v-if="message.hasInteractionButtons && message.interactionData"
+                        <!-- 互动建议（资讯推送、智能复盘等，不包括自选股） -->
+                        <div v-if="message.hasInteractionButtons && message.interactionData && !message.isWatchlistDisplay"
                             class="interaction-suggestions">
                             <div class="suggestion-intro">
-                                💡 <span class="intro-text">{{ message.isNewsUpdate ? '基于这些资讯，我建议您可以：' :
-                                    '基于复盘结果，我建议您可以：'
+                                💡 <span class="intro-text">{{
+                                    message.isNewsUpdate ? '基于这些资讯，我建议您可以：' :
+                                        '基于复盘结果，我建议您可以：'
                                 }}</span>
                             </div>
                             <div class="suggestion-items">
@@ -278,6 +279,160 @@
 
 
 
+                        <!-- 自选股列表展示 -->
+                        <div v-if="message.isWatchlistDisplay && message.watchlistData"
+                            class="watchlist-display-container">
+                            <!-- 概览信息 -->
+                            <div class="watchlist-overview">
+                                <div class="overview-stats">
+                                    <div class="stat-item total">
+                                        <div class="stat-icon">⭐</div>
+                                        <div class="stat-info">
+                                            <div class="stat-value">{{ message.watchlistStats.total }}</div>
+                                            <div class="stat-label">关注股票</div>
+                                        </div>
+                                    </div>
+                                    <div class="stat-item up">
+                                        <div class="stat-icon">📈</div>
+                                        <div class="stat-info">
+                                            <div class="stat-value">{{ message.watchlistStats.upCount }}</div>
+                                            <div class="stat-label">上涨</div>
+                                        </div>
+                                    </div>
+                                    <div class="stat-item down">
+                                        <div class="stat-icon">📉</div>
+                                        <div class="stat-info">
+                                            <div class="stat-value">{{ message.watchlistStats.downCount }}</div>
+                                            <div class="stat-label">下跌</div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- 股票卡片列表 -->
+                            <div class="watchlist-stock-list">
+                                <div v-for="(stock, stockIdx) in message.watchlistData" :key="stockIdx"
+                                    class="stock-item watchlist-stock-card">
+                                    <div class="stock-info">
+                                        <div class="stock-header">
+                                            <div class="stock-name-code">
+                                                <div class="name-code-row">
+                                                    <span class="stock-name">{{ stock.name }}</span>
+                                                    <span class="stock-code">({{ stock.code }})</span>
+                                                </div>
+                                                <!-- 关注状态 -->
+                                                <div class="watchlist-status">
+                                                    <span class="status-label">关注时间：</span>
+                                                    <span class="status-value">
+                                                        {{ formatAddedTime(stock.addedAt) }}
+                                                    </span>
+                                                </div>
+                                            </div>
+                                            <div class="stock-price-change">
+                                                <span class="current-price">¥{{ stock.price }}</span>
+                                                <span
+                                                    :class="['price-change', stock.changePct >= 0 ? 'positive' : 'negative']">
+                                                    {{ stock.changePercent }}
+                                                </span>
+                                            </div>
+                                        </div>
+
+                                        <div class="stock-details">
+                                            <div class="detail-row">
+                                                <span class="detail-label">所属行业：</span>
+                                                <span class="detail-value industry">{{ stock.industry || '未分类' }}</span>
+                                                <span class="detail-label">涨跌额：</span>
+                                                <span
+                                                    :class="['detail-value', stock.changePct >= 0 ? 'positive' : 'negative']">
+                                                    {{ stock.change }}
+                                                </span>
+                                            </div>
+                                            <div class="detail-row">
+                                                <span class="detail-label">当前价格：</span>
+                                                <span class="detail-value target-price">¥{{ stock.currentPrice }}</span>
+                                                <span class="detail-label">股票类型：</span>
+                                                <span class="detail-value">自选关注</span>
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                    <div class="stock-item-actions">
+                                        <!-- 移除自选按钮 -->
+                                        <el-button size="small" @click="removeFromWatchlist(stock.code)"
+                                            class="remove-watchlist-btn">
+                                            <svg width="14" height="14" viewBox="0 0 24 24" fill="none">
+                                                <path
+                                                    d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"
+                                                    fill="currentColor" />
+                                            </svg>
+                                            移除自选
+                                        </el-button>
+
+                                        <!-- 量化分析按钮（付费） -->
+                                        <el-button size="small" @click="showPaidAnalysisDialog(stock)"
+                                            class="paid-analysis-btn">
+                                            <svg width="14" height="14" viewBox="0 0 24 24" fill="none">
+                                                <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"
+                                                    stroke="currentColor" stroke-width="2" />
+                                            </svg>
+                                            量化分析
+                                            <div class="price-tag-container">
+                                                <span class="price-tag original-price">3智点</span>
+                                                <span class="price-tag promo-price">1智点</span>
+                                            </div>
+                                        </el-button>
+
+                                        <!-- AI委托交易按钮（付费） -->
+                                        <el-button size="small" @click="showQuantAnalysisDialog(stock)"
+                                            class="quant-analysis-btn">
+                                            <svg width="14" height="14" viewBox="0 0 24 24" fill="none">
+                                                <path d="M3 3v18h18M7 16l4-4 4 4 4-4" stroke="currentColor"
+                                                    stroke-width="2" fill="none" />
+                                            </svg>
+                                            AI委托交易
+                                            <div class="price-tag-container">
+                                                <span class="price-tag original-price">3智点</span>
+                                                <span class="price-tag promo-price">1智点</span>
+                                            </div>
+                                        </el-button>
+
+                                        <!-- 购买按钮 -->
+                                        <el-button size="small" @click="showBuyDialog(stock)"
+                                            class="buy-stock-btn-secondary">
+                                            <svg width="14" height="14" viewBox="0 0 24 24" fill="none">
+                                                <path d="M12 2v20M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"
+                                                    stroke="currentColor" stroke-width="2" />
+                                            </svg>
+                                            购买
+                                        </el-button>
+
+
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- 自选股互动建议 -->
+                            <div v-if="message.hasInteractionButtons && message.interactionData"
+                                class="interaction-suggestions">
+                                <div class="suggestion-intro">
+                                    💡 <span class="intro-text">基于您的自选股，建议您可以：</span>
+                                </div>
+                                <div class="suggestion-items">
+                                    <div v-for="action in message.interactionData.recommendActions" :key="action.id"
+                                        @click="handleInteractionAction(action, message)" class="suggestion-item">
+                                        <span class="suggestion-icon">{{ action.icon }}</span>
+                                        <span class="suggestion-text">{{ action.description }}</span>
+                                        <span class="suggestion-arrow">→</span>
+                                    </div>
+                                </div>
+                                <!-- 自选股时显示更新时间 -->
+                                <div v-if="message.watchlistStats" class="suggestion-time">
+                                    数据更新时间：{{ message.watchlistStats.updateTime }}
+                                </div>
+                            </div>
+
+                        </div>
+
                         <!-- 股票账户信息展示 -->
                         <div v-if="message.hasAssetInfo && message.assetData" class="stock-account-container">
                             <!-- 账户标题 -->
@@ -295,13 +450,13 @@
                                         <div class="asset-amount">
                                             <span class="amount-label">总资产</span>
                                             <span class="amount-value">¥{{ formatCurrency(message.assetData.totalAssets)
-                                            }}</span>
+                                                }}</span>
                                         </div>
                                         <div class="asset-change"
                                             :class="[message.assetData.totalProfitPercent >= 0 ? 'profit' : 'loss']">
                                             <span class="change-icon">{{ message.assetData.totalProfitPercent >= 0 ?
                                                 '📈' : '📉'
-                                            }}</span>
+                                                }}</span>
                                             <span class="change-label">今日盈亏：</span>
                                             <span class="change-text">
                                                 {{ message.assetData.totalProfitPercent >= 0 ? '+' : '' }}¥{{
@@ -327,7 +482,7 @@
                                         <div class="stat-info">
                                             <div class="stat-label">持仓市值</div>
                                             <div class="stat-value">¥{{ formatCurrency(message.assetData.portfolioValue)
-                                            }}
+                                                }}
                                             </div>
                                         </div>
                                     </div>
@@ -388,7 +543,7 @@
                                                         <div class="stock-price-change">
                                                             <span class="current-price">¥{{
                                                                 position.currentPrice.toFixed(2)
-                                                            }}</span>
+                                                                }}</span>
                                                             <span
                                                                 :class="['price-change', position.profitPercent >= 0 ? 'positive' : 'negative']">
                                                                 {{ position.profitPercent >= 0 ? '+' : '' }}¥{{
@@ -402,10 +557,10 @@
                                                             <span class="detail-label">持仓数量：</span>
                                                             <span class="detail-value">{{
                                                                 position.quantity.toLocaleString()
-                                                            }}股</span>
+                                                                }}股</span>
                                                             <span class="detail-label">成本价：</span>
                                                             <span class="detail-value">¥{{ position.avgPrice.toFixed(2)
-                                                            }}</span>
+                                                                }}</span>
                                                         </div>
                                                         <div class="detail-row">
                                                             <span class="detail-label">持仓市值：</span>
@@ -414,7 +569,7 @@
                                                             <span class="detail-label">所属行业：</span>
                                                             <span class="detail-value industry">{{ position.industry ||
                                                                 '未分类'
-                                                            }}</span>
+                                                                }}</span>
                                                         </div>
                                                     </div>
                                                 </div>
@@ -524,7 +679,7 @@
                                                         <div class="detail-row">
                                                             <span class="detail-label">关注时间：</span>
                                                             <span class="detail-value">{{
-                                                                formatRecommendationTime(stock.addTime
+                                                                formatRecommendationTime(stock.addedAt
                                                                     || new Date()) }}</span>
                                                             <span class="detail-label">股票类型：</span>
                                                             <span class="detail-value industry">自选关注</span>
@@ -607,7 +762,7 @@
                             <div v-if="message.isPersistent" class="recommendation-toolbar">
                                 <div class="toolbar-left">
                                     <span class="recommendation-time">{{ formatRecommendationTime(message.timestamp)
-                                    }}</span>
+                                        }}</span>
                                 </div>
                                 <div class="toolbar-right">
                                     <el-button size="small" text @click="refreshRecommendation(message)"
@@ -1019,7 +1174,7 @@
                 </div>
                 <div class="guide-actions">
                     <el-button type="primary" size="small" @click="handleGuideAction">{{ guideActionText
-                        }}</el-button>
+                    }}</el-button>
                     <el-button size="small" @click="dismissGuide">稍后</el-button>
                 </div>
             </div>
@@ -1057,7 +1212,7 @@
                         <div class="summary-item">
                             <span class="summary-label">买入信号</span>
                             <span class="summary-value signal-score">{{ currentQuantAnalysis.buySignalScore
-                            }}/100</span>
+                                }}/100</span>
                         </div>
                         <div class="summary-item">
                             <span class="summary-label">量化评级</span>
@@ -3052,11 +3207,11 @@ const handleWatchlistView = async () => {
     // 如果用户没有自选股，添加一些示例数据用于演示
     if (userStore.watchlist.length === 0) {
         const sampleWatchlist = [
-            { code: '600519', name: '贵州茅台', industry: '食品饮料', addTime: '2024-01-15T09:30:00.000Z' },
-            { code: '000001', name: '平安银行', industry: '银行', addTime: '2024-01-14T10:15:00.000Z' },
-            { code: '300750', name: '宁德时代', industry: '新能源', addTime: '2024-01-13T14:20:00.000Z' },
-            { code: '000858', name: '五粮液', industry: '食品饮料', addTime: '2024-01-12T11:45:00.000Z' },
-            { code: '002415', name: '海康威视', industry: '电子', addTime: '2024-01-11T13:30:00.000Z' }
+            { code: '600519', name: '贵州茅台', industry: '食品饮料', addedAt: '2024-01-15T09:30:00.000Z', price: '1680.50', change: '+28.50', changePercent: '+1.72%' },
+            { code: '000001', name: '平安银行', industry: '银行', addedAt: '2024-01-14T10:15:00.000Z', price: '12.68', change: '-0.15', changePercent: '-1.17%' },
+            { code: '300750', name: '宁德时代', industry: '新能源', addedAt: '2024-01-13T14:20:00.000Z', price: '485.20', change: '+12.30', changePercent: '+2.60%' },
+            { code: '000858', name: '五粮液', industry: '食品饮料', addedAt: '2024-01-12T11:45:00.000Z', price: '52.30', change: '-1.20', changePercent: '-2.24%' },
+            { code: '002415', name: '海康威视', industry: '电子', addedAt: '2024-01-11T13:30:00.000Z', price: '28.90', change: '+0.45', changePercent: '+1.58%' }
         ];
 
         userStore.watchlist.push(...sampleWatchlist);
@@ -3064,7 +3219,7 @@ const handleWatchlistView = async () => {
         ElMessage.info('已为您添加示例自选股数据');
     }
 
-    // 构建自选股查看消息
+    // 获取自选股数据，添加实时价格信息
     const watchlistData = userStore.watchlist.map(stock => {
         const currentPrice = getCurrentStockPrice(stock.code);
         const yesterdayPrice = currentPrice * (1 - (Math.random() * 0.1 - 0.05)); // 模拟昨日价格
@@ -3073,43 +3228,69 @@ const handleWatchlistView = async () => {
 
         return {
             ...stock,
+            price: stock.price || currentPrice.toFixed(2),
+            change: stock.change || (changeAmount >= 0 ? `+${changeAmount.toFixed(2)}` : changeAmount.toFixed(2)),
+            changePercent: stock.changePercent || (parseFloat(changePercent) >= 0 ? `+${changePercent}%` : `${changePercent}%`),
             currentPrice: currentPrice.toFixed(2),
             changeAmount: changeAmount.toFixed(2),
-            changePercent: parseFloat(changePercent)
+            changePct: parseFloat(changePercent)
         };
     });
 
-    const message = `自选股：请分析我的自选股票表现，包括：
+    // 直接显示自选股列表，使用卡片形式
+    const userMessage = '查看我的自选股列表';
+    const assistantMessage = `📋 **我的自选股列表**
 
-**我的自选股列表（${userStore.watchlist.length}只）**
-${watchlistData.map(stock =>
-        `- ${stock.name}(${stock.code})：¥${stock.currentPrice} ${stock.changePercent >= 0 ? '+' : ''}${stock.changePercent}%`
-    ).join('\n')}
-
-请提供以下分析：
-1. 今日表现最佳和最差的股票
-2. 各行业板块的表现情况
-3. 技术面和基本面分析要点
-4. 买入、卖出或继续观察的建议
-5. 风险提示和注意事项
-6. 相关热点和催化因素分析
-
-请结合市场环境和个股基本面，给出专业的投资建议。`;
-
-    const res = await mockApi.sendMessage(message);
+您当前关注 **${userStore.watchlist.length}** 只股票，详细信息如下：`;
 
     chatHistory.value.push(
-        { role: 'user', content: '自选股：查看我的自选股票分析' },
+        { role: 'user', content: userMessage },
         {
-            ...res.data,
+            role: 'assistant',
+            content: assistantMessage,
             hasWatchlistInfo: true,
-            watchlistData: watchlistData
+            watchlistData: watchlistData,
+            isWatchlistDisplay: true,
+            hasInteractionButtons: true,
+            interactionData: {
+                recommendActions: [
+                    {
+                        id: 'analyze_overall',
+                        icon: '📊',
+                        description: '分析整体表现',
+                        actionType: 'analyze',
+                        prompt: '分析我的自选股整体表现'
+                    },
+                    {
+                        id: 'trading_advice',
+                        icon: '💰',
+                        description: '获取交易建议',
+                        actionType: 'advice',
+                        prompt: '给出我的自选股交易建议'
+                    },
+                    {
+                        id: 'related_recommend',
+                        icon: '🔥',
+                        description: '相关热门推荐',
+                        actionType: 'recommend',
+                        prompt: '推荐与我自选股相关的热门股票'
+                    }
+                ]
+            },
+            watchlistStats: {
+                total: userStore.watchlist.length,
+                upCount: watchlistData.filter(s => s.changePct >= 0).length,
+                downCount: watchlistData.filter(s => s.changePct < 0).length,
+                bestPerformer: watchlistData.sort((a, b) => b.changePct - a.changePct)[0],
+                worstPerformer: watchlistData.sort((a, b) => a.changePct - b.changePct)[0],
+                updateTime: new Date().toLocaleString('zh-CN')
+            }
         }
     );
 
     await nextTick();
     scrollToBottom();
-    ElMessage.success('已为您生成自选股分析报告');
+    ElMessage.success('已显示您的自选股列表');
 
     // 使用快捷操作后自动收起
     if (showChatShortcuts.value) {
@@ -3133,6 +3314,29 @@ const getCurrentStockPrice = (stockCode) => {
     };
     return mockPrices[stockCode] || 10.00;
 };
+
+// 格式化添加时间
+const formatAddedTime = (addedAt) => {
+    const date = new Date(addedAt);
+    const now = new Date();
+    const diffTime = now - date;
+    const diffDays = Math.floor(diffTime / (1000 * 60 * 60 * 24));
+
+    if (diffDays === 0) {
+        return '今天添加';
+    } else if (diffDays === 1) {
+        return '昨天添加';
+    } else if (diffDays < 7) {
+        return `${diffDays}天前添加`;
+    } else {
+        return date.toLocaleDateString('zh-CN', {
+            month: 'short',
+            day: 'numeric'
+        });
+    }
+};
+
+
 
 // 格式化货币显示
 const formatCurrency = (amount) => {
@@ -4384,19 +4588,32 @@ ${message.interactionData.newsItems.map(news => `- ${news.title}: ${news.summary
 请提供完整的策略执行方案。`;
                 break;
         }
+    } else if (message.isWatchlistDisplay) {
+        // 自选股相关的交互操作
+        switch (action.actionType) {
+            case 'analyze':
+                analysisPrompt = action.prompt || '分析我的自选股整体表现';
+                break;
+            case 'advice':
+                analysisPrompt = action.prompt || '给出我的自选股交易建议';
+                break;
+            case 'recommend':
+                analysisPrompt = action.prompt || '推荐与我自选股相关的热门股票';
+                break;
+        }
     }
 
     if (analysisPrompt) {
         // 发送分析请求
         const res = await mockApi.sendMessage(analysisPrompt);
         chatHistory.value.push(
-            { role: 'user', content: `${action.label}：${action.description}` },
+            { role: 'user', content: action.description || analysisPrompt },
             res.data
         );
 
         await nextTick();
         scrollToBottom();
-        ElMessage.success(`${action.label}分析已生成`);
+        ElMessage.success(`已为您生成分析结果`);
     }
 };
 
@@ -5366,6 +5583,15 @@ body.onboarding-mode {
 .suggestion-item:hover .suggestion-arrow {
     color: #3b82f6;
     transform: translateX(2px);
+}
+
+.suggestion-time {
+    margin-top: 10px;
+    font-size: 0.75rem;
+    color: #64748b;
+    text-align: center;
+    padding-top: 8px;
+    border-top: 1px solid rgba(203, 213, 225, 0.5);
 }
 
 /* 移动端适配 */
@@ -12792,6 +13018,316 @@ body {
         padding: 6px 10px;
         border-radius: 5px;
     }
+}
+
+/* 自选股展示容器 */
+.watchlist-display-container {
+    margin-top: 16px;
+    background: #f8fafc;
+    border: 1px solid #e2e8f0;
+    border-radius: 12px;
+    padding: 20px;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+}
+
+/* 自选股概览统计 */
+.watchlist-overview {
+    margin-bottom: 16px;
+}
+
+.watchlist-overview .overview-stats {
+    display: flex;
+    gap: 12px;
+    justify-content: center;
+}
+
+.watchlist-overview .stat-item {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    background: white;
+    padding: 10px 16px;
+    border-radius: 8px;
+    border: 1px solid #e5e7eb;
+    transition: all 0.2s ease;
+    min-width: 80px;
+    justify-content: center;
+}
+
+.watchlist-overview .stat-item:hover {
+    transform: translateY(-1px);
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+}
+
+.watchlist-overview .stat-item.total .stat-icon {
+    color: #f59e0b;
+    font-size: 1rem;
+}
+
+.watchlist-overview .stat-item.up .stat-icon {
+    color: #10b981;
+    font-size: 1rem;
+}
+
+.watchlist-overview .stat-item.down .stat-icon {
+    color: #ef4444;
+    font-size: 1rem;
+}
+
+.watchlist-overview .stat-info {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 2px;
+}
+
+.watchlist-overview .stat-label {
+    font-size: 0.75rem;
+    color: #6b7280;
+    line-height: 1;
+}
+
+.watchlist-overview .stat-value {
+    font-size: 1.1rem;
+    font-weight: 700;
+    color: #1f2937;
+    line-height: 1;
+}
+
+/* 自选股卡片列表 */
+.watchlist-stock-list {
+    display: grid;
+    gap: 16px;
+    margin-bottom: 20px;
+}
+
+.watchlist-stock-card {
+    background: white;
+    border: 1px solid #e5e7eb;
+    border-radius: 12px;
+    padding: 20px;
+    transition: all 0.3s ease;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.02);
+}
+
+.watchlist-stock-card:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 8px 25px rgba(0, 0, 0, 0.1);
+    border-color: #3b82f6;
+}
+
+.watchlist-stock-card .stock-info {
+    margin-bottom: 16px;
+}
+
+.watchlist-stock-card .stock-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    margin-bottom: 12px;
+}
+
+.watchlist-stock-card .stock-name-code {
+    flex: 1;
+}
+
+.watchlist-stock-card .name-code-row {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin-bottom: 6px;
+}
+
+.watchlist-stock-card .stock-name {
+    font-size: 1.1rem;
+    font-weight: 600;
+    color: #1f2937;
+}
+
+.watchlist-stock-card .stock-code {
+    font-size: 0.9rem;
+    color: #6b7280;
+    background: #f3f4f6;
+    padding: 2px 8px;
+    border-radius: 4px;
+}
+
+.watchlist-stock-card .watchlist-status {
+    margin-top: 4px;
+}
+
+.watchlist-stock-card .status-label {
+    font-size: 0.8rem;
+    color: #9ca3af;
+}
+
+.watchlist-stock-card .status-value {
+    font-size: 0.8rem;
+    color: #6b7280;
+    font-weight: 500;
+}
+
+.watchlist-stock-card .stock-price-change {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-end;
+    gap: 4px;
+}
+
+.watchlist-stock-card .current-price {
+    font-size: 1.3rem;
+    font-weight: 700;
+    color: #1f2937;
+}
+
+.watchlist-stock-card .price-change {
+    font-size: 0.9rem;
+    font-weight: 600;
+    padding: 2px 8px;
+    border-radius: 4px;
+}
+
+.watchlist-stock-card .price-change.positive {
+    color: #10b981;
+    background: #ecfdf5;
+}
+
+.watchlist-stock-card .price-change.negative {
+    color: #ef4444;
+    background: #fef2f2;
+}
+
+.watchlist-stock-card .stock-details {
+    background: #f8fafc;
+    border-radius: 8px;
+    padding: 12px;
+}
+
+.watchlist-stock-card .detail-row {
+    display: grid;
+    grid-template-columns: auto 1fr auto 1fr;
+    gap: 8px 16px;
+    margin-bottom: 8px;
+    align-items: center;
+}
+
+.watchlist-stock-card .detail-row:last-child {
+    margin-bottom: 0;
+}
+
+.watchlist-stock-card .detail-label {
+    font-size: 0.85rem;
+    color: #6b7280;
+}
+
+.watchlist-stock-card .detail-value {
+    font-size: 0.9rem;
+    font-weight: 500;
+    color: #374151;
+}
+
+.watchlist-stock-card .detail-value.industry {
+    color: #7c3aed;
+    background: #f3f0ff;
+    padding: 2px 8px;
+    border-radius: 4px;
+    font-size: 0.8rem;
+}
+
+.watchlist-stock-card .detail-value.target-price {
+    color: #059669;
+    font-weight: 600;
+}
+
+.watchlist-stock-card .detail-value.positive {
+    color: #10b981;
+    font-weight: 600;
+}
+
+.watchlist-stock-card .detail-value.negative {
+    color: #ef4444;
+    font-weight: 600;
+}
+
+.watchlist-stock-card .stock-item-actions {
+    display: flex;
+    gap: 8px;
+    flex-wrap: wrap;
+    padding-top: 16px;
+    border-top: 1px solid #f1f5f9;
+}
+
+.watchlist-stock-card .analyze-stock-btn {
+    background: #3b82f6;
+    border-color: #3b82f6;
+    color: white;
+}
+
+.watchlist-stock-card .analyze-stock-btn:hover {
+    background: #2563eb;
+    border-color: #2563eb;
+}
+
+
+
+/* 移动端响应式 - 自选股展示 */
+@media (max-width: 768px) {
+    .watchlist-display-container {
+        margin: 12px 0;
+        padding: 16px;
+    }
+
+    .watchlist-overview .overview-stats {
+        gap: 8px;
+    }
+
+    .watchlist-overview .stat-item {
+        padding: 8px 12px;
+        gap: 6px;
+        min-width: 70px;
+    }
+
+    .watchlist-overview .stat-icon {
+        font-size: 0.9rem !important;
+    }
+
+    .watchlist-overview .stat-label {
+        font-size: 0.7rem;
+    }
+
+    .watchlist-overview .stat-value {
+        font-size: 1rem;
+    }
+
+    .watchlist-stock-card {
+        padding: 16px;
+    }
+
+    .watchlist-stock-card .stock-header {
+        flex-direction: column;
+        gap: 12px;
+    }
+
+    .watchlist-stock-card .stock-price-change {
+        align-items: flex-start;
+    }
+
+    .watchlist-stock-card .detail-row {
+        grid-template-columns: 1fr;
+        gap: 4px;
+    }
+
+    .watchlist-stock-card .stock-item-actions {
+        gap: 6px;
+    }
+
+    .watchlist-stock-card .stock-item-actions .el-button {
+        font-size: 0.8rem;
+        padding: 6px 12px;
+        height: auto;
+    }
+
+
 }
 </style>
 

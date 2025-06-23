@@ -13,8 +13,8 @@
                 <div class="service-cost">
                     <span class="cost-label">服务费用</span>
                     <div class="cost-pricing">
-                        <span class="cost-original">1智点</span>
-                        <span class="cost-promo">0.5智点</span>
+                        <span class="cost-original">3智点</span>
+                        <span class="cost-promo">1智点</span>
                     </div>
                 </div>
             </div>
@@ -133,8 +133,8 @@
             <div class="dialog-footer">
                 <el-button @click="handleCancel">取消</el-button>
                 <el-button type="primary" @click="handleConfirm" :loading="loading">
-                    <span class="confirm-text">确认委托 (0.5智点)</span>
-                    <span class="confirm-text-mobile">确认 (0.5智点)</span>
+                    <span class="confirm-text">确认委托 (1智点)</span>
+                    <span class="confirm-text-mobile">确认 (1智点)</span>
                 </el-button>
             </div>
         </template>
@@ -145,7 +145,7 @@
 import { ref, reactive, watch, computed } from 'vue';
 import { useUserStore } from '../store/user';
 import { ArrowDown, ArrowUp } from '@element-plus/icons-vue';
-import { ElMessage } from 'element-plus';
+import { ElMessage, ElMessageBox } from 'element-plus';
 
 // Props
 const props = defineProps({
@@ -279,8 +279,8 @@ const handleCancel = () => {
 
 // 处理确认
 const handleConfirm = async () => {
-    // 检查余额（按0.5智点计算）
-    if (userStore.balance < 0.5) {
+    // 检查余额（按1智点计算）
+    if (userStore.balance < 1) {
         ElMessage.error('智点余额不足，请先充值');
         return;
     }
@@ -293,6 +293,22 @@ const handleConfirm = async () => {
 
     if (form.quantity < 100 || form.quantity % 100 !== 0) {
         ElMessage.error('交易数量必须是100的整数倍');
+        return;
+    }
+
+    // 支付确认提示
+    try {
+        await ElMessageBox.confirm(
+            `AI委托交易 ${props.stock.name}(${props.stock.code}) 促销价仅需 1智点（原价3智点），是否确认支付并设置委托交易？`,
+            '付费服务确认',
+            {
+                confirmButtonText: '确认支付 1智点',
+                cancelButtonText: '取消',
+                type: 'info',
+            }
+        );
+    } catch {
+        // 用户取消支付
         return;
     }
 
@@ -345,8 +361,8 @@ const handleConfirm = async () => {
     try {
         loading.value = true;
 
-        // 扣费（扣除0.5智点）
-        userStore.deductBalance(0.5);
+        // 扣费（扣除1智点）
+        userStore.deductBalance(1);
         ElMessage.success('支付成功，正在设置AI委托交易...');
 
         // 关闭对话框

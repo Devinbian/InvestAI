@@ -305,34 +305,11 @@ const showPaidAnalysisDialog = (position) => {
 };
 
 const showQuantAnalysisDialog = (position) => {
-    // 检查余额是否足够
-    if (userStore.balance < 1) {
-        ElMessage.warning('余额不足，请先充值');
-        return;
-    }
-
-    ElMessageBox.confirm(
-        `AI委托交易 ${position.name}(${position.code}) 促销价仅需 1智点（原价3智点），是否继续？`,
-        '付费服务确认',
-        {
-            confirmButtonText: '确认支付 1智点',
-            cancelButtonText: '取消',
-            type: 'info',
-        }
-    ).then(() => {
-        // 扣费（扣除1智点）
-        if (userStore.deductBalance(1)) {
-            ElMessage.success('支付成功，正在生成AI委托交易...');
-            emit('send-to-chat', {
-                type: 'quant-analysis',
-                content: position,
-                title: `AI委托交易${position.name}(${position.code})`
-            });
-        } else {
-            ElMessage.error('支付失败，智点余额不足');
-        }
-    }).catch(() => {
-        // 用户取消
+    // 发送到主界面处理AI委托交易对话框
+    emit('send-to-chat', {
+        type: 'show-ai-trading-dialog',
+        content: position,
+        title: `AI委托交易设置 ${position.name}(${position.code})`
     });
 };
 

@@ -89,6 +89,15 @@ export const useUserStore = defineStore("user", {
       }
     },
 
+    setUserPortrait(preferences) {
+      let userInfo = JSON.parse(localStorage.getItem("userInfo"));
+      if(userInfo) {
+        userInfo.preferences = preferences;
+        this.userInfo = userInfo;
+        localStorage.setItem("userInfo",  JSON.stringify(userInfo));
+      }
+    },
+
     logout() {
       this.token = "";
       this.userInfo = {};

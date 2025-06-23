@@ -199,19 +199,34 @@ const handleLogin = async () => {
 
                 if (res && res.data && res.data.success) {
                     let userPortrait = res.data.data.userPortrait || {};
+                    // 关注板块
+                    let sectors = JSON.parse(res.data.data.userPortrait?.focusIndustry || null) || [];
+                    let majorCategories = [];
+                    let subCategories = [];
+                    sectors.forEach(item => {
+                        majorCategories.push(item.parent);
+                        subCategories = subCategories.concat(item.children);
+                    });
                     let userInfo = {
                         nickname: res.data.data.nickname,
                         isNewUser: isNewUser,
+                        token: res.data.data.token,
                         preferences: {
-                            investStyle: userPortrait.investStyle,
-                            investExperience: userPortrait.investExperience,
-                            riskTolerance: userPortrait.riskTolerance,
-                            involveLevel: userPortrait.involveLevel,
-                            learnIntention: userPortrait.learnIntention,
-                            strategyComplexity: userPortrait.strategyComplexity,
-                            tradeFrequency: userPortrait.tradeFrequency,
-                            innovationAcceptance: userPortrait.innovationAcceptance,
-                            focusIndustry: userPortrait.focusIndustry
+                            experience: userPortrait.investExperience, // 投资经验
+                            riskLevel: userPortrait.investStyle, // 投资风格
+                            userTraits:{
+                                active_participation: userPortrait.involveLevel,
+                                innovation_trial: userPortrait.innovationAcceptance,
+                                learning_willingness: userPortrait.learnIntention,
+                                risk_tolerance: userPortrait.riskTolerance,
+                                strategy_dependency: userPortrait.strategyComplexity, 
+                                trading_frequency: userPortrait.tradeFrequency, 
+                            },
+                            sectors: {
+                                majorCategories: majorCategories,
+                                subCategories: subCategories,
+                                categories: sectors
+                            }
                         }
                     };
                     userStore.setUserInfo(userInfo);

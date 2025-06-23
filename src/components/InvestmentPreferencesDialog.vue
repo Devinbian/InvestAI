@@ -122,6 +122,8 @@ import { ref, reactive, computed, watch, onMounted, onUnmounted, nextTick } from
 import { ElMessage } from 'element-plus';
 import { useUserStore } from '@/store/user';
 import InvestmentPreferencesForm from './InvestmentPreferencesForm.vue';
+import { updateUserPortrait, getUserPortrait } from '@/api/api';
+import { majorSectors, subSectors } from '@/config/userPortrait';
 
 // Props
 const props = defineProps({
@@ -263,28 +265,14 @@ watch(currentStep, () => {
 });
 
 // Initialize with existing user preferences when dialog opens
-const initializePreferences = () => {
-    const existingPreferences = userStore.userInfo?.preferences;
-    console.log('Loading existing preferences:', existingPreferences);
+const initializePreferences = async() => {
+    console.log(localStorage.getItem('userInfo'))
 
-    if (existingPreferences) {
+    let preferences = await getUserPortraitDetail();
+
+    if (preferences) {
         // Load existing preferences
-        Object.assign(localPreferences, {
-            riskLevel: existingPreferences.riskLevel || '',
-            experience: existingPreferences.experience || '',
-            userTraits: {
-                risk_tolerance: existingPreferences.userTraits?.risk_tolerance || 3,
-                active_participation: existingPreferences.userTraits?.active_participation || 3,
-                learning_willingness: existingPreferences.userTraits?.learning_willingness || 3,
-                strategy_dependency: existingPreferences.userTraits?.strategy_dependency || 2,
-                trading_frequency: existingPreferences.userTraits?.trading_frequency || 2,
-                innovation_trial: existingPreferences.userTraits?.innovation_trial || 3
-            },
-            sectors: {
-                majorCategories: existingPreferences.sectors?.majorCategories || [],
-                subCategories: existingPreferences.sectors?.subCategories || []
-            }
-        });
+        Object.assign(localPreferences, preferences);
         console.log('Loaded preferences:', localPreferences);
     } else {
         // Initialize with default values for new users
@@ -295,6 +283,40 @@ const initializePreferences = () => {
             sectors: { majorCategories: [], subCategories: [] }
         });
         console.log('No existing preferences found, using defaults');
+    }
+};
+
+const getUserPortraitDetail = async () => {
+    let res = await getUserPortrait();
+    if (res && res.data && res.data.success) {
+        let userPortrait = res.data.data || {};
+        // 关注板块
+        let sectors = JSON.parse(res.data.data?.focusIndustry || null) || [];
+        let majorCategories = [];
+        let subCategories = [];
+        sectors.forEach(item => {
+            majorCategories.push(item.parent);
+            subCategories = subCategories.concat(item.children);
+        });
+        let preferences = {
+            experience: userPortrait.investExperience, // 投资经验
+            riskLevel: userPortrait.investStyle, // 投资风格
+            userTraits:{
+                active_participation: userPortrait.involveLevel,
+                innovation_trial: userPortrait.innovationAcceptance,
+                learning_willingness: userPortrait.learnIntention,
+                risk_tolerance: userPortrait.riskTolerance,
+                strategy_dependency: userPortrait.strategyComplexity, 
+                trading_frequency: userPortrait.tradeFrequency, 
+            },
+            sectors: {
+                majorCategories: majorCategories,
+                subCategories: subCategories,
+                categories: sectors
+            }
+        };
+        userStore.setUserPortrait(preferences);
+        return preferences;
     }
 };
 
@@ -319,12 +341,43 @@ const handlePreferencesSubmit = async () => {
     if (!isStepValid.value) return;
     preferencesLoading.value = true;
 
-    setTimeout(() => {
-        const preferences = {
-            ...localPreferences,
-            completedAt: new Date().toISOString()
-        };
+    const preferences = {
+        ...localPreferences,
+        completedAt: new Date().toISOString()
+    };
 
+    // 准备API请求数据
+    const portraitData = {
+        investStyle: preferences.riskLevel,
+        investExperience: preferences.experience,
+        riskTolerance: preferences.userTraits.risk_tolerance,
+        involveLevel: preferences.userTraits.active_participation,
+        learnIntention: preferences.userTraits.learning_willingness,
+        strategyComplexity: preferences.userTraits.strategy_dependency,
+        tradeFrequency: preferences.userTraits.trading_frequency,
+        innovationAcceptance: preferences.userTraits.innovation_trial,
+        focusIndustry: '',
+    };
+    // 处理关注板块
+    let subCategories = preferences.sectors.subCategories || [];
+    const parentMap = new Map();
+    subCategories.forEach(subValue => {
+    const sector = subSectors.find(item => item.value === subValue);
+    if (sector) {
+        if (!parentMap.has(sector.parent)) {
+        parentMap.set(sector.parent, []);
+        }
+        parentMap.get(sector.parent).push(subValue);
+    }
+    });
+    let focusIndustry = Array.from(parentMap.entries()).map(([parent, children]) => ({
+    parent,children}));
+    portraitData.focusIndustry = JSON.stringify(focusIndustry);
+    preferences.sectors.categories = focusIndustry;
+
+    let res = await updateUserPortrait(portraitData);
+
+    if (res && res.data && res.data.success) {
         const currentUser = userStore.userInfo;
         userStore.setUserInfo({
             ...currentUser,
@@ -338,7 +391,11 @@ const handlePreferencesSubmit = async () => {
         currentStep.value = 0; // Reset for next time
 
         emit('preferences-completed', preferences);
-    }, 1000);
+    }else{
+        ElMessage.error('保存偏好设置失败，请稍后重试');
+        preferencesLoading.value = false;
+    }
+
 };
 
 const skipPreferences = () => {

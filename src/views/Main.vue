@@ -1240,8 +1240,14 @@
             @preferences-completed="handlePreferencesCompleted" @preferences-skipped="handlePreferencesSkipped" />
 
         <!-- 股票交易对话框 -->
-        <StockTradingDialog v-model="buyDialogVisible" :stock="selectedStock" :trade-type="tradeType"
-            @trade-completed="handleTradeCompleted" @watchlist-changed="handleWatchlistChanged" />
+        <StockTradingDialog v-if="!isMobileView" v-model="buyDialogVisible" :stock="selectedStock"
+            :trade-type="tradeType" @trade-completed="handleTradeCompleted"
+            @watchlist-changed="handleWatchlistChanged" />
+
+        <!-- 移动端原生股票交易对话框 -->
+        <MobileStockTradingDialog v-if="isMobileView" v-model="buyDialogVisible" :stock="selectedStock"
+            :trade-type="tradeType" @trade-completed="handleTradeCompleted"
+            @watchlist-changed="handleWatchlistChanged" />
 
         <!-- AI委托交易设置对话框 -->
         <AITradingDialog v-model="showAITradingDialog" :stock="selectedStockForAITrading"
@@ -1520,6 +1526,7 @@ import LoginDialog from '../components/LoginDialog.vue';
 import PasswordRecoveryDialog from '../components/PasswordRecoveryDialog.vue';
 import InvestmentPreferencesDialog from '../components/InvestmentPreferencesDialog.vue';
 import StockTradingDialog from '../components/StockTradingDialog.vue';
+import MobileStockTradingDialog from '../components/MobileStockTradingDialog.vue';
 import AITradingDialog from '../components/AITradingDialog.vue';
 import CustomizeShortcutsDialog from '../components/CustomizeShortcutsDialog.vue';
 import MobileShortcutsDialog from '../components/MobileShortcutsDialog.vue';

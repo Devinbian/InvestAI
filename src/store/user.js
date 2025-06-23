@@ -66,6 +66,9 @@ export const useUserStore = defineStore("user", {
     aiTradingRecords: JSON.parse(
       localStorage.getItem("aiTradingRecords") || "[]",
     ), // AI委托交易记录
+
+    // 委托单管理
+    pendingOrders: JSON.parse(localStorage.getItem("pendingOrders") || "[]"), // 待成交委托单
   }),
 
   actions: {
@@ -106,6 +109,7 @@ export const useUserStore = defineStore("user", {
       localStorage.removeItem("quantAnalysisReports");
       localStorage.removeItem("smartPointsTransactions");
       localStorage.removeItem("aiTradingRecords");
+      localStorage.removeItem("pendingOrders");
     },
 
     // 自选股管理
@@ -509,6 +513,99 @@ export const useUserStore = defineStore("user", {
       ];
 
       mockTrades.forEach((trade) => this.addAITradingRecord(trade));
+
+      // 生成委托单测试数据
+      if (this.pendingOrders.length === 0) {
+        const mockOrders = [
+          {
+            stockCode: "000001",
+            stockName: "平安银行",
+            type: "buy",
+            orderType: "limit",
+            price: 12.2,
+            quantity: 1000,
+          },
+          {
+            stockCode: "600519",
+            stockName: "贵州茅台",
+            type: "sell",
+            orderType: "limit",
+            price: 1680.0,
+            quantity: 100,
+          },
+          {
+            stockCode: "000001",
+            stockName: "平安银行",
+            type: "buy",
+            orderType: "limit",
+            price: 12.15,
+            quantity: 500,
+          },
+        ];
+
+        mockOrders.forEach((order) => this.addPendingOrder(order));
+      }
+    },
+
+    // 委托单管理
+    addPendingOrder(order) {
+      const newOrder = {
+        id: `order_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
+        ...order,
+        status: "pending", // pending, partial, filled, cancelled
+        createdAt: new Date().toISOString(),
+        filledQuantity: 0,
+      };
+
+      this.pendingOrders.push(newOrder);
+      localStorage.setItem("pendingOrders", JSON.stringify(this.pendingOrders));
+      return newOrder;
+    },
+
+    cancelPendingOrder(orderId) {
+      const order = this.pendingOrders.find((o) => o.id === orderId);
+      if (order && order.status === "pending") {
+        order.status = "cancelled";
+        order.cancelledAt = new Date().toISOString();
+        localStorage.setItem(
+          "pendingOrders",
+          JSON.stringify(this.pendingOrders),
+        );
+        return true;
+      }
+      return false;
+    },
+
+    getPendingOrdersByStock(stockCode) {
+      return this.pendingOrders.filter(
+        (order) => order.stockCode === stockCode && order.status === "pending",
+      );
+    },
+
+    getAllPendingOrders() {
+      return this.pendingOrders.filter((order) => order.status === "pending");
+    },
+
+    // 模拟委托单部分成交
+    simulateOrderExecution(orderId, filledQuantity) {
+      const order = this.pendingOrders.find((o) => o.id === orderId);
+      if (order && order.status === "pending") {
+        order.filledQuantity += filledQuantity;
+
+        if (order.filledQuantity >= order.quantity) {
+          order.status = "filled";
+          order.filledAt = new Date().toISOString();
+        } else {
+          order.status = "partial";
+        }
+
+        localStorage.setItem(
+          "pendingOrders",
+          JSON.stringify(this.pendingOrders),
+        );
+        return true;
+      }
+      return false;
     },
   },
 });

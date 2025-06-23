@@ -639,8 +639,8 @@ setInterval(updateChatHistoryList, 1000);
 }
 
 .section-divider {
-    margin: 12px 16px;
-    padding: 8px 0;
+    margin: 0 16px;
+    padding: 0 0 8px 0;
     border-bottom: 2px solid #f3f4f6;
     position: relative;
 }

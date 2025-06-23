@@ -280,7 +280,7 @@ const initializePreferences = async() => {
         userTraits.strategy_dependency = userTraits.strategy_dependency || 2;
         userTraits.trading_frequency = userTraits.trading_frequency || 2;
         preferences.userTraits = userTraits;
-        localPreferences  = preferences;
+        Object.assign(localPreferences, preferences);
         console.log('Loaded preferences:', localPreferences);
     } else {
         // Initialize with default values for new users

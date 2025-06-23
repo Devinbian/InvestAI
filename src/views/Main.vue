@@ -344,7 +344,7 @@
                                                 <div class="detail-row">
                                                     <span class="detail-label">所属行业：</span>
                                                     <span class="detail-value industry">{{ stock.industry || '未分类'
-                                                    }}</span>
+                                                        }}</span>
                                                     <span class="detail-label">涨跌额：</span>
                                                     <span
                                                         :class="['detail-value', stock.changePct >= 0 ? 'positive' : 'negative']">
@@ -354,7 +354,7 @@
                                                 <div class="detail-row">
                                                     <span class="detail-label">当前价格：</span>
                                                     <span class="detail-value target-price">¥{{ stock.currentPrice
-                                                    }}</span>
+                                                        }}</span>
                                                     <span class="detail-label">股票类型：</span>
                                                     <span class="detail-value">自选关注</span>
                                                 </div>
@@ -480,7 +480,7 @@
                                                 <span class="detail-label">推荐等级：</span>
                                                 <span class="detail-value recommend-level">{{ stock.recommendLevel ||
                                                     '中性'
-                                                }}</span>
+                                                    }}</span>
                                             </div>
                                         </div>
 
@@ -538,13 +538,13 @@
                                         <div class="asset-amount">
                                             <span class="amount-label">总资产</span>
                                             <span class="amount-value">¥{{ formatCurrency(message.assetData.totalAssets)
-                                            }}</span>
+                                                }}</span>
                                         </div>
                                         <div class="asset-change"
                                             :class="[message.assetData.totalProfitPercent >= 0 ? 'profit' : 'loss']">
                                             <span class="change-icon">{{ message.assetData.totalProfitPercent >= 0 ?
                                                 '📈' : '📉'
-                                            }}</span>
+                                                }}</span>
                                             <span class="change-label">今日盈亏：</span>
                                             <span class="change-text">
                                                 {{ message.assetData.totalProfitPercent >= 0 ? '+' : '' }}¥{{
@@ -570,7 +570,7 @@
                                         <div class="stat-info">
                                             <div class="stat-label">持仓市值</div>
                                             <div class="stat-value">¥{{ formatCurrency(message.assetData.portfolioValue)
-                                            }}
+                                                }}
                                             </div>
                                         </div>
                                     </div>
@@ -631,7 +631,7 @@
                                                         <div class="stock-price-change">
                                                             <span class="current-price">¥{{
                                                                 position.currentPrice.toFixed(2)
-                                                            }}</span>
+                                                                }}</span>
                                                             <span
                                                                 :class="['price-change', position.profitPercent >= 0 ? 'positive' : 'negative']">
                                                                 {{ position.profitPercent >= 0 ? '+' : '' }}¥{{
@@ -645,10 +645,10 @@
                                                             <span class="detail-label">持仓数量：</span>
                                                             <span class="detail-value">{{
                                                                 position.quantity.toLocaleString()
-                                                            }}股</span>
+                                                                }}股</span>
                                                             <span class="detail-label">成本价：</span>
                                                             <span class="detail-value">¥{{ position.avgPrice.toFixed(2)
-                                                            }}</span>
+                                                                }}</span>
                                                         </div>
                                                         <div class="detail-row">
                                                             <span class="detail-label">持仓市值：</span>
@@ -657,7 +657,7 @@
                                                             <span class="detail-label">所属行业：</span>
                                                             <span class="detail-value industry">{{ position.industry ||
                                                                 '未分类'
-                                                            }}</span>
+                                                                }}</span>
                                                         </div>
                                                     </div>
                                                 </div>
@@ -850,7 +850,7 @@
                             <div v-if="message.isPersistent" class="recommendation-toolbar">
                                 <div class="toolbar-left">
                                     <span class="recommendation-time">{{ formatRecommendationTime(message.timestamp)
-                                    }}</span>
+                                        }}</span>
                                 </div>
                                 <div class="toolbar-right">
                                     <el-button size="small" text @click="refreshRecommendation(message)"
@@ -1273,7 +1273,7 @@
                 </div>
                 <div class="guide-actions">
                     <el-button type="primary" size="small" @click="handleGuideAction">{{ guideActionText
-                        }}</el-button>
+                    }}</el-button>
                     <el-button size="small" @click="dismissGuide">稍后</el-button>
                 </div>
             </div>
@@ -1311,7 +1311,7 @@
                         <div class="summary-item">
                             <span class="summary-label">买入信号</span>
                             <span class="summary-value signal-score">{{ currentQuantAnalysis.buySignalScore
-                            }}/100</span>
+                                }}/100</span>
                         </div>
                         <div class="summary-item">
                             <span class="summary-label">量化评级</span>
@@ -7027,6 +7027,19 @@ body.onboarding-mode {
     color: white;
     text-align: center;
     box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
+    position: relative;
+    overflow: hidden;
+}
+
+.total-asset-card::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: linear-gradient(135deg, rgba(255, 255, 255, 0.1) 0%, rgba(255, 255, 255, 0.05) 100%);
+    pointer-events: none;
 }
 
 .asset-amount {
@@ -11612,29 +11625,122 @@ body {
         gap: 16px;
     }
 
+    /* 移动端总资产卡片优化 */
+    .total-asset-card {
+        padding: 20px 16px;
+        border-radius: 12px;
+        margin-bottom: 16px;
+        box-shadow: 0 4px 20px rgba(102, 126, 234, 0.25);
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    }
+
+    .total-asset-card::before {
+        background: linear-gradient(135deg, rgba(255, 255, 255, 0.15) 0%, rgba(255, 255, 255, 0.08) 100%);
+    }
+
+    .amount-label {
+        font-size: 0.9rem;
+        margin-bottom: 6px;
+    }
+
+    .amount-value {
+        font-size: 2.2rem;
+        font-weight: 800;
+        margin-bottom: 8px;
+    }
+
+    .asset-change {
+        font-size: 1rem;
+        gap: 6px;
+    }
+
+    .change-label {
+        font-size: 0.85rem;
+    }
+
+    /* 移动端统计卡片网格优化 */
     .overview-stats {
         grid-template-columns: repeat(2, 1fr);
-        gap: 12px;
+        gap: 10px;
+        margin-top: 12px;
     }
 
     .stat-item {
-        padding: 12px;
-        gap: 6px;
-        min-height: 70px;
+        padding: 14px 10px;
+        gap: 8px;
+        min-height: 85px;
+        border-radius: 10px;
+        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+        transition: all 0.3s ease;
+        position: relative;
+        overflow: hidden;
+    }
+
+    .stat-item::before {
+        content: '';
+        position: absolute;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        background: linear-gradient(135deg, rgba(255, 255, 255, 0.5) 0%, rgba(255, 255, 255, 0.1) 100%);
+        opacity: 0;
+        transition: opacity 0.3s ease;
+        pointer-events: none;
+    }
+
+    .stat-item:active {
+        transform: scale(0.98);
+        box-shadow: 0 1px 4px rgba(0, 0, 0, 0.12);
+    }
+
+    .stat-item:active::before {
+        opacity: 1;
+    }
+
+    .stat-item:hover {
+        transform: none;
+        box-shadow: 0 3px 12px rgba(0, 0, 0, 0.12);
     }
 
     .stat-icon {
-        font-size: 1.25rem;
-        width: 20px;
-        height: 20px;
+        font-size: 1.4rem;
+        width: 32px;
+        height: 32px;
+        border-radius: 8px;
+        background: linear-gradient(135deg, #f1f5f9 0%, #e2e8f0 100%);
+        margin-bottom: 4px;
+    }
+
+    .stat-icon.cash {
+        background: linear-gradient(135deg, #fef3c7 0%, #fde68a 100%);
+    }
+
+    .stat-icon.portfolio {
+        background: linear-gradient(135deg, #dbeafe 0%, #bfdbfe 100%);
+    }
+
+    .stat-icon.stocks {
+        background: linear-gradient(135deg, #ecfdf5 0%, #d1fae5 100%);
+    }
+
+    .stat-icon.watchlist {
+        background: linear-gradient(135deg, #fef7ff 0%, #f3e8ff 100%);
     }
 
     .stat-label {
         font-size: 0.75rem;
+        color: #64748b !important;
+        margin-bottom: 3px;
+        font-weight: 600;
+        line-height: 1.2;
     }
 
     .stat-value {
-        font-size: 1rem;
+        font-size: 1.1rem;
+        font-weight: 800;
+        color: #1e293b !important;
+        line-height: 1.1;
     }
 
     .data-grid {
@@ -11669,8 +11775,81 @@ body {
 }
 
 @media (max-width: 480px) {
+
+    /* 超小屏幕总资产卡片进一步优化 */
+    .total-asset-card {
+        padding: 18px 14px;
+        margin-bottom: 14px;
+    }
+
+    .amount-label {
+        font-size: 0.85rem;
+        margin-bottom: 5px;
+    }
+
+    .amount-value {
+        font-size: 2rem;
+        margin-bottom: 6px;
+    }
+
+    .asset-change {
+        font-size: 0.95rem;
+        gap: 5px;
+    }
+
+    .change-label {
+        font-size: 0.8rem;
+    }
+
+    /* 超小屏幕统计卡片紧凑布局 */
     .overview-stats {
-        grid-template-columns: 1fr;
+        grid-template-columns: repeat(2, 1fr);
+        gap: 6px;
+        margin-top: 10px;
+    }
+
+    .stat-item {
+        padding: 8px 6px;
+        min-height: 60px;
+        flex-direction: column;
+        text-align: center;
+        gap: 4px;
+        border-radius: 8px;
+        transition: all 0.2s ease;
+    }
+
+    .stat-item:active {
+        transform: scale(0.99);
+        box-shadow: 0 1px 6px rgba(0, 0, 0, 0.1);
+    }
+
+    .stat-icon {
+        font-size: 1.1rem;
+        width: 24px;
+        height: 24px;
+        flex-shrink: 0;
+        margin-bottom: 2px;
+    }
+
+    .stat-info {
+        align-items: center;
+        text-align: center;
+        flex: 1;
+    }
+
+    .stat-label {
+        font-size: 0.65rem;
+        margin-bottom: 1px;
+        text-align: center;
+        font-weight: 600;
+        line-height: 1.1;
+    }
+
+    .stat-value {
+        font-size: 0.9rem;
+        font-weight: 800;
+        text-align: center;
+        line-height: 1.1;
     }
 
     /* 超小屏幕主内容区域间距进一步优化 */

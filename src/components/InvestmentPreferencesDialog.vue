@@ -272,7 +272,15 @@ const initializePreferences = async() => {
 
     if (preferences) {
         // Load existing preferences
-        Object.assign(localPreferences, preferences);
+        let userTraits = preferences.userTraits || {};
+        userTraits.risk_tolerance = userTraits.risk_tolerance || 3;
+        userTraits.active_participation = userTraits.active_participation || 3;
+        userTraits.learning_willingness = userTraits.learning_willingness || 3;
+        userTraits.innovation_trial = userTraits.innovation_trial || 3;
+        userTraits.strategy_dependency = userTraits.strategy_dependency || 2;
+        userTraits.trading_frequency = userTraits.trading_frequency || 2;
+        preferences.userTraits = userTraits;
+        localPreferences  = preferences;
         console.log('Loaded preferences:', localPreferences);
     } else {
         // Initialize with default values for new users

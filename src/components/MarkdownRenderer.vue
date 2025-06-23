@@ -1,5 +1,5 @@
 <template>
-    <div class="markdown-content" v-html="renderedContent"></div>
+    <div class="markdown-content" :class="{ 'compact-recap': isRecapMessage }" v-html="renderedContent"></div>
 </template>
 
 <script setup>
@@ -44,6 +44,13 @@ renderer.codespan = function (code) {
     return `<code class="inline-code">${code}</code>`;
 };
 
+// 检测是否为智能复盘消息
+const isRecapMessage = computed(() => {
+    if (!props.content) return false;
+    const contentStr = typeof props.content === 'string' ? props.content : String(props.content);
+    return contentStr.includes('智能复盘') || contentStr.includes('请帮我进行全面的智能投资复盘分析');
+});
+
 // 计算渲染后的内容
 const renderedContent = computed(() => {
     if (!props.content) return '';
@@ -51,26 +58,11 @@ const renderedContent = computed(() => {
     // 确保content是字符串类型
     const contentStr = typeof props.content === 'string' ? props.content : String(props.content);
 
-    // 简单测试：如果内容包含复盘关键词，输出调试信息
-    if (contentStr.includes('智能复盘')) {
-        console.log('=== 复盘消息调试 ===');
-        console.log('原始内容:', contentStr);
-        console.log('内容类型:', typeof contentStr);
-        console.log('前50个字符:', contentStr.substring(0, 50));
 
-        // 测试简单的markdown解析
-        const testMarkdown = "1. 测试项目一\n2. 测试项目二";
-        const testResult = marked(testMarkdown);
-        console.log('测试markdown解析:', testResult);
-    }
 
     try {
         // 使用 marked 解析 markdown，使用自定义渲染器
         const parsed = marked(contentStr, { renderer });
-
-        if (contentStr.includes('智能复盘')) {
-            console.log('解析结果:', parsed);
-        }
 
         // 使用 DOMPurify 清理 HTML，防止 XSS 攻击
         const result = DOMPurify.sanitize(parsed, {
@@ -90,11 +82,6 @@ const renderedContent = computed(() => {
             ],
             ALLOWED_URI_REGEXP: /^(?:(?:(?:f|ht)tps?|mailto|tel|callto|cid|xmpp):|[^a-z]|[a-z+.\-]+(?:[^a-z+.\-:]|$))/i
         });
-
-        if (contentStr.includes('智能复盘')) {
-            console.log('最终结果:', result);
-            console.log('=== 调试结束 ===');
-        }
 
         return result;
     } catch (error) {
@@ -185,6 +172,32 @@ const renderedContent = computed(() => {
 
 .markdown-content :deep(ol li) {
     list-style-type: decimal;
+    margin-bottom: 0;
+    padding-bottom: 0;
+}
+
+/* 智能复盘消息的紧凑样式 */
+.markdown-content.compact-recap :deep(p) {
+    margin: 2px 0;
+    line-height: 1.3;
+}
+
+.markdown-content.compact-recap :deep(ol) {
+    margin: 0;
+    padding-left: 18px;
+    line-height: 0.6;
+}
+
+.markdown-content.compact-recap :deep(ol li) {
+    margin: 0;
+    padding: 0;
+    line-height: 1.2;
+    display: list-item;
+    list-style-position: outside;
+}
+
+.markdown-content.compact-recap {
+    line-height: 1.3;
 }
 
 /* 任务列表样式 */

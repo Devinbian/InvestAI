@@ -184,7 +184,9 @@
             <div class="chat-history-area chat-area" v-if="isChatMode && chatHistory.length" ref="chatHistoryRef">
                 <div v-for="(message, idx) in chatHistory" :key="idx" :class="['chat-message', message.role]">
                     <div class="chat-message-content">
-                        <div v-if="message.content" class="message-text">{{ message.content }}</div>
+                        <div v-if="message.content" class="message-text">
+                            <MarkdownRenderer :content="message.content" />
+                        </div>
 
                         <!-- 互动建议（资讯推送、智能复盘等，不包括自选股） -->
                         <div v-if="message.hasInteractionButtons && message.interactionData && !message.isWatchlistDisplay"
@@ -1531,6 +1533,7 @@ import AITradingDialog from '../components/AITradingDialog.vue';
 import CustomizeShortcutsDialog from '../components/CustomizeShortcutsDialog.vue';
 import MobileShortcutsDialog from '../components/MobileShortcutsDialog.vue';
 import ChatHistory from '../components/ChatHistory.vue';
+import MarkdownRenderer from '../components/MarkdownRenderer.vue';
 
 const router = useRouter();
 const userStore = useUserStore();
@@ -1638,7 +1641,17 @@ const defaultShortcuts = ref([
         title: '智能复盘',
         shortTitle: '复盘',
         description: '智能分析市场表现和投资策略',
-        action: () => setSuggestionAndSend('智能复盘：请帮我进行全面的智能投资复盘分析，包括：\n\n1. 市场整体走势分析（主要指数表现、板块轮动）\n2. 我的投资组合表现分析和风险评估\n3. 基于AI算法的策略优化建议\n4. 市场情绪和技术指标综合分析\n5. 个性化的下一步操作建议\n6. 风险预警和机会识别\n7. 智能资产配置优化方案\n\n请结合我的投资风格和市场大数据，给出专业的智能化复盘建议。'),
+        action: () => setSuggestionAndSend(`智能复盘：请帮我进行全面的智能投资复盘分析，包括：
+
+1. 市场整体走势分析（主要指数表现、板块轮动）
+2. 我的投资组合表现分析和风险评估
+3. 基于AI算法的策略优化建议
+4. 市场情绪和技术指标综合分析
+5. 个性化的下一步操作建议
+6. 风险预警和机会识别
+7. 智能资产配置优化方案
+
+请结合我的投资风格和市场大数据，给出专业的智能化复盘建议。`),
         isDefault: true,
         isActive: true
     },
@@ -2321,6 +2334,8 @@ const sendMessage = async () => {
 
     const message = inputMessage.value;
     inputMessage.value = '';
+
+
 
     // 发送消息后切换到聊天模式
     isChatMode.value = true;
@@ -3458,7 +3473,7 @@ const formatCurrency = (amount) => {
 const handleSidebarInteraction = async (data) => {
     const { type, content, title } = data;
 
-    let message = '';
+    let message;
 
     switch (type) {
         case 'stock':
@@ -5666,6 +5681,57 @@ body.onboarding-mode {
     /* 确保长文本正确换行 */
 }
 
+/* 用户消息中的markdown内容样式覆盖 */
+.chat-message.user .chat-message-content .markdown-content {
+    color: white !important;
+}
+
+.chat-message.user .chat-message-content .markdown-content :deep(*) {
+    color: inherit !important;
+}
+
+.chat-message.user .chat-message-content .markdown-content :deep(strong) {
+    color: white !important;
+    font-weight: 700;
+}
+
+.chat-message.user .chat-message-content .markdown-content :deep(em) {
+    color: rgba(255, 255, 255, 0.9) !important;
+}
+
+.chat-message.user .chat-message-content .markdown-content :deep(a) {
+    color: #87ceeb !important;
+}
+
+.chat-message.user .chat-message-content .markdown-content :deep(a:hover) {
+    color: #b0e0e6 !important;
+}
+
+.chat-message.user .chat-message-content .markdown-content :deep(.inline-code) {
+    background: rgba(255, 255, 255, 0.2) !important;
+    color: #fff !important;
+    border-color: rgba(255, 255, 255, 0.3) !important;
+}
+
+.chat-message.user .chat-message-content .markdown-content :deep(blockquote) {
+    background: rgba(255, 255, 255, 0.1) !important;
+    color: rgba(255, 255, 255, 0.9) !important;
+    border-left-color: rgba(255, 255, 255, 0.5) !important;
+}
+
+/* 用户消息中的markdown段落间距优化 */
+.chat-message.user .chat-message-content .markdown-content :deep(p) {
+    margin: 4px 0 !important;
+}
+
+.chat-message.user .chat-message-content .markdown-content :deep(p:first-child) {
+    margin-top: 0 !important;
+}
+
+.chat-message.user .chat-message-content .markdown-content :deep(p:last-child) {
+    margin-bottom: 0 !important;
+}
+
 .chat-message.assistant .chat-message-content {
     background: #f1f3f4;
     color: #18181b;
@@ -5680,10 +5746,23 @@ body.onboarding-mode {
     /* 确保长文本正确换行 */
 }
 
+/* AI助手消息中的markdown段落间距优化 */
+.chat-message.assistant .chat-message-content .markdown-content :deep(p) {
+    margin: 4px 0 !important;
+}
+
+.chat-message.assistant .chat-message-content .markdown-content :deep(p:first-child) {
+    margin-top: 0 !important;
+}
+
+.chat-message.assistant .chat-message-content .markdown-content :deep(p:last-child) {
+    margin-bottom: 0 !important;
+}
+
 /* 聊天消息内容样式 */
 .message-text {
     white-space: pre-line;
-    margin-bottom: 28px;
+    margin-bottom: 8px;
 }
 
 .message-text:last-child {

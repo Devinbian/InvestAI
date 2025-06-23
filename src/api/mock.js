@@ -883,6 +883,96 @@ ${
         stockInfo: stockInfo, // 附加股票信息用于自选股功能
         hasStockInfo: true,
       };
+    } else if (
+      message.includes("markdown") ||
+      message.includes("测试") ||
+      message.includes("格式")
+    ) {
+      // Markdown语法测试响应
+      response = {
+        role: "assistant",
+        content: `# Markdown语法测试
+
+## 基本格式
+
+**粗体文本** 和 *斜体文本* 以及 ~~删除线文本~~
+
+### 列表示例
+
+#### 无序列表
+- 第一项
+- 第二项
+  - 子项目 A
+  - 子项目 B
+- 第三项
+
+#### 有序列表
+1. 首先做这个
+2. 然后做那个
+3. 最后完成
+   1. 子步骤 1
+   2. 子步骤 2
+
+### 代码示例
+
+这是\`内联代码\`示例。
+
+\`\`\`javascript
+// 这是代码块示例
+function calculateReturn(price, cost) {
+  return ((price - cost) / cost * 100).toFixed(2) + '%';
+}
+
+const stockReturn = calculateReturn(12.45, 10.20);
+console.log('投资收益率:', stockReturn);
+\`\`\`
+
+\`\`\`python
+# Python代码示例
+import pandas as pd
+import numpy as np
+
+def analyze_stock(data):
+    """分析股票数据"""
+    return {
+        'mean': data.mean(),
+        'std': data.std(),
+        'sharpe': data.mean() / data.std()
+    }
+\`\`\`
+
+### 引用文本
+
+> 投资有风险，入市需谨慎。
+> 
+> 这是一个重要的投资原则，所有投资者都应该牢记。
+
+### 表格示例
+
+| 股票代码 | 股票名称 | 当前价格 | 涨跌幅 | 推荐等级 |
+|---------|---------|---------|--------|----------|
+| 000001  | 平安银行 | 12.45   | +1.88% | 买入     |
+| 600519  | 贵州茅台 | 1678.90 | -0.74% | 持有     |
+| 300750  | 宁德时代 | 185.50  | +4.62% | 买入     |
+
+### 链接示例
+
+访问 [上海证券交易所](https://www.sse.com.cn) 获取更多信息。
+
+### 分割线
+
+---
+
+### 任务列表
+
+- [x] 完成市场分析
+- [x] 更新投资组合
+- [ ] 制定下周投资计划
+- [ ] 风险评估报告
+
+这样的markdown格式可以让投资信息更加清晰易读！`,
+        hasStockInfo: false,
+      };
     } else {
       // 普通AI响应
       const responses = [

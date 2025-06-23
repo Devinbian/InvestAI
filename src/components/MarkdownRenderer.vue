@@ -97,6 +97,8 @@ const renderedContent = computed(() => {
     color: #333;
     word-wrap: break-word;
     overflow-wrap: break-word;
+    margin: 0;
+    padding: 0;
 }
 
 /* 标题样式 */
@@ -136,6 +138,18 @@ const renderedContent = computed(() => {
     margin: 8px 0;
 }
 
+/* 最后一个段落的底部间距清零 */
+.markdown-content :deep(p:last-child) {
+    margin-bottom: 0 !important;
+    padding-bottom: 0 !important;
+}
+
+/* 第一个段落的顶部间距清零 */
+.markdown-content :deep(p:first-child) {
+    margin-top: 0 !important;
+    padding-top: 0 !important;
+}
+
 /* 强调样式 */
 .markdown-content :deep(strong) {
     font-weight: 600;
@@ -161,6 +175,47 @@ const renderedContent = computed(() => {
     padding-left: 24px;
 }
 
+/* 最后一个列表的底部间距清零 */
+.markdown-content :deep(ul:last-child),
+.markdown-content :deep(ol:last-child) {
+    margin-bottom: 0 !important;
+    padding-bottom: 0 !important;
+}
+
+/* 第一个列表的顶部间距清零 */
+.markdown-content :deep(ul:first-child),
+.markdown-content :deep(ol:first-child) {
+    margin-top: 0 !important;
+    padding-top: 0 !important;
+}
+
+/* 确保所有最后的元素都没有底部间距 */
+.markdown-content :deep(*:last-child) {
+    margin-bottom: 0 !important;
+    padding-bottom: 0 !important;
+}
+
+/* 确保所有第一个元素都没有顶部间距 */
+.markdown-content :deep(*:first-child) {
+    margin-top: 0 !important;
+    padding-top: 0 !important;
+}
+
+/* 强制清除所有可能的间距 */
+.markdown-content :deep(p),
+.markdown-content :deep(div),
+.markdown-content :deep(span) {
+    margin-bottom: 0 !important;
+    padding-bottom: 0 !important;
+}
+
+.markdown-content :deep(p:last-child),
+.markdown-content :deep(div:last-child),
+.markdown-content :deep(span:last-child) {
+    margin-bottom: 0 !important;
+    padding-bottom: 0 !important;
+}
+
 .markdown-content :deep(li) {
     margin: 4px 0;
     line-height: 1.5;
@@ -182,10 +237,22 @@ const renderedContent = computed(() => {
     line-height: 1.3;
 }
 
+.markdown-content.compact-recap :deep(p:last-child) {
+    margin-bottom: 0;
+}
+
+.markdown-content.compact-recap :deep(p:first-child) {
+    margin-top: 0;
+}
+
 .markdown-content.compact-recap :deep(ol) {
     margin: 0;
     padding-left: 18px;
     line-height: 0.6;
+}
+
+.markdown-content.compact-recap :deep(ol:last-child) {
+    margin-bottom: 0;
 }
 
 .markdown-content.compact-recap :deep(ol li) {

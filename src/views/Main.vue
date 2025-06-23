@@ -5502,7 +5502,7 @@ body.onboarding-mode {
     }
 
     .message-text {
-        margin-bottom: 20px;
+        margin-bottom: 0;
     }
 
     /* 移动端主内容区域间距优化 */
@@ -5671,7 +5671,7 @@ body.onboarding-mode {
     background: #007bff;
     color: white;
     border-radius: 18px 18px 4px 18px;
-    padding: 14px 20px;
+    padding: 14px 20px 0 20px;
     margin-left: auto;
     max-width: 100%;
     /* PC端聊天消息占满聊天框宽度，通过padding控制内容间距 */
@@ -5679,6 +5679,17 @@ body.onboarding-mode {
     line-height: 1.5;
     word-wrap: break-word;
     /* 确保长文本正确换行 */
+}
+
+/* 强制清除用户消息内容的内部间距 */
+.chat-message.user .chat-message-content .message-text {
+    margin: 0 !important;
+    padding: 0 !important;
+}
+
+.chat-message.user .chat-message-content .message-text>* {
+    margin-bottom: 0 !important;
+    padding-bottom: 0 !important;
 }
 
 /* 用户消息中的markdown内容样式覆盖 */
@@ -5721,7 +5732,7 @@ body.onboarding-mode {
 
 /* 用户消息中的markdown段落间距优化 */
 .chat-message.user .chat-message-content .markdown-content :deep(p) {
-    margin: 4px 0 !important;
+    margin: 2px 0 !important;
 }
 
 .chat-message.user .chat-message-content .markdown-content :deep(p:first-child) {
@@ -5736,7 +5747,7 @@ body.onboarding-mode {
     background: #f1f3f4;
     color: #18181b;
     border-radius: 18px 18px 18px 4px;
-    padding: 14px 20px;
+    padding: 14px 20px 8px 20px;
     margin-right: auto;
     max-width: 100%;
     /* PC端聊天消息占满聊天框宽度，通过padding控制内容间距 */
@@ -5746,9 +5757,20 @@ body.onboarding-mode {
     /* 确保长文本正确换行 */
 }
 
+/* 强制清除AI助手消息内容的内部间距 */
+.chat-message.assistant .chat-message-content .message-text {
+    margin: 0 !important;
+    padding: 0 !important;
+}
+
+.chat-message.assistant .chat-message-content .message-text>* {
+    margin-bottom: 0 !important;
+    padding-bottom: 0 !important;
+}
+
 /* AI助手消息中的markdown段落间距优化 */
 .chat-message.assistant .chat-message-content .markdown-content :deep(p) {
-    margin: 4px 0 !important;
+    margin: 2px 0 !important;
 }
 
 .chat-message.assistant .chat-message-content .markdown-content :deep(p:first-child) {
@@ -5762,7 +5784,9 @@ body.onboarding-mode {
 /* 聊天消息内容样式 */
 .message-text {
     white-space: pre-line;
-    margin-bottom: 8px;
+    margin: 0;
+    padding: 0;
+    line-height: inherit;
 }
 
 .message-text:last-child {
@@ -12263,6 +12287,26 @@ body {
     .chat-message.assistant .chat-message-content {
         max-width: 90% !important;
         /* 增加助手消息最大宽度 */
+    }
+
+    /* 移动端强制清除消息内容间距 */
+    .chat-message-content .message-text {
+        margin: 0 !important;
+        padding: 0 !important;
+    }
+
+    .chat-message-content .message-text>* {
+        margin-bottom: 0 !important;
+        padding-bottom: 0 !important;
+    }
+
+    /* 移动端消息气泡padding调整 */
+    .chat-message.user .chat-message-content {
+        padding: 12px 16px 0 16px !important;
+    }
+
+    .chat-message.assistant .chat-message-content {
+        padding: 12px 16px 0 16px !important;
     }
 
     /* 最后一条消息额外增加底部间距 - 默认适应非微信浏览器 */

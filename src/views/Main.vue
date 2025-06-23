@@ -1248,7 +1248,12 @@
             @ai-trading-confirmed="handleAITradingConfirmed" />
 
         <!-- 自定义快捷操作对话框 -->
-        <CustomizeShortcutsDialog v-model="customizeDialogVisible" @shortcuts-updated="handleShortcutsUpdated" />
+        <CustomizeShortcutsDialog v-if="!isMobileView" v-model="customizeDialogVisible"
+            @shortcuts-updated="handleShortcutsUpdated" />
+
+        <!-- 移动端原生快捷操作对话框 -->
+        <MobileShortcutsDialog v-if="isMobileView" v-model="customizeDialogVisible"
+            @shortcuts-updated="handleShortcutsUpdated" />
 
         <!-- 引导提示 -->
         <div v-if="showGuideTip" class="guide-tip">
@@ -1517,6 +1522,7 @@ import InvestmentPreferencesDialog from '../components/InvestmentPreferencesDial
 import StockTradingDialog from '../components/StockTradingDialog.vue';
 import AITradingDialog from '../components/AITradingDialog.vue';
 import CustomizeShortcutsDialog from '../components/CustomizeShortcutsDialog.vue';
+import MobileShortcutsDialog from '../components/MobileShortcutsDialog.vue';
 import ChatHistory from '../components/ChatHistory.vue';
 
 const router = useRouter();

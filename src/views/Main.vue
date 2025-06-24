@@ -4650,16 +4650,25 @@ const handleShortcutsUpdated = () => {
 const fixUserMessagePadding = () => {
     nextTick(() => {
         const userMessages = document.querySelectorAll('.chat-message.user .chat-message-content');
-        userMessages.forEach(element => {
+        console.log('🔧 找到用户消息元素数量:', userMessages.length);
+
+        userMessages.forEach((element, index) => {
+            console.log(`🔧 处理第${index + 1}个用户消息元素`);
+
             if (isMobileView.value) {
-                element.style.padding = '18px 16px 6px 16px';
-                element.style.lineHeight = '1.3';
+                element.style.setProperty('padding', '18px 16px 6px 16px', 'important');
+                element.style.setProperty('line-height', '1.3', 'important');
+                console.log('🔧 应用移动端样式: 18px 16px 6px 16px');
             } else {
-                element.style.padding = '20px 20px 8px 20px';
-                element.style.lineHeight = '1.3';
+                element.style.setProperty('padding', '20px 20px 8px 20px', 'important');
+                element.style.setProperty('line-height', '1.3', 'important');
+                console.log('🔧 应用PC端样式: 20px 20px 8px 20px');
             }
-            element.style.setProperty('padding', element.style.padding, 'important');
-            element.style.setProperty('line-height', element.style.lineHeight, 'important');
+
+            // 验证样式是否应用成功
+            const computedStyle = window.getComputedStyle(element);
+            console.log('🔧 实际应用的padding:', computedStyle.padding);
+            console.log('🔧 实际应用的line-height:', computedStyle.lineHeight);
         });
     });
 };

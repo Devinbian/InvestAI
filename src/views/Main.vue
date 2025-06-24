@@ -359,13 +359,13 @@
                                         <div class="asset-amount">
                                             <span class="amount-label">总资产</span>
                                             <span class="amount-value">¥{{ formatCurrency(message.assetData.totalAssets)
-                                                }}</span>
+                                            }}</span>
                                         </div>
                                         <div class="asset-change"
                                             :class="[message.assetData.totalProfitPercent >= 0 ? 'profit' : 'loss']">
                                             <span class="change-icon">{{ message.assetData.totalProfitPercent >= 0 ?
                                                 '📈' : '📉'
-                                                }}</span>
+                                            }}</span>
                                             <span class="change-label">今日盈亏：</span>
                                             <span class="change-text">
                                                 {{ message.assetData.totalProfitPercent >= 0 ? '+' : '' }}¥{{
@@ -391,7 +391,7 @@
                                         <div class="stat-info">
                                             <div class="stat-label">持仓市值</div>
                                             <div class="stat-value">¥{{ formatCurrency(message.assetData.portfolioValue)
-                                                }}
+                                            }}
                                             </div>
                                         </div>
                                     </div>
@@ -767,7 +767,7 @@
                 </div>
                 <div class="guide-actions">
                     <el-button type="primary" size="small" @click="handleGuideAction">{{ guideActionText
-                    }}</el-button>
+                        }}</el-button>
                     <el-button size="small" @click="dismissGuide">稍后</el-button>
                 </div>
             </div>
@@ -805,7 +805,7 @@
                         <div class="summary-item">
                             <span class="summary-label">买入信号</span>
                             <span class="summary-value signal-score">{{ currentQuantAnalysis.buySignalScore
-                                }}/100</span>
+                            }}/100</span>
                         </div>
                         <div class="summary-item">
                             <span class="summary-label">量化评级</span>
@@ -5333,7 +5333,7 @@ body.onboarding-mode {
     background: #007bff;
     color: white;
     border-radius: 18px 18px 4px 18px;
-    padding: 14px 20px 0 20px;
+    padding: 14px 20px 14px 20px;
     margin-left: auto;
     max-width: 100%;
     width: 100%;
@@ -11702,8 +11702,8 @@ body {
 
     /* 移动端聊天消息宽度优化 */
     .chat-message.user .chat-message-content {
-        max-width: 100% !important;
-        /* 用户消息占满全屏宽度 */
+        max-width: 85% !important;
+        /* 用户消息保持合理宽度，不占满全屏 */
     }
 
     .chat-message.assistant .chat-message-content {
@@ -11860,8 +11860,8 @@ body {
 
     /* 超小屏幕聊天消息宽度进一步优化 */
     .chat-message.user .chat-message-content {
-        max-width: 100% !important;
-        /* 超小屏幕用户消息占满全屏宽度 */
+        max-width: 80% !important;
+        /* 超小屏幕用户消息保持合理宽度，稍微紧凑一些 */
     }
 
     .chat-message.assistant .chat-message-content {

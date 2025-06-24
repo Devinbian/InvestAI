@@ -4656,13 +4656,13 @@ const fixUserMessagePadding = () => {
             console.log(`🔧 处理第${index + 1}个用户消息元素`);
 
             if (isMobileView.value) {
-                element.style.setProperty('padding', '18px 16px 6px 16px', 'important');
-                element.style.setProperty('line-height', '1.3', 'important');
-                console.log('🔧 应用移动端样式: 18px 16px 6px 16px');
+                element.style.setProperty('padding', '20px 16px 4px 16px', 'important');
+                element.style.setProperty('line-height', '1.2', 'important');
+                console.log('🔧 应用移动端样式: 20px 16px 4px 16px');
             } else {
-                element.style.setProperty('padding', '20px 20px 8px 20px', 'important');
-                element.style.setProperty('line-height', '1.3', 'important');
-                console.log('🔧 应用PC端样式: 20px 20px 8px 20px');
+                element.style.setProperty('padding', '22px 20px 6px 20px', 'important');
+                element.style.setProperty('line-height', '1.2', 'important');
+                console.log('🔧 应用PC端样式: 22px 20px 6px 20px');
             }
 
             // 验证样式是否应用成功

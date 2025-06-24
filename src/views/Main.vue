@@ -5333,8 +5333,8 @@ body.onboarding-mode {
     background: #007bff;
     color: white;
     border-radius: 18px 18px 4px 18px;
-    padding: 18px 20px 10px 20px;
-    /* 调整用户消息padding：顶部18px，底部10px，进一步补偿字体基线对齐造成的视觉不平衡 */
+    padding: 18px 20px 10px 20px !important;
+    /* 调整用户消息padding：顶部18px，底部10px，使用!important确保优先级 */
     margin-left: auto;
     max-width: 75%;
     /* PC端用户消息保持适中宽度，与助手消息形成视觉层次 */
@@ -5393,17 +5393,32 @@ body.onboarding-mode {
     border-left-color: rgba(255, 255, 255, 0.5) !important;
 }
 
-/* 用户消息中的markdown段落间距优化 */
+/* 用户消息中的markdown段落间距优化 - 强制清零所有间距 */
 .chat-message.user .chat-message-content .markdown-content :deep(p) {
-    margin: 2px 0 !important;
+    margin: 0 !important;
+    padding: 0 !important;
 }
 
 .chat-message.user .chat-message-content .markdown-content :deep(p:first-child) {
     margin-top: 0 !important;
+    padding-top: 0 !important;
 }
 
 .chat-message.user .chat-message-content .markdown-content :deep(p:last-child) {
     margin-bottom: 0 !important;
+    padding-bottom: 0 !important;
+}
+
+/* 强制清除用户消息中所有可能的内部间距 */
+.chat-message.user .chat-message-content .markdown-content :deep(*) {
+    margin: 0 !important;
+    padding: 0 !important;
+}
+
+.chat-message.user .chat-message-content .markdown-content {
+    margin: 0 !important;
+    padding: 0 !important;
+    line-height: 1.5 !important;
 }
 
 .chat-message.assistant .chat-message-content {

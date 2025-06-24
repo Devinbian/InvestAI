@@ -47,14 +47,14 @@ const recommendationActions = [
         text: "加入自选",
         type: "primary",
         class: "add-watchlist-btn",
-        icon: "M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z",
+        icon: "⭐",
     },
     {
         key: "removeWatchlist",
         text: "已加自选",
         type: "success",
         class: "remove-watchlist-btn",
-        icon: "M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z",
+        icon: "⭐",
         iconFill: "currentColor",
     },
     {
@@ -62,7 +62,7 @@ const recommendationActions = [
         text: "量化分析",
         type: "default",
         class: "paid-analysis-btn",
-        icon: "M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z",
+        icon: "🎯",
         priceTag: {
             original: "3智点",
             promo: "1智点",
@@ -73,7 +73,7 @@ const recommendationActions = [
         text: "AI委托交易",
         type: "default",
         class: "quant-analysis-btn",
-        icon: "M3 3v18h18M7 16l4-4 4 4 4-4",
+        icon: "🤖",
         priceTag: {
             original: "3智点",
             promo: "1智点",

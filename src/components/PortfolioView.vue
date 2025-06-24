@@ -111,7 +111,7 @@ const portfolioActions = [
         text: "量化分析",
         type: "default",
         class: "paid-analysis-btn",
-        icon: "M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z",
+        icon: "🎯",
         priceTag: {
             original: "3智点",
             promo: "1智点",
@@ -122,7 +122,7 @@ const portfolioActions = [
         text: "AI委托交易",
         type: "default",
         class: "quant-analysis-btn",
-        icon: "M3 3v18h18M7 16l4-4 4 4 4-4",
+        icon: "🤖",
         priceTag: {
             original: "3智点",
             promo: "1智点",

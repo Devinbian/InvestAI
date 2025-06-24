@@ -168,21 +168,23 @@
                         <!-- 自选股相关按钮 -->
                         <el-button v-if="action.key === 'addWatchlist' && !isInWatchlist(stock)" type="primary"
                             size="small" @click.stop="handleAction(action.key, stock)" :class="action.class">
-                            <svg v-if="action.icon" width="14" height="14" viewBox="0 0 24 24" fill="none">
-                                <path
-                                    d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"
-                                    stroke="currentColor" stroke-width="2" />
+                            <span v-if="action.icon === '⭐'">⭐</span>
+                            <svg v-else-if="action.icon && action.icon.startsWith('M')" width="14" height="14"
+                                viewBox="0 0 24 24" fill="none">
+                                <path :d="action.icon" stroke="currentColor" stroke-width="2" />
                             </svg>
+                            <span v-else-if="action.icon">{{ action.icon }}</span>
                             {{ action.text }}
                         </el-button>
 
                         <el-button v-if="action.key === 'removeWatchlist' && isInWatchlist(stock)" type="success"
                             size="small" @click.stop="handleAction(action.key, stock)" :class="action.class">
-                            <svg v-if="action.icon" width="14" height="14" viewBox="0 0 24 24" fill="none">
-                                <path
-                                    d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"
-                                    fill="currentColor" />
+                            <span v-if="action.icon === '⭐'">⭐</span>
+                            <svg v-else-if="action.icon && action.icon.startsWith('M')" width="14" height="14"
+                                viewBox="0 0 24 24" fill="none">
+                                <path :d="action.icon" fill="currentColor" />
                             </svg>
+                            <span v-else-if="action.icon">{{ action.icon }}</span>
                             {{ action.text }}
                         </el-button>
 
@@ -190,7 +192,8 @@
                         <el-button v-if="!['addWatchlist', 'removeWatchlist'].includes(action.key)"
                             :type="action.type || 'default'" size="small" @click.stop="handleAction(action.key, stock)"
                             :class="action.class" :loading="action.loading">
-                            <svg v-if="action.icon" width="14" height="14" viewBox="0 0 24 24" fill="none">
+                            <span v-if="action.icon && !action.icon.startsWith('M')">{{ action.icon }}</span>
+                            <svg v-else-if="action.icon" width="14" height="14" viewBox="0 0 24 24" fill="none">
                                 <path :d="action.icon" stroke="currentColor" stroke-width="2"
                                     :fill="action.iconFill || 'none'" />
                             </svg>

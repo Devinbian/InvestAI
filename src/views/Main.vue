@@ -46,11 +46,21 @@
 
         <!-- 聊天历史悬浮切换按钮 - 只在面板收起时显示 -->
         <button v-if="userStore.isLoggedIn && !showChatHistory" class="floating-history-toggle"
-            @click="toggleChatHistory" title="展开聊天记录">
-            <svg width="16" height="16" viewBox="0 0 24 24" fill="none">
+            @click="toggleChatHistory" :title="isMobileView ? '展开聊天记录' : '展开聊天记录'">
+            <!-- PC端显示图标 -->
+            <svg v-if="!isMobileView" width="16" height="16" viewBox="0 0 24 24" fill="none">
                 <path d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" stroke="currentColor" stroke-width="2"
                     stroke-linecap="round" stroke-linejoin="round" />
             </svg>
+            <!-- 移动端显示历史记录图标 -->
+            <template v-else>
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none">
+                    <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z" stroke="currentColor"
+                        stroke-width="2" stroke-linecap="round" stroke-linejoin="round" />
+                    <path d="M8 9h8M8 13h6" stroke="currentColor" stroke-width="2" stroke-linecap="round"
+                        stroke-linejoin="round" />
+                </svg>
+            </template>
         </button>
 
         <!-- 主体内容 -->
@@ -222,30 +232,19 @@
                             <!-- 自选股按钮 -->
                             <el-button v-if="!userStore.isInWatchlist(message.stockInfo.code)" type="primary"
                                 size="small" @click="addToWatchlist(message.stockInfo)" class="add-watchlist-btn">
-                                <svg width="14" height="14" viewBox="0 0 24 24" fill="none">
-                                    <path
-                                        d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"
-                                        stroke="currentColor" stroke-width="2" />
-                                </svg>
+                                ⭐
                                 加入自选
                             </el-button>
                             <el-button v-else type="success" size="small"
                                 @click="removeFromWatchlist(message.stockInfo.code)" class="remove-watchlist-btn">
-                                <svg width="14" height="14" viewBox="0 0 24 24" fill="none">
-                                    <path
-                                        d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"
-                                        fill="currentColor" />
-                                </svg>
+                                ⭐
                                 已加自选
                             </el-button>
 
                             <!-- AI委托交易按钮（付费） -->
                             <el-button v-if="!message.isBuyMode" size="small"
                                 @click="showQuantAnalysisDialog(message.stockInfo)" class="quant-analysis-btn">
-                                <svg width="14" height="14" viewBox="0 0 24 24" fill="none">
-                                    <path d="M3 3v18h18M7 16l4-4 4 4 4-4" stroke="currentColor" stroke-width="2"
-                                        fill="none" />
-                                </svg>
+                                🤖
                                 AI委托交易
                                 <div class="price-tag-container">
                                     <span class="price-tag original-price">3智点</span>
@@ -312,9 +311,13 @@
                             </div>
 
                             <!-- 使用通用股票列表组件 -->
-                            <StockList :stocks="message.watchlistData" :show-watchlist-status="true"
-                                :show-basic-details="true" :actions="watchlistActionButtons"
-                                @stock-click="handleStockClick" @action-click="handleWatchlistActionClick" />
+                            <StockList v-if="!isMobileView" :stocks="message.watchlistData"
+                                :show-watchlist-status="true" :show-basic-details="true"
+                                :actions="watchlistActionButtons" @stock-click="handleStockClick"
+                                @action-click="handleWatchlistActionClick" />
+                            <MobileStockList v-else :stocks="message.watchlistData" :show-watchlist-status="true"
+                                :show-details="true" :actions="watchlistActionButtons" @stock-click="handleStockClick"
+                                @action-click="handleWatchlistActionClick" />
 
                             <!-- 自选股互动建议 -->
                             <div v-if="message.hasInteractionButtons && message.interactionData"
@@ -355,13 +358,13 @@
                                         <div class="asset-amount">
                                             <span class="amount-label">总资产</span>
                                             <span class="amount-value">¥{{ formatCurrency(message.assetData.totalAssets)
-                                            }}</span>
+                                                }}</span>
                                         </div>
                                         <div class="asset-change"
                                             :class="[message.assetData.totalProfitPercent >= 0 ? 'profit' : 'loss']">
                                             <span class="change-icon">{{ message.assetData.totalProfitPercent >= 0 ?
                                                 '📈' : '📉'
-                                            }}</span>
+                                                }}</span>
                                             <span class="change-label">今日盈亏：</span>
                                             <span class="change-text">
                                                 {{ message.assetData.totalProfitPercent >= 0 ? '+' : '' }}¥{{
@@ -387,7 +390,7 @@
                                         <div class="stat-info">
                                             <div class="stat-label">持仓市值</div>
                                             <div class="stat-value">¥{{ formatCurrency(message.assetData.portfolioValue)
-                                            }}
+                                                }}
                                             </div>
                                         </div>
                                     </div>
@@ -424,11 +427,17 @@
                                 <div class="tab-content">
                                     <!-- 持仓明细Tab -->
                                     <div v-if="activeTab === 'portfolio'" class="tab-panel">
-                                        <StockList v-if="message.assetData.portfolioData.length > 0"
-                                            :stocks="message.assetData.portfolioData" :show-position-status="true"
-                                            :show-position-details="true" :show-basic-details="false"
-                                            :actions="portfolioActionButtons" @stock-click="handleStockClick"
-                                            @action-click="handlePortfolioActionClick" />
+                                        <template v-if="message.assetData.portfolioData.length > 0">
+                                            <StockList v-if="!isMobileView" :stocks="message.assetData.portfolioData"
+                                                :show-position-status="true" :show-position-details="true"
+                                                :show-basic-details="false" :actions="portfolioActionButtons"
+                                                @stock-click="handleStockClick"
+                                                @action-click="handlePortfolioActionClick" />
+                                            <MobileStockList v-else :stocks="message.assetData.portfolioData"
+                                                :show-position-status="true" :show-details="true"
+                                                :actions="portfolioActionButtons" @stock-click="handleStockClick"
+                                                @action-click="handlePortfolioActionClick" />
+                                        </template>
 
                                         <!-- 空状态 -->
                                         <div v-else class="empty-state">
@@ -442,11 +451,16 @@
 
                                     <!-- 自选股票Tab -->
                                     <div v-if="activeTab === 'watchlist'" class="tab-panel">
-                                        <StockList v-if="message.assetData.watchlistData.length > 0"
-                                            :stocks="message.assetData.watchlistData" :show-watchlist-status="true"
-                                            :show-basic-details="true" :actions="watchlistActionButtons"
-                                            @stock-click="handleStockClick"
-                                            @action-click="handleWatchlistActionClick" />
+                                        <template v-if="message.assetData.watchlistData.length > 0">
+                                            <StockList v-if="!isMobileView" :stocks="message.assetData.watchlistData"
+                                                :show-watchlist-status="true" :show-basic-details="true"
+                                                :actions="watchlistActionButtons" @stock-click="handleStockClick"
+                                                @action-click="handleWatchlistActionClick" />
+                                            <MobileStockList v-else :stocks="message.assetData.watchlistData"
+                                                :show-watchlist-status="true" :show-details="true"
+                                                :actions="watchlistActionButtons" @stock-click="handleStockClick"
+                                                @action-click="handleWatchlistActionClick" />
+                                        </template>
 
                                         <!-- 空状态 -->
                                         <div v-else class="empty-state">
@@ -464,8 +478,9 @@
                         <!-- 股票列表（智能荐股等场景） -->
                         <div v-if="message.hasStockInfo && message.stockList" class="stock-list"
                             :class="{ 'persistent-stock-list': message.isPersistent }">
-                            <StockList :stocks="message.stockList" v-bind="getSmartRecommendationConfig(message)"
-                                @stock-click="handleStockClick" @action-click="handleStockActionClick">
+                            <StockList v-if="!isMobileView" :stocks="message.stockList"
+                                v-bind="getSmartRecommendationConfig(message)" @stock-click="handleStockClick"
+                                @action-click="handleStockActionClick">
                                 <template #toolbar-actions v-if="message.isPersistent">
                                     <el-button size="small" text @click="refreshRecommendation(message)"
                                         class="refresh-recommendation-btn">
@@ -478,6 +493,20 @@
                                     </el-button>
                                 </template>
                             </StockList>
+                            <MobileStockList v-else :stocks="message.stockList"
+                                v-bind="getMobileSmartRecommendationConfig(message)" @stock-click="handleStockClick"
+                                @action-click="handleStockActionClick" :show-toolbar="true" :toolbar-title="'智能荐股'"
+                                :show-time="true" :timestamp="message.timestamp">
+                                <template #toolbar-actions>
+                                    <button @click="refreshRecommendation(message)" class="mobile-refresh-btn">
+                                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none">
+                                            <path
+                                                d="M23 4v6h-6M1 20v-6h6M20.49 9A9 9 0 0 0 5.64 5.64L1 10m22 4l-4.64 4.36A9 9 0 0 1 3.51 15"
+                                                stroke="currentColor" stroke-width="2" fill="none" />
+                                        </svg>
+                                    </button>
+                                </template>
+                            </MobileStockList>
                         </div>
                     </div>
                 </div>
@@ -499,10 +528,7 @@
                         <!-- 快速跳转到荐股列表 -->
                         <el-button v-if="hasRecommendationInHistory" class="goto-recommendation-btn"
                             @click="scrollToRecommendation">
-                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none">
-                                <path d="M3 3v18h18M7 16l4-4 4 4 4-4" stroke="currentColor" stroke-width="2"
-                                    fill="none" />
-                            </svg>
+                            🎯
                             查看荐股
                         </el-button>
                     </div>
@@ -737,7 +763,7 @@
                 </div>
                 <div class="guide-actions">
                     <el-button type="primary" size="small" @click="handleGuideAction">{{ guideActionText
-                        }}</el-button>
+                    }}</el-button>
                     <el-button size="small" @click="dismissGuide">稍后</el-button>
                 </div>
             </div>
@@ -775,7 +801,7 @@
                         <div class="summary-item">
                             <span class="summary-label">买入信号</span>
                             <span class="summary-value signal-score">{{ currentQuantAnalysis.buySignalScore
-                            }}/100</span>
+                                }}/100</span>
                         </div>
                         <div class="summary-item">
                             <span class="summary-label">量化评级</span>
@@ -997,6 +1023,7 @@ import MobileShortcutsDialog from '../components/MobileShortcutsDialog.vue';
 import ChatHistory from '../components/ChatHistory.vue';
 import MarkdownRenderer from '../components/MarkdownRenderer.vue';
 import StockList from '../components/StockList.vue';
+import MobileStockList from '../components/MobileStockList.vue';
 import { getStockListConfig } from '../config/stockListConfig';
 import { recommendStock } from '@/api/api';
 import { riskOptions } from '@/config/userPortrait';
@@ -2238,7 +2265,7 @@ const handleSmartRecommendation = async () => {
     // 构建智能荐股消息
     const userPreferences = userStore.userInfo?.preferences;
     let message = '智能荐股：根据我的投资偏好推荐优质股票\n';
-    let userPreferencesText ='';
+    let userPreferencesText = '';
     if (userPreferences) {
         userPreferencesText += `我的投资偏好：
         - 风险偏好：${getRiskLevelText(userPreferences.riskLevel)} 
@@ -2248,13 +2275,13 @@ const handleSmartRecommendation = async () => {
 
     // 先显示初始消息
     const processingMessage = { role: 'user', content: message.concat(userPreferencesText) };
-    const processingMessage1 = {role: 'assistant',content: '正在为您分析市场数据，请等待片刻......'};
+    const processingMessage1 = { role: 'assistant', content: '正在为您分析市场数据，请等待片刻......' };
     chatHistory.value.push(processingMessage, processingMessage1);
- 
+
     const mockRes = await mockApi.sendMessage(message);
 
     let response = await recommendStock({ pageNo: 1, pageSize: 3 });
-    if(response && response.data && response.data.success){
+    if (response && response.data && response.data.success) {
         let stockList = [];
         let data = response.data.data || [];
         data.forEach(item => {
@@ -2283,7 +2310,7 @@ const handleSmartRecommendation = async () => {
             isRecommendation: stockList.length > 0,
             role: 'assistant',
             stockList: stockList
-        }
+        };
 
         // 为荐股消息添加持久化标识和唯一ID
         const recommendationMessage = {
@@ -2858,14 +2885,14 @@ const watchlistActionButtons = [
         text: '移除自选',
         type: 'default',
         class: 'remove-watchlist-btn',
-        icon: 'M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z'
+        icon: '⭐'
     },
     {
         key: 'analysis',
         text: '量化分析',
         type: 'default',
         class: 'paid-analysis-btn',
-        icon: 'M3 3v18h18M7 16l4-4 4 4 4-4',
+        icon: '🎯',
         priceTag: { original: '3智点', promo: '1智点' }
     },
     {
@@ -2873,7 +2900,7 @@ const watchlistActionButtons = [
         text: 'AI委托交易',
         type: 'default',
         class: 'quant-analysis-btn',
-        icon: 'M3 3v18h18M7 16l4-4 4 4 4-4',
+        icon: '🤖',
         priceTag: { original: '3智点', promo: '1智点' }
     },
     {
@@ -2888,6 +2915,24 @@ const watchlistActionButtons = [
 // 持仓股票操作按钮配置
 const portfolioActionButtons = [
     {
+        key: 'analysis',
+        text: '量化分析',
+        type: 'default',
+        class: 'paid-analysis-btn',
+        icon: '🎯',
+        priceTag: { original: '3智点', promo: '1智点' },
+        mobileText: '分析'
+    },
+    {
+        key: 'aiTrading',
+        text: 'AI委托交易',
+        type: 'default',
+        class: 'quant-analysis-btn',
+        icon: '🤖',
+        priceTag: { original: '3智点', promo: '1智点' },
+        mobileText: 'AI交易'
+    },
+    {
         key: 'sell',
         text: '卖出',
         type: 'danger',
@@ -2900,22 +2945,6 @@ const portfolioActionButtons = [
         type: 'default',
         class: 'buy-stock-btn-secondary',
         icon: 'M12 2v20M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6'
-    },
-    {
-        key: 'analysis',
-        text: '量化分析',
-        type: 'default',
-        class: 'paid-analysis-btn',
-        icon: 'M3 3v18h18M7 16l4-4 4 4 4-4',
-        priceTag: { original: '3智点', promo: '1智点' }
-    },
-    {
-        key: 'aiTrading',
-        text: 'AI委托交易',
-        type: 'default',
-        class: 'quant-analysis-btn',
-        icon: 'M3 3v18h18M7 16l4-4 4 4 4-4',
-        priceTag: { original: '3智点', promo: '1智点' }
     }
 ];
 
@@ -2971,6 +3000,22 @@ const getSmartRecommendationConfig = (message) => {
         toolbarTitle: '智能荐股推荐',
         timestamp: message.timestamp,
         showToolbar: message.isPersistent
+    };
+};
+
+// 获取移动端智能荐股配置
+const getMobileSmartRecommendationConfig = (message) => {
+    const config = getStockListConfig('smartRecommendation');
+    return {
+        ...config,
+        // 移动端特定配置
+        // 移除工具栏相关配置，让直接传递的属性生效
+        showRecommendIndex: config.showRecommendIndex,
+        showWatchlistStatus: config.showWatchlistStatus,
+        showPositionStatus: config.showPositionStatus,
+        showDetails: true, // 移动端统一使用showDetails
+        showReason: config.showReason,
+        actions: config.actions
     };
 };
 
@@ -3041,7 +3086,7 @@ const getRiskLevelText = (level) => {
 };
 
 const getExperienceText = (experience) => {
-   return experience === 1 ? '新手' : experience === 2 ? '有经验' : '未设置';
+    return experience === 1 ? '新手' : experience === 2 ? '有经验' : '未设置';
 };
 
 const getFocusIndustryText = (focusIndustry) => {
@@ -4346,7 +4391,7 @@ body.onboarding-mode {
     cursor: pointer;
     transition: all 0.3s ease;
     color: #6b7280;
-    z-index: 110;
+    z-index: 50;
 }
 
 .floating-history-toggle:hover {
@@ -4366,18 +4411,88 @@ body.onboarding-mode {
     transition: all 0.2s ease;
 }
 
-/* 移动端悬浮按钮优化 */
+/* 移动端底部圆形小按钮优化 */
 @media (max-width: 768px) {
     .floating-history-toggle {
-        width: 36px;
-        height: 36px;
-        top: 68px;
+        /* 重置PC端样式 */
+        top: auto;
+        left: auto;
+
+        /* 移动端圆形按钮尺寸 - 更小更低调 */
+        width: 28px;
+        height: 28px;
+        border-radius: 50%;
+        padding: 0;
+
+        /* 移动端底部位置 - 左下角避免遮挡操作按钮 */
+        bottom: 24px;
         left: 16px;
+
+        /* 移动端样式 - 更低调 */
+        background: rgba(255, 255, 255, 0.8);
+        color: #9ca3af;
+        border: 1px solid rgba(0, 0, 0, 0.05);
+        box-shadow: 0 1px 4px rgba(0, 0, 0, 0.08);
+        backdrop-filter: blur(8px);
+
+        /* 移动端触摸优化 */
+        -webkit-tap-highlight-color: transparent;
+        -webkit-touch-callout: none;
+        -webkit-user-select: none;
+        user-select: none;
+        touch-action: manipulation;
+
+        /* 居中图标 */
+        display: flex;
+        align-items: center;
+        justify-content: center;
+    }
+
+    .floating-history-toggle:hover {
+        background: rgba(255, 255, 255, 0.9);
+        color: #6b7280;
+        box-shadow: 0 2px 6px rgba(0, 0, 0, 0.1);
+        transform: translateY(-0.5px);
+    }
+
+    .floating-history-toggle:active {
+        transform: translateY(0);
+        box-shadow: 0 1px 4px rgba(0, 0, 0, 0.1);
+        background: rgba(255, 255, 255, 0.9);
+        transition: all 0.1s ease;
     }
 
     .floating-history-toggle svg {
         width: 14px;
         height: 14px;
+        flex-shrink: 0;
+    }
+
+    /* 确保在聊天模式下按钮不被输入框遮挡 */
+    .main-container.chatting .floating-history-toggle {
+        bottom: 120px;
+        /* 在聊天模式下上移更多，确保完全不被输入框遮挡 */
+    }
+
+    /* 在非聊天模式下（首页）的位置优化 */
+    .main-container:not(.chatting) .floating-history-toggle {
+        bottom: 140px;
+        /* 在首页时上移，避免遮挡AI输入框 */
+    }
+
+    /* 在有键盘弹出时的适配 */
+    @supports (bottom: env(keyboard-inset-height)) {
+        .floating-history-toggle {
+            bottom: calc(24px + env(keyboard-inset-height, 0px));
+        }
+
+        .main-container.chatting .floating-history-toggle {
+            bottom: calc(120px + env(keyboard-inset-height, 0px));
+        }
+
+        .main-container:not(.chatting) .floating-history-toggle {
+            bottom: calc(140px + env(keyboard-inset-height, 0px));
+        }
     }
 }
 
@@ -4730,15 +4845,15 @@ body.onboarding-mode {
     .chat-message.assistant .chat-message-content {
         font-size: 0.9rem;
         padding: 12px 16px;
-        max-width: 85%;
+        max-width: 100%;
     }
 
     /* 移动端聊天历史区域完整重新定义 */
     .chat-history-area {
         height: calc(100vh - 76px - 160px) !important;
         /* 减少高度：76px(导航+间距) + 160px(输入框空间) */
-        padding: 0 0 32px 16px !important;
-        /* 顶部无padding，左侧16px间距，底部32px避免遮挡 */
+        padding: 0 0 32px 0 !important;
+        /* 顶部无padding，左右无间距让股票列表占满全屏，底部32px避免遮挡 */
         margin: 0 !important;
         /* 移除所有margin */
         width: 100% !important;
@@ -4779,8 +4894,8 @@ body.onboarding-mode {
     /* 移动端消息间距调整 */
     .chat-message {
         margin-bottom: 16px;
-        padding-right: 12px !important;
-        /* 为滚动条留出足够间距，避免内容贴边 */
+        padding-right: 4px !important;
+        /* 为滚动条留出最小间距，让股票列表占满更多宽度 */
     }
 
     /* 最后一条消息增加底部间距，确保与输入框有足够间隔 */
@@ -4952,16 +5067,19 @@ body.onboarding-mode {
     margin-bottom: 24px;
     padding: 0 20px;
     /* 添加左右间距，与AI卡片的内边距保持一致，确保消息内容不贴边 */
+    width: 100%;
+    box-sizing: border-box;
 }
 
 .chat-message.user .chat-message-content {
     background: #007bff;
     color: white;
     border-radius: 18px 18px 4px 18px;
-    padding: 14px 20px 0 20px;
+    padding: 16px 20px 16px 20px;
+    /* 调整用户消息padding：顶部16px，底部12px，补偿字体基线对齐造成的视觉不平衡 */
     margin-left: auto;
-    max-width: 100%;
-    /* PC端聊天消息占满聊天框宽度，通过padding控制内容间距 */
+    max-width: 75%;
+    /* PC端用户消息保持适中宽度，与助手消息形成视觉层次 */
     font-size: 1rem;
     line-height: 1.5;
     word-wrap: break-word;
@@ -4982,6 +5100,10 @@ body.onboarding-mode {
 /* 用户消息中的markdown内容样式覆盖 */
 .chat-message.user .chat-message-content .markdown-content {
     color: white !important;
+    display: flex;
+    flex-direction: column;
+    min-height: fit-content;
+    justify-content: flex-start;
 }
 
 .chat-message.user .chat-message-content .markdown-content :deep(*) {
@@ -5037,6 +5159,7 @@ body.onboarding-mode {
     padding: 14px 20px 8px 20px;
     margin-right: auto;
     max-width: 100%;
+    width: 100%;
     /* PC端聊天消息占满聊天框宽度，通过padding控制内容间距 */
     font-size: 1rem;
     line-height: 1.5;
@@ -5053,6 +5176,14 @@ body.onboarding-mode {
 .chat-message.assistant .chat-message-content .message-text>* {
     margin-bottom: 0 !important;
     padding-bottom: 0 !important;
+}
+
+/* AI助手消息中的markdown内容样式优化 */
+.chat-message.assistant .chat-message-content .markdown-content {
+    display: flex;
+    flex-direction: column;
+    min-height: fit-content;
+    justify-content: flex-start;
 }
 
 /* AI助手消息中的markdown段落间距优化 */
@@ -5202,7 +5333,6 @@ body.onboarding-mode {
     border: 2px solid transparent;
     border-radius: 12px;
     padding: 8px;
-    margin: -8px;
     transition: all 0.3s ease;
 }
 
@@ -5932,7 +6062,6 @@ body.onboarding-mode {
     /* 移动端股票列表间距优化 */
     .stock-list {
         gap: 6px;
-        margin-top: 8px;
     }
 }
 
@@ -6063,6 +6192,7 @@ body.onboarding-mode {
     border-radius: 12px;
     padding: 24px;
     margin-top: 16px;
+    margin-bottom: 16px;
 }
 
 /* 账户标题区域 */
@@ -10447,11 +10577,15 @@ body {
 }
 
 .tab-content {
-    min-height: 300px;
+    min-height: 50px;
+    overflow: visible;
+    margin-bottom: 0;
 }
 
 .tab-panel {
     animation: fadeIn 0.3s ease;
+    overflow: visible;
+    margin-bottom: 0;
 }
 
 @keyframes fadeIn {
@@ -10670,7 +10804,7 @@ body {
 /* 空状态样式 */
 .empty-state {
     text-align: center;
-    padding: 60px 20px;
+    padding: 40px 20px;
     color: #6b7280;
 }
 
@@ -10849,6 +10983,25 @@ body {
     .amount-value {
         font-size: 2rem;
     }
+
+    /* 移动端空状态优化 */
+    .empty-state {
+        padding: 30px 20px;
+    }
+
+    .empty-state .empty-icon {
+        font-size: 36px;
+        margin-bottom: 12px;
+    }
+
+    .empty-state h4 {
+        font-size: 16px;
+        margin: 0 0 6px 0;
+    }
+
+    .empty-state p {
+        font-size: 13px;
+    }
 }
 
 @media (max-width: 480px) {
@@ -10995,6 +11148,37 @@ body {
         font-size: 0.75rem;
         padding: 4px 8px;
     }
+
+    /* 超小屏幕空状态进一步优化 */
+    .empty-state {
+        padding: 20px 16px;
+        margin-bottom: 0;
+    }
+
+    .empty-state .empty-icon {
+        font-size: 32px;
+        margin-bottom: 10px;
+    }
+
+    .empty-state h4 {
+        font-size: 15px;
+        margin: 0 0 5px 0;
+    }
+
+    .empty-state p {
+        font-size: 12px;
+        line-height: 1.4;
+    }
+
+    /* 移动端资产容器优化 */
+    .tab-content {
+        min-height: 10px;
+        margin-bottom: 0;
+    }
+
+    .tab-panel {
+        margin-bottom: 0;
+    }
 }
 
 /* 版权信息样式 */
@@ -11020,6 +11204,22 @@ body {
 }
 
 @media (max-width: 768px) {
+
+    /* 移动端资产容器优化 */
+    .tab-content {
+        min-height: 20px;
+        margin-bottom: 0;
+    }
+
+    .tab-panel {
+        margin-bottom: 0;
+    }
+
+    .empty-state {
+        padding: 25px 16px;
+        margin-bottom: 0;
+    }
+
     .copyright-footer {
         margin-top: 40px;
         padding: 16px 0;
@@ -11248,19 +11448,19 @@ body {
 
     /* 消息右侧间距，避免贴滚动条 */
     .chat-message {
-        padding-right: 8px !important;
-        /* 减少右侧padding，让消息内容更宽 */
+        padding: 0 4px 16px 0 !important;
+        /* 最小化左右padding，让消息内容占满更多宽度 */
     }
 
     /* 移动端聊天消息宽度优化 */
     .chat-message.user .chat-message-content {
-        max-width: 90% !important;
-        /* 增加用户消息最大宽度 */
+        max-width: 85% !important;
+        /* 用户消息保持合理宽度，不占满全屏 */
     }
 
     .chat-message.assistant .chat-message-content {
-        max-width: 90% !important;
-        /* 增加助手消息最大宽度 */
+        max-width: 100% !important;
+        /* 助手消息占满全屏宽度 */
     }
 
     /* 移动端强制清除消息内容间距 */
@@ -11276,25 +11476,26 @@ body {
 
     /* 移动端消息气泡padding调整 */
     .chat-message.user .chat-message-content {
-        padding: 12px 16px 0 16px !important;
+        padding: 14px 16px 14px 16px !important;
+        /* 移动端用户消息：顶部14px，底部10px，补偿字体基线对齐造成的视觉不平衡 */
     }
 
     .chat-message.assistant .chat-message-content {
-        padding: 12px 16px 0 16px !important;
+        padding: 12px 16px 12px 16px !important;
     }
 
-    /* 最后一条消息额外增加底部间距 - 默认适应非微信浏览器 */
+    /* 最后一条消息额外增加底部间距 - 优化移动端体验 */
     .chat-message:last-child {
-        margin-bottom: 100px !important;
-        /* 确保最后一条消息有足够间隔，适应非微信浏览器的输入框偏移 */
+        margin-bottom: 60px !important;
+        /* 减少底部间距，优化移动端空间利用 */
     }
 
-    /* 使用伪元素在聊天历史区域底部创建额外空间 - 默认适应非微信浏览器 */
+    /* 使用伪元素在聊天历史区域底部创建额外空间 - 优化移动端体验 */
     .chat-history-area::after {
         content: '';
         display: block;
-        height: 120px !important;
-        /* 额外的底部空间，适应非微信浏览器的输入框偏移 */
+        height: 80px !important;
+        /* 减少额外底部空间，优化移动端体验 */
         width: 100%;
         flex-shrink: 0;
     }
@@ -11412,13 +11613,13 @@ body {
 
     /* 超小屏幕聊天消息宽度进一步优化 */
     .chat-message.user .chat-message-content {
-        max-width: 92% !important;
-        /* 超小屏幕用户消息更宽 */
+        max-width: 80% !important;
+        /* 超小屏幕用户消息保持合理宽度，稍微紧凑一些 */
     }
 
     .chat-message.assistant .chat-message-content {
-        max-width: 92% !important;
-        /* 超小屏幕助手消息更宽 */
+        max-width: 100% !important;
+        /* 超小屏幕助手消息占满全屏宽度 */
     }
 }
 
@@ -13088,6 +13289,37 @@ body {
         width: 11px;
         height: 11px;
     }
+}
+
+/* 移动端刷新按钮样式 */
+.mobile-refresh-btn {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 20px;
+    height: 20px;
+    border: 1px solid #d1d5db;
+    border-radius: 4px;
+    background: #ffffff;
+    color: #6b7280;
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+.mobile-refresh-btn:hover {
+    background: #f3f4f6;
+    color: #3b82f6;
+    border-color: #3b82f6;
+}
+
+.mobile-refresh-btn:active {
+    transform: scale(0.95);
+    background: #e5e7eb;
+}
+
+.mobile-refresh-btn svg {
+    width: 10px;
+    height: 10px;
 }
 </style>
 

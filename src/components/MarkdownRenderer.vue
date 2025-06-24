@@ -99,6 +99,9 @@ const renderedContent = computed(() => {
     overflow-wrap: break-word;
     margin: 0;
     padding: 0;
+    display: flex;
+    flex-direction: column;
+    min-height: fit-content;
 }
 
 /* 标题样式 */
@@ -136,6 +139,11 @@ const renderedContent = computed(() => {
 /* 段落样式 */
 .markdown-content :deep(p) {
     margin: 8px 0;
+    line-height: inherit;
+    /* 继承容器的行高 */
+    display: block;
+    width: 100%;
+    box-sizing: border-box;
 }
 
 /* 最后一个段落的底部间距清零 */
@@ -199,6 +207,20 @@ const renderedContent = computed(() => {
 .markdown-content :deep(*:first-child) {
     margin-top: 0 !important;
     padding-top: 0 !important;
+}
+
+/* 单行文本优化：当只有一个段落时，完全贴合容器 */
+.markdown-content:has(p:only-child) {
+    align-items: stretch;
+}
+
+.markdown-content :deep(p:only-child) {
+    margin: 0 !important;
+    padding: 0 !important;
+    flex: 1;
+    display: flex;
+    align-items: center;
+    min-height: 1em;
 }
 
 /* 强制清除所有可能的间距 */

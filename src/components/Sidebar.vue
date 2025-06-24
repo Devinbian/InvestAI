@@ -21,20 +21,12 @@
                 </div>
                 <!-- 2. 智能荐股 -->
                 <div class="tab-item" :class="{ 'active': activeTab === 'stocks' }" @click="activeTab = 'stocks'">
-                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none">
-                        <path
-                            d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"
-                            stroke="currentColor" stroke-width="2" />
-                    </svg>
+                    🎯
                     智能荐股
                 </div>
                 <!-- 3. 自选股 -->
                 <div class="tab-item" :class="{ 'active': activeTab === 'watchlist' }" @click="activeTab = 'watchlist'">
-                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none">
-                        <path
-                            d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"
-                            fill="currentColor" />
-                    </svg>
+                    ⭐
                     自选股
                     <span v-if="watchlistCount > 0" class="count-badge">{{ watchlistCount }}</span>
                 </div>
@@ -49,8 +41,8 @@
                 <!-- 5. 消息推送 -->
                 <div class="tab-item" :class="{ 'active': activeTab === 'messages' }" @click="activeTab = 'messages'">
                     <svg width="16" height="16" viewBox="0 0 24 24" fill="none">
-                        <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z" stroke="currentColor"
-                            stroke-width="2" />
+                        <path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9" stroke="currentColor" stroke-width="2" />
+                        <path d="M13.73 21a2 2 0 0 1-3.46 0" stroke="currentColor" stroke-width="2" />
                     </svg>
                     消息推送
                     <span v-if="unreadCount > 0" class="unread-badge">{{ unreadCount }}</span>

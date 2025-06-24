@@ -183,7 +183,8 @@
             <!-- 聊天历史区域 -->
             <div class="chat-history-area chat-area" v-if="isChatMode && chatHistory.length" ref="chatHistoryRef">
                 <div v-for="(message, idx) in chatHistory" :key="idx" :class="['chat-message', message.role]">
-                    <div class="chat-message-content">
+                    <div class="chat-message-content"
+                        :style="message.role === 'user' ? (isMobileView ? 'padding: 18px 16px 6px 16px !important; line-height: 1.3 !important;' : 'padding: 20px 20px 8px 20px !important; line-height: 1.3 !important;') : ''">
                         <div v-if="message.content" class="message-text">
                             <MarkdownRenderer :content="message.content" />
                         </div>
@@ -5329,7 +5330,7 @@ body.onboarding-mode {
     box-sizing: border-box;
 }
 
-:deep(.chat-message.user .chat-message-content) {
+.chat-history-area .chat-message.user .chat-message-content {
     background: #007bff !important;
     color: white !important;
     border-radius: 18px 18px 4px 18px !important;
@@ -11739,7 +11740,7 @@ body {
     }
 
     /* 移动端消息气泡padding调整 */
-    :deep(.chat-message.user .chat-message-content) {
+    .chat-history-area .chat-message.user .chat-message-content {
         padding: 18px 16px 6px 16px !important;
         /* 移动端用户消息：大幅调整padding，顶部18px，底部6px */
         line-height: 1.3 !important;

@@ -22,11 +22,7 @@
             <!-- 空状态 -->
             <div v-if="userStore.watchlist.length === 0" class="empty-state">
                 <div class="empty-icon">
-                    <svg width="48" height="48" viewBox="0 0 24 24" fill="none">
-                        <path
-                            d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"
-                            stroke="currentColor" stroke-width="2" />
-                    </svg>
+                    ⭐
                 </div>
                 <div class="empty-title">暂无自选股</div>
                 <div class="empty-desc">在聊天中分析股票时可以添加到自选股</div>

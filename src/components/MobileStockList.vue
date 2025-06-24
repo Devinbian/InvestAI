@@ -1,18 +1,19 @@
 <template>
     <div class="mobile-stock-list-container">
-        <!-- 列表头部工具栏（可选） -->
+        <!-- 列表工具栏（可选） -->
         <div v-if="showToolbar" class="mobile-list-toolbar">
             <div class="toolbar-content">
-                <h3 v-if="toolbarTitle" class="toolbar-title">{{ toolbarTitle }}</h3>
-                <span v-if="showTime" class="toolbar-time">{{ formatTime(timestamp) }}</span>
+                <span v-if="showTime" class="toolbar-time">{{ formatTime(timestamp) || '刚刚更新' }}</span>
             </div>
             <div class="toolbar-actions">
                 <slot name="toolbar-actions"></slot>
             </div>
         </div>
 
+
+
         <!-- 移动端股票列表 -->
-        <div class="mobile-stock-list" :class="listClass">
+        <div class="mobile-stock-list" :class="[listClass, { 'with-toolbar': showToolbar }]">
             <div v-for="(stock, index) in stocks" :key="stock.code || index" class="mobile-stock-card"
                 :class="{ 'clickable': clickable }" @click="handleStockClick(stock)" @touchstart="handleTouchStart"
                 @touchend="handleTouchEnd">
@@ -44,13 +45,23 @@
 
                 <!-- 推荐指数（星级评分） -->
                 <div v-if="showRecommendIndex && stock.recommendIndex" class="recommend-rating">
-                    <div class="rating-stars">
-                        <span v-for="i in 5" :key="i" :class="['star', i <= Math.floor(stock.recommendIndex) ? 'filled' :
-                            i <= stock.recommendIndex ? 'half' : 'empty']">
-                            ★
-                        </span>
+                    <div class="rating-content">
+                        <div class="rating-stars">
+                            <span v-for="i in 5" :key="i" :class="['star', i <= Math.floor(stock.recommendIndex) ? 'filled' :
+                                i <= stock.recommendIndex ? 'half' : 'empty']">
+                                ★
+                            </span>
+                        </div>
+                        <span class="rating-score">{{ stock.recommendIndex.toFixed(1) }}</span>
+                        <div class="rating-info-btn" @click.stop="showRatingInfo = !showRatingInfo">
+                            <svg width="14" height="14" viewBox="0 0 24 24" fill="none">
+                                <circle cx="12" cy="12" r="10" stroke="currentColor" stroke-width="2" fill="none" />
+                                <path d="M9,9h0a3,3,0,0,1,6,0c0,2-3,3-3,3" stroke="currentColor" stroke-width="2"
+                                    stroke-linecap="round" stroke-linejoin="round" fill="none" />
+                                <circle cx="12" cy="17" r="1" fill="currentColor" />
+                            </svg>
+                        </div>
                     </div>
-                    <span class="rating-score">{{ stock.recommendIndex }}/5.0</span>
                 </div>
 
                 <!-- 股票状态信息 -->
@@ -114,11 +125,19 @@
 
                 <!-- 推荐理由 -->
                 <div v-if="showReason && stock.reason" class="recommend-reason">
-                    <div class="reason-header">
+                    <div class="reason-header" @click.stop="toggleReasonExpanded(stock.code)">
                         <div class="reason-icon">💡</div>
                         <span class="reason-label">推荐理由</span>
+                        <button class="reason-toggle-btn">
+                            <svg width="12" height="12" viewBox="0 0 24 24" fill="none"
+                                :class="{ 'rotated': expandedReasons.includes(stock.code) }">
+                                <path d="M6 9l6 6 6-6" stroke="currentColor" stroke-width="2" />
+                            </svg>
+                        </button>
                     </div>
-                    <p class="reason-text">{{ stock.reason }}</p>
+                    <div class="reason-content" :class="{ 'expanded': expandedReasons.includes(stock.code) }">
+                        <p class="reason-text">{{ stock.reason }}</p>
+                    </div>
                 </div>
 
                 <!-- 原生移动端操作区域 -->
@@ -166,11 +185,45 @@
         <div v-if="showFooter" class="mobile-list-footer">
             <slot name="footer"></slot>
         </div>
+
+        <!-- 推荐指数说明弹窗 -->
+        <teleport to="body" v-if="showRatingInfo">
+            <div class="rating-info-popup" @click="showRatingInfo = false">
+                <div class="rating-info-dialog" @click.stop>
+                    <div class="rating-info-header">
+                        <span class="info-title">推荐指数说明</span>
+                        <button class="close-btn" @click="showRatingInfo = false">✕</button>
+                    </div>
+                    <div class="rating-info-content">
+                        <div class="info-item">
+                            <span class="score-range">5.0</span>
+                            <span class="score-desc">强烈推荐 - 投资价值极高</span>
+                        </div>
+                        <div class="info-item">
+                            <span class="score-range">4.0-4.9</span>
+                            <span class="score-desc">推荐 - 具备较好投资价值</span>
+                        </div>
+                        <div class="info-item">
+                            <span class="score-range">3.0-3.9</span>
+                            <span class="score-desc">中性 - 可持续观察</span>
+                        </div>
+                        <div class="info-item">
+                            <span class="score-range">2.0-2.9</span>
+                            <span class="score-desc">谨慎 - 建议控制仓位</span>
+                        </div>
+                        <div class="info-item">
+                            <span class="score-range">1.0-1.9</span>
+                            <span class="score-desc">不推荐 - 建议回避</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </teleport>
     </div>
 </template>
 
 <script setup>
-import { computed, ref, onMounted, onUnmounted, nextTick } from 'vue';
+import { computed, ref, onMounted, onUnmounted, nextTick, watch } from 'vue';
 import { useUserStore } from '../store/user';
 
 // Props
@@ -255,6 +308,22 @@ const userStore = useUserStore();
 
 // 展开的操作菜单
 const expandedActions = ref(null);
+
+// 推荐指数说明显示状态
+const showRatingInfo = ref(false);
+
+// 推荐理由展开状态
+const expandedReasons = ref([]);
+
+// 监听stocks变化，默认展开第一个股票的推荐理由
+const initializeExpandedReasons = () => {
+    if (props.stocks.length > 0 && props.showReason) {
+        const firstStock = props.stocks[0];
+        if (firstStock.reason && !expandedReasons.value.includes(firstStock.code)) {
+            expandedReasons.value.push(firstStock.code);
+        }
+    }
+};
 
 // 模拟当前价格数据
 const currentPrices = {
@@ -466,13 +535,13 @@ const getActionIcon = (action) => {
     // 使用统一的图标映射（确保相同功能使用相同图标）
     const iconMap = {
         'addWatchlist': '⭐',
-        'removeWatchlist': '★',
+        'removeWatchlist': '⭐',  // 统一使用星形图标
         'buy': '💰',
         'sell': '📤',
-        'analysis': '📊',
-        'quantAnalysis': '📊',  // 统一使用分析图标
-        'paidAnalysis': '📊',   // 统一使用分析图标
-        'aiTrading': '🤖',
+        'analysis': '🎯',
+        'quantAnalysis': '🎯',  // 统一使用智能荐股的分析图标
+        'paidAnalysis': '🎯',   // 统一使用智能荐股的分析图标
+        'aiTrading': '🤖',      // 使用机器人图标表示AI智能交易
         'addPosition': '📈'
     };
 
@@ -534,17 +603,36 @@ const handleTouchEnd = (e) => {
     }, 100);
 };
 
+// 切换推荐理由展开状态
+const toggleReasonExpanded = (stockCode) => {
+    const index = expandedReasons.value.indexOf(stockCode);
+    if (index > -1) {
+        expandedReasons.value.splice(index, 1);
+    } else {
+        expandedReasons.value.push(stockCode);
+    }
+};
+
 // 点击外部关闭菜单
 const handleClickOutside = (e) => {
     if (!e.target.closest('.more-actions') && !e.target.closest('.actions-menu')) {
         expandedActions.value = null;
     }
+    if (!e.target.closest('.rating-info-popup') && !e.target.closest('.rating-info-btn')) {
+        showRatingInfo.value = false;
+    }
 };
 
 // 在组件挂载时添加全局点击监听
 
+// 监听stocks变化
+watch(() => props.stocks, () => {
+    initializeExpandedReasons();
+}, { immediate: true });
+
 onMounted(() => {
     document.addEventListener('click', handleClickOutside);
+    initializeExpandedReasons();
 });
 
 onUnmounted(() => {
@@ -556,44 +644,39 @@ onUnmounted(() => {
 /* 移动端股票列表容器 */
 .mobile-stock-list-container {
     width: 100%;
-    background: #f8fafc;
-    min-height: 100vh;
-    overflow: visible;
 }
 
 /* 工具栏样式 */
 .mobile-list-toolbar {
-    display: flex;
+    display: flex !important;
     justify-content: space-between;
     align-items: center;
-    padding: 12px 12px 8px 12px;
-    background: #ffffff;
-    border-bottom: 1px solid #e2e8f0;
-    position: sticky;
-    top: 0;
-    z-index: 10;
+    padding: 6px 12px;
+    margin: 0 8px 8px 8px;
+    background: #f8fafc;
+    border: 1px solid #e2e8f0;
+    border-radius: 8px;
+    position: relative;
+    min-height: 28px;
+    visibility: visible !important;
+    opacity: 1 !important;
 }
 
 .toolbar-content {
     flex: 1;
 }
 
-.toolbar-title {
-    font-size: 1rem;
-    font-weight: 600;
-    color: #1e293b;
-    margin: 0 0 2px 0;
-}
-
 .toolbar-time {
-    font-size: 0.6875rem;
+    font-size: 0.75rem;
     color: #64748b;
+    line-height: 1;
+    margin: 0;
 }
 
 .toolbar-actions {
     display: flex;
     align-items: center;
-    gap: 8px;
+    gap: 6px;
 }
 
 /* 移动端股票列表 */
@@ -603,6 +686,16 @@ onUnmounted(() => {
     flex-direction: column;
     gap: 8px;
     overflow: visible;
+}
+
+/* 有工具栏时的样式调整 */
+.mobile-stock-list-container:has(.mobile-list-toolbar) .mobile-stock-list {
+    padding-top: 8px;
+}
+
+/* 兼容性备用方案 */
+.mobile-stock-list.with-toolbar {
+    padding-top: 8px;
 }
 
 /* 移动端股票卡片 */
@@ -736,13 +829,16 @@ onUnmounted(() => {
 
 /* 推荐指数 */
 .recommend-rating {
+    margin-bottom: 8px;
+}
+
+.rating-content {
     display: flex;
     align-items: center;
-    justify-content: space-between;
+    gap: 8px;
     padding: 8px 12px;
     background: #f8fafc;
     border-radius: 8px;
-    margin-bottom: 8px;
 }
 
 .rating-stars {
@@ -778,6 +874,138 @@ onUnmounted(() => {
     padding: 4px 8px;
     border-radius: 4px;
     border: 1px solid #e5e7eb;
+}
+
+.rating-info-btn {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 24px;
+    height: 24px;
+    border: none;
+    border-radius: 8px;
+    background: rgba(99, 102, 241, 0.1);
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+.rating-info-btn:hover {
+    background: rgba(99, 102, 241, 0.15);
+}
+
+.rating-info-btn:active {
+    transform: scale(0.95);
+}
+
+.rating-info-btn svg {
+    color: #6366f1;
+}
+
+/* 推荐指数说明弹窗 */
+.rating-info-popup {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    z-index: 999999;
+    background: rgba(0, 0, 0, 0.3);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 20px;
+}
+
+.rating-info-dialog {
+    background: #ffffff;
+    border-radius: 12px;
+    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.15);
+    overflow: hidden;
+    max-width: 400px;
+    width: 100%;
+    animation: slideUp 0.3s ease;
+}
+
+@keyframes slideUp {
+    from {
+        opacity: 0;
+        transform: translateY(20px);
+    }
+
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+.rating-info-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 16px;
+    background: #f8fafc;
+    border-bottom: 1px solid #e2e8f0;
+}
+
+.info-title {
+    font-size: 1rem;
+    font-weight: 600;
+    color: #1e293b;
+}
+
+.close-btn {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 28px;
+    height: 28px;
+    border: none;
+    border-radius: 8px;
+    background: #ffffff;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    font-size: 1rem;
+    color: #64748b;
+}
+
+.close-btn:hover {
+    background: #f1f5f9;
+    color: #374151;
+}
+
+.close-btn:active {
+    transform: scale(0.95);
+}
+
+.rating-info-content {
+    padding: 16px;
+}
+
+.info-item {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    margin-bottom: 12px;
+    gap: 12px;
+}
+
+.info-item:last-child {
+    margin-bottom: 0;
+}
+
+.score-range {
+    font-size: 0.875rem;
+    font-weight: 600;
+    color: #374151;
+    min-width: 60px;
+    flex-shrink: 0;
+}
+
+.score-desc {
+    font-size: 0.875rem;
+    color: #64748b;
+    font-weight: 400;
+    line-height: 1.4;
 }
 
 /* 状态信息 */
@@ -883,34 +1111,81 @@ onUnmounted(() => {
 /* 推荐理由 */
 .recommend-reason {
     margin-bottom: 8px;
-    padding: 12px;
     background: #fefce8;
     border-radius: 8px;
     border: 1px solid #fde047;
+    overflow: hidden;
 }
 
 .reason-header {
     display: flex;
     align-items: center;
-    gap: 6px;
-    margin-bottom: 6px;
+    justify-content: space-between;
+    padding: 10px 12px;
+    cursor: pointer;
+    transition: background-color 0.2s ease;
+}
+
+.reason-header:hover {
+    background: rgba(254, 240, 138, 0.3);
 }
 
 .reason-icon {
-    font-size: 1rem;
+    font-size: 0.875rem;
+    margin-right: 6px;
 }
 
 .reason-label {
-    font-size: 0.875rem;
+    font-size: 0.8125rem;
     font-weight: 600;
+    color: #92400e;
+    flex: 1;
+}
+
+.reason-toggle-btn {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 24px;
+    height: 24px;
+    border: none;
+    border-radius: 6px;
+    background: rgba(146, 64, 14, 0.1);
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+.reason-toggle-btn:hover {
+    background: rgba(146, 64, 14, 0.15);
+}
+
+.reason-toggle-btn svg {
+    transition: transform 0.2s ease;
     color: #92400e;
 }
 
+.reason-toggle-btn svg.rotated {
+    transform: rotate(180deg);
+}
+
+.reason-content {
+    max-height: 0;
+    overflow: hidden;
+    transition: max-height 0.3s ease;
+}
+
+.reason-content.expanded {
+    max-height: 200px;
+}
+
+/* 移除强制展开第一个股票推荐理由的样式，让JavaScript完全控制 */
+
 .reason-text {
-    font-size: 0.875rem;
+    font-size: 0.8125rem;
     color: #451a03;
     line-height: 1.4;
     margin: 0;
+    padding: 0 12px 12px 12px;
 }
 
 /* 原生移动端操作区域 */
@@ -921,11 +1196,12 @@ onUnmounted(() => {
     margin-top: 16px;
     padding-top: 16px;
     border-top: 1px solid #e2e8f0;
+    gap: 8px;
 }
 
 .primary-actions {
     display: flex;
-    gap: 12px;
+    gap: 8px;
     flex: 1;
 }
 
@@ -934,17 +1210,18 @@ onUnmounted(() => {
     align-items: center;
     justify-content: center;
     gap: 4px;
-    padding: 6px 12px;
+    padding: 10px 20px;
     border: none;
     border-radius: 8px;
-    font-size: 0.8125rem;
+    font-size: 0.9rem;
     font-weight: 600;
     cursor: pointer;
     transition: all 0.2s ease;
     position: relative;
-    min-height: 32px;
+    min-height: 40px;
     flex: 1;
-    max-width: 120px;
+    max-width: none;
+    white-space: nowrap;
 }
 
 /* 主要按钮样式 */
@@ -1005,15 +1282,16 @@ onUnmounted(() => {
 /* 更多操作按钮 */
 .more-actions {
     position: relative;
-    margin-left: 12px;
+    margin-left: 8px;
+    flex-shrink: 0;
 }
 
 .more-btn {
     display: flex;
     align-items: center;
     justify-content: center;
-    width: 32px;
-    height: 32px;
+    width: 40px;
+    height: 40px;
     border: 1px solid #e2e8f0;
     border-radius: 8px;
     background: #f8fafc;
@@ -1148,15 +1426,15 @@ onUnmounted(() => {
     }
 
     .primary-action-btn {
-        padding: 5px 8px;
-        font-size: 0.75rem;
-        min-height: 28px;
-        max-width: 80px;
+        padding: 8px 12px;
+        font-size: 0.8rem;
+        min-height: 36px;
+        max-width: none;
     }
 
     .more-btn {
-        width: 28px;
-        height: 28px;
+        width: 36px;
+        height: 36px;
     }
 
     .actions-menu {

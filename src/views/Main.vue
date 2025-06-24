@@ -183,9 +183,7 @@
             <!-- 聊天历史区域 -->
             <div class="chat-history-area chat-area" v-if="isChatMode && chatHistory.length" ref="chatHistoryRef">
                 <div v-for="(message, idx) in chatHistory" :key="idx" :class="['chat-message', message.role]">
-                    <div class="chat-message-content"
-                        :style="message.role === 'user' ? (isMobileView ? 'padding: 18px 16px 6px 16px; line-height: 1.3;' : 'padding: 20px 20px 8px 20px; line-height: 1.3;') : ''"
-                        :class="{ 'user-message-fix': message.role === 'user' }">
+                    <div class="chat-message-content">
                         <div v-if="message.content" class="message-text">
                             <MarkdownRenderer :content="message.content" />
                         </div>
@@ -224,30 +222,19 @@
                             <!-- 自选股按钮 -->
                             <el-button v-if="!userStore.isInWatchlist(message.stockInfo.code)" type="primary"
                                 size="small" @click="addToWatchlist(message.stockInfo)" class="add-watchlist-btn">
-                                <svg width="14" height="14" viewBox="0 0 24 24" fill="none">
-                                    <path
-                                        d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"
-                                        stroke="currentColor" stroke-width="2" />
-                                </svg>
+                                ⭐
                                 加入自选
                             </el-button>
                             <el-button v-else type="success" size="small"
                                 @click="removeFromWatchlist(message.stockInfo.code)" class="remove-watchlist-btn">
-                                <svg width="14" height="14" viewBox="0 0 24 24" fill="none">
-                                    <path
-                                        d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"
-                                        fill="currentColor" />
-                                </svg>
+                                ⭐
                                 已加自选
                             </el-button>
 
                             <!-- AI委托交易按钮（付费） -->
                             <el-button v-if="!message.isBuyMode" size="small"
                                 @click="showQuantAnalysisDialog(message.stockInfo)" class="quant-analysis-btn">
-                                <svg width="14" height="14" viewBox="0 0 24 24" fill="none">
-                                    <path d="M3 3v18h18M7 16l4-4 4 4 4-4" stroke="currentColor" stroke-width="2"
-                                        fill="none" />
-                                </svg>
+                                🤖
                                 AI委托交易
                                 <div class="price-tag-container">
                                     <span class="price-tag original-price">3智点</span>
@@ -361,13 +348,13 @@
                                         <div class="asset-amount">
                                             <span class="amount-label">总资产</span>
                                             <span class="amount-value">¥{{ formatCurrency(message.assetData.totalAssets)
-                                            }}</span>
+                                                }}</span>
                                         </div>
                                         <div class="asset-change"
                                             :class="[message.assetData.totalProfitPercent >= 0 ? 'profit' : 'loss']">
                                             <span class="change-icon">{{ message.assetData.totalProfitPercent >= 0 ?
                                                 '📈' : '📉'
-                                            }}</span>
+                                                }}</span>
                                             <span class="change-label">今日盈亏：</span>
                                             <span class="change-text">
                                                 {{ message.assetData.totalProfitPercent >= 0 ? '+' : '' }}¥{{
@@ -393,7 +380,7 @@
                                         <div class="stat-info">
                                             <div class="stat-label">持仓市值</div>
                                             <div class="stat-value">¥{{ formatCurrency(message.assetData.portfolioValue)
-                                            }}
+                                                }}
                                             </div>
                                         </div>
                                     </div>
@@ -498,9 +485,9 @@
                             </StockList>
                             <MobileStockList v-else :stocks="message.stockList"
                                 v-bind="getMobileSmartRecommendationConfig(message)" @stock-click="handleStockClick"
-                                @action-click="handleStockActionClick" :show-toolbar="message.isPersistent"
-                                :toolbar-title="message.isPersistent ? '智能荐股' : ''" :show-time="message.isPersistent">
-                                <template #toolbar-actions v-if="message.isPersistent">
+                                @action-click="handleStockActionClick" :show-toolbar="true" :toolbar-title="'智能荐股'"
+                                :show-time="true" :timestamp="message.timestamp">
+                                <template #toolbar-actions>
                                     <button @click="refreshRecommendation(message)" class="mobile-refresh-btn">
                                         <svg width="14" height="14" viewBox="0 0 24 24" fill="none">
                                             <path
@@ -531,10 +518,7 @@
                         <!-- 快速跳转到荐股列表 -->
                         <el-button v-if="hasRecommendationInHistory" class="goto-recommendation-btn"
                             @click="scrollToRecommendation">
-                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none">
-                                <path d="M3 3v18h18M7 16l4-4 4 4 4-4" stroke="currentColor" stroke-width="2"
-                                    fill="none" />
-                            </svg>
+                            🎯
                             查看荐股
                         </el-button>
                     </div>
@@ -769,7 +753,7 @@
                 </div>
                 <div class="guide-actions">
                     <el-button type="primary" size="small" @click="handleGuideAction">{{ guideActionText
-                        }}</el-button>
+                    }}</el-button>
                     <el-button size="small" @click="dismissGuide">稍后</el-button>
                 </div>
             </div>
@@ -807,7 +791,7 @@
                         <div class="summary-item">
                             <span class="summary-label">买入信号</span>
                             <span class="summary-value signal-score">{{ currentQuantAnalysis.buySignalScore
-                            }}/100</span>
+                                }}/100</span>
                         </div>
                         <div class="summary-item">
                             <span class="summary-label">量化评级</span>
@@ -3223,14 +3207,14 @@ const watchlistActionButtons = [
         text: '移除自选',
         type: 'default',
         class: 'remove-watchlist-btn',
-        icon: 'M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z'
+        icon: '⭐'
     },
     {
         key: 'analysis',
         text: '量化分析',
         type: 'default',
         class: 'paid-analysis-btn',
-        icon: 'M3 3v18h18M7 16l4-4 4 4 4-4',
+        icon: '🎯',
         priceTag: { original: '3智点', promo: '1智点' }
     },
     {
@@ -3238,7 +3222,7 @@ const watchlistActionButtons = [
         text: 'AI委托交易',
         type: 'default',
         class: 'quant-analysis-btn',
-        icon: 'M3 3v18h18M7 16l4-4 4 4 4-4',
+        icon: '🤖',
         priceTag: { original: '3智点', promo: '1智点' }
     },
     {
@@ -3257,7 +3241,7 @@ const portfolioActionButtons = [
         text: '量化分析',
         type: 'default',
         class: 'paid-analysis-btn',
-        icon: 'M3 3v18h18M7 16l4-4 4 4 4-4',
+        icon: '🎯',
         priceTag: { original: '3智点', promo: '1智点' },
         mobileText: '分析'
     },
@@ -3266,7 +3250,7 @@ const portfolioActionButtons = [
         text: 'AI委托交易',
         type: 'default',
         class: 'quant-analysis-btn',
-        icon: 'M3 3v18h18M7 16l4-4 4 4 4-4',
+        icon: '🤖',
         priceTag: { original: '3智点', promo: '1智点' },
         mobileText: 'AI交易'
     },
@@ -3347,6 +3331,7 @@ const getMobileSmartRecommendationConfig = (message) => {
     return {
         ...config,
         // 移动端特定配置
+        // 移除工具栏相关配置，让直接传递的属性生效
         showRecommendIndex: config.showRecommendIndex,
         showWatchlistStatus: config.showWatchlistStatus,
         showPositionStatus: config.showPositionStatus,
@@ -4646,47 +4631,9 @@ const handleShortcutsUpdated = () => {
     initializeShortcuts();
 };
 
-// 强制修复用户消息padding的函数
-const fixUserMessagePadding = () => {
-    nextTick(() => {
-        const userMessages = document.querySelectorAll('.chat-message.user .chat-message-content');
-        console.log('🔧 找到用户消息元素数量:', userMessages.length);
-
-        userMessages.forEach((element, index) => {
-            console.log(`🔧 处理第${index + 1}个用户消息元素`);
-
-            if (isMobileView.value) {
-                element.style.setProperty('padding', '20px 16px 4px 16px', 'important');
-                element.style.setProperty('line-height', '1.2', 'important');
-                console.log('🔧 应用移动端样式: 20px 16px 4px 16px');
-            } else {
-                element.style.setProperty('padding', '22px 20px 6px 20px', 'important');
-                element.style.setProperty('line-height', '1.2', 'important');
-                console.log('🔧 应用PC端样式: 22px 20px 6px 20px');
-            }
-
-            // 验证样式是否应用成功
-            const computedStyle = window.getComputedStyle(element);
-            console.log('🔧 实际应用的padding:', computedStyle.padding);
-            console.log('🔧 实际应用的line-height:', computedStyle.lineHeight);
-        });
-    });
-};
-
-// 监听聊天历史变化，强制修复padding
-watch(chatHistory, () => {
-    fixUserMessagePadding();
-}, { deep: true });
-
-// 监听移动端视图变化
-watch(isMobileView, () => {
-    fixUserMessagePadding();
-});
-
 // 组件挂载时初始化
 onMounted(() => {
     initializeShortcuts();
-    fixUserMessagePadding();
 });
 </script>
 
@@ -5369,25 +5316,18 @@ body.onboarding-mode {
     box-sizing: border-box;
 }
 
-/* 用户消息padding修复 - 使用更高优先级的选择器 */
-.chat-history-area .chat-message.user .chat-message-content.user-message-fix {
-    padding: 20px 20px 8px 20px !important;
-    line-height: 1.3 !important;
-}
-
-.chat-history-area .chat-message.user .chat-message-content {
-    background: #007bff !important;
-    color: white !important;
-    border-radius: 18px 18px 4px 18px !important;
-    padding: 20px 20px 8px 20px !important;
-    /* 大幅调整padding：顶部20px，底部8px，明显的视觉差异 */
-    margin-left: auto !important;
-    max-width: 75% !important;
+.chat-message.user .chat-message-content {
+    background: #007bff;
+    color: white;
+    border-radius: 18px 18px 4px 18px;
+    padding: 16px 20px 16px 20px;
+    /* 调整用户消息padding：顶部16px，底部12px，补偿字体基线对齐造成的视觉不平衡 */
+    margin-left: auto;
+    max-width: 75%;
     /* PC端用户消息保持适中宽度，与助手消息形成视觉层次 */
-    font-size: 1rem !important;
-    line-height: 1.3 !important;
-    /* 进一步减小行高 */
-    word-wrap: break-word !important;
+    font-size: 1rem;
+    line-height: 1.5;
+    word-wrap: break-word;
     /* 确保长文本正确换行 */
 }
 
@@ -5405,6 +5345,10 @@ body.onboarding-mode {
 /* 用户消息中的markdown内容样式覆盖 */
 .chat-message.user .chat-message-content .markdown-content {
     color: white !important;
+    display: flex;
+    flex-direction: column;
+    min-height: fit-content;
+    justify-content: flex-start;
 }
 
 .chat-message.user .chat-message-content .markdown-content :deep(*) {
@@ -5440,32 +5384,17 @@ body.onboarding-mode {
     border-left-color: rgba(255, 255, 255, 0.5) !important;
 }
 
-/* 用户消息中的markdown段落间距优化 - 强制清零所有间距 */
+/* 用户消息中的markdown段落间距优化 */
 .chat-message.user .chat-message-content .markdown-content :deep(p) {
-    margin: 0 !important;
-    padding: 0 !important;
+    margin: 2px 0 !important;
 }
 
 .chat-message.user .chat-message-content .markdown-content :deep(p:first-child) {
     margin-top: 0 !important;
-    padding-top: 0 !important;
 }
 
 .chat-message.user .chat-message-content .markdown-content :deep(p:last-child) {
     margin-bottom: 0 !important;
-    padding-bottom: 0 !important;
-}
-
-/* 强制清除用户消息中所有可能的内部间距 */
-.chat-message.user .chat-message-content .markdown-content :deep(*) {
-    margin: 0 !important;
-    padding: 0 !important;
-}
-
-.chat-message.user .chat-message-content .markdown-content {
-    margin: 0 !important;
-    padding: 0 !important;
-    line-height: 1.5 !important;
 }
 
 .chat-message.assistant .chat-message-content {
@@ -5492,6 +5421,14 @@ body.onboarding-mode {
 .chat-message.assistant .chat-message-content .message-text>* {
     margin-bottom: 0 !important;
     padding-bottom: 0 !important;
+}
+
+/* AI助手消息中的markdown内容样式优化 */
+.chat-message.assistant .chat-message-content .markdown-content {
+    display: flex;
+    flex-direction: column;
+    min-height: fit-content;
+    justify-content: flex-start;
 }
 
 /* AI助手消息中的markdown段落间距优化 */
@@ -5641,7 +5578,6 @@ body.onboarding-mode {
     border: 2px solid transparent;
     border-radius: 12px;
     padding: 8px;
-    margin: -8px;
     transition: all 0.3s ease;
 }
 
@@ -6371,7 +6307,6 @@ body.onboarding-mode {
     /* 移动端股票列表间距优化 */
     .stock-list {
         gap: 6px;
-        margin-top: 8px;
     }
 }
 
@@ -11785,16 +11720,9 @@ body {
     }
 
     /* 移动端消息气泡padding调整 */
-    .chat-history-area .chat-message.user .chat-message-content.user-message-fix {
-        padding: 18px 16px 6px 16px !important;
-        line-height: 1.3 !important;
-    }
-
-    .chat-history-area .chat-message.user .chat-message-content {
-        padding: 18px 16px 6px 16px !important;
-        /* 移动端用户消息：大幅调整padding，顶部18px，底部6px */
-        line-height: 1.3 !important;
-        /* 进一步减小行高 */
+    .chat-message.user .chat-message-content {
+        padding: 14px 16px 14px 16px !important;
+        /* 移动端用户消息：顶部14px，底部10px，补偿字体基线对齐造成的视觉不平衡 */
     }
 
     .chat-message.assistant .chat-message-content {
@@ -13613,24 +13541,30 @@ body {
     display: flex;
     align-items: center;
     justify-content: center;
-    width: 28px;
-    height: 28px;
-    border: 1px solid #e2e8f0;
-    border-radius: 6px;
+    width: 20px;
+    height: 20px;
+    border: 1px solid #d1d5db;
+    border-radius: 4px;
     background: #ffffff;
-    color: #64748b;
+    color: #6b7280;
     cursor: pointer;
     transition: all 0.2s ease;
 }
 
 .mobile-refresh-btn:hover {
-    background: #f1f5f9;
+    background: #f3f4f6;
     color: #3b82f6;
     border-color: #3b82f6;
 }
 
 .mobile-refresh-btn:active {
     transform: scale(0.95);
+    background: #e5e7eb;
+}
+
+.mobile-refresh-btn svg {
+    width: 10px;
+    height: 10px;
 }
 </style>
 

@@ -5333,8 +5333,8 @@ body.onboarding-mode {
     background: #007bff;
     color: white;
     border-radius: 18px 18px 4px 18px;
-    padding: 16px 20px 12px 20px;
-    /* 调整用户消息padding：顶部16px，底部12px，补偿字体基线对齐造成的视觉不平衡 */
+    padding: 18px 20px 10px 20px;
+    /* 调整用户消息padding：顶部18px，底部10px，进一步补偿字体基线对齐造成的视觉不平衡 */
     margin-left: auto;
     max-width: 75%;
     /* PC端用户消息保持适中宽度，与助手消息形成视觉层次 */
@@ -11724,8 +11724,8 @@ body {
 
     /* 移动端消息气泡padding调整 */
     .chat-message.user .chat-message-content {
-        padding: 14px 16px 10px 16px !important;
-        /* 移动端用户消息：顶部14px，底部10px，补偿字体基线对齐造成的视觉不平衡 */
+        padding: 16px 16px 8px 16px !important;
+        /* 移动端用户消息：顶部16px，底部8px，进一步补偿字体基线对齐造成的视觉不平衡 */
     }
 
     .chat-message.assistant .chat-message-content {

@@ -303,10 +303,15 @@ const getUserPortraitDetail = async () => {
         let sectors = JSON.parse(res.data.data?.focusIndustry || null) || [];
         let majorCategories = [];
         let subCategories = [];
-        sectors.forEach(item => {
-            majorCategories.push(item.parent);
-            subCategories = subCategories.concat(item.children);
-        });
+        sectors.forEach(parentNode => {
+            // 添加父级value
+            majorCategories.push(parentNode.value);
+
+            // 添加所有子级value
+            parentNode.children.forEach(childNode => {
+                subCategories.push(childNode.value);
+            });
+        }); 
         let preferences = {
             experience: userPortrait.investExperience, // 投资经验
             riskLevel: userPortrait.investStyle, // 投资风格
@@ -346,6 +351,61 @@ const previousStep = () => {
     }
 };
 
+/**
+ * 根据子分类value数组生成包含父子关系的结构
+ * @param {string[]} subCategoryValues 子分类value数组
+ * @returns {Array} 格式化后的数据结构：[{"parent": {"value": "","label": ""},"children": [{"value": "","label": ""}]}]
+ */
+/**
+ * 将子分类value数组转换为树形结构
+ * @param {string[]} subCategoryValues - 子分类value数组
+ * @returns {Array} 格式化后的树形结构
+ */
+function formatSectorTree(subCategoryValues) {
+  // 1. 创建父分类查找表 (value -> majorSector)
+  const parentLookup = majorSectors.reduce((acc, sector) => {
+    acc[sector.value] = {
+      value: sector.value,
+      label: sector.label
+    };
+    return acc;
+  }, {});
+  // 2. 创建子分类查找表 (value -> subSector)
+  const childLookup = subSectors.reduce((acc, sector) => {
+    acc[sector.value] = {
+      value: sector.value,
+      label: sector.label,
+      parent: sector.parent
+    };
+    return acc;
+  }, {});
+  // 3. 按父分类分组
+  const treeMap = subCategoryValues.reduce((acc, subValue) => {
+    const child = childLookup[subValue];
+    if (child) {
+      const parentValue = child.parent;
+      const parent = parentLookup[parentValue];
+      
+      if (!acc[parentValue]) {
+        acc[parentValue] = {
+          value: parent.value,
+          label: parent.label,
+          children: []
+        };
+      }
+      
+      acc[parentValue].children.push({
+        value: child.value,
+        label: child.label
+      });
+    }
+    return acc;
+  }, {});
+  // 4. 转换为数组
+  return Object.values(treeMap);
+}
+
+
 const handlePreferencesSubmit = async () => {
     if (!isStepValid.value) return;
     preferencesLoading.value = true;
@@ -369,18 +429,7 @@ const handlePreferencesSubmit = async () => {
     };
     // 处理关注板块
     let subCategories = preferences.sectors.subCategories || [];
-    const parentMap = new Map();
-    subCategories.forEach(subValue => {
-    const sector = subSectors.find(item => item.value === subValue);
-    if (sector) {
-        if (!parentMap.has(sector.parent)) {
-        parentMap.set(sector.parent, []);
-        }
-        parentMap.get(sector.parent).push(subValue);
-    }
-    });
-    let focusIndustry = Array.from(parentMap.entries()).map(([parent, children]) => ({
-    parent,children}));
+    let focusIndustry = formatSectorTree(subCategories);
     portraitData.focusIndustry = JSON.stringify(focusIndustry);
     preferences.sectors.categories = focusIndustry;
 

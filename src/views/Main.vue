@@ -998,6 +998,8 @@ import ChatHistory from '../components/ChatHistory.vue';
 import MarkdownRenderer from '../components/MarkdownRenderer.vue';
 import StockList from '../components/StockList.vue';
 import { getStockListConfig } from '../config/stockListConfig';
+import { recommendStock } from '@/api/api';
+import { riskOptions } from '@/config/userPortrait';
 
 const router = useRouter();
 const userStore = useUserStore();
@@ -1267,379 +1269,6 @@ const preferenceSteps = [
     {
         title: '关注板块',
         desc: '请选择您关注的投资板块（可多选）'
-    }
-];
-
-// 选项配置
-const riskOptions = [
-    {
-        value: 'conservative',
-        title: '求稳型',
-        desc: '像存银行一样稳，但收益比存款高一点',
-        simpleDesc: '投1万元，一年大概赚300-600元',
-        maxLoss: '最多亏500元',
-        examples: '大银行股票（工商银行、建设银行）',
-        maxDrawdown: '5%',
-        expectedReturn: '3-6%',
-        riskLevel: 1,
-        icon: '🛡️'
-    },
-    {
-        value: 'stable',
-        title: '稳健型',
-        desc: '选择知名大公司，收益稳定有保障',
-        simpleDesc: '投1万元，一年大概赚600-1000元',
-        maxLoss: '最多亏1000元',
-        examples: '知名品牌（茅台、招商银行、美的）',
-        maxDrawdown: '10%',
-        expectedReturn: '6-10%',
-        riskLevel: 2,
-        icon: '🏦'
-    },
-    {
-        value: 'balanced',
-        title: '均衡型',
-        desc: '稳健和成长兼顾，适合大多数人',
-        simpleDesc: '投1万元，一年大概赚1000-1500元',
-        maxLoss: '最多亏1500元',
-        examples: '优质公司组合（银行+白酒+新能源）',
-        maxDrawdown: '15%',
-        expectedReturn: '10-15%',
-        riskLevel: 3,
-        icon: '⚖️'
-    },
-    {
-        value: 'growth',
-        title: '成长型',
-        desc: '追求更高收益，选择有潜力的公司',
-        simpleDesc: '投1万元，一年大概赚1500-2500元',
-        maxLoss: '最多亏2000元',
-        examples: '热门科技股（比亚迪、宁德时代）',
-        maxDrawdown: '20%',
-        expectedReturn: '15-25%',
-        riskLevel: 4,
-        icon: '🚀'
-    },
-    {
-        value: 'aggressive',
-        title: '进取型',
-        desc: '追求最高收益，但风险也最大',
-        simpleDesc: '投1万元，一年可能赚2500元以上',
-        maxLoss: '可能亏3000元以上',
-        examples: '新兴小公司股票（创业板、科创板）',
-        maxDrawdown: '30%+',
-        expectedReturn: '25%+',
-        riskLevel: 5,
-        icon: '⚡'
-    }
-];
-
-const experienceOptions = [
-    {
-        value: 'beginner',
-        title: '投资新手',
-        label: '我是投资新手，想稳步学习',
-        desc: '刚开始接触投资，希望从简单稳健的方式开始',
-        icon: '🌱'
-    },
-    {
-        value: 'experienced',
-        title: '有投资经验',
-        label: '我有一定投资经验，可以承担风险',
-        desc: '已经有过投资经历，了解市场波动，能接受一定风险',
-        icon: '📈'
-    }
-];
-
-const userTraits = [
-    {
-        id: 'risk_tolerance',
-        title: '风险承受',
-        desc: '您能接受多大的投资波动？',
-        icon: '🛡️',
-        options: [
-            { value: 1, label: '1分', desc: '完全不能接受亏损，只要保本' },
-            { value: 2, label: '2分', desc: '可接受很小的波动，亏损不超过5%' },
-            { value: 3, label: '3分', desc: '可接受适度波动，亏损不超过15%' },
-            { value: 4, label: '4分', desc: '可接受较大波动，亏损不超过25%' },
-            { value: 5, label: '5分', desc: '可接受高风险，亏损超过30%也能承受' }
-        ],
-        defaultValue: 3
-    },
-    {
-        id: 'active_participation',
-        title: '主动参与',
-        desc: '您希望多深度参与投资决策？',
-        icon: '🎯',
-        options: [
-            { value: 1, label: '1分', desc: '完全不想管，全部交给专业人士' },
-            { value: 2, label: '2分', desc: '偶尔关注，主要听专业建议' },
-            { value: 3, label: '3分', desc: '适度参与，听建议但自己决定' },
-            { value: 4, label: '4分', desc: '积极参与，自己研究后做决策' },
-            { value: 5, label: '5分', desc: '完全主导，所有决策都自己做' }
-        ],
-        defaultValue: 3
-    },
-    {
-        id: 'learning_willingness',
-        title: '学习意愿',
-        desc: '您愿意花多少时间学习投资？',
-        icon: '📚',
-        options: [
-            { value: 1, label: '1分', desc: '完全没时间学习投资知识' },
-            { value: 2, label: '2分', desc: '偶尔看看新闻，了解大概' },
-            { value: 3, label: '3分', desc: '定期看资讯，学习基础知识' },
-            { value: 4, label: '4分', desc: '主动学习，研究投资策略' },
-            { value: 5, label: '5分', desc: '深度学习，钻研各种投资理论' }
-        ],
-        defaultValue: 3
-    },
-    {
-        id: 'strategy_dependency',
-        title: '策略复杂度',
-        desc: '您更倾向于哪种投资策略？',
-        icon: '📊',
-        options: [
-            { value: 1, label: '1分', desc: '最简单策略，买了就长期持有' },
-            { value: 2, label: '2分', desc: '简单策略，偶尔调整持仓' },
-            { value: 3, label: '3分', desc: '中等策略，定期优化投资组合' },
-            { value: 4, label: '4分', desc: '复杂策略，使用多种投资工具' },
-            { value: 5, label: '5分', desc: '高级策略，运用各种量化模型' }
-        ],
-        defaultValue: 2
-    },
-    {
-        id: 'trading_frequency',
-        title: '交易频次',
-        desc: '您计划多久调整一次投资？',
-        icon: '⏰',
-        options: [
-            { value: 1, label: '1分', desc: '很少交易，半年以上才调整' },
-            { value: 2, label: '2分', desc: '低频交易，2-3个月调整一次' },
-            { value: 3, label: '3分', desc: '中频交易，每月都会看看调整' },
-            { value: 4, label: '4分', desc: '高频交易，每周都关注调整' },
-            { value: 5, label: '5分', desc: '超高频，几乎每天都在交易' }
-        ],
-        defaultValue: 2
-    },
-    {
-        id: 'innovation_trial',
-        title: '创新接受度',
-        desc: '您对新的投资产品态度如何？',
-        icon: '🚀',
-        options: [
-            { value: 1, label: '1分', desc: '非常保守，只投最传统的产品' },
-            { value: 2, label: '2分', desc: '比较保守，只投成熟稳定的产品' },
-            { value: 3, label: '3分', desc: '适度开放，了解清楚后会尝试' },
-            { value: 4, label: '4分', desc: '比较开放，愿意尝试新兴产品' },
-            { value: 5, label: '5分', desc: '非常开放，积极尝试各种新产品' }
-        ],
-        defaultValue: 3
-    }
-];
-
-// 大分类配置（最多选择2个）
-const majorSectorOptions = [
-    {
-        value: 'technology',
-        label: '科技板块',
-        icon: '💻',
-        desc: '包含互联网、软件、硬件、人工智能等科技相关行业',
-        color: '#3b82f6'
-    },
-    {
-        value: 'finance',
-        label: '金融板块',
-        icon: '🏦',
-        desc: '包含银行、保险、证券、支付等金融服务行业',
-        color: '#10b981'
-    },
-    {
-        value: 'consumer',
-        label: '消费板块',
-        icon: '🛍️',
-        desc: '包含食品饮料、服装、家电、零售等消费相关行业',
-        color: '#f59e0b'
-    },
-    {
-        value: 'healthcare',
-        label: '医疗板块',
-        icon: '🏥',
-        desc: '包含医药、医疗器械、生物技术等医疗健康行业',
-        color: '#ef4444'
-    },
-    {
-        value: 'industrial',
-        label: '工业板块',
-        icon: '🏭',
-        desc: '包含制造业、基建、能源、材料等传统工业行业',
-        color: '#8b5cf6'
-    },
-    {
-        value: 'emerging',
-        label: '新兴板块',
-        icon: '🚀',
-        desc: '包含新能源、环保、军工等新兴战略性行业',
-        color: '#06b6d4'
-    }
-];
-
-// 小分类配置（可选择3-4个）
-const subSectorOptions = [
-    // 科技板块下的小分类
-    {
-        value: 'internet',
-        label: '互联网',
-        parent: 'technology',
-        icon: '🌐',
-        desc: '电商、社交、搜索、云服务等互联网公司',
-        examples: '腾讯、阿里巴巴、百度'
-    },
-    {
-        value: 'chips',
-        label: '芯片半导体',
-        parent: 'technology',
-        icon: '🔬',
-        desc: '芯片设计、制造、封测等半导体产业链',
-        examples: '中芯国际、韦尔股份、紫光国微'
-    },
-    {
-        value: 'software',
-        label: '软件服务',
-        parent: 'technology',
-        icon: '💾',
-        desc: '企业软件、游戏、教育软件等',
-        examples: '用友网络、恒生电子、三六零'
-    },
-    {
-        value: 'ai',
-        label: '人工智能',
-        parent: 'technology',
-        icon: '🤖',
-        desc: 'AI算法、机器学习、智能硬件等',
-        examples: '科大讯飞、海康威视、大华股份'
-    },
-
-    // 金融板块下的小分类
-    {
-        value: 'banks',
-        label: '银行',
-        parent: 'finance',
-        icon: '🏛️',
-        desc: '国有银行、股份制银行、城商行等',
-        examples: '招商银行、平安银行、宁波银行'
-    },
-    {
-        value: 'insurance',
-        label: '保险',
-        parent: 'finance',
-        icon: '🛡️',
-        desc: '人寿保险、财产保险等保险公司',
-        examples: '中国平安、中国人寿、新华保险'
-    },
-    {
-        value: 'securities',
-        label: '证券',
-        parent: 'finance',
-        icon: '📈',
-        desc: '证券公司、基金公司等',
-        examples: '中信证券、华泰证券、东方财富'
-    },
-
-    // 消费板块下的小分类
-    {
-        value: 'food_beverage',
-        label: '食品饮料',
-        parent: 'consumer',
-        icon: '🍷',
-        desc: '白酒、饮料、食品加工等',
-        examples: '贵州茅台、五粮液、伊利股份'
-    },
-    {
-        value: 'retail',
-        label: '零售',
-        parent: 'consumer',
-        icon: '🏪',
-        desc: '超市、百货、电商零售等',
-        examples: '永辉超市、苏宁易购、王府井'
-    },
-    {
-        value: 'appliances',
-        label: '家电',
-        parent: 'consumer',
-        icon: '📺',
-        desc: '白色家电、黑色家电等',
-        examples: '美的集团、格力电器、海尔智家'
-    },
-
-    // 医疗板块下的小分类
-    {
-        value: 'pharma',
-        label: '医药制造',
-        parent: 'healthcare',
-        icon: '💊',
-        desc: '化学药、中药、生物药等',
-        examples: '恒瑞医药、云南白药、片仔癀'
-    },
-    {
-        value: 'medical_devices',
-        label: '医疗器械',
-        parent: 'healthcare',
-        icon: '🩺',
-        desc: '医疗设备、体外诊断等',
-        examples: '迈瑞医疗、鱼跃医疗、乐普医疗'
-    },
-
-    // 工业板块下的小分类
-    {
-        value: 'manufacturing',
-        label: '先进制造',
-        parent: 'industrial',
-        icon: '⚙️',
-        desc: '机械设备、精密制造等',
-        examples: '三一重工、中联重科、徐工机械'
-    },
-    {
-        value: 'materials',
-        label: '基础材料',
-        parent: 'industrial',
-        icon: '🏗️',
-        desc: '钢铁、有色金属、化工等',
-        examples: '宝钢股份、紫金矿业、万华化学'
-    },
-    {
-        value: 'infrastructure',
-        label: '基础设施',
-        parent: 'industrial',
-        icon: '🌉',
-        desc: '建筑、交通、公用事业等',
-        examples: '中国建筑、中国中铁、长江电力'
-    },
-
-    // 新兴板块下的小分类
-    {
-        value: 'new_energy',
-        label: '新能源',
-        parent: 'emerging',
-        icon: '🔋',
-        desc: '光伏、风电、储能、新能源车等',
-        examples: '宁德时代、比亚迪、隆基绿能'
-    },
-    {
-        value: 'environmental',
-        label: '环保',
-        parent: 'emerging',
-        icon: '🌱',
-        desc: '污水处理、固废处理、大气治理等',
-        examples: '碧水源、启迪环境、龙净环保'
-    },
-    {
-        value: 'military',
-        label: '军工',
-        parent: 'emerging',
-        icon: '🛡️',
-        desc: '军工装备、航空航天等',
-        examples: '中航沈飞、航发动力、中直股份'
     }
 ];
 
@@ -2608,39 +2237,78 @@ const handleSmartRecommendation = async () => {
 
     // 构建智能荐股消息
     const userPreferences = userStore.userInfo?.preferences;
-    let message = '智能荐股：根据我的投资偏好推荐优质股票';
-
+    let message = '智能荐股：根据我的投资偏好推荐优质股票\n';
+    let userPreferencesText ='';
     if (userPreferences) {
-        message += `\n\n我的投资偏好：
-- 风险偏好：${getRiskLevelText(userPreferences.riskLevel)}
-- 投资经验：${userPreferences.experience === 'beginner' ? '新手' : '有经验'}
-- 关注板块：${userPreferences.sectors?.majorCategories?.join('、') || '未设置'}`;
+        userPreferencesText += `我的投资偏好：
+        - 风险偏好：${getRiskLevelText(userPreferences.riskLevel)} 
+        - 投资经验：${getExperienceText(userPreferences.experience)} 
+        - 关注板块：${getFocusIndustryText(userPreferences.sectors?.categories)}`;
     }
 
-    const res = await mockApi.sendMessage(message);
+    // 先显示初始消息
+    const processingMessage = { role: 'user', content: message.concat(userPreferencesText) };
+    const processingMessage1 = {role: 'assistant',content: '正在为您分析市场数据，请等待片刻......'};
+    chatHistory.value.push(processingMessage, processingMessage1);
+ 
+    const mockRes = await mockApi.sendMessage(message);
 
-    // 为荐股消息添加持久化标识和唯一ID
-    const recommendationMessage = {
-        ...res.data,
-        isPersistent: true,
-        messageId: `recommendation-${Date.now()}`,
-        timestamp: new Date().toISOString()
-    };
+    let response = await recommendStock({ pageNo: 1, pageSize: 3 });
+    if(response && response.data && response.data.success){
+        let stockList = [];
+        let data = response.data.data || [];
+        data.forEach(item => {
+            stockList.push({
+                name: item.name,
+                code: item.code,
+                recommendIndex: item.recommendScore,
+                recommendLevel: item.recommendLevel,
+                price: item.price || item.targetPrice, // 当前价格
+                change: item.change || 0, // 涨跌额
+                changePercent: item.changePercent || 0, // 涨跌幅
+                targetPrice: item.targetPrice,
+                riskLevel: item.riskLevel,
+                industry: item.industry,
+                reason: item.recommendReason,
+            });
+        });
+        stockList.sort((a, b) => b.recommendIndex - a.recommendIndex);
 
-    chatHistory.value.push(
-        { role: 'user', content: '智能荐股：根据我的投资偏好推荐优质股票' },
-        recommendationMessage
-    );
+        console.log('智能荐股API响应:', stockList);
 
-    await nextTick();
-    scrollToBottom();
-    ElMessage.success('已为您生成个性化股票推荐');
+        // 构建荐股消息内容
+        const stockListMessage = {
+            content: mockRes.data.content,
+            hasStockInfo: stockList.length > 0,
+            isRecommendation: stockList.length > 0,
+            role: 'assistant',
+            stockList: stockList
+        }
 
-    // 使用快捷操作后自动收起
-    if (showChatShortcuts.value) {
-        setTimeout(() => {
-            showChatShortcuts.value = false;
-        }, 300);
+        // 为荐股消息添加持久化标识和唯一ID
+        const recommendationMessage = {
+            ...stockListMessage,
+            isPersistent: true,
+            messageId: `recommendation-${Date.now()}`,
+            timestamp: new Date().toISOString()
+        };
+
+        chatHistory.value.push(
+            recommendationMessage
+        );
+
+        await nextTick();
+        scrollToBottom();
+        ElMessage.success('已为您生成个性化股票推荐');
+
+        // 使用快捷操作后自动收起
+        if (showChatShortcuts.value) {
+            setTimeout(() => {
+                showChatShortcuts.value = false;
+            }, 300);
+        }
+    } else {
+        ElMessage.error('智能荐股失败，请稍后重试');
     }
 };
 
@@ -3368,18 +3036,25 @@ const handleWatchlistChanged = (data) => {
 };
 
 const getRiskLevelText = (level) => {
-    const map = {
-        'conservative': '保守型',
-        'stable': '稳健型',
-        'balanced': '平衡型',
-        'growth': '成长型',
-        'aggressive': '激进型',
-        'low': '低风险',
-        'medium': '中风险',
-        'high': '高风险',
-        'moderate': '稳健型'
-    };
-    return map[level] || '未设置';
+    const riskOption = riskOptions.find(option => option.riskLevel === level);
+    return riskOption ? riskOption.title : '未设置';
+};
+
+const getExperienceText = (experience) => {
+   return experience === 1 ? '新手' : experience === 2 ? '有经验' : '未设置';
+};
+
+const getFocusIndustryText = (focusIndustry) => {
+    const labels = [];
+    focusIndustry = focusIndustry || [];
+    focusIndustry.forEach(item => {
+        if (item.children && Array.isArray(item.children)) {
+            item.children.forEach(child => {
+                if (child.label) labels.push(child.label);
+            });
+        }
+    });
+    return labels.length > 0 ? labels.join('、') : '未设置';
 };
 
 // 获取策略文本

@@ -46,11 +46,21 @@
 
         <!-- 聊天历史悬浮切换按钮 - 只在面板收起时显示 -->
         <button v-if="userStore.isLoggedIn && !showChatHistory" class="floating-history-toggle"
-            @click="toggleChatHistory" title="展开聊天记录">
-            <svg width="16" height="16" viewBox="0 0 24 24" fill="none">
+            @click="toggleChatHistory" :title="isMobileView ? '展开聊天记录' : '展开聊天记录'">
+            <!-- PC端显示图标 -->
+            <svg v-if="!isMobileView" width="16" height="16" viewBox="0 0 24 24" fill="none">
                 <path d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" stroke="currentColor" stroke-width="2"
                     stroke-linecap="round" stroke-linejoin="round" />
             </svg>
+            <!-- 移动端显示历史记录图标 -->
+            <template v-else>
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none">
+                    <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z" stroke="currentColor"
+                        stroke-width="2" stroke-linecap="round" stroke-linejoin="round" />
+                    <path d="M8 9h8M8 13h6" stroke="currentColor" stroke-width="2" stroke-linecap="round"
+                        stroke-linejoin="round" />
+                </svg>
+            </template>
         </button>
 
         <!-- 主体内容 -->
@@ -2255,7 +2265,7 @@ const handleSmartRecommendation = async () => {
     // 构建智能荐股消息
     const userPreferences = userStore.userInfo?.preferences;
     let message = '智能荐股：根据我的投资偏好推荐优质股票\n';
-    let userPreferencesText ='';
+    let userPreferencesText = '';
     if (userPreferences) {
         userPreferencesText += `我的投资偏好：
         - 风险偏好：${getRiskLevelText(userPreferences.riskLevel)} 
@@ -2265,13 +2275,13 @@ const handleSmartRecommendation = async () => {
 
     // 先显示初始消息
     const processingMessage = { role: 'user', content: message.concat(userPreferencesText) };
-    const processingMessage1 = {role: 'assistant',content: '正在为您分析市场数据，请等待片刻......'};
+    const processingMessage1 = { role: 'assistant', content: '正在为您分析市场数据，请等待片刻......' };
     chatHistory.value.push(processingMessage, processingMessage1);
- 
+
     const mockRes = await mockApi.sendMessage(message);
 
     let response = await recommendStock({ pageNo: 1, pageSize: 3 });
-    if(response && response.data && response.data.success){
+    if (response && response.data && response.data.success) {
         let stockList = [];
         let data = response.data.data || [];
         data.forEach(item => {
@@ -2300,7 +2310,7 @@ const handleSmartRecommendation = async () => {
             isRecommendation: stockList.length > 0,
             role: 'assistant',
             stockList: stockList
-        }
+        };
 
         // 为荐股消息添加持久化标识和唯一ID
         const recommendationMessage = {
@@ -3076,7 +3086,7 @@ const getRiskLevelText = (level) => {
 };
 
 const getExperienceText = (experience) => {
-   return experience === 1 ? '新手' : experience === 2 ? '有经验' : '未设置';
+    return experience === 1 ? '新手' : experience === 2 ? '有经验' : '未设置';
 };
 
 const getFocusIndustryText = (focusIndustry) => {
@@ -4381,7 +4391,7 @@ body.onboarding-mode {
     cursor: pointer;
     transition: all 0.3s ease;
     color: #6b7280;
-    z-index: 110;
+    z-index: 50;
 }
 
 .floating-history-toggle:hover {
@@ -4401,18 +4411,88 @@ body.onboarding-mode {
     transition: all 0.2s ease;
 }
 
-/* 移动端悬浮按钮优化 */
+/* 移动端底部圆形小按钮优化 */
 @media (max-width: 768px) {
     .floating-history-toggle {
-        width: 36px;
-        height: 36px;
-        top: 68px;
+        /* 重置PC端样式 */
+        top: auto;
+        left: auto;
+
+        /* 移动端圆形按钮尺寸 - 更小更低调 */
+        width: 28px;
+        height: 28px;
+        border-radius: 50%;
+        padding: 0;
+
+        /* 移动端底部位置 - 左下角避免遮挡操作按钮 */
+        bottom: 24px;
         left: 16px;
+
+        /* 移动端样式 - 更低调 */
+        background: rgba(255, 255, 255, 0.8);
+        color: #9ca3af;
+        border: 1px solid rgba(0, 0, 0, 0.05);
+        box-shadow: 0 1px 4px rgba(0, 0, 0, 0.08);
+        backdrop-filter: blur(8px);
+
+        /* 移动端触摸优化 */
+        -webkit-tap-highlight-color: transparent;
+        -webkit-touch-callout: none;
+        -webkit-user-select: none;
+        user-select: none;
+        touch-action: manipulation;
+
+        /* 居中图标 */
+        display: flex;
+        align-items: center;
+        justify-content: center;
+    }
+
+    .floating-history-toggle:hover {
+        background: rgba(255, 255, 255, 0.9);
+        color: #6b7280;
+        box-shadow: 0 2px 6px rgba(0, 0, 0, 0.1);
+        transform: translateY(-0.5px);
+    }
+
+    .floating-history-toggle:active {
+        transform: translateY(0);
+        box-shadow: 0 1px 4px rgba(0, 0, 0, 0.1);
+        background: rgba(255, 255, 255, 0.9);
+        transition: all 0.1s ease;
     }
 
     .floating-history-toggle svg {
         width: 14px;
         height: 14px;
+        flex-shrink: 0;
+    }
+
+    /* 确保在聊天模式下按钮不被输入框遮挡 */
+    .main-container.chatting .floating-history-toggle {
+        bottom: 120px;
+        /* 在聊天模式下上移更多，确保完全不被输入框遮挡 */
+    }
+
+    /* 在非聊天模式下（首页）的位置优化 */
+    .main-container:not(.chatting) .floating-history-toggle {
+        bottom: 140px;
+        /* 在首页时上移，避免遮挡AI输入框 */
+    }
+
+    /* 在有键盘弹出时的适配 */
+    @supports (bottom: env(keyboard-inset-height)) {
+        .floating-history-toggle {
+            bottom: calc(24px + env(keyboard-inset-height, 0px));
+        }
+
+        .main-container.chatting .floating-history-toggle {
+            bottom: calc(120px + env(keyboard-inset-height, 0px));
+        }
+
+        .main-container:not(.chatting) .floating-history-toggle {
+            bottom: calc(140px + env(keyboard-inset-height, 0px));
+        }
     }
 }
 

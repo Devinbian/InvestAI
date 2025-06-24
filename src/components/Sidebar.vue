@@ -65,7 +65,7 @@
                 </div>
                 <!-- 2. 智能荐股 -->
                 <div v-show="activeTab === 'stocks'" class="tab-panel">
-                    <StockRecommendations @send-to-chat="handleSendToChat" />
+                    <StockRecommendations @send-to-chat="handleSendToChat" @show-buy-dialog="handleShowBuyDialog" />
                 </div>
                 <!-- 3. 自选股 -->
                 <div v-show="activeTab === 'watchlist'" class="tab-panel">

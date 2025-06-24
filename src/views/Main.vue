@@ -311,195 +311,10 @@
                                 </div>
                             </div>
 
-                            <!-- 股票卡片列表 -->
-                            <div class="watchlist-stock-list">
-                                <div v-for="(stock, stockIdx) in message.watchlistData" :key="stockIdx"
-                                    class="stock-item watchlist-stock-card">
-
-                                    <!-- PC端布局 -->
-                                    <div class="pc-card-layout">
-                                        <div class="stock-info">
-                                            <div class="stock-header">
-                                                <div class="stock-name-code">
-                                                    <div class="name-code-row">
-                                                        <span class="stock-name">{{ stock.name }}</span>
-                                                        <span class="stock-code">({{ stock.code }})</span>
-                                                    </div>
-                                                    <!-- 关注状态 -->
-                                                    <div class="watchlist-status">
-                                                        <span class="status-label">关注时间：</span>
-                                                        <span class="status-value">
-                                                            {{ formatAddedTime(stock.addedAt) }}
-                                                        </span>
-                                                    </div>
-                                                </div>
-                                                <div class="stock-price-change">
-                                                    <span class="current-price">¥{{ stock.price }}</span>
-                                                    <span
-                                                        :class="['price-change', stock.changePct >= 0 ? 'positive' : 'negative']">
-                                                        {{ stock.changePercent }}
-                                                    </span>
-                                                </div>
-                                            </div>
-
-                                            <div class="stock-details">
-                                                <div class="detail-row">
-                                                    <span class="detail-label">所属行业：</span>
-                                                    <span class="detail-value industry">{{ stock.industry || '未分类'
-                                                        }}</span>
-                                                    <span class="detail-label">涨跌额：</span>
-                                                    <span
-                                                        :class="['detail-value', stock.changePct >= 0 ? 'positive' : 'negative']">
-                                                        {{ stock.change }}
-                                                    </span>
-                                                </div>
-                                                <div class="detail-row">
-                                                    <span class="detail-label">当前价格：</span>
-                                                    <span class="detail-value target-price">¥{{ stock.currentPrice
-                                                        }}</span>
-                                                    <span class="detail-label">股票类型：</span>
-                                                    <span class="detail-value">自选关注</span>
-                                                </div>
-                                            </div>
-                                        </div>
-
-                                        <div class="stock-item-actions">
-                                            <!-- 移除自选按钮 -->
-                                            <el-button size="small" @click="removeFromWatchlist(stock.code)"
-                                                class="remove-watchlist-btn">
-                                                <svg width="14" height="14" viewBox="0 0 24 24" fill="none">
-                                                    <path
-                                                        d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"
-                                                        fill="currentColor" />
-                                                </svg>
-                                                移除自选
-                                            </el-button>
-
-                                            <!-- 量化分析按钮（付费） -->
-                                            <el-button size="small" @click="showPaidAnalysisDialog(stock)"
-                                                class="paid-analysis-btn">
-                                                <svg width="14" height="14" viewBox="0 0 24 24" fill="none">
-                                                    <path
-                                                        d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"
-                                                        stroke="currentColor" stroke-width="2" />
-                                                </svg>
-                                                量化分析
-                                                <div class="price-tag-container">
-                                                    <span class="price-tag original-price">3智点</span>
-                                                    <span class="price-tag promo-price">1智点</span>
-                                                </div>
-                                            </el-button>
-
-                                            <!-- AI委托交易按钮（付费） -->
-                                            <el-button size="small" @click="showQuantAnalysisDialog(stock)"
-                                                class="quant-analysis-btn">
-                                                <svg width="14" height="14" viewBox="0 0 24 24" fill="none">
-                                                    <path d="M3 3v18h18M7 16l4-4 4 4 4-4" stroke="currentColor"
-                                                        stroke-width="2" fill="none" />
-                                                </svg>
-                                                AI委托交易
-                                                <div class="price-tag-container">
-                                                    <span class="price-tag original-price">3智点</span>
-                                                    <span class="price-tag promo-price">1智点</span>
-                                                </div>
-                                            </el-button>
-
-                                            <!-- 购买按钮 -->
-                                            <el-button size="small" @click="showBuyDialog(stock)"
-                                                class="buy-stock-btn-secondary">
-                                                <svg width="14" height="14" viewBox="0 0 24 24" fill="none">
-                                                    <path d="M12 2v20M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"
-                                                        stroke="currentColor" stroke-width="2" />
-                                                </svg>
-                                                购买
-                                            </el-button>
-                                        </div>
-                                    </div>
-
-                                    <!-- 移动端布局 - 完全仿照分析报告 -->
-                                    <div class="mobile-card-layout">
-                                        <!-- 头部：标签和操作按钮 -->
-                                        <div class="mobile-stock-header">
-                                            <div class="mobile-stock-left">
-                                                <span class="industry-tag">{{ stock.industry || '未分类' }}</span>
-                                            </div>
-                                            <div class="mobile-stock-right">
-                                                <div class="mobile-actions-dropdown">
-                                                    <el-dropdown trigger="click" placement="bottom-end">
-                                                        <el-button class="mobile-more-btn" size="small">
-                                                            <svg width="14" height="14" viewBox="0 0 24 24" fill="none">
-                                                                <circle cx="12" cy="12" r="1" fill="currentColor" />
-                                                                <circle cx="12" cy="5" r="1" fill="currentColor" />
-                                                                <circle cx="12" cy="19" r="1" fill="currentColor" />
-                                                            </svg>
-                                                        </el-button>
-                                                        <template #dropdown>
-                                                            <el-dropdown-menu>
-                                                                <el-dropdown-item
-                                                                    @click="removeFromWatchlist(stock.code)">移除自选</el-dropdown-item>
-                                                                <el-dropdown-item
-                                                                    @click="showPaidAnalysisDialog(stock)">量化分析
-                                                                    (1智点)</el-dropdown-item>
-                                                                <el-dropdown-item
-                                                                    @click="showQuantAnalysisDialog(stock)">AI委托交易
-                                                                    (1智点)</el-dropdown-item>
-                                                                <el-dropdown-item
-                                                                    @click="showBuyDialog(stock)">购买股票</el-dropdown-item>
-                                                            </el-dropdown-menu>
-                                                        </template>
-                                                    </el-dropdown>
-                                                </div>
-                                            </div>
-                                        </div>
-
-                                        <!-- 标题 -->
-                                        <div class="mobile-stock-title">
-                                            <span class="stock-name">{{ stock.name }}({{ stock.code }})</span>
-                                        </div>
-
-                                        <!-- 详情信息 - 与sidebar自选股列表保持一致 -->
-                                        <div class="mobile-stock-details">
-                                            <div class="mobile-detail-item">
-                                                <span class="detail-label">关注时间：</span>
-                                                <span class="detail-value">{{ formatAddedTime(stock.addedAt) }}</span>
-                                            </div>
-                                            <div class="mobile-detail-item">
-                                                <span class="detail-label">当前价格：</span>
-                                                <span class="detail-value target-price">¥{{ stock.price }}</span>
-                                            </div>
-                                            <div class="mobile-detail-item">
-                                                <span class="detail-label">涨跌幅：</span>
-                                                <span
-                                                    :class="['detail-value', stock.changePct >= 0 ? 'positive' : 'negative']">
-                                                    {{ stock.changePercent }}
-                                                </span>
-                                            </div>
-                                            <div class="mobile-detail-item">
-                                                <span class="detail-label">所属行业：</span>
-                                                <span class="detail-value industry">{{ stock.industry || '未分类' }}</span>
-                                            </div>
-                                            <div class="mobile-detail-item">
-                                                <span class="detail-label">推荐等级：</span>
-                                                <span class="detail-value recommend-level">{{ stock.recommendLevel ||
-                                                    '中性'
-                                                    }}</span>
-                                            </div>
-                                        </div>
-
-                                        <!-- 底部状态 - 自选状态 -->
-                                        <div class="mobile-stock-footer">
-                                            <div class="stock-status">
-                                                <svg width="12" height="12" viewBox="0 0 24 24" fill="none">
-                                                    <path
-                                                        d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"
-                                                        fill="#10b981" />
-                                                </svg>
-                                                已加自选
-                                            </div>
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
+                            <!-- 使用通用股票列表组件 -->
+                            <StockList :stocks="message.watchlistData" :show-watchlist-status="true"
+                                :show-basic-details="true" :actions="watchlistActionButtons"
+                                @stock-click="handleStockClick" @action-click="handleWatchlistActionClick" />
 
                             <!-- 自选股互动建议 -->
                             <div v-if="message.hasInteractionButtons && message.interactionData"
@@ -540,13 +355,13 @@
                                         <div class="asset-amount">
                                             <span class="amount-label">总资产</span>
                                             <span class="amount-value">¥{{ formatCurrency(message.assetData.totalAssets)
-                                                }}</span>
+                                            }}</span>
                                         </div>
                                         <div class="asset-change"
                                             :class="[message.assetData.totalProfitPercent >= 0 ? 'profit' : 'loss']">
                                             <span class="change-icon">{{ message.assetData.totalProfitPercent >= 0 ?
                                                 '📈' : '📉'
-                                                }}</span>
+                                            }}</span>
                                             <span class="change-label">今日盈亏：</span>
                                             <span class="change-text">
                                                 {{ message.assetData.totalProfitPercent >= 0 ? '+' : '' }}¥{{
@@ -572,7 +387,7 @@
                                         <div class="stat-info">
                                             <div class="stat-label">持仓市值</div>
                                             <div class="stat-value">¥{{ formatCurrency(message.assetData.portfolioValue)
-                                                }}
+                                            }}
                                             </div>
                                         </div>
                                     </div>
@@ -609,115 +424,11 @@
                                 <div class="tab-content">
                                     <!-- 持仓明细Tab -->
                                     <div v-if="activeTab === 'portfolio'" class="tab-panel">
-                                        <div v-if="message.assetData.portfolioData.length > 0" class="portfolio-list">
-                                            <div v-for="position in message.assetData.portfolioData"
-                                                :key="position.code" class="stock-item">
-                                                <div class="stock-info">
-                                                    <div class="stock-header">
-                                                        <div class="stock-name-code">
-                                                            <div class="name-code-row">
-                                                                <span class="stock-name">{{ position.name }}</span>
-                                                                <span class="stock-code">({{ position.code }})</span>
-                                                            </div>
-                                                            <!-- 持仓盈亏状态 -->
-                                                            <div class="position-status">
-                                                                <span class="status-label">持仓状态：</span>
-                                                                <span
-                                                                    :class="['status-value', position.profitPercent >= 0 ? 'profit' : 'loss']">
-                                                                    {{ position.profitPercent >= 0 ? '盈利' : '亏损' }}
-                                                                    {{ position.profitPercent >= 0 ? '+' : '' }}{{
-                                                                        position.profitPercent }}%
-                                                                </span>
-                                                            </div>
-                                                        </div>
-                                                        <div class="stock-price-change">
-                                                            <span class="current-price">¥{{
-                                                                position.currentPrice.toFixed(2)
-                                                                }}</span>
-                                                            <span
-                                                                :class="['price-change', position.profitPercent >= 0 ? 'positive' : 'negative']">
-                                                                {{ position.profitPercent >= 0 ? '+' : '' }}¥{{
-                                                                    Math.abs(position.profit).toFixed(2) }}
-                                                            </span>
-                                                        </div>
-                                                    </div>
-
-                                                    <div class="stock-details">
-                                                        <div class="detail-row">
-                                                            <span class="detail-label">持仓数量：</span>
-                                                            <span class="detail-value">{{
-                                                                position.quantity.toLocaleString()
-                                                                }}股</span>
-                                                            <span class="detail-label">成本价：</span>
-                                                            <span class="detail-value">¥{{ position.avgPrice.toFixed(2)
-                                                                }}</span>
-                                                        </div>
-                                                        <div class="detail-row">
-                                                            <span class="detail-label">持仓市值：</span>
-                                                            <span class="detail-value target-price">¥{{
-                                                                formatCurrency(position.marketValue) }}</span>
-                                                            <span class="detail-label">所属行业：</span>
-                                                            <span class="detail-value industry">{{ position.industry ||
-                                                                '未分类'
-                                                                }}</span>
-                                                        </div>
-                                                    </div>
-                                                </div>
-
-                                                <div class="stock-item-actions">
-                                                    <!-- 卖出按钮 -->
-                                                    <el-button size="small" @click="showBuyDialog(position, 'sell')"
-                                                        class="sell-stock-btn">
-                                                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none">
-                                                            <path
-                                                                d="M12 2v20M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"
-                                                                stroke="currentColor" stroke-width="2" />
-                                                        </svg>
-                                                        卖出
-                                                    </el-button>
-
-                                                    <!-- 买入按钮（加仓） -->
-                                                    <el-button size="small" @click="showBuyDialog(position, 'buy')"
-                                                        class="buy-stock-btn-secondary">
-                                                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none">
-                                                            <path
-                                                                d="M12 2v20M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"
-                                                                stroke="currentColor" stroke-width="2" />
-                                                        </svg>
-                                                        加仓
-                                                    </el-button>
-
-                                                    <!-- 量化分析按钮（付费） -->
-                                                    <el-button size="small" @click="showPaidAnalysisDialog(position)"
-                                                        class="paid-analysis-btn">
-                                                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none">
-                                                            <path
-                                                                d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"
-                                                                stroke="currentColor" stroke-width="2" />
-                                                        </svg>
-                                                        量化分析
-                                                        <div class="price-tag-container">
-                                                            <span class="price-tag original-price">3智点</span>
-                                                            <span class="price-tag promo-price">1智点</span>
-                                                        </div>
-                                                    </el-button>
-
-                                                    <!-- AI委托交易按钮（付费） -->
-                                                    <el-button size="small" @click="showQuantAnalysisDialog(position)"
-                                                        class="quant-analysis-btn">
-                                                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none">
-                                                            <path d="M3 3v18h18M7 16l4-4 4 4 4-4" stroke="currentColor"
-                                                                stroke-width="2" fill="none" />
-                                                        </svg>
-                                                        AI委托交易
-                                                        <div class="price-tag-container">
-                                                            <span class="price-tag original-price">3智点</span>
-                                                            <span class="price-tag promo-price">1智点</span>
-                                                        </div>
-                                                    </el-button>
-                                                </div>
-                                            </div>
-                                        </div>
+                                        <StockList v-if="message.assetData.portfolioData.length > 0"
+                                            :stocks="message.assetData.portfolioData" :show-position-status="true"
+                                            :show-position-details="true" :show-basic-details="false"
+                                            :actions="portfolioActionButtons" @stock-click="handleStockClick"
+                                            @action-click="handlePortfolioActionClick" />
 
                                         <!-- 空状态 -->
                                         <div v-else class="empty-state">
@@ -731,106 +442,11 @@
 
                                     <!-- 自选股票Tab -->
                                     <div v-if="activeTab === 'watchlist'" class="tab-panel">
-                                        <div v-if="message.assetData.watchlistData.length > 0" class="watchlist-list">
-                                            <div v-for="stock in message.assetData.watchlistData" :key="stock.code"
-                                                class="stock-item">
-                                                <div class="stock-info">
-                                                    <div class="stock-header">
-                                                        <div class="stock-name-code">
-                                                            <div class="name-code-row">
-                                                                <span class="stock-name">{{ stock.name }}</span>
-                                                                <span class="stock-code">({{ stock.code }})</span>
-                                                            </div>
-                                                            <!-- 关注状态 -->
-                                                            <div class="watchlist-status">
-                                                                <span class="status-label">关注状态：</span>
-                                                                <span class="status-value watchlist-active">
-                                                                    ⭐ 已关注
-                                                                </span>
-                                                            </div>
-                                                        </div>
-                                                        <div class="stock-price-change">
-                                                            <span class="current-price">¥{{
-                                                                getCurrentStockPrice(stock.code).toFixed(2) }}</span>
-                                                            <span class="price-change neutral">
-                                                                实时价格
-                                                            </span>
-                                                        </div>
-                                                    </div>
-
-                                                    <div class="stock-details">
-                                                        <div class="detail-row">
-                                                            <span class="detail-label">股票代码：</span>
-                                                            <span class="detail-value">{{ stock.code }}</span>
-                                                            <span class="detail-label">当前价格：</span>
-                                                            <span class="detail-value target-price">¥{{
-                                                                getCurrentStockPrice(stock.code).toFixed(2) }}</span>
-                                                        </div>
-                                                        <div class="detail-row">
-                                                            <span class="detail-label">关注时间：</span>
-                                                            <span class="detail-value">{{
-                                                                formatRecommendationTime(stock.addedAt
-                                                                    || new Date()) }}</span>
-                                                            <span class="detail-label">股票类型：</span>
-                                                            <span class="detail-value industry">自选关注</span>
-                                                        </div>
-                                                    </div>
-                                                </div>
-
-                                                <div class="stock-item-actions">
-                                                    <!-- 移除自选按钮 -->
-                                                    <el-button size="small" @click="removeFromWatchlist(stock.code)"
-                                                        class="remove-watchlist-btn">
-                                                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none">
-                                                            <path
-                                                                d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"
-                                                                fill="currentColor" />
-                                                        </svg>
-                                                        移除关注
-                                                    </el-button>
-
-                                                    <!-- 量化分析按钮（付费） -->
-                                                    <el-button size="small" @click="showPaidAnalysisDialog(stock)"
-                                                        class="paid-analysis-btn">
-                                                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none">
-                                                            <path
-                                                                d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"
-                                                                stroke="currentColor" stroke-width="2" />
-                                                        </svg>
-                                                        量化分析
-                                                        <div class="price-tag-container">
-                                                            <span class="price-tag original-price">3智点</span>
-                                                            <span class="price-tag promo-price">1智点</span>
-                                                        </div>
-                                                    </el-button>
-
-                                                    <!-- AI委托交易按钮（付费） -->
-                                                    <el-button size="small" @click="showQuantAnalysisDialog(stock)"
-                                                        class="quant-analysis-btn">
-                                                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none">
-                                                            <path d="M3 3v18h18M7 16l4-4 4 4 4-4" stroke="currentColor"
-                                                                stroke-width="2" fill="none" />
-                                                        </svg>
-                                                        AI委托交易
-                                                        <div class="price-tag-container">
-                                                            <span class="price-tag original-price">3智点</span>
-                                                            <span class="price-tag promo-price">1智点</span>
-                                                        </div>
-                                                    </el-button>
-
-                                                    <!-- 购买按钮 -->
-                                                    <el-button size="small" @click="showBuyDialog(stock)"
-                                                        class="buy-stock-btn-secondary">
-                                                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none">
-                                                            <path
-                                                                d="M12 2v20M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"
-                                                                stroke="currentColor" stroke-width="2" />
-                                                        </svg>
-                                                        购买
-                                                    </el-button>
-                                                </div>
-                                            </div>
-                                        </div>
+                                        <StockList v-if="message.assetData.watchlistData.length > 0"
+                                            :stocks="message.assetData.watchlistData" :show-watchlist-status="true"
+                                            :show-basic-details="true" :actions="watchlistActionButtons"
+                                            @stock-click="handleStockClick"
+                                            @action-click="handleWatchlistActionClick" />
 
                                         <!-- 空状态 -->
                                         <div v-else class="empty-state">
@@ -848,13 +464,9 @@
                         <!-- 股票列表（智能荐股等场景） -->
                         <div v-if="message.hasStockInfo && message.stockList" class="stock-list"
                             :class="{ 'persistent-stock-list': message.isPersistent }">
-                            <!-- 荐股列表操作栏 -->
-                            <div v-if="message.isPersistent" class="recommendation-toolbar">
-                                <div class="toolbar-left">
-                                    <span class="recommendation-time">{{ formatRecommendationTime(message.timestamp)
-                                        }}</span>
-                                </div>
-                                <div class="toolbar-right">
+                            <StockList :stocks="message.stockList" v-bind="getSmartRecommendationConfig(message)"
+                                @stock-click="handleStockClick" @action-click="handleStockActionClick">
+                                <template #toolbar-actions v-if="message.isPersistent">
                                     <el-button size="small" text @click="refreshRecommendation(message)"
                                         class="refresh-recommendation-btn">
                                         <svg width="14" height="14" viewBox="0 0 24 24" fill="none">
@@ -864,158 +476,8 @@
                                         </svg>
                                         刷新荐股
                                     </el-button>
-                                </div>
-                            </div>
-                            <div v-for="(stock, stockIdx) in message.stockList"
-                                :key="`${message.messageId || idx}-${stockIdx}`" class="stock-item">
-                                <div class="stock-info">
-                                    <div class="stock-header">
-                                        <div class="stock-name-code">
-                                            <div class="name-code-row">
-                                                <span class="stock-name">{{ stock.name }}</span>
-                                                <span class="stock-code">({{ stock.code }})</span>
-                                            </div>
-                                            <!-- 推荐指数 -->
-                                            <div class="recommend-index">
-                                                <div class="recommend-stars">
-                                                    <span v-for="i in 5" :key="i" :class="['star', i <= Math.floor(stock.recommendIndex) ? 'filled' :
-                                                        i <= stock.recommendIndex ? 'half' : 'empty']">
-                                                        ★
-                                                    </span>
-                                                </div>
-                                                <span class="recommend-score">{{ stock.recommendIndex }}/5.0</span>
-                                                <el-tooltip placement="top" effect="dark" :show-after="100"
-                                                    popper-class="recommend-tooltip">
-                                                    <template #content>
-                                                        <div class="recommend-index-tooltip">
-                                                            <div class="tooltip-title">推荐指数说明：</div>
-                                                            <div class="tooltip-item">
-                                                                <span class="score">5.0：</span>
-                                                                <span class="desc">强烈推荐 - 投资价值极高</span>
-                                                            </div>
-                                                            <div class="tooltip-item">
-                                                                <span class="score">4.0-4.9：</span>
-                                                                <span class="desc">推荐 - 具备较好投资价值</span>
-                                                            </div>
-                                                            <div class="tooltip-item">
-                                                                <span class="score">3.0-3.9：</span>
-                                                                <span class="desc">中性 - 可持续观察</span>
-                                                            </div>
-                                                            <div class="tooltip-item">
-                                                                <span class="score">2.0-2.9：</span>
-                                                                <span class="desc">谨慎 - 建议控制仓位</span>
-                                                            </div>
-                                                            <div class="tooltip-item">
-                                                                <span class="score">1.0-1.9：</span>
-                                                                <span class="desc">不推荐 - 建议回避</span>
-                                                            </div>
-                                                        </div>
-                                                    </template>
-                                                    <el-icon class="help-icon">
-                                                        <QuestionFilled />
-                                                    </el-icon>
-                                                </el-tooltip>
-                                                <span
-                                                    :class="['recommend-level', getRecommendLevelClass(stock.recommendLevel)]">
-                                                    {{ stock.recommendLevel }}
-                                                </span>
-                                            </div>
-                                        </div>
-                                        <div class="stock-price-change">
-                                            <span class="current-price">¥{{ stock.price }}</span>
-                                            <span
-                                                :class="['price-change', stock.change >= 0 ? 'positive' : 'negative']">
-                                                {{ stock.change >= 0 ? '+' : '' }}{{ stock.change }}
-                                                ({{ stock.changePercent >= 0 ? '+' : '' }}{{ stock.changePercent }}%)
-                                            </span>
-                                        </div>
-                                    </div>
-
-                                    <div class="stock-details">
-                                        <div class="detail-group">
-                                            <span class="detail-label">目标价</span>
-                                            <span class="detail-value target-price">¥{{ stock.targetPrice }}</span>
-                                        </div>
-                                        <div class="detail-group">
-                                            <span class="detail-label">预期收益</span>
-                                            <span class="detail-value expected-return">{{ stock.expectedReturn }}</span>
-                                        </div>
-                                        <div class="detail-group">
-                                            <span class="detail-label">风险等级</span>
-                                            <span class="detail-value risk-level">{{ stock.riskLevel }}</span>
-                                        </div>
-                                        <div class="detail-group">
-                                            <span class="detail-label">所属行业</span>
-                                            <span class="detail-value industry">{{ stock.industry }}</span>
-                                        </div>
-                                        <div class="stock-reason">
-                                            <span class="reason-label">推荐理由：</span>
-                                            <span class="reason-text" v-if="stock.reason">{{ stock.reason }}</span>
-                                            <span class="reason-text" v-else>暂无推荐理由</span>
-                                        </div>
-                                    </div>
-                                </div>
-
-                                <div class="stock-item-actions">
-                                    <!-- 自选股按钮 -->
-                                    <el-button v-if="!userStore.isInWatchlist(stock.code)" type="primary" size="small"
-                                        @click="addToWatchlist(stock)" class="add-watchlist-btn">
-                                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none">
-                                            <path
-                                                d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"
-                                                stroke="currentColor" stroke-width="2" />
-                                        </svg>
-                                        加入自选
-                                    </el-button>
-                                    <el-button v-else type="success" size="small"
-                                        @click="removeFromWatchlist(stock.code)" class="remove-watchlist-btn">
-                                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none">
-                                            <path
-                                                d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"
-                                                fill="currentColor" />
-                                        </svg>
-                                        已加自选
-                                    </el-button>
-
-                                    <!-- 量化分析按钮（付费） -->
-                                    <el-button size="small" @click="showPaidAnalysisDialog(stock)"
-                                        class="paid-analysis-btn">
-                                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none">
-                                            <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"
-                                                stroke="currentColor" stroke-width="2" />
-                                        </svg>
-                                        量化分析
-                                        <div class="price-tag-container">
-                                            <span class="price-tag original-price">3智点</span>
-                                            <span class="price-tag promo-price">1智点</span>
-                                        </div>
-                                    </el-button>
-
-                                    <!-- AI委托交易按钮（付费） -->
-                                    <el-button v-if="!message.isBuyMode" size="small"
-                                        @click="showQuantAnalysisDialog(stock)" class="quant-analysis-btn">
-                                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none">
-                                            <path d="M3 3v18h18M7 16l4-4 4 4 4-4" stroke="currentColor" stroke-width="2"
-                                                fill="none" />
-                                        </svg>
-                                        AI委托交易
-                                        <div class="price-tag-container">
-                                            <span class="price-tag original-price">3智点</span>
-                                            <span class="price-tag promo-price">1智点</span>
-                                        </div>
-                                    </el-button>
-
-                                    <!-- 购买按钮 -->
-                                    <el-button size="small" @click="showBuyDialog(stock)"
-                                        class="buy-stock-btn-secondary">
-                                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none">
-                                            <path d="M12 2v20M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"
-                                                stroke="currentColor" stroke-width="2" />
-                                        </svg>
-                                        购买
-                                    </el-button>
-                                </div>
-                            </div>
+                                </template>
+                            </StockList>
                         </div>
                     </div>
                 </div>
@@ -1275,7 +737,7 @@
                 </div>
                 <div class="guide-actions">
                     <el-button type="primary" size="small" @click="handleGuideAction">{{ guideActionText
-                    }}</el-button>
+                        }}</el-button>
                     <el-button size="small" @click="dismissGuide">稍后</el-button>
                 </div>
             </div>
@@ -1313,7 +775,7 @@
                         <div class="summary-item">
                             <span class="summary-label">买入信号</span>
                             <span class="summary-value signal-score">{{ currentQuantAnalysis.buySignalScore
-                                }}/100</span>
+                            }}/100</span>
                         </div>
                         <div class="summary-item">
                             <span class="summary-label">量化评级</span>
@@ -1534,6 +996,8 @@ import CustomizeShortcutsDialog from '../components/CustomizeShortcutsDialog.vue
 import MobileShortcutsDialog from '../components/MobileShortcutsDialog.vue';
 import ChatHistory from '../components/ChatHistory.vue';
 import MarkdownRenderer from '../components/MarkdownRenderer.vue';
+import StockList from '../components/StockList.vue';
+import { getStockListConfig } from '../config/stockListConfig';
 
 const router = useRouter();
 const userStore = useUserStore();
@@ -2925,7 +2389,7 @@ const fixMobileChatBox = () => {
                         // 微信浏览器通常不需要额外偏移
                         bottomOffset = 0;
                     } else if (isAndroid && isChrome) {
-                        // Android Chrome 浏览器工具栏高度通常在56-72px
+                        // Android Chrome 浏览器工具栏通常在56-72px
                         bottomOffset = Math.min(72, Math.max(0, screenHeight - windowHeight - 100));
                     } else if (isIOS && isSafari) {
                         // iOS Safari 工具栏高度通常在44-88px
@@ -3284,7 +2748,7 @@ const handleAssetAnalysis = async () => {
             totalProfit: totalProfit.toFixed(2),
             totalProfitPercent: parseFloat(totalProfitPercent),
             portfolioData,
-            watchlistData: userStore.watchlist.slice(0, 8) // 显示前8只自选股
+            watchlistData: userStore.watchlist.slice(0, 8).map(stock => generateWatchlistStockData(stock)) // 显示前8只自选股，包含完整详情
         },
         isPersistent: true,
         messageId: `asset-analysis-${Date.now()}`,
@@ -3335,23 +2799,8 @@ const handleWatchlistView = async () => {
         ElMessage.info('已为您添加示例自选股数据');
     }
 
-    // 获取自选股数据，添加实时价格信息
-    const watchlistData = userStore.watchlist.map(stock => {
-        const currentPrice = getCurrentStockPrice(stock.code);
-        const yesterdayPrice = currentPrice * (1 - (Math.random() * 0.1 - 0.05)); // 模拟昨日价格
-        const changeAmount = currentPrice - yesterdayPrice;
-        const changePercent = ((changeAmount / yesterdayPrice) * 100).toFixed(2);
-
-        return {
-            ...stock,
-            price: stock.price || currentPrice.toFixed(2),
-            change: stock.change || (changeAmount >= 0 ? `+${changeAmount.toFixed(2)}` : changeAmount.toFixed(2)),
-            changePercent: stock.changePercent || (parseFloat(changePercent) >= 0 ? `+${changePercent}%` : `${changePercent}%`),
-            currentPrice: currentPrice.toFixed(2),
-            changeAmount: changeAmount.toFixed(2),
-            changePct: parseFloat(changePercent)
-        };
-    });
+    // 获取自选股数据，使用辅助函数生成完整的股票详情
+    const watchlistData = userStore.watchlist.map(stock => generateWatchlistStockData(stock));
 
     // 直接显示自选股列表，使用卡片形式
     const userMessage = '查看我的自选股列表';
@@ -3429,6 +2878,45 @@ const getCurrentStockPrice = (stockCode) => {
         '002415': 28.90
     };
     return mockPrices[stockCode] || 10.00;
+};
+
+// 生成完整的自选股数据（包含详情信息）
+const generateWatchlistStockData = (stock) => {
+    const currentPrice = getCurrentStockPrice(stock.code);
+    const yesterdayPrice = currentPrice * (1 - (Math.random() * 0.1 - 0.05));
+    const changeAmount = currentPrice - yesterdayPrice;
+    const changePercent = ((changeAmount / yesterdayPrice) * 100).toFixed(2);
+
+    // 生成目标价格（当前价格的1.1-1.3倍）
+    const targetPriceMultiplier = 1.1 + Math.random() * 0.2;
+    const targetPrice = (currentPrice * targetPriceMultiplier).toFixed(2);
+
+    // 计算预期收益
+    const expectedReturnPercent = ((targetPrice - currentPrice) / currentPrice * 100).toFixed(1);
+
+    // 根据股票代码生成风险等级
+    const riskLevels = ['低风险', '中低风险', '中风险', '中高风险', '高风险'];
+    const riskLevel = riskLevels[Math.floor(Math.random() * riskLevels.length)];
+
+    // 根据股票代码生成推荐等级
+    const recommendLevels = ['强烈推荐', '推荐', '中性', '谨慎', '不推荐'];
+    const recommendLevel = recommendLevels[Math.floor(Math.random() * recommendLevels.length)];
+
+    return {
+        ...stock,
+        price: stock.price || currentPrice.toFixed(2),
+        change: stock.change || (changeAmount >= 0 ? `+${changeAmount.toFixed(2)}` : changeAmount.toFixed(2)),
+        changePercent: stock.changePercent || (parseFloat(changePercent) >= 0 ? `+${changePercent}%` : `${changePercent}%`),
+        currentPrice: currentPrice.toFixed(2),
+        changeAmount: changeAmount.toFixed(2),
+        changePct: parseFloat(changePercent),
+        // 详情信息字段
+        targetPrice: targetPrice,
+        expectedReturn: `${expectedReturnPercent}%`,
+        riskLevel: riskLevel,
+        recommendLevel: recommendLevel,
+        industry: stock.industry || '未分类'
+    };
 };
 
 // 格式化添加时间
@@ -3609,23 +3097,8 @@ const updateWatchlistInChatHistory = () => {
     chatHistory.value.forEach(message => {
         // 更新自选股展示消息
         if (message.isWatchlistDisplay && message.watchlistData) {
-            // 重新获取自选股数据
-            const updatedWatchlistData = userStore.watchlist.map(stock => {
-                const currentPrice = getCurrentStockPrice(stock.code);
-                const yesterdayPrice = currentPrice * (1 - (Math.random() * 0.1 - 0.05));
-                const changeAmount = currentPrice - yesterdayPrice;
-                const changePercent = ((changeAmount / yesterdayPrice) * 100).toFixed(2);
-
-                return {
-                    ...stock,
-                    price: stock.price || currentPrice.toFixed(2),
-                    change: stock.change || (changeAmount >= 0 ? `+${changeAmount.toFixed(2)}` : changeAmount.toFixed(2)),
-                    changePercent: stock.changePercent || (parseFloat(changePercent) >= 0 ? `+${changePercent}%` : `${changePercent}%`),
-                    currentPrice: currentPrice.toFixed(2),
-                    changeAmount: changeAmount.toFixed(2),
-                    changePct: parseFloat(changePercent)
-                };
-            });
+            // 重新获取自选股数据，使用辅助函数生成完整详情
+            const updatedWatchlistData = userStore.watchlist.map(stock => generateWatchlistStockData(stock));
 
             // 更新消息中的自选股数据
             message.watchlistData = updatedWatchlistData;
@@ -3644,22 +3117,7 @@ const updateWatchlistInChatHistory = () => {
 
         // 更新资产信息中的自选股数据
         if (message.hasAssetInfo && message.assetData && message.assetData.watchlistData) {
-            message.assetData.watchlistData = userStore.watchlist.map(stock => {
-                const currentPrice = getCurrentStockPrice(stock.code);
-                const yesterdayPrice = currentPrice * (1 - (Math.random() * 0.1 - 0.05));
-                const changeAmount = currentPrice - yesterdayPrice;
-                const changePercent = ((changeAmount / yesterdayPrice) * 100).toFixed(2);
-
-                return {
-                    ...stock,
-                    price: stock.price || currentPrice.toFixed(2),
-                    change: stock.change || (changeAmount >= 0 ? `+${changeAmount.toFixed(2)}` : changeAmount.toFixed(2)),
-                    changePercent: stock.changePercent || (parseFloat(changePercent) >= 0 ? `+${changePercent}%` : `${changePercent}%`),
-                    currentPrice: currentPrice.toFixed(2),
-                    changeAmount: changeAmount.toFixed(2),
-                    changePct: parseFloat(changePercent)
-                };
-            });
+            message.assetData.watchlistData = userStore.watchlist.map(stock => generateWatchlistStockData(stock));
 
             // 更新自选股数量
             message.assetData.watchlistCount = userStore.watchlist.length;
@@ -3724,6 +3182,160 @@ const performQuantAnalysis = async (stockInfo) => {
 
 
 
+
+// 自选股票操作按钮配置
+const watchlistActionButtons = [
+    {
+        key: 'removeWatchlist',
+        text: '移除自选',
+        type: 'default',
+        class: 'remove-watchlist-btn',
+        icon: 'M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z'
+    },
+    {
+        key: 'analysis',
+        text: '量化分析',
+        type: 'default',
+        class: 'paid-analysis-btn',
+        icon: 'M3 3v18h18M7 16l4-4 4 4 4-4',
+        priceTag: { original: '3智点', promo: '1智点' }
+    },
+    {
+        key: 'aiTrading',
+        text: 'AI委托交易',
+        type: 'default',
+        class: 'quant-analysis-btn',
+        icon: 'M3 3v18h18M7 16l4-4 4 4 4-4',
+        priceTag: { original: '3智点', promo: '1智点' }
+    },
+    {
+        key: 'buy',
+        text: '买入',
+        type: 'default',
+        class: 'buy-stock-btn-secondary',
+        icon: 'M12 2v20M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6'
+    }
+];
+
+// 持仓股票操作按钮配置
+const portfolioActionButtons = [
+    {
+        key: 'sell',
+        text: '卖出',
+        type: 'danger',
+        class: 'sell-stock-btn',
+        icon: 'M12 2v20M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6'
+    },
+    {
+        key: 'addPosition',
+        text: '加仓',
+        type: 'default',
+        class: 'buy-stock-btn-secondary',
+        icon: 'M12 2v20M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6'
+    },
+    {
+        key: 'analysis',
+        text: '量化分析',
+        type: 'default',
+        class: 'paid-analysis-btn',
+        icon: 'M3 3v18h18M7 16l4-4 4 4 4-4',
+        priceTag: { original: '3智点', promo: '1智点' }
+    },
+    {
+        key: 'aiTrading',
+        text: 'AI委托交易',
+        type: 'default',
+        class: 'quant-analysis-btn',
+        icon: 'M3 3v18h18M7 16l4-4 4 4 4-4',
+        priceTag: { original: '3智点', promo: '1智点' }
+    }
+];
+
+// 自选股票操作事件处理
+const handleWatchlistActionClick = ({ action, stock }) => {
+    console.log('执行自选股票操作:', action, stock);
+
+    switch (action) {
+        case 'removeWatchlist':
+            removeFromWatchlist(stock.code);
+            break;
+        case 'analysis':
+            showPaidAnalysisDialog(stock);
+            break;
+        case 'aiTrading':
+            showQuantAnalysisDialog(stock);
+            break;
+        case 'buy':
+            showBuyDialog(stock);
+            break;
+        default:
+            console.log('未知操作:', action);
+    }
+};
+
+// 持仓股票操作事件处理
+const handlePortfolioActionClick = ({ action, stock }) => {
+    console.log('执行持仓股票操作:', action, stock);
+
+    switch (action) {
+        case 'sell':
+            showBuyDialog(stock, 'sell');
+            break;
+        case 'addPosition':
+            showBuyDialog(stock, 'buy');
+            break;
+        case 'analysis':
+            showPaidAnalysisDialog(stock);
+            break;
+        case 'aiTrading':
+            showQuantAnalysisDialog(stock);
+            break;
+        default:
+            console.log('未知操作:', action);
+    }
+};
+
+// 获取智能荐股配置
+const getSmartRecommendationConfig = (message) => {
+    const config = getStockListConfig('smartRecommendation');
+    return {
+        ...config,
+        toolbarTitle: '智能荐股推荐',
+        timestamp: message.timestamp,
+        showToolbar: message.isPersistent
+    };
+};
+
+// 股票点击事件处理
+const handleStockClick = (stock) => {
+    console.log('点击了股票:', stock);
+    // 可以在这里添加股票点击的处理逻辑，比如跳转到股票详情页
+};
+
+// 股票操作按钮点击事件处理
+const handleStockActionClick = ({ action, stock }) => {
+    console.log('执行操作:', action, stock);
+
+    switch (action) {
+        case 'addWatchlist':
+            addToWatchlist(stock);
+            break;
+        case 'removeWatchlist':
+            removeFromWatchlist(stock.code);
+            break;
+        case 'analysis':
+            showPaidAnalysisDialog(stock);
+            break;
+        case 'aiTrading':
+            showQuantAnalysisDialog(stock);
+            break;
+        case 'buy':
+            showBuyDialog(stock);
+            break;
+        default:
+            console.log('未知操作:', action);
+    }
+};
 
 // 投资偏好组件事件处理
 const handlePreferencesCompleted = (preferences) => {
@@ -5989,61 +5601,7 @@ body.onboarding-mode {
     box-shadow: 0 0 0 4px rgba(251, 191, 36, 0.1) !important;
 }
 
-.portfolio-list,
-.watchlist-list {
-    display: flex;
-    flex-direction: column;
-    gap: 16px;
-}
-
-.stock-item {
-    background: #f8fafc;
-    border: 1px solid #e2e8f0;
-    border-radius: 12px;
-    padding: 16px;
-    transition: all 0.2s ease;
-}
-
-.stock-item:hover {
-    background: #f1f5f9;
-    border-color: #cbd5e1;
-    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
-}
-
-.stock-info {
-    margin-bottom: 12px;
-}
-
-.stock-header {
-    display: flex;
-    justify-content: space-between;
-    align-items: flex-start;
-    margin-bottom: 12px;
-}
-
-.stock-name-code {
-    display: flex;
-    flex-direction: column;
-    gap: 8px;
-}
-
-.name-code-row {
-    display: flex;
-    align-items: center;
-    gap: 6px;
-}
-
-.stock-name {
-    font-size: 1rem;
-    font-weight: 600;
-    color: #1e293b;
-}
-
-.stock-code {
-    font-size: 0.875rem;
-    color: #64748b;
-    font-weight: 500;
-}
+/* 使用StockList组件，移除重复的股票样式 */
 
 /* 推荐指数样式 */
 .recommend-index {
@@ -6354,15 +5912,7 @@ body.onboarding-mode {
     flex: 1;
 }
 
-.stock-item-actions {
-    display: flex;
-    gap: 4px;
-    flex-wrap: nowrap;
-    justify-content: flex-end;
-    align-items: center;
-    padding-top: 12px;
-    border-top: 1px solid #f1f5f9;
-}
+/* 使用StockList组件，移除重复的stock-item-actions样式 */
 
 /* 付费功能按钮样式 */
 .paid-analysis-btn,
@@ -6552,71 +6102,7 @@ body.onboarding-mode {
         white-space: nowrap;
     }
 
-    /* 移动端股票信息字体优化 */
-    .stock-name {
-        font-size: 0.9rem;
-    }
-
-    .stock-code {
-        font-size: 0.75rem;
-    }
-
-    .stock-item {
-        padding: 8px;
-        margin: 4px 0;
-        border-radius: 8px;
-        display: flex;
-        flex-direction: column;
-        gap: 6px;
-        min-height: auto;
-    }
-
-    .stock-item:hover {
-        transform: none;
-        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
-    }
-
-    .stock-info {
-        margin-bottom: 0;
-    }
-
-    .stock-header {
-        display: flex;
-        flex-direction: row;
-        justify-content: space-between;
-        align-items: flex-start;
-        gap: 8px;
-        margin-bottom: 4px;
-    }
-
-    .stock-name-code {
-        flex: 1;
-        min-width: 0;
-    }
-
-    .name-code-row {
-        display: flex;
-        flex-direction: column;
-        align-items: flex-start;
-        gap: 2px;
-        margin-bottom: 4px;
-    }
-
-    .stock-name {
-        font-size: 0.85rem;
-        font-weight: 600;
-        line-height: 1.2;
-        white-space: nowrap;
-        overflow: hidden;
-        text-overflow: ellipsis;
-        max-width: 100%;
-    }
-
-    .stock-code {
-        font-size: 0.7rem;
-        color: #64748b;
-        line-height: 1;
-    }
+    /* 使用StockList组件，移除重复的股票基础样式 */
 
     .recommend-index {
         display: flex;
@@ -6766,64 +6252,7 @@ body.onboarding-mode {
         flex: 1 !important;
     }
 
-    .stock-item-actions {
-        margin-top: 6px;
-        padding: 8px;
-        background: #f8fafc;
-        border-radius: 6px;
-        border: 1px solid #e2e8f0;
-        display: grid;
-        grid-template-columns: 1fr 1fr;
-        gap: 6px;
-        align-items: center;
-        justify-items: center;
-    }
-
-    .stock-item-actions .el-button {
-        font-size: 0.7rem;
-        padding: 6px 8px;
-        height: 32px;
-        border-radius: 4px;
-        white-space: nowrap;
-        overflow: hidden;
-        text-overflow: ellipsis;
-        min-width: 0;
-        width: 100%;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        gap: 3px;
-        line-height: 1;
-        box-sizing: border-box;
-        margin: 0;
-    }
-
-    .stock-item-actions .el-button svg {
-        width: 12px;
-        height: 12px;
-        flex-shrink: 0;
-    }
-
-    /* 三个按钮的情况，第三个按钮跨列 */
-    .stock-item-actions .el-button:nth-child(3):last-child {
-        grid-column: 1 / -1;
-        max-width: none;
-    }
-
-    /* 四个按钮的情况，使用2x2布局 */
-    .stock-item-actions .el-button:nth-child(4) {
-        grid-column: auto;
-    }
-
-    /* 确保所有按钮高度一致并消除默认边距 */
-    .stock-item-actions .el-button.el-button--primary,
-    .stock-item-actions .el-button.el-button--success,
-    .stock-item-actions .el-button.el-button--default {
-        height: 32px !important;
-        min-height: 32px !important;
-        margin: 0 !important;
-        vertical-align: top;
-    }
+    /* 移除重复的stock-item-actions样式 - 由StockList组件提供 */
 
     /* 移动端股票列表间距优化 */
     .stock-list {
@@ -6832,34 +6261,10 @@ body.onboarding-mode {
     }
 }
 
-/* 小屏手机进一步优化 */
-/* 小屏手机进一步优化 - 极简横向布局 */
+/* 小屏手机进一步优化 - 移除重复的股票样式，由StockList组件提供 */
 @media (max-width: 480px) {
-    .stock-item {
-        padding: 6px;
-        margin: 3px 0;
-        gap: 4px;
-    }
 
-    .stock-header {
-        gap: 6px;
-        margin-bottom: 3px;
-    }
-
-    .name-code-row {
-        gap: 1px;
-        margin-bottom: 3px;
-    }
-
-    .stock-name {
-        font-size: 0.8rem;
-        max-width: 120px;
-    }
-
-    .stock-code {
-        font-size: 0.65rem;
-    }
-
+    /* 保留推荐指数的小屏幕优化样式 */
     .recommend-index {
         gap: 3px;
     }
@@ -6884,104 +6289,7 @@ body.onboarding-mode {
         margin-left: 1px;
     }
 
-    .current-price {
-        font-size: 0.85rem;
-    }
-
-    .price-change {
-        font-size: 0.65rem;
-        padding: 1px 3px;
-    }
-
-    .stock-item .stock-info .stock-details {
-        margin-top: 3px !important;
-        padding: 4px 6px !important;
-        gap: 4px 6px !important;
-        grid-template-columns: minmax(0, 1fr) minmax(0, 1fr) !important;
-        width: 100% !important;
-        box-sizing: border-box !important;
-        overflow: hidden !important;
-    }
-
-    .detail-label {
-        font-size: 0.65rem;
-    }
-
-    .detail-value {
-        font-size: 0.65rem;
-    }
-
-    .stock-reason {
-        margin-top: 6px !important;
-        padding: 6px !important;
-        background: #fff3cd !important;
-        border: 1px solid #ffeaa7 !important;
-        border-radius: 4px !important;
-        display: flex !important;
-        align-items: center !important;
-        gap: 4px !important;
-        min-height: 28px !important;
-        grid-column: 1 / -1 !important;
-        position: relative !important;
-    }
-
-    .reason-label {
-        font-size: 0.65rem !important;
-        color: #856404 !important;
-        font-weight: bold !important;
-        flex-shrink: 0 !important;
-    }
-
-    .reason-text {
-        font-size: 0.65rem !important;
-        line-height: 1.3 !important;
-        color: #533f03 !important;
-        white-space: normal !important;
-        word-wrap: break-word !important;
-        word-break: break-all !important;
-        flex: 1 !important;
-    }
-
-    .stock-item-actions {
-        margin-top: 4px;
-        padding: 6px;
-        gap: 4px;
-        grid-template-columns: 1fr 1fr;
-        align-items: center;
-        justify-items: center;
-    }
-
-    .stock-item-actions .el-button {
-        font-size: 0.65rem;
-        padding: 4px 6px;
-        height: 28px;
-        border-radius: 3px;
-        margin: 0;
-        box-sizing: border-box;
-        width: 100%;
-    }
-
-    .stock-item-actions .el-button svg {
-        width: 10px;
-        height: 10px;
-    }
-
-    /* 小屏幕按钮高度统一 */
-    .stock-item-actions .el-button.el-button--primary,
-    .stock-item-actions .el-button.el-button--success,
-    .stock-item-actions .el-button.el-button--default {
-        height: 28px !important;
-        min-height: 28px !important;
-        margin: 0 !important;
-    }
-
-    /* 三个按钮时的特殊布局 */
-    .stock-item-actions .el-button:nth-child(3):last-child {
-        grid-column: 1 / -1;
-        font-size: 0.6rem;
-        padding: 3px 5px;
-        height: 26px;
-    }
+    /* 移除重复的小屏幕按钮样式 - 由StockList组件提供 */
 }
 
 .add-watchlist-btn,
@@ -7331,16 +6639,7 @@ body.onboarding-mode {
     gap: 4px;
 }
 
-.stock-name {
-    font-size: 1rem;
-    font-weight: 600;
-    color: #1e293b;
-}
-
-.stock-code {
-    font-size: 0.875rem;
-    color: #64748b;
-}
+/* 移除重复的基础股票样式 - 由StockList组件提供 */
 
 .stock-industry {
     font-size: 0.75rem;
@@ -12970,19 +12269,7 @@ body {
     flex-wrap: wrap;
 }
 
-.stock-name {
-    font-size: 16px;
-    font-weight: 600;
-    color: #1e40af;
-}
-
-.stock-code {
-    font-size: 14px;
-    color: #64748b;
-    background: rgba(255, 255, 255, 0.7);
-    padding: 2px 8px;
-    border-radius: 4px;
-}
+/* 移除重复的股票样式 - 由StockList组件提供 */
 
 .reminder-form-section {
     margin-bottom: 20px;
@@ -13445,13 +12732,7 @@ body {
         padding: 8px;
     }
 
-    .stock-name {
-        font-size: 14px;
-    }
-
-    .stock-code {
-        font-size: 12px;
-    }
+    /* 移除重复的股票样式 - 由StockList组件提供 */
 
     .form-label {
         font-size: 12px;
@@ -13643,11 +12924,6 @@ body {
 
 .watchlist-stock-card .watchlist-status {
     margin-top: 4px;
-}
-
-.watchlist-stock-card .status-label {
-    font-size: 0.8rem;
-    color: #9ca3af;
 }
 
 .watchlist-stock-card .status-value {

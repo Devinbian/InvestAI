@@ -61,7 +61,7 @@
             </div>
         </div>
 
-        <!-- 持仓列表 -->
+        <!-- 持仓列表 - 使用通用StockList组件 -->
         <div class="portfolio-content">
             <div v-if="userStore.portfolio.length === 0" class="empty-state">
                 <div class="empty-icon">📊</div>
@@ -71,100 +71,11 @@
                 </div>
             </div>
 
-            <div v-else class="portfolio-list">
-                <div v-for="position in userStore.portfolio" :key="position.code" class="stock-item"
-                    @click="analyzeStock(position)">
-                    <div class="stock-info">
-                        <div class="stock-header">
-                            <div class="stock-name-code">
-                                <div class="name-code-row">
-                                    <span class="stock-name">{{ position.name }}</span>
-                                    <span class="stock-code">({{ position.code }})</span>
-                                </div>
-                                <!-- 持仓盈亏状态 -->
-                                <div class="position-status"
-                                    :class="getPositionProfitLoss(position) >= 0 ? 'profit' : 'loss'">
-                                    <span class="status-label">盈亏：</span>
-                                    <span class="status-value">
-                                        {{ getPositionProfitLoss(position) >= 0 ? '+' : '' }}¥{{
-                                            Math.abs(getPositionProfitLoss(position)).toFixed(2) }}
-                                        ({{ getPositionProfitPercent(position) >= 0 ? '+' : '' }}{{
-                                            getPositionProfitPercent(position).toFixed(2) }}%)
-                                    </span>
-                                </div>
-                            </div>
-                            <div class="stock-price-change">
-                                <div class="current-price">¥{{ getCurrentPrice(position.code) }}</div>
-                                <div class="price-change"
-                                    :class="getPositionProfitLoss(position) >= 0 ? 'positive' : 'negative'">
-                                    {{ getPositionProfitLoss(position) >= 0 ? '+' : '' }}{{
-                                        getPositionProfitPercent(position).toFixed(2) }}%
-                                </div>
-                            </div>
-                        </div>
-
-                        <div class="stock-details">
-                            <div class="detail-row">
-                                <span class="detail-label">持仓数量：</span>
-                                <span class="detail-value">{{ position.quantity.toLocaleString() }}股</span>
-                                <span class="detail-label">成本价：</span>
-                                <span class="detail-value">¥{{ position.avgPrice.toFixed(2) }}</span>
-                            </div>
-                            <div class="detail-row">
-                                <span class="detail-label">持仓市值：</span>
-                                <span class="detail-value target-price">¥{{ (position.quantity *
-                                    getCurrentPrice(position.code)).toFixed(2) }}</span>
-                                <span class="detail-label">所属行业：</span>
-                                <span class="detail-value industry">{{ position.industry || '未分类' }}</span>
-                            </div>
-                        </div>
-                    </div>
-
-                    <div class="stock-actions">
-                        <el-button size="small" @click.stop="showSellDialog(position)" class="sell-stock-btn">
-                            <svg width="14" height="14" viewBox="0 0 24 24" fill="none">
-                                <path d="M12 2v20M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"
-                                    stroke="currentColor" stroke-width="2" />
-                            </svg>
-                            卖出
-                        </el-button>
-                        <el-button size="small" @click.stop="showBuyDialog(position)" class="buy-stock-btn-secondary">
-                            <svg width="14" height="14" viewBox="0 0 24 24" fill="none">
-                                <path d="M12 2v20M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"
-                                    stroke="currentColor" stroke-width="2" />
-                            </svg>
-                            加仓
-                        </el-button>
-                        <el-button size="small" @click.stop="showPaidAnalysisDialog(position)"
-                            class="paid-analysis-btn">
-                            <svg width="14" height="14" viewBox="0 0 24 24" fill="none">
-                                <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"
-                                    stroke="currentColor" stroke-width="2" />
-                            </svg>
-                            量化分析
-                            <div class="price-tag-container">
-                                <span class="price-tag original-price">3智点</span>
-                                <span class="price-tag promo-price">1智点</span>
-                            </div>
-                        </el-button>
-                        <el-button size="small" @click.stop="showQuantAnalysisDialog(position)"
-                            class="quant-analysis-btn">
-                            <svg width="14" height="14" viewBox="0 0 24 24" fill="none">
-                                <path d="M3 3v18h18M7 16l4-4 4 4 4-4" stroke="currentColor" stroke-width="2"
-                                    fill="none" />
-                            </svg>
-                            AI委托交易
-                            <div class="price-tag-container">
-                                <span class="price-tag original-price">3智点</span>
-                                <span class="price-tag promo-price">1智点</span>
-                            </div>
-                        </el-button>
-                    </div>
-                </div>
-            </div>
+            <StockList v-else :stocks="portfolioStocks" :actions="portfolioActions" :show-position-status="true"
+                :show-position-details="true" :show-basic-details="false" :clickable="true" @stock-click="analyzeStock"
+                @sell-stock="handleSellStock" @buy-stock="handleBuyStock" @paid-analysis="handlePaidAnalysis"
+                @ai-trading="handleAITrading" />
         </div>
-
-        <!-- 移除本地卖出对话框，改为使用主窗口的统一交易对话框 -->
     </div>
 </template>
 
@@ -172,27 +83,52 @@
 import { ref, reactive, computed } from 'vue';
 import { useUserStore } from '../store/user';
 import { ElMessage, ElMessageBox } from 'element-plus';
+import StockList from './StockList.vue';
 
 // 定义emit
 const emit = defineEmits(['send-to-chat', 'show-buy-dialog', 'show-sell-dialog']);
 
 const userStore = useUserStore();
 
-// 移除卖出相关的本地状态和方法，改为通过事件调用
-// const sellDialogVisible = ref(false);
-// const selectedPosition = ref(null);
-// const sellLoading = ref(false);
-// const sellFormRef = ref(null);
-// const sellForm = reactive({
-//     quantity: 100
-// });
-
-// const sellRules = {
-//     quantity: [
-//         { required: true, message: '请输入卖出数量', trigger: 'blur' },
-//         { type: 'number', min: 100, message: '最少卖出100股', trigger: 'blur' }
-//     ]
-// };
+// 持仓操作按钮配置
+const portfolioActions = [
+    {
+        key: "sell",
+        text: "卖出",
+        type: "danger",
+        class: "sell-stock-btn",
+        icon: "M12 2v20M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6",
+    },
+    {
+        key: "buy",
+        text: "加仓",
+        type: "default",
+        class: "buy-stock-btn-secondary",
+        icon: "M12 2v20M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6",
+    },
+    {
+        key: "analysis",
+        text: "量化分析",
+        type: "default",
+        class: "paid-analysis-btn",
+        icon: "M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z",
+        priceTag: {
+            original: "3智点",
+            promo: "1智点",
+        },
+    },
+    {
+        key: "aiTrading",
+        text: "AI委托交易",
+        type: "default",
+        class: "quant-analysis-btn",
+        icon: "M3 3v18h18M7 16l4-4 4 4 4-4",
+        priceTag: {
+            original: "3智点",
+            promo: "1智点",
+        },
+    },
+];
 
 // 模拟当前价格数据
 const currentPrices = {
@@ -220,14 +156,42 @@ const totalProfitLoss = computed(() => {
     }, 0);
 });
 
-// 移除卖出收入计算，因为不再使用本地卖出对话框
-// const sellRevenue = computed(() => {
-//     if (!selectedPosition.value || !sellForm.quantity) return 0;
-//     const currentPrice = getCurrentPrice(selectedPosition.value.code);
-//     const revenue = sellForm.quantity * currentPrice;
-//     const fee = revenue * 0.0003; // 0.03% 手续费
-//     return revenue - fee;
-// });
+// 转换持仓数据为StockList组件需要的格式
+const portfolioStocks = computed(() => {
+    return userStore.portfolio.map(position => {
+        const currentPrice = getCurrentPrice(position.code);
+        const profitLoss = getPositionProfitLoss(position);
+        const profitPercent = getPositionProfitPercent(position);
+
+        // 根据股票代码推断行业信息
+        const getIndustryByCode = (code) => {
+            const industryMap = {
+                '000001': '银行业',
+                '000858': '食品饮料',
+                '000002': '房地产',
+                '300750': '医疗器械',
+                '600519': '食品饮料',
+                '000700': '交通运输'
+            };
+            return industryMap[code] || '未分类';
+        };
+
+        return {
+            code: position.code,
+            name: position.name,
+            price: currentPrice,
+            change: profitPercent,
+            changeAmount: profitLoss,
+            industry: position.industry || getIndustryByCode(position.code),
+            // 持仓特有信息
+            quantity: position.quantity,
+            avgPrice: position.avgPrice,
+            marketValue: position.quantity * currentPrice,
+            profitLoss: profitLoss,
+            profitPercent: profitPercent
+        };
+    });
+});
 
 // 方法
 const getCurrentPrice = (stockCode) => {
@@ -249,30 +213,37 @@ const formatTime = (timeString) => {
     return date.toLocaleDateString('zh-CN');
 };
 
-const analyzeStock = (position) => {
+// 事件处理方法
+const analyzeStock = (stock) => {
     emit('send-to-chat', {
         type: 'stock',
-        content: position,
-        title: `分析${position.name}(${position.code})`
+        content: stock,
+        title: `分析${stock.name}(${stock.code})`
     });
 };
 
-const showBuyDialog = (position) => {
-    emit('show-buy-dialog', position);
+const handleSellStock = (stock) => {
+    // 找到原始持仓数据
+    const position = userStore.portfolio.find(p => p.code === stock.code);
+    if (position) {
+        const enhancedPosition = {
+            ...position,
+            currentPrice: getCurrentPrice(position.code),
+            price: getCurrentPrice(position.code)
+        };
+        emit('show-sell-dialog', enhancedPosition);
+    }
 };
 
-// 修改卖出方法，通过事件调用主窗口的卖出对话框
-const showSellDialog = (position) => {
-    // 添加当前价格信息到position对象
-    const enhancedPosition = {
-        ...position,
-        currentPrice: getCurrentPrice(position.code), // 添加当前价格
-        price: position.price || getCurrentPrice(position.code) // 确保有价格信息
-    };
-    emit('show-sell-dialog', enhancedPosition);
+const handleBuyStock = (stock) => {
+    // 找到原始持仓数据
+    const position = userStore.portfolio.find(p => p.code === stock.code);
+    if (position) {
+        emit('show-buy-dialog', position);
+    }
 };
 
-const showPaidAnalysisDialog = (position) => {
+const handlePaidAnalysis = (stock) => {
     // 检查余额是否足够
     if (userStore.balance < 1) {
         ElMessage.warning('余额不足，请先充值');
@@ -280,7 +251,7 @@ const showPaidAnalysisDialog = (position) => {
     }
 
     ElMessageBox.confirm(
-        `量化分析 ${position.name}(${position.code}) 促销价仅需 1智点（原价3智点），是否继续？`,
+        `量化分析 ${stock.name}(${stock.code}) 促销价仅需 1智点（原价3智点），是否继续？`,
         '付费服务确认',
         {
             confirmButtonText: '确认支付 1智点',
@@ -293,8 +264,8 @@ const showPaidAnalysisDialog = (position) => {
             ElMessage.success('支付成功，正在生成量化分析...');
             emit('send-to-chat', {
                 type: 'paid-analysis',
-                content: position,
-                title: `量化分析${position.name}(${position.code})`
+                content: stock,
+                title: `量化分析${stock.name}(${stock.code})`
             });
         } else {
             ElMessage.error('支付失败，智点余额不足');
@@ -304,12 +275,12 @@ const showPaidAnalysisDialog = (position) => {
     });
 };
 
-const showQuantAnalysisDialog = (position) => {
+const handleAITrading = (stock) => {
     // 发送到主界面处理AI委托交易对话框
     emit('send-to-chat', {
         type: 'show-ai-trading-dialog',
-        content: position,
-        title: `AI委托交易设置 ${position.name}(${position.code})`
+        content: stock,
+        title: `AI委托交易设置 ${stock.name}(${stock.code})`
     });
 };
 
@@ -324,35 +295,6 @@ const refreshData = () => {
     ElMessage.success('数据已刷新');
     // 这里可以添加实际的数据刷新逻辑
 };
-
-// 移除本地卖出对话框的确认方法
-// const confirmSell = async () => {
-//     if (!sellFormRef.value) return;
-
-//     await sellFormRef.value.validate((valid) => {
-//         if (valid) {
-//             sellLoading.value = true;
-
-//             setTimeout(() => {
-//                 const currentPrice = getCurrentPrice(selectedPosition.value.code);
-//                 const result = userStore.sellStock(
-//                     selectedPosition.value.code,
-//                     sellForm.quantity,
-//                     currentPrice
-//                 );
-
-//                 if (result.success) {
-//                     ElMessage.success(result.message);
-//                     sellDialogVisible.value = false;
-//                 } else {
-//                     ElMessage.error(result.message);
-//                 }
-
-//                 sellLoading.value = false;
-//             }, 1000);
-//         }
-//     });
-// };
 </script>
 
 <style scoped>

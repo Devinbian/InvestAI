@@ -184,7 +184,8 @@
             <div class="chat-history-area chat-area" v-if="isChatMode && chatHistory.length" ref="chatHistoryRef">
                 <div v-for="(message, idx) in chatHistory" :key="idx" :class="['chat-message', message.role]">
                     <div class="chat-message-content"
-                        :style="message.role === 'user' ? (isMobileView ? 'padding: 18px 16px 6px 16px !important; line-height: 1.3 !important;' : 'padding: 20px 20px 8px 20px !important; line-height: 1.3 !important;') : ''">
+                        :style="message.role === 'user' ? (isMobileView ? 'padding: 18px 16px 6px 16px; line-height: 1.3;' : 'padding: 20px 20px 8px 20px; line-height: 1.3;') : ''"
+                        :class="{ 'user-message-fix': message.role === 'user' }">
                         <div v-if="message.content" class="message-text">
                             <MarkdownRenderer :content="message.content" />
                         </div>
@@ -4645,9 +4646,38 @@ const handleShortcutsUpdated = () => {
     initializeShortcuts();
 };
 
+// 强制修复用户消息padding的函数
+const fixUserMessagePadding = () => {
+    nextTick(() => {
+        const userMessages = document.querySelectorAll('.chat-message.user .chat-message-content');
+        userMessages.forEach(element => {
+            if (isMobileView.value) {
+                element.style.padding = '18px 16px 6px 16px';
+                element.style.lineHeight = '1.3';
+            } else {
+                element.style.padding = '20px 20px 8px 20px';
+                element.style.lineHeight = '1.3';
+            }
+            element.style.setProperty('padding', element.style.padding, 'important');
+            element.style.setProperty('line-height', element.style.lineHeight, 'important');
+        });
+    });
+};
+
+// 监听聊天历史变化，强制修复padding
+watch(chatHistory, () => {
+    fixUserMessagePadding();
+}, { deep: true });
+
+// 监听移动端视图变化
+watch(isMobileView, () => {
+    fixUserMessagePadding();
+});
+
 // 组件挂载时初始化
 onMounted(() => {
     initializeShortcuts();
+    fixUserMessagePadding();
 });
 </script>
 
@@ -5328,6 +5358,12 @@ body.onboarding-mode {
     /* 添加左右间距，与AI卡片的内边距保持一致，确保消息内容不贴边 */
     width: 100%;
     box-sizing: border-box;
+}
+
+/* 用户消息padding修复 - 使用更高优先级的选择器 */
+.chat-history-area .chat-message.user .chat-message-content.user-message-fix {
+    padding: 20px 20px 8px 20px !important;
+    line-height: 1.3 !important;
 }
 
 .chat-history-area .chat-message.user .chat-message-content {
@@ -11740,6 +11776,11 @@ body {
     }
 
     /* 移动端消息气泡padding调整 */
+    .chat-history-area .chat-message.user .chat-message-content.user-message-fix {
+        padding: 18px 16px 6px 16px !important;
+        line-height: 1.3 !important;
+    }
+
     .chat-history-area .chat-message.user .chat-message-content {
         padding: 18px 16px 6px 16px !important;
         /* 移动端用户消息：大幅调整padding，顶部18px，底部6px */

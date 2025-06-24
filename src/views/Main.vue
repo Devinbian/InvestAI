@@ -5329,25 +5329,20 @@ body.onboarding-mode {
     box-sizing: border-box;
 }
 
-.chat-message.user .chat-message-content {
-    background: #007bff;
-    color: white;
-    border-radius: 18px 18px 4px 18px;
-    padding: 14px 20px 14px 20px !important;
-    /* 先恢复相等padding，然后通过其他方式调整视觉平衡 */
-    margin-left: auto;
-    max-width: 75%;
+:deep(.chat-message.user .chat-message-content) {
+    background: #007bff !important;
+    color: white !important;
+    border-radius: 18px 18px 4px 18px !important;
+    padding: 20px 20px 8px 20px !important;
+    /* 大幅调整padding：顶部20px，底部8px，明显的视觉差异 */
+    margin-left: auto !important;
+    max-width: 75% !important;
     /* PC端用户消息保持适中宽度，与助手消息形成视觉层次 */
-    font-size: 1rem;
-    line-height: 1.4;
-    /* 减小行高以减少字体下方的视觉空间 */
-    word-wrap: break-word;
+    font-size: 1rem !important;
+    line-height: 1.3 !important;
+    /* 进一步减小行高 */
+    word-wrap: break-word !important;
     /* 确保长文本正确换行 */
-    display: flex;
-    align-items: center;
-    /* 使用flex布局垂直居中对齐 */
-    min-height: 20px;
-    /* 设置最小高度确保对齐效果 */
 }
 
 /* 强制清除用户消息内容的内部间距 */
@@ -11744,16 +11739,11 @@ body {
     }
 
     /* 移动端消息气泡padding调整 */
-    .chat-message.user .chat-message-content {
-        padding: 12px 16px 12px 16px !important;
-        /* 移动端用户消息：恢复相等padding，通过其他方式调整视觉平衡 */
-        line-height: 1.4 !important;
-        /* 减小行高以减少字体下方的视觉空间 */
-        display: flex !important;
-        align-items: center !important;
-        /* 使用flex布局垂直居中对齐 */
-        min-height: 18px !important;
-        /* 设置最小高度确保对齐效果 */
+    :deep(.chat-message.user .chat-message-content) {
+        padding: 18px 16px 6px 16px !important;
+        /* 移动端用户消息：大幅调整padding，顶部18px，底部6px */
+        line-height: 1.3 !important;
+        /* 进一步减小行高 */
     }
 
     .chat-message.assistant .chat-message-content {

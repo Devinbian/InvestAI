@@ -18,11 +18,17 @@
         </div>
 
         <div class="recommendations-list">
-            <StockList :stocks="formattedRecommendations" :actions="recommendationActions" :show-recommend-index="true"
-                :show-recommend-tooltip="true" :show-basic-details="true" :show-reason="true" :clickable="true"
-                @stock-click="showStockDetail" @add-watchlist="handleAddWatchlist"
+            <!-- PC端使用StockList -->
+            <StockList v-if="!isMobileView" :stocks="formattedRecommendations" :actions="recommendationActions"
+                :show-recommend-index="true" :show-recommend-tooltip="true" :show-basic-details="true"
+                :show-reason="true" :clickable="true" @stock-click="showStockDetail" @add-watchlist="handleAddWatchlist"
                 @remove-watchlist="handleRemoveWatchlist" @paid-analysis="handlePaidAnalysis"
                 @ai-trading="handleAITrading" @buy-stock="handleBuyStock" />
+
+            <!-- 移动端使用MobileStockList -->
+            <MobileStockList v-else :stocks="formattedRecommendations" :actions="recommendationActions"
+                :show-recommend-index="true" :show-details="true" :clickable="true" @stock-click="showStockDetail"
+                @action-click="handleActionClick" />
         </div>
 
 
@@ -30,15 +36,23 @@
 </template>
 
 <script setup>
-import { ref, computed } from 'vue';
+import { ref, computed, onMounted, onUnmounted } from 'vue';
 import { ElMessage, ElMessageBox } from 'element-plus';
 import { useUserStore } from '../store/user';
 import StockList from './StockList.vue';
+import MobileStockList from './MobileStockList.vue';
 
 // 定义emit
 const emit = defineEmits(['send-to-chat', 'show-buy-dialog']);
 
 const userStore = useUserStore();
+
+// 移动端检测
+const isMobileView = ref(false);
+
+const checkMobileView = () => {
+    isMobileView.value = window.innerWidth <= 768;
+};
 
 // 推荐股票操作按钮配置
 const recommendationActions = [
@@ -198,6 +212,29 @@ const showStockDetail = (stock) => {
     });
 };
 
+// 移动端操作处理
+const handleActionClick = ({ action, stock }) => {
+    switch (action) {
+        case 'addWatchlist':
+            handleAddWatchlist(stock);
+            break;
+        case 'removeWatchlist':
+            handleRemoveWatchlist(stock);
+            break;
+        case 'analysis':
+            handlePaidAnalysis(stock);
+            break;
+        case 'aiTrading':
+            handleAITrading(stock);
+            break;
+        case 'buy':
+            handleBuyStock(stock);
+            break;
+        default:
+            console.log('未知操作:', action);
+    }
+};
+
 const handleAddWatchlist = (stock) => {
     const success = userStore.addToWatchlist(stock);
     if (success) {
@@ -261,6 +298,15 @@ const handleBuyStock = (stock) => {
     emit('show-buy-dialog', stock);
 };
 
+// 生命周期
+onMounted(() => {
+    checkMobileView();
+    window.addEventListener('resize', checkMobileView);
+});
+
+onUnmounted(() => {
+    window.removeEventListener('resize', checkMobileView);
+});
 
 </script>
 

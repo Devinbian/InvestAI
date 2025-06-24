@@ -30,8 +30,14 @@
 
             <!-- 自选股列表 -->
             <div v-else class="watchlist-list">
-                <StockList :stocks="watchlistStocks" v-bind="getStockListConfig('watchlist')"
+                <!-- PC端使用StockList -->
+                <StockList v-if="!isMobileView" :stocks="watchlistStocks" v-bind="getStockListConfig('watchlist')"
                     @stock-click="handleStockClick" @action-click="handleActionClick" />
+
+                <!-- 移动端使用MobileStockList -->
+                <MobileStockList v-else :stocks="watchlistStocks" :actions="getStockListConfig('watchlist').actions"
+                    :show-details="true" :clickable="true" @stock-click="handleStockClick"
+                    @action-click="handleActionClick" />
             </div>
         </div>
 
@@ -44,16 +50,24 @@
 </template>
 
 <script setup>
-import { computed } from 'vue';
+import { computed, ref, onMounted, onUnmounted } from 'vue';
 import { useUserStore } from '../store/user';
 import { ElMessage, ElMessageBox } from 'element-plus';
 import StockList from './StockList.vue';
+import MobileStockList from './MobileStockList.vue';
 import { getStockListConfig } from '../config/stockListConfig';
 
 // 定义emit
 const emit = defineEmits(['send-to-chat', 'show-buy-dialog']);
 
 const userStore = useUserStore();
+
+// 移动端检测
+const isMobileView = ref(false);
+
+const checkMobileView = () => {
+    isMobileView.value = window.innerWidth <= 768;
+};
 
 // 处理自选股数据，添加实时价格信息
 const watchlistStocks = computed(() => {
@@ -330,6 +344,16 @@ const refreshWatchlist = () => {
     // 这里可以调用API刷新股票价格等数据
     ElMessage.success('自选股数据已刷新');
 };
+
+// 生命周期
+onMounted(() => {
+    checkMobileView();
+    window.addEventListener('resize', checkMobileView);
+});
+
+onUnmounted(() => {
+    window.removeEventListener('resize', checkMobileView);
+});
 </script>
 
 <style scoped>

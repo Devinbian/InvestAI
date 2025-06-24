@@ -8,12 +8,7 @@ const routes = [
     component: () => import("../views/Main.vue"),
     meta: { requiresAuth: false },
   },
-  {
-    path: "/login",
-    name: "Login",
-    component: () => import("../views/Login.vue"),
-    meta: { requiresAuth: false },
-  },
+
   {
     path: "/risk-assessment",
     name: "RiskAssessment",
@@ -49,10 +44,10 @@ router.beforeEach((to, from, next) => {
   const userStore = useUserStore();
 
   if (to.meta.requiresAuth && !userStore.isLoggedIn) {
-    // 如果需要登录但未登录，保存目标路由并重定向到登录页
+    // 如果需要登录但未登录，重定向到主页面（主页面会显示登录弹窗）
     next({
-      name: "Login",
-      query: { redirect: to.fullPath },
+      name: "Main",
+      query: { redirect: to.fullPath, showLogin: true },
     });
   } else {
     next();

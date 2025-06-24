@@ -59,7 +59,7 @@ request.interceptors.response.use(
     switch (data?.code) {
       case "A0307":
       case "B0301":
-        router.push("/login");
+        router.push("/?showLogin=true");
         msg = "请先登录";
         break;
     }

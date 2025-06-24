@@ -1,50 +1,68 @@
 <template>
-    <div class="sidebar-container" :class="{ 'collapsed': isCollapsed }" @wheel.stop>
-        <!-- 收起/展开按钮 -->
-        <button class="sidebar-toggle" @click="toggleSidebar">
+    <!-- 移动端遮罩层 -->
+    <div class="sidebar-overlay" :class="{ 'show': isMobileExpanded }" @click="closeMobileSidebar"></div>
+
+    <div class="sidebar-container" :class="{ 'collapsed': isCollapsed, 'mobile-expanded': isMobileExpanded }"
+        @wheel.stop>
+        <!-- 收起/展开按钮 - PC端显示 -->
+        <button v-if="!isMobileView" class="sidebar-toggle" @click="toggleSidebar">
             <svg width="16" height="16" viewBox="0 0 24 24" fill="none" :class="{ 'rotated': isCollapsed }">
                 <path d="M15 18l-6-6 6-6" stroke="currentColor" stroke-width="2" stroke-linecap="round"
                     stroke-linejoin="round" />
             </svg>
         </button>
 
-        <div class="sidebar-content" v-show="!isCollapsed">
+        <div class="sidebar-content" v-show="(isMobileView && isMobileExpanded) || (!isMobileView && !isCollapsed)">
+            <!-- 移动端顶部标题栏 -->
+            <div v-if="isMobileView" class="mobile-header">
+                <h3 class="mobile-title">功能面板</h3>
+                <button class="mobile-close-btn" @click="closeMobileSidebar">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none">
+                        <path d="M18 6L6 18M6 6l12 12" stroke="currentColor" stroke-width="2" stroke-linecap="round"
+                            stroke-linejoin="round" />
+                    </svg>
+                </button>
+            </div>
+
             <!-- Tab导航 -->
-            <div class="tab-nav">
+            <div class="tab-nav" :class="{ 'mobile-nav': isMobileView }">
                 <!-- 1. 大盘指数 -->
                 <div class="tab-item" :class="{ 'active': activeTab === 'market' }" @click="activeTab = 'market'">
-                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none">
+                    <svg :width="isMobileView ? '18' : '16'" :height="isMobileView ? '18' : '16'" viewBox="0 0 24 24"
+                        fill="none">
                         <path d="M3 3v18h18" stroke="currentColor" stroke-width="2" />
                         <path d="M7 12l4-4 4 4 6-6" stroke="currentColor" stroke-width="2" />
                     </svg>
-                    大盘指数
+                    <span class="tab-text">大盘指数</span>
                 </div>
                 <!-- 2. 智能荐股 -->
                 <div class="tab-item" :class="{ 'active': activeTab === 'stocks' }" @click="activeTab = 'stocks'">
-                    🎯
-                    智能荐股
+                    <span class="tab-icon">🎯</span>
+                    <span class="tab-text">智能荐股</span>
                 </div>
                 <!-- 3. 自选股 -->
                 <div class="tab-item" :class="{ 'active': activeTab === 'watchlist' }" @click="activeTab = 'watchlist'">
-                    ⭐
-                    自选股
+                    <span class="tab-icon">⭐</span>
+                    <span class="tab-text">自选股</span>
                     <span v-if="watchlistCount > 0" class="count-badge">{{ watchlistCount }}</span>
                 </div>
                 <!-- 4. 持仓 -->
                 <div class="tab-item" :class="{ 'active': activeTab === 'portfolio' }" @click="activeTab = 'portfolio'">
-                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none">
+                    <svg :width="isMobileView ? '18' : '16'" :height="isMobileView ? '18' : '16'" viewBox="0 0 24 24"
+                        fill="none">
                         <path d="M3 3h18v18H3zM12 8v8m-4-4h8" stroke="currentColor" stroke-width="2" />
                     </svg>
-                    持仓
+                    <span class="tab-text">持仓</span>
                     <span v-if="portfolioCount > 0" class="count-badge">{{ portfolioCount }}</span>
                 </div>
                 <!-- 5. 消息推送 -->
                 <div class="tab-item" :class="{ 'active': activeTab === 'messages' }" @click="activeTab = 'messages'">
-                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none">
+                    <svg :width="isMobileView ? '18' : '16'" :height="isMobileView ? '18' : '16'" viewBox="0 0 24 24"
+                        fill="none">
                         <path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9" stroke="currentColor" stroke-width="2" />
                         <path d="M13.73 21a2 2 0 0 1-3.46 0" stroke="currentColor" stroke-width="2" />
                     </svg>
-                    消息推送
+                    <span class="tab-text">消息推送</span>
                     <span v-if="unreadCount > 0" class="unread-badge">{{ unreadCount }}</span>
                 </div>
             </div>
@@ -78,7 +96,7 @@
 </template>
 
 <script setup>
-import { ref, computed } from 'vue';
+import { ref, computed, onMounted, onUnmounted } from 'vue';
 import { useUserStore } from '../store/user';
 import MarketIndex from './MarketIndex.vue';
 import StockRecommendations from './StockRecommendations.vue';
@@ -96,15 +114,104 @@ const isCollapsed = ref(true);
 const activeTab = ref('market'); // 默认显示大盘指数
 const unreadCount = ref(2); // 未读消息数量，这里可以从消息组件获取
 
+// 移动端状态管理
+const isMobileView = ref(false);
+const isMobileExpanded = ref(false);
+
 // 自选股数量
 const watchlistCount = computed(() => userStore.watchlist.length);
 
 // 持仓数量
 const portfolioCount = computed(() => userStore.portfolio.length);
 
-const toggleSidebar = () => {
-    isCollapsed.value = !isCollapsed.value;
+// 检测移动端
+const checkMobileView = () => {
+    const newIsMobileView = window.innerWidth <= 768;
+    console.log('Sidebar移动端检测:', {
+        windowWidth: window.innerWidth,
+        oldIsMobileView: isMobileView.value,
+        newIsMobileView: newIsMobileView
+    });
+
+    // 如果从移动端切换到PC端，重置移动端状态
+    if (isMobileView.value && !newIsMobileView && isMobileExpanded.value) {
+        isMobileExpanded.value = false;
+        document.body.style.overflow = '';
+    }
+
+    isMobileView.value = newIsMobileView;
 };
+
+// 切换侧边栏
+const toggleSidebar = () => {
+    console.log('Sidebar toggleSidebar被调用', {
+        isMobileView: isMobileView.value,
+        isMobileExpanded: isMobileExpanded.value,
+        isCollapsed: isCollapsed.value,
+        windowWidth: window.innerWidth
+    });
+
+    if (isMobileView.value) {
+        // 移动端：切换展开/收起状态
+        isMobileExpanded.value = !isMobileExpanded.value;
+        console.log('移动端模式，isMobileExpanded设为:', isMobileExpanded.value);
+
+        // 防止背景滚动
+        if (isMobileExpanded.value) {
+            document.body.style.overflow = 'hidden';
+        } else {
+            document.body.style.overflow = '';
+        }
+    } else {
+        // PC端：原有逻辑
+        console.log('PC端模式，isCollapsed设为:', !isCollapsed.value);
+        isCollapsed.value = !isCollapsed.value;
+    }
+};
+
+// 关闭移动端侧边栏
+const closeMobileSidebar = () => {
+    if (isMobileView.value && isMobileExpanded.value) {
+        isMobileExpanded.value = false;
+        document.body.style.overflow = '';
+    }
+};
+
+// 监听窗口大小变化
+const handleResize = () => {
+    checkMobileView();
+
+    // 如果从移动端切换到PC端，重置移动端状态
+    if (!isMobileView.value && isMobileExpanded.value) {
+        isMobileExpanded.value = false;
+        document.body.style.overflow = '';
+    }
+};
+
+// 监听ESC键关闭移动端侧边栏
+const handleKeyDown = (event) => {
+    if (event.key === 'Escape' && isMobileView.value && isMobileExpanded.value) {
+        closeMobileSidebar();
+    }
+};
+
+// 生命周期
+onMounted(() => {
+    checkMobileView();
+    // 移动端模式下，初始化为非收起状态，这样内容可以正常显示
+    if (isMobileView.value) {
+        isCollapsed.value = false;
+    }
+    window.addEventListener('resize', handleResize);
+    document.addEventListener('keydown', handleKeyDown);
+});
+
+onUnmounted(() => {
+    window.removeEventListener('resize', handleResize);
+    document.removeEventListener('keydown', handleKeyDown);
+    // 清理样式
+    document.body.style.overflow = '';
+});
 
 // 处理子组件发送到聊天的事件
 const handleSendToChat = (data) => {
@@ -126,6 +233,11 @@ const handleWheel = (event) => {
     // 直接阻止事件冒泡，让Sidebar内部处理滚动
     event.stopPropagation();
 };
+
+// 暴露方法给父组件调用
+defineExpose({
+    toggleSidebar
+});
 </script>
 
 <style scoped>
@@ -348,14 +460,860 @@ const handleWheel = (event) => {
 
 /* 移动端响应式处理 */
 @media (max-width: 768px) {
+
+
+
     .sidebar-container {
-        display: none !important;
-        /* 移动端完全隐藏侧边栏 */
+        /* 移动端改为抽屉式侧边栏 */
+        width: 85vw !important;
+        max-width: 380px !important;
+        height: 100vh !important;
+        top: 0 !important;
+        right: -100% !important;
+        /* 默认隐藏在右侧 */
+        position: fixed !important;
+        transform: translateX(0) !important;
+        transition: right 0.3s cubic-bezier(0.25, 0.46, 0.45, 0.94) !important;
+        z-index: 10001 !important;
+        background: white !important;
+        border-left: 2px solid #3b82f6 !important;
+        box-shadow: -8px 0 32px rgba(0, 0, 0, 0.3) !important;
+        display: flex !important;
+        /* 覆盖之前的隐藏样式 */
+        flex-direction: column !important;
     }
 
+    /* 移动端展开状态 */
+    .sidebar-container.mobile-expanded {
+        right: 0 !important;
+    }
+
+    /* 移动端侧边栏内容 */
+    .sidebar-content {
+        height: 100% !important;
+        padding: 0 !important;
+        /* 移除顶部间距 */
+        overflow: hidden !important;
+        display: flex !important;
+        flex-direction: column !important;
+    }
+
+    /* 移动端顶部标题栏 - 紧凑版 */
+    .mobile-header {
+        display: flex !important;
+        align-items: center !important;
+        justify-content: space-between !important;
+        padding: 10px 16px !important;
+        background: linear-gradient(135deg, #3b82f6, #1d4ed8) !important;
+        color: white !important;
+        border-bottom: 1px solid rgba(255, 255, 255, 0.1) !important;
+        flex-shrink: 0 !important;
+        min-height: 44px !important;
+    }
+
+    .mobile-title {
+        margin: 0 !important;
+        font-size: 1rem !important;
+        font-weight: 600 !important;
+        color: white !important;
+    }
+
+    .mobile-close-btn {
+        background: rgba(255, 255, 255, 0.1) !important;
+        border: 1px solid rgba(255, 255, 255, 0.2) !important;
+        border-radius: 6px !important;
+        width: 32px !important;
+        height: 32px !important;
+        display: flex !important;
+        align-items: center !important;
+        justify-content: center !important;
+        cursor: pointer !important;
+        transition: all 0.2s ease !important;
+        color: white !important;
+    }
+
+    .mobile-close-btn:hover {
+        background: rgba(255, 255, 255, 0.2) !important;
+        transform: scale(1.05) !important;
+    }
+
+    /* 移动端tab导航优化 - 紧凑版 */
+    .tab-nav.mobile-nav {
+        flex-wrap: nowrap !important;
+        overflow-x: auto !important;
+        overflow-y: hidden !important;
+        scrollbar-width: none !important;
+        /* Firefox */
+        -ms-overflow-style: none !important;
+        /* IE/Edge */
+        display: flex !important;
+        flex-shrink: 0 !important;
+        background: rgba(249, 250, 251, 0.95) !important;
+        border-bottom: 2px solid #e5e7eb !important;
+        padding: 6px 0 !important;
+        min-height: 56px !important;
+    }
+
+    .tab-nav.mobile-nav::-webkit-scrollbar {
+        display: none;
+        /* Chrome/Safari */
+    }
+
+    .mobile-nav .tab-item {
+        flex: 0 0 auto !important;
+        min-width: 75px !important;
+        padding: 8px 8px !important;
+        font-size: 0.7rem !important;
+        font-weight: 500 !important;
+        white-space: nowrap !important;
+        flex-direction: column !important;
+        gap: 3px !important;
+        border-radius: 10px !important;
+        margin: 0 3px !important;
+        transition: all 0.2s ease !important;
+    }
+
+    .mobile-nav .tab-item:hover {
+        background: rgba(59, 130, 246, 0.08) !important;
+        color: #1d4ed8 !important;
+    }
+
+    .mobile-nav .tab-item.active {
+        background: rgba(59, 130, 246, 0.12) !important;
+        color: #1d4ed8 !important;
+        border-bottom: none !important;
+        font-weight: 600 !important;
+    }
+
+    .mobile-nav .tab-text {
+        font-size: 0.7rem !important;
+        line-height: 1.2 !important;
+        text-align: center !important;
+    }
+
+    .mobile-nav .tab-icon {
+        font-size: 1.1rem !important;
+        line-height: 1 !important;
+    }
+
+    /* 移动端tab内容区域 - 紧凑版 */
+    .tab-content {
+        height: calc(100vh - 100px) !important;
+        /* 减去标题栏(44px)和tab导航(56px) */
+        padding: 6px !important;
+        flex: 1 !important;
+        overflow-y: auto !important;
+        background: #f8fafc !important;
+    }
+
+    .tab-panel {
+        padding: 0 !important;
+        padding-bottom: 100px !important;
+        /* 底部留出空间避免与聊天框冲突 */
+        background: transparent !important;
+        border-radius: 0 !important;
+        box-shadow: none !important;
+        overflow: visible !important;
+    }
+
+    /* 移动端侧边栏内的股票列表优化 */
+    .tab-panel .mobile-stock-list-container {
+        background: transparent !important;
+    }
+
+    .tab-panel .mobile-stock-card {
+        margin: 0 0 8px 0 !important;
+        padding: 10px !important;
+        border-radius: 8px !important;
+        box-shadow: 0 1px 3px rgba(0, 0, 0, 0.08) !important;
+        border: 1px solid #e2e8f0 !important;
+        background: white !important;
+    }
+
+    .tab-panel .stock-name {
+        font-size: 0.9rem !important;
+        line-height: 1.3 !important;
+    }
+
+    .tab-panel .current-price {
+        font-size: 1.05rem !important;
+    }
+
+    /* 修复操作按钮溢出问题 */
+    .sidebar-container.mobile-expanded .tab-panel .native-mobile-actions {
+        margin-top: 10px !important;
+        display: flex !important;
+        align-items: flex-start !important;
+        gap: 6px !important;
+        flex-wrap: nowrap !important;
+        overflow: visible !important;
+        width: 100% !important;
+        box-sizing: border-box !important;
+    }
+
+    .sidebar-container.mobile-expanded .tab-panel .primary-actions {
+        flex: 1 !important;
+        display: flex !important;
+        gap: 4px !important;
+        flex-wrap: wrap !important;
+        min-width: 0 !important;
+        width: calc(100% - 34px) !important;
+        box-sizing: border-box !important;
+    }
+
+    .sidebar-container.mobile-expanded .tab-panel .primary-action-btn {
+        padding: 6px 8px !important;
+        font-size: 0.65rem !important;
+        min-height: 30px !important;
+        border-radius: 6px !important;
+        flex: 0 1 calc(50% - 2px) !important;
+        min-width: 0 !important;
+        max-width: calc(50% - 2px) !important;
+        white-space: nowrap !important;
+        overflow: hidden !important;
+        text-overflow: ellipsis !important;
+        box-sizing: border-box !important;
+        display: flex !important;
+        align-items: center !important;
+        justify-content: center !important;
+        gap: 3px !important;
+        /* 调试边框 */
+        border: 1px solid #00ff00 !important;
+    }
+
+    .sidebar-container.mobile-expanded .tab-panel .action-text {
+        font-size: 0.65rem !important;
+        white-space: nowrap !important;
+        overflow: hidden !important;
+        text-overflow: ellipsis !important;
+        flex: 1 !important;
+        text-align: center !important;
+    }
+
+    .sidebar-container.mobile-expanded .tab-panel .action-icon {
+        font-size: 0.75rem !important;
+        flex-shrink: 0 !important;
+        width: 12px !important;
+        height: 12px !important;
+        display: flex !important;
+        align-items: center !important;
+        justify-content: center !important;
+    }
+
+    .sidebar-container.mobile-expanded .tab-panel .price-badge {
+        font-size: 0.5rem !important;
+        padding: 1px 4px !important;
+        border-radius: 3px !important;
+        margin-left: 0 !important;
+        background: rgba(255, 165, 0, 0.2) !important;
+        color: #ff8c00 !important;
+        border: 1px solid rgba(255, 165, 0, 0.3) !important;
+        flex-shrink: 0 !important;
+    }
+
+    .sidebar-container.mobile-expanded .tab-panel .more-btn {
+        width: 30px !important;
+        height: 30px !important;
+        flex-shrink: 0 !important;
+        border-radius: 6px !important;
+        display: flex !important;
+        align-items: center !important;
+        justify-content: center !important;
+        background: #f3f4f6 !important;
+        border: 1px solid #e5e7eb !important;
+        color: #6b7280 !important;
+    }
+
+    .sidebar-container.mobile-expanded .tab-panel .more-btn:hover {
+        background: #e5e7eb !important;
+    }
+
+    .sidebar-container.mobile-expanded .tab-panel .more-icon {
+        font-size: 1rem !important;
+        font-weight: bold !important;
+    }
+
+    /* 移动端侧边栏组件标题优化 */
+    .tab-panel .card-header {
+        padding: 12px 16px 8px 16px !important;
+        background: white !important;
+        border-bottom: 1px solid #f1f5f9 !important;
+        border-radius: 8px 8px 0 0 !important;
+        margin-bottom: 8px !important;
+    }
+
+    .tab-panel .card-title {
+        font-size: 0.95rem !important;
+        color: #1e293b !important;
+    }
+
+    .tab-panel .update-time {
+        font-size: 0.7rem !important;
+        color: #64748b !important;
+    }
+
+    /* 移动端空状态优化 */
+    .tab-panel .empty-state {
+        padding: 30px 20px !important;
+        text-align: center !important;
+        background: white !important;
+        border-radius: 8px !important;
+        margin: 8px 0 !important;
+    }
+
+    .tab-panel .empty-icon {
+        font-size: 2rem !important;
+        margin-bottom: 8px !important;
+        opacity: 0.6 !important;
+    }
+
+    .tab-panel .empty-title {
+        font-size: 0.9rem !important;
+        color: #6b7280 !important;
+        margin-bottom: 4px !important;
+    }
+
+    .tab-panel .empty-desc {
+        font-size: 0.75rem !important;
+        color: #9ca3af !important;
+        line-height: 1.4 !important;
+    }
+
+
+
+    .sidebar-container.mobile-expanded .tab-panel .summary-header {
+        padding: 0 0 12px 0 !important;
+        margin-bottom: 0 !important;
+        display: flex !important;
+        justify-content: space-between !important;
+        align-items: center !important;
+    }
+
+    .sidebar-container.mobile-expanded .tab-panel .summary-header h3 {
+        font-size: 1rem !important;
+        margin: 0 !important;
+        color: white !important;
+        font-weight: 600 !important;
+    }
+
+    .sidebar-container.mobile-expanded .tab-panel .refresh-btn {
+        width: 28px !important;
+        height: 28px !important;
+        border-radius: 6px !important;
+        background: rgba(255, 255, 255, 0.15) !important;
+        border: 1px solid rgba(255, 255, 255, 0.2) !important;
+        color: white !important;
+        display: flex !important;
+        align-items: center !important;
+        justify-content: center !important;
+        cursor: pointer !important;
+        transition: all 0.2s ease !important;
+    }
+
+    .sidebar-container.mobile-expanded .tab-panel .refresh-btn:hover {
+        background: rgba(255, 255, 255, 0.2) !important;
+    }
+
+    .sidebar-container.mobile-expanded .tab-panel .refresh-btn svg {
+        width: 14px !important;
+        height: 14px !important;
+    }
+
+    .sidebar-container.mobile-expanded .tab-panel .summary-main {
+        margin-bottom: 6px !important;
+        padding: 0 !important;
+    }
+
+    .sidebar-container.mobile-expanded .tab-panel .total-assets-card {
+        display: flex !important;
+        align-items: center !important;
+        gap: 6px !important;
+        background: rgba(255, 255, 255, 0.15) !important;
+        border-radius: 4px !important;
+        padding: 6px 8px !important;
+        border: 1px solid rgba(255, 255, 255, 0.2) !important;
+        backdrop-filter: blur(10px) !important;
+        min-height: 40px !important;
+        max-height: 40px !important;
+    }
+
+    .sidebar-container.mobile-expanded .tab-panel .asset-icon {
+        font-size: 1rem !important;
+        flex-shrink: 0 !important;
+        width: 28px !important;
+        height: 28px !important;
+        background: rgba(255, 255, 255, 0.2) !important;
+        border-radius: 50% !important;
+        display: flex !important;
+        align-items: center !important;
+        justify-content: center !important;
+    }
+
+    .sidebar-container.mobile-expanded .tab-panel .asset-info {
+        flex: 1 !important;
+        display: flex !important;
+        flex-direction: column !important;
+        gap: 1px !important;
+        min-height: 28px !important;
+        justify-content: center !important;
+    }
+
+    .sidebar-container.mobile-expanded .tab-panel .asset-label {
+        font-size: 0.65rem !important;
+        color: rgba(255, 255, 255, 0.9) !important;
+        margin: 0 !important;
+        font-weight: 500 !important;
+        line-height: 1 !important;
+    }
+
+    .sidebar-container.mobile-expanded .tab-panel .asset-value {
+        font-size: 1rem !important;
+        font-weight: 700 !important;
+        color: white !important;
+        margin: 0 !important;
+        line-height: 1.1 !important;
+    }
+
+    .sidebar-container.mobile-expanded .tab-panel .asset-change {
+        display: flex !important;
+        align-items: center !important;
+        gap: 2px !important;
+        font-size: 0.6rem !important;
+        font-weight: 600 !important;
+        padding: 1px 3px !important;
+        border-radius: 2px !important;
+        background: rgba(255, 255, 255, 0.1) !important;
+        width: fit-content !important;
+        margin-top: 1px !important;
+    }
+
+    .sidebar-container.mobile-expanded .tab-panel .asset-change.positive {
+        color: #10b981 !important;
+        background: rgba(16, 185, 129, 0.15) !important;
+    }
+
+    .sidebar-container.mobile-expanded .tab-panel .asset-change.negative {
+        color: #ef4444 !important;
+        background: rgba(239, 68, 68, 0.15) !important;
+    }
+
+    .sidebar-container.mobile-expanded .tab-panel .asset-change svg {
+        width: 10px !important;
+        height: 10px !important;
+        flex-shrink: 0 !important;
+    }
+
+    .sidebar-container.mobile-expanded .tab-panel .summary-grid {
+        display: grid !important;
+        grid-template-columns: 1fr 1fr 1fr !important;
+        gap: 3px !important;
+        padding: 0 !important;
+    }
+
+    .sidebar-container.mobile-expanded .tab-panel .summary-card {
+        background: rgba(255, 255, 255, 0.15) !important;
+        border-radius: 3px !important;
+        padding: 4px 3px !important;
+        border: 1px solid rgba(255, 255, 255, 0.2) !important;
+        display: flex !important;
+        flex-direction: column !important;
+        align-items: center !important;
+        gap: 1px !important;
+        text-align: center !important;
+        backdrop-filter: blur(10px) !important;
+        transition: all 0.2s ease !important;
+        min-height: 40px !important;
+        max-height: 40px !important;
+    }
+
+    .sidebar-container.mobile-expanded .tab-panel .summary-card:hover {
+        background: rgba(255, 255, 255, 0.2) !important;
+    }
+
+    .sidebar-container.mobile-expanded .tab-panel .card-icon {
+        font-size: 0.8rem !important;
+        margin-bottom: 0 !important;
+        flex-shrink: 0 !important;
+        line-height: 1 !important;
+        height: 12px !important;
+        display: flex !important;
+        align-items: center !important;
+        justify-content: center !important;
+    }
+
+    .sidebar-container.mobile-expanded .tab-panel .card-content {
+        display: flex !important;
+        flex-direction: column !important;
+        align-items: center !important;
+        gap: 0px !important;
+        width: 100% !important;
+        flex: 1 !important;
+        justify-content: center !important;
+    }
+
+    .sidebar-container.mobile-expanded .tab-panel .card-label {
+        font-size: 0.55rem !important;
+        color: rgba(255, 255, 255, 0.9) !important;
+        margin: 0 !important;
+        line-height: 1 !important;
+        font-weight: 500 !important;
+        white-space: nowrap !important;
+    }
+
+    .sidebar-container.mobile-expanded .tab-panel .card-value {
+        font-size: 0.65rem !important;
+        font-weight: 700 !important;
+        color: white !important;
+        margin: 0 !important;
+        line-height: 1 !important;
+        white-space: nowrap !important;
+        overflow: hidden !important;
+        text-overflow: ellipsis !important;
+        width: 100% !important;
+        margin-top: 1px !important;
+    }
+
+    .sidebar-container.mobile-expanded .tab-panel .card-value.positive {
+        color: #10b981 !important;
+    }
+
+    .sidebar-container.mobile-expanded .tab-panel .card-value.negative {
+        color: #ef4444 !important;
+    }
+
+    /* 持仓列表区域优化 */
+    .tab-panel .portfolio-content {
+        background: transparent !important;
+        padding: 0 !important;
+    }
+
+    /* 移动端隐藏PC端的切换按钮 */
     .sidebar-toggle {
         display: none !important;
-        /* 移动端也隐藏切换按钮 */
+    }
+}
+
+
+
+/* 移动端遮罩层 */
+@media (max-width: 768px) {
+    .sidebar-overlay {
+        position: fixed !important;
+        top: 0 !important;
+        left: 0 !important;
+        width: 100vw !important;
+        height: 100vh !important;
+        background: rgba(0, 0, 0, 0.5) !important;
+        z-index: 9998 !important;
+        opacity: 0 !important;
+        visibility: hidden !important;
+        transition: opacity 0.3s ease, visibility 0.3s ease !important;
+    }
+
+    .sidebar-overlay.show {
+        opacity: 1 !important;
+        visibility: visible !important;
+    }
+}
+</style>
+
+<style>
+/* 全局移动端样式优化，不使用scoped */
+@media (max-width: 768px) {
+
+    /* 持仓资产卡片优化 */
+    .account-summary {
+        background: linear-gradient(135deg, #4f46e5 0%, #7c3aed 100%) !important;
+        border-radius: 12px !important;
+        padding: 12px !important;
+        margin: 0 0 12px 0 !important;
+        box-shadow: 0 4px 12px rgba(79, 70, 229, 0.15) !important;
+        position: relative !important;
+        overflow: hidden !important;
+    }
+
+    /* 操作按钮布局优化 */
+    .primary-action-btn {
+        padding: 4px 6px !important;
+        font-size: 0.6rem !important;
+        min-height: 28px !important;
+        border-radius: 4px !important;
+        max-width: calc(48% - 2px) !important;
+        flex: 0 1 calc(48% - 2px) !important;
+        box-sizing: border-box !important;
+        overflow: hidden !important;
+        text-overflow: ellipsis !important;
+        white-space: nowrap !important;
+        display: flex !important;
+        align-items: center !important;
+        justify-content: center !important;
+        gap: 2px !important;
+    }
+
+    /* 总资产卡片 */
+    .total-assets-card {
+        display: flex !important;
+        align-items: center !important;
+        gap: 12px !important;
+        background: rgba(255, 255, 255, 0.15) !important;
+        border-radius: 8px !important;
+        padding: 12px !important;
+        border: 1px solid rgba(255, 255, 255, 0.2) !important;
+        backdrop-filter: blur(10px) !important;
+    }
+
+    /* 资产图标 */
+    .asset-icon {
+        font-size: 1.5rem !important;
+        width: 40px !important;
+        height: 40px !important;
+        background: rgba(255, 255, 255, 0.2) !important;
+        border-radius: 50% !important;
+        display: flex !important;
+        align-items: center !important;
+        justify-content: center !important;
+        flex-shrink: 0 !important;
+    }
+
+    /* 移动端资产卡片重新设计 - 现代化布局 */
+    .sidebar-container.mobile-expanded .tab-panel .account-summary {
+        background: transparent !important;
+        padding: 8px !important;
+        margin: 0 !important;
+    }
+
+    /* 移动端隐藏刷新按钮和标题，优化布局 */
+    .sidebar-container.mobile-expanded .tab-panel .account-summary .summary-header {
+        display: none !important;
+    }
+
+    /* 总资产卡片 - 紧凑现代化设计 */
+    .sidebar-container.mobile-expanded .tab-panel .account-summary .total-assets-card {
+        background: linear-gradient(135deg, #4f46e5 0%, #7c3aed 100%) !important;
+        color: white !important;
+        border: none !important;
+        border-radius: 10px !important;
+        padding: 10px 12px !important;
+        box-shadow: 0 2px 12px rgba(79, 70, 229, 0.25) !important;
+        backdrop-filter: blur(20px) !important;
+        display: flex !important;
+        align-items: center !important;
+        gap: 10px !important;
+        margin-bottom: 8px !important;
+        margin-top: 0 !important;
+        min-height: auto !important;
+        max-height: none !important;
+    }
+
+    /* 三个子卡片 - 紧凑白色卡片设计 */
+    .sidebar-container.mobile-expanded .tab-panel .account-summary .summary-card {
+        background: #ffffff !important;
+        color: #1f2937 !important;
+        border: 1px solid #e5e7eb !important;
+        border-radius: 6px !important;
+        padding: 8px 6px !important;
+        box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1) !important;
+        backdrop-filter: none !important;
+        display: flex !important;
+        flex-direction: column !important;
+        align-items: center !important;
+        justify-content: center !important;
+        gap: 2px !important;
+        text-align: center !important;
+        transition: all 0.2s ease !important;
+        min-height: 48px !important;
+        max-height: none !important;
+    }
+
+    .sidebar-container.mobile-expanded .tab-panel .account-summary .summary-card:hover {
+        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15) !important;
+        transform: translateY(-1px) !important;
+    }
+
+    /* 总资产卡片内部元素样式 - 紧凑版 */
+    .sidebar-container.mobile-expanded .tab-panel .account-summary .asset-icon {
+        width: 32px !important;
+        height: 32px !important;
+        font-size: 1.2rem !important;
+        background: rgba(255, 255, 255, 0.2) !important;
+        border-radius: 50% !important;
+        display: flex !important;
+        align-items: center !important;
+        justify-content: center !important;
+        flex-shrink: 0 !important;
+    }
+
+    .sidebar-container.mobile-expanded .tab-panel .account-summary .asset-info {
+        flex: 1 !important;
+        display: flex !important;
+        flex-direction: column !important;
+        gap: 2px !important;
+    }
+
+    .sidebar-container.mobile-expanded .tab-panel .account-summary .asset-label {
+        font-size: 0.7rem !important;
+        line-height: 1.1 !important;
+        color: rgba(255, 255, 255, 0.8) !important;
+        font-weight: 500 !important;
+        margin: 0 !important;
+    }
+
+    .sidebar-container.mobile-expanded .tab-panel .account-summary .asset-value {
+        font-size: 1.1rem !important;
+        line-height: 1.2 !important;
+        color: #ffffff !important;
+        font-weight: 700 !important;
+        margin: 0 !important;
+    }
+
+    .sidebar-container.mobile-expanded .tab-panel .account-summary .asset-change {
+        font-size: 0.65rem !important;
+        padding: 1px 4px !important;
+        border-radius: 3px !important;
+        gap: 1px !important;
+        font-weight: 600 !important;
+        display: flex !important;
+        align-items: center !important;
+        width: fit-content !important;
+    }
+
+    .sidebar-container.mobile-expanded .tab-panel .account-summary .asset-change.positive {
+        color: #ffffff !important;
+        background: rgba(34, 197, 94, 0.3) !important;
+    }
+
+    .sidebar-container.mobile-expanded .tab-panel .account-summary .asset-change.negative {
+        color: #ffffff !important;
+        background: rgba(239, 68, 68, 0.3) !important;
+    }
+
+    /* 三个子卡片网格布局 - 紧凑版 */
+    .sidebar-container.mobile-expanded .tab-panel .account-summary .summary-grid {
+        display: grid !important;
+        grid-template-columns: 1fr 1fr 1fr !important;
+        gap: 6px !important;
+        padding: 0 !important;
+    }
+
+    /* 子卡片图标样式 - 紧凑版 */
+    .sidebar-container.mobile-expanded .tab-panel .account-summary .card-icon {
+        font-size: 1rem !important;
+        margin-bottom: 1px !important;
+        flex-shrink: 0 !important;
+        color: #6366f1 !important;
+    }
+
+    .sidebar-container.mobile-expanded .tab-panel .account-summary .card-content {
+        display: flex !important;
+        flex-direction: column !important;
+        align-items: center !important;
+        gap: 1px !important;
+        width: 100% !important;
+    }
+
+    .sidebar-container.mobile-expanded .tab-panel .account-summary .card-label {
+        font-size: 0.65rem !important;
+        line-height: 1.1 !important;
+        color: #6b7280 !important;
+        font-weight: 500 !important;
+        text-align: center !important;
+        margin: 0 !important;
+    }
+
+    .sidebar-container.mobile-expanded .tab-panel .account-summary .card-value {
+        font-size: 0.75rem !important;
+        line-height: 1.1 !important;
+        color: #1f2937 !important;
+        font-weight: 700 !important;
+        text-align: center !important;
+        margin: 0 !important;
+    }
+
+    .sidebar-container.mobile-expanded .tab-panel .account-summary .card-value.positive {
+        color: #059669 !important;
+    }
+
+    .sidebar-container.mobile-expanded .tab-panel .account-summary .card-value.negative {
+        color: #dc2626 !important;
+    }
+
+    /* 移动端持仓列表底部间距 */
+    .sidebar-container.mobile-expanded .tab-panel .portfolio-content {
+        padding-bottom: 12px !important;
+    }
+
+    /* 操作按钮相关样式 */
+    .native-mobile-actions {
+        margin-top: 10px !important;
+        display: flex !important;
+        align-items: flex-start !important;
+        gap: 6px !important;
+        flex-wrap: nowrap !important;
+        overflow: visible !important;
+        width: 100% !important;
+        box-sizing: border-box !important;
+    }
+
+    .primary-actions {
+        flex: 1 !important;
+        display: flex !important;
+        gap: 4px !important;
+        flex-wrap: wrap !important;
+        min-width: 0 !important;
+        width: calc(100% - 34px) !important;
+        box-sizing: border-box !important;
+    }
+
+    .action-text {
+        font-size: 0.6rem !important;
+        white-space: nowrap !important;
+        overflow: hidden !important;
+        text-overflow: ellipsis !important;
+        flex: 1 !important;
+        text-align: center !important;
+    }
+
+    .action-icon {
+        font-size: 0.7rem !important;
+        flex-shrink: 0 !important;
+        width: 10px !important;
+        height: 10px !important;
+        display: flex !important;
+        align-items: center !important;
+        justify-content: center !important;
+    }
+
+    .price-badge {
+        font-size: 0.45rem !important;
+        padding: 1px 3px !important;
+        border-radius: 2px !important;
+        margin-left: 0 !important;
+        background: rgba(255, 165, 0, 0.2) !important;
+        color: #ff8c00 !important;
+        border: 1px solid rgba(255, 165, 0, 0.3) !important;
+        flex-shrink: 0 !important;
+    }
+
+    .more-btn {
+        width: 30px !important;
+        height: 30px !important;
+        flex-shrink: 0 !important;
+        border-radius: 4px !important;
+        display: flex !important;
+        align-items: center !important;
+        justify-content: center !important;
+        background: #f3f4f6 !important;
+        border: 1px solid #e5e7eb !important;
+        color: #6b7280 !important;
+    }
+
+    .more-btn:hover {
+        background: #e5e7eb !important;
+    }
+
+    .more-icon {
+        font-size: 0.9rem !important;
+        font-weight: bold !important;
     }
 }
 </style>

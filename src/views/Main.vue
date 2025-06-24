@@ -63,6 +63,17 @@
             </template>
         </button>
 
+
+
+        <!-- 移动端侧边栏悬浮切换按钮 -->
+        <button v-show="userStore.isLoggedIn && isMobileView" class="floating-sidebar-toggle"
+            @click="toggleMobileSidebar" title="打开功能面板">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none">
+                <path d="M3 12h18m-9 9l9-9-9-9" stroke="currentColor" stroke-width="2" stroke-linecap="round"
+                    stroke-linejoin="round" />
+            </svg>
+        </button>
+
         <!-- 主体内容 -->
         <main class="modern-content main-container"
             :class="{ 'chatting': isChatMode, 'with-sidebar': userStore.isLoggedIn, 'with-chat-history': showChatHistory }"
@@ -358,13 +369,13 @@
                                         <div class="asset-amount">
                                             <span class="amount-label">总资产</span>
                                             <span class="amount-value">¥{{ formatCurrency(message.assetData.totalAssets)
-                                                }}</span>
+                                            }}</span>
                                         </div>
                                         <div class="asset-change"
                                             :class="[message.assetData.totalProfitPercent >= 0 ? 'profit' : 'loss']">
                                             <span class="change-icon">{{ message.assetData.totalProfitPercent >= 0 ?
                                                 '📈' : '📉'
-                                                }}</span>
+                                            }}</span>
                                             <span class="change-label">今日盈亏：</span>
                                             <span class="change-text">
                                                 {{ message.assetData.totalProfitPercent >= 0 ? '+' : '' }}¥{{
@@ -390,7 +401,7 @@
                                         <div class="stat-info">
                                             <div class="stat-label">持仓市值</div>
                                             <div class="stat-value">¥{{ formatCurrency(message.assetData.portfolioValue)
-                                                }}
+                                            }}
                                             </div>
                                         </div>
                                     </div>
@@ -605,8 +616,8 @@
         </main>
 
         <!-- 侧边栏（仅在登录后显示） -->
-        <Sidebar v-if="userStore.isLoggedIn" @send-to-chat="handleSidebarInteraction" @show-buy-dialog="showBuyDialog"
-            @show-sell-dialog="handleShowSellDialog" />
+        <Sidebar v-if="userStore.isLoggedIn" ref="sidebarRef" @send-to-chat="handleSidebarInteraction"
+            @show-buy-dialog="showBuyDialog" @show-sell-dialog="handleShowSellDialog" />
 
         <!-- 快捷操作栏（移动端独立显示） -->
         <div class="mobile-shortcuts-overlay" v-if="showChatShortcuts && isMobileView" @click="toggleChatShortcuts">
@@ -763,7 +774,7 @@
                 </div>
                 <div class="guide-actions">
                     <el-button type="primary" size="small" @click="handleGuideAction">{{ guideActionText
-                    }}</el-button>
+                        }}</el-button>
                     <el-button size="small" @click="dismissGuide">稍后</el-button>
                 </div>
             </div>
@@ -801,7 +812,7 @@
                         <div class="summary-item">
                             <span class="summary-label">买入信号</span>
                             <span class="summary-value signal-score">{{ currentQuantAnalysis.buySignalScore
-                                }}/100</span>
+                            }}/100</span>
                         </div>
                         <div class="summary-item">
                             <span class="summary-label">量化评级</span>
@@ -1002,7 +1013,7 @@
 
 <script setup>
 import { ref, reactive, onMounted, onUnmounted, nextTick, watch, computed } from 'vue';
-import { useRouter } from 'vue-router';
+import { useRouter, useRoute } from 'vue-router';
 import { useUserStore } from '../store/user';
 import { useChatHistoryStore } from '../store/chatHistory';
 import { User, Lock, ArrowDown, ArrowUp, Plus, Edit, Delete, QuestionFilled } from '@element-plus/icons-vue';
@@ -1970,14 +1981,30 @@ const updateChatHistoryHeight = () => {
 
 // 检测移动端视图
 const checkMobileView = () => {
-    isMobileView.value = window.innerWidth <= 768;
+    const newIsMobileView = window.innerWidth <= 768;
+    console.log('Main移动端检测:', {
+        windowWidth: window.innerWidth,
+        isMobileView: newIsMobileView,
+        previousValue: isMobileView.value
+    });
+    isMobileView.value = newIsMobileView;
 };
 
+// 移动端侧边栏状态管理
+const sidebarRef = ref(null);
 
-
-
-
-
+const toggleMobileSidebar = () => {
+    console.log('toggleMobileSidebar被调用', {
+        sidebarRef: sidebarRef.value,
+        isMobileView: isMobileView.value
+    });
+    // 通过调用Sidebar组件的toggleSidebar方法来切换状态
+    if (sidebarRef.value) {
+        sidebarRef.value.toggleSidebar();
+    } else {
+        console.error('sidebarRef为空，无法调用toggleSidebar方法');
+    }
+};
 
 // 移动端聊天框修复 - 使用visualViewport检测实际可视区域
 const fixMobileChatBox = () => {
@@ -2153,8 +2180,6 @@ const fixMobileChatBox = () => {
         });
     }
 };
-
-
 
 // 处理下拉菜单命令
 const handleDropdownCommand = (command) => {
@@ -3254,6 +3279,12 @@ const handleMobileKeyboard = () => {
 onMounted(() => {
     scrollToBottom();
     // 移除自动检查用户状态，避免老用户登录后进入引导流程
+
+    // 检查是否需要显示登录弹窗
+    const route = useRoute();
+    if (route.query.showLogin === 'true' && !userStore.isLoggedIn) {
+        loginDialogVisible.value = true;
+    }
 
     // 检测移动端视图
     checkMobileView();
@@ -4493,6 +4524,77 @@ body.onboarding-mode {
         .main-container:not(.chatting) .floating-history-toggle {
             bottom: calc(140px + env(keyboard-inset-height, 0px));
         }
+    }
+}
+
+/* 移动端侧边栏悬浮切换按钮 */
+.floating-sidebar-toggle {
+    position: fixed;
+    top: 72px;
+    right: 20px;
+    width: 44px;
+    height: 44px;
+    border-radius: 50%;
+    border: none;
+    background: rgba(59, 130, 246, 0.9);
+    backdrop-filter: blur(10px);
+    box-shadow: 0 4px 20px rgba(59, 130, 246, 0.3);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    color: white;
+    z-index: 10001;
+}
+
+.floating-sidebar-toggle:hover {
+    background: rgba(59, 130, 246, 1);
+    box-shadow: 0 6px 25px rgba(59, 130, 246, 0.4);
+    transform: translateY(-2px) scale(1.05);
+}
+
+.floating-sidebar-toggle:active {
+    transform: translateY(0) scale(0.95);
+    transition: all 0.1s ease;
+}
+
+.floating-sidebar-toggle svg {
+    transition: all 0.2s ease;
+}
+
+/* 移动端优化 */
+@media (max-width: 768px) {
+    .floating-sidebar-toggle {
+        width: 56px;
+        height: 56px;
+        right: 20px;
+        top: 80px;
+        background: rgba(59, 130, 246, 1) !important;
+        border: 3px solid rgba(255, 255, 255, 0.3);
+        box-shadow: 0 6px 24px rgba(59, 130, 246, 0.5) !important;
+
+        /* 移动端触摸优化 */
+        -webkit-tap-highlight-color: transparent;
+        -webkit-touch-callout: none;
+        -webkit-user-select: none;
+        user-select: none;
+        touch-action: manipulation;
+    }
+
+    .floating-sidebar-toggle:hover {
+        background: rgba(59, 130, 246, 1);
+        transform: translateY(-1px) scale(1.02);
+    }
+
+    .floating-sidebar-toggle:active {
+        transform: translateY(0) scale(0.98);
+        background: rgba(37, 99, 235, 1);
+    }
+
+    .floating-sidebar-toggle svg {
+        width: 22px;
+        height: 22px;
     }
 }
 

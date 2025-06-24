@@ -71,24 +71,37 @@
                 </div>
             </div>
 
-            <StockList v-else :stocks="portfolioStocks" :actions="portfolioActions" :show-position-status="true"
-                :show-position-details="true" :show-basic-details="false" :clickable="true" @stock-click="analyzeStock"
-                @sell-stock="handleSellStock" @buy-stock="handleBuyStock" @paid-analysis="handlePaidAnalysis"
-                @ai-trading="handleAITrading" />
+            <!-- PC端使用StockList -->
+            <StockList v-if="!isMobileView" :stocks="portfolioStocks" :actions="portfolioActions"
+                :show-position-status="true" :show-position-details="true" :show-basic-details="false" :clickable="true"
+                @stock-click="analyzeStock" @sell-stock="handleSellStock" @buy-stock="handleBuyStock"
+                @paid-analysis="handlePaidAnalysis" @ai-trading="handleAITrading" />
+
+            <!-- 移动端使用MobileStockList -->
+            <MobileStockList v-else :stocks="portfolioStocks" :actions="portfolioActions" :show-position-status="true"
+                :show-details="true" :clickable="true" @stock-click="analyzeStock" @action-click="handleActionClick" />
         </div>
     </div>
 </template>
 
 <script setup>
-import { ref, reactive, computed } from 'vue';
+import { ref, reactive, computed, onMounted, onUnmounted } from 'vue';
 import { useUserStore } from '../store/user';
 import { ElMessage, ElMessageBox } from 'element-plus';
 import StockList from './StockList.vue';
+import MobileStockList from './MobileStockList.vue';
 
 // 定义emit
 const emit = defineEmits(['send-to-chat', 'show-buy-dialog', 'show-sell-dialog']);
 
 const userStore = useUserStore();
+
+// 移动端检测
+const isMobileView = ref(false);
+
+const checkMobileView = () => {
+    isMobileView.value = window.innerWidth <= 768;
+};
 
 // 持仓操作按钮配置
 const portfolioActions = [
@@ -295,6 +308,36 @@ const refreshData = () => {
     ElMessage.success('数据已刷新');
     // 这里可以添加实际的数据刷新逻辑
 };
+
+// 移动端操作处理
+const handleActionClick = ({ action, stock }) => {
+    switch (action) {
+        case 'sell':
+            handleSellStock(stock);
+            break;
+        case 'buy':
+            handleBuyStock(stock);
+            break;
+        case 'analysis':
+            handlePaidAnalysis(stock);
+            break;
+        case 'aiTrading':
+            handleAITrading(stock);
+            break;
+        default:
+            console.log('未知操作:', action);
+    }
+};
+
+// 生命周期
+onMounted(() => {
+    checkMobileView();
+    window.addEventListener('resize', checkMobileView);
+});
+
+onUnmounted(() => {
+    window.removeEventListener('resize', checkMobileView);
+});
 </script>
 
 <style scoped>

@@ -1058,5 +1058,395 @@ onUnmounted(() => {
     text-align: center;
 }
 
-/* 移除卖出对话框样式，改为使用主窗口的统一交易对话框 */
+/* 移动端响应式样式 */
+@media (max-width: 768px) {
+
+    /* 移动端容器优化 */
+    .portfolio-view {
+        min-height: auto !important;
+        max-height: none !important;
+        margin: 0 !important;
+        border-radius: 8px !important;
+        overflow: visible !important;
+    }
+
+    /* 移动端账户总览优化 - 重新设计 */
+    .account-summary {
+        margin: 0 !important;
+        padding: 0 !important;
+        border-radius: 0 !important;
+        position: static !important;
+        background: transparent !important;
+        border: none !important;
+        box-shadow: none !important;
+    }
+
+    .account-summary::before,
+    .account-summary::after {
+        display: none !important;
+    }
+
+    /* 隐藏头部标题 */
+    .summary-header {
+        display: none !important;
+    }
+
+    .summary-main {
+        margin: 0 !important;
+        padding: 0 !important;
+    }
+
+    /* 总资产卡片 - 紫色渐变设计，与截图风格一致 */
+    .total-assets-card {
+        background: linear-gradient(135deg, #6366f1 0%, #8b5cf6 100%) !important;
+        color: white !important;
+        padding: 14px 16px !important;
+        border-radius: 16px !important;
+        margin: 6px !important;
+        border: none !important;
+        box-shadow: 0 4px 16px rgba(99, 102, 241, 0.3) !important;
+        display: flex !important;
+        align-items: center !important;
+        gap: 12px !important;
+        position: relative !important;
+        overflow: hidden !important;
+    }
+
+    /* 添加光泽效果 */
+    .total-assets-card::before {
+        content: '' !important;
+        position: absolute !important;
+        top: 0 !important;
+        left: 0 !important;
+        right: 0 !important;
+        bottom: 0 !important;
+        background: linear-gradient(135deg, rgba(255, 255, 255, 0.1) 0%, transparent 50%, rgba(255, 255, 255, 0.05) 100%) !important;
+        pointer-events: none !important;
+    }
+
+    .asset-icon {
+        width: 36px !important;
+        height: 36px !important;
+        font-size: 1.2rem !important;
+        background: rgba(255, 255, 255, 0.2) !important;
+        border-radius: 50% !important;
+        display: flex !important;
+        align-items: center !important;
+        justify-content: center !important;
+        flex-shrink: 0 !important;
+        color: white !important;
+        border: 1px solid rgba(255, 255, 255, 0.3) !important;
+        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1) !important;
+    }
+
+    .asset-info {
+        flex: 1 !important;
+        display: flex !important;
+        flex-direction: column !important;
+        gap: 2px !important;
+        position: relative !important;
+        z-index: 1 !important;
+    }
+
+    .asset-label {
+        font-size: 0.75rem !important;
+        color: rgba(255, 255, 255, 0.85) !important;
+        font-weight: 500 !important;
+        margin: 0 !important;
+        opacity: 0.9 !important;
+    }
+
+    .asset-value {
+        font-size: 1.4rem !important;
+        font-weight: 700 !important;
+        color: white !important;
+        margin: 0 !important;
+        line-height: 1.1 !important;
+        text-shadow: 0 1px 2px rgba(0, 0, 0, 0.1) !important;
+    }
+
+    .asset-change {
+        font-size: 0.7rem !important;
+        padding: 2px 8px !important;
+        border-radius: 12px !important;
+        font-weight: 600 !important;
+        display: inline-flex !important;
+        align-items: center !important;
+        gap: 3px !important;
+        width: fit-content !important;
+        background: rgba(255, 255, 255, 0.2) !important;
+        color: white !important;
+        margin-top: 4px !important;
+        border: 1px solid rgba(255, 255, 255, 0.2) !important;
+        backdrop-filter: blur(10px) !important;
+    }
+
+    .asset-change svg {
+        width: 10px !important;
+        height: 10px !important;
+    }
+
+    /* 三个子卡片 - 精致白色卡片设计 */
+    .summary-grid {
+        display: grid !important;
+        grid-template-columns: repeat(3, 1fr) !important;
+        gap: 8px !important;
+        padding: 0 6px 8px 6px !important;
+        margin: 0 !important;
+    }
+
+    .summary-card {
+        background: white !important;
+        border: 1px solid #e2e8f0 !important;
+        border-radius: 12px !important;
+        padding: 10px 6px !important;
+        display: flex !important;
+        flex-direction: column !important;
+        align-items: center !important;
+        justify-content: center !important;
+        gap: 3px !important;
+        text-align: center !important;
+        transition: all 0.3s ease !important;
+        min-height: 64px !important;
+        box-shadow: 0 2px 4px rgba(0, 0, 0, 0.06) !important;
+        position: relative !important;
+        overflow: hidden !important;
+    }
+
+    .summary-card::before {
+        content: '' !important;
+        position: absolute !important;
+        top: 0 !important;
+        left: 0 !important;
+        right: 0 !important;
+        bottom: 0 !important;
+        background: linear-gradient(135deg, rgba(99, 102, 241, 0.02) 0%, transparent 100%) !important;
+        pointer-events: none !important;
+    }
+
+    .summary-card:hover {
+        transform: translateY(-2px) !important;
+        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.12) !important;
+        border-color: #c7d2fe !important;
+    }
+
+    .summary-card:hover::before {
+        background: linear-gradient(135deg, rgba(99, 102, 241, 0.05) 0%, transparent 100%) !important;
+    }
+
+    .card-icon {
+        font-size: 1.1rem !important;
+        margin-bottom: 2px !important;
+        color: #6366f1 !important;
+        flex-shrink: 0 !important;
+        width: 24px !important;
+        height: 24px !important;
+        display: flex !important;
+        align-items: center !important;
+        justify-content: center !important;
+        background: rgba(99, 102, 241, 0.08) !important;
+        border-radius: 6px !important;
+        position: relative !important;
+        z-index: 1 !important;
+    }
+
+    .card-content {
+        display: flex !important;
+        flex-direction: column !important;
+        align-items: center !important;
+        gap: 1px !important;
+        width: 100% !important;
+        position: relative !important;
+        z-index: 1 !important;
+    }
+
+    .card-label {
+        font-size: 0.65rem !important;
+        color: #64748b !important;
+        font-weight: 500 !important;
+        text-align: center !important;
+        margin: 0 !important;
+        line-height: 1.1 !important;
+        opacity: 0.9 !important;
+    }
+
+    .card-value {
+        font-size: 0.85rem !important;
+        color: #1e293b !important;
+        font-weight: 700 !important;
+        text-align: center !important;
+        margin: 0 !important;
+        line-height: 1.1 !important;
+    }
+
+    .card-value.positive {
+        color: #059669 !important;
+    }
+
+    .card-value.negative {
+        color: #dc2626 !important;
+    }
+
+    /* 移动端持仓内容优化 */
+    .portfolio-content {
+        padding: 8px !important;
+        overflow: visible !important;
+        height: auto !important;
+        flex: none !important;
+    }
+
+    .portfolio-list {
+        gap: 8px !important;
+    }
+
+    .stock-item {
+        padding: 12px !important;
+        border-radius: 8px !important;
+        gap: 8px !important;
+    }
+
+    .stock-header {
+        margin-bottom: 8px !important;
+    }
+
+    .stock-name {
+        font-size: 0.9rem !important;
+    }
+
+    .stock-code {
+        font-size: 0.8rem !important;
+    }
+
+    .current-price {
+        font-size: 1rem !important;
+    }
+
+    .price-change {
+        font-size: 0.8rem !important;
+    }
+
+    .stock-details {
+        gap: 6px !important;
+    }
+
+    .detail-item {
+        gap: 6px !important;
+    }
+
+    .detail-label {
+        font-size: 0.7rem !important;
+        min-width: 50px !important;
+    }
+
+    .detail-value {
+        font-size: 0.8rem !important;
+    }
+
+    .stock-actions {
+        gap: 6px !important;
+        padding-top: 8px !important;
+        flex-wrap: wrap !important;
+    }
+
+    .stock-actions .el-button {
+        font-size: 0.7rem !important;
+        padding: 4px 8px !important;
+        border-radius: 6px !important;
+    }
+
+    /* 移动端空状态优化 */
+    .empty-state {
+        padding: 30px 16px !important;
+        min-height: 200px !important;
+        height: auto !important;
+    }
+
+    .empty-icon {
+        font-size: 2.5rem !important;
+        margin-bottom: 12px !important;
+    }
+
+    .empty-text h4 {
+        font-size: 1rem !important;
+        margin-bottom: 6px !important;
+    }
+
+    .empty-text p {
+        font-size: 0.8rem !important;
+    }
+}
+
+/* 移动端侧边栏专用样式 */
+@media (max-width: 768px) {
+
+    /* 在移动端侧边栏中进一步优化 */
+    .sidebar-container .portfolio-view {
+        border: none !important;
+        background: transparent !important;
+        box-shadow: none !important;
+    }
+
+    /* 侧边栏中的账户总览样式 - 更加紧凑 */
+    .sidebar-container .account-summary {
+        margin: 0 !important;
+        padding: 0 !important;
+    }
+
+    .sidebar-container .total-assets-card {
+        margin: 6px !important;
+        padding: 12px 14px !important;
+        box-shadow: 0 2px 8px rgba(99, 102, 241, 0.2) !important;
+        border-radius: 14px !important;
+    }
+
+    .sidebar-container .asset-icon {
+        width: 32px !important;
+        height: 32px !important;
+        font-size: 1.1rem !important;
+    }
+
+    .sidebar-container .asset-value {
+        font-size: 1.2rem !important;
+    }
+
+    .sidebar-container .asset-change {
+        font-size: 0.65rem !important;
+        padding: 1px 6px !important;
+    }
+
+    .sidebar-container .summary-grid {
+        padding: 0 6px 6px 6px !important;
+        gap: 6px !important;
+    }
+
+    .sidebar-container .summary-card {
+        min-height: 58px !important;
+        padding: 8px 4px !important;
+        border-radius: 10px !important;
+    }
+
+    .sidebar-container .card-icon {
+        width: 20px !important;
+        height: 20px !important;
+        font-size: 0.9rem !important;
+        border-radius: 5px !important;
+    }
+
+    .sidebar-container .card-label {
+        font-size: 0.6rem !important;
+    }
+
+    .sidebar-container .card-value {
+        font-size: 0.75rem !important;
+    }
+
+    .sidebar-container .portfolio-content {
+        padding: 0 6px 12px 6px !important;
+    }
+
+    .sidebar-container .stock-item {
+        margin: 0 0 6px 0 !important;
+        box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05) !important;
+    }
+}
 </style>

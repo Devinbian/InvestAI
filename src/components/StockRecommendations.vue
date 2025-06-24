@@ -354,4 +354,57 @@ onUnmounted(() => {
 
 
 /* 使用StockList中的统一按钮样式 */
+
+/* 移动端响应式样式 */
+@media (max-width: 768px) {
+
+    /* 移动端容器优化 */
+    .recommendations-container {
+        min-height: auto !important;
+        margin: 0 !important;
+        border-radius: 8px !important;
+        overflow: visible !important;
+    }
+
+    /* 移动端头部优化 */
+    .card-header {
+        padding: 12px 16px 8px 16px !important;
+        border-radius: 8px 8px 0 0 !important;
+    }
+
+    .card-title {
+        font-size: 1rem !important;
+    }
+
+    .update-time {
+        font-size: 0.7rem !important;
+    }
+
+    /* 移动端推荐列表优化 */
+    .recommendations-list {
+        padding: 8px !important;
+        overflow: visible !important;
+        flex: none !important;
+    }
+}
+
+/* 移动端侧边栏专用样式 */
+@media (max-width: 768px) {
+
+    /* 在移动端侧边栏中进一步优化 */
+    .sidebar-container .recommendations-container {
+        border: none !important;
+        background: transparent !important;
+        box-shadow: none !important;
+        margin: 0 !important;
+    }
+
+    .sidebar-container .card-header {
+        display: none !important;
+    }
+
+    .sidebar-container .recommendations-list {
+        padding: 0 6px 12px 6px !important;
+    }
+}
 </style>

@@ -392,4 +392,137 @@ const viewAllNotifications = () => {
     gap: 4px;
     font-size: 0.85rem;
 }
+
+/* 移动端响应式样式 */
+@media (max-width: 768px) {
+
+    /* 移动端容器优化 */
+    .notifications-container {
+        min-height: auto !important;
+        margin: 0 !important;
+        border-radius: 8px !important;
+        overflow: visible !important;
+    }
+
+    /* 移动端头部优化 */
+    .card-header {
+        padding: 12px 16px 8px 16px !important;
+        border-radius: 8px 8px 0 0 !important;
+    }
+
+    .card-title {
+        font-size: 1rem !important;
+    }
+
+    .unread-count {
+        font-size: 0.7rem !important;
+    }
+
+    /* 移动端消息列表优化 */
+    .notifications-list {
+        overflow: visible !important;
+        flex: none !important;
+    }
+
+    .notification-item {
+        padding: 10px 12px !important;
+        border-radius: 6px !important;
+        margin: 0 8px 6px 8px !important;
+        background: #f8fafc !important;
+        border: 1px solid #e2e8f0 !important;
+        border-bottom: 1px solid #e2e8f0 !important;
+    }
+
+    .notification-item:hover {
+        background: #f1f5f9 !important;
+        transform: translateY(-1px) !important;
+        box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1) !important;
+    }
+
+    .notification-item.unread {
+        background: #f0f9ff !important;
+        border-color: #bae6fd !important;
+    }
+
+    .notification-item.important {
+        border-left: 2px solid #ef4444 !important;
+    }
+
+    .notification-icon {
+        margin-right: 8px !important;
+    }
+
+    .icon-wrapper {
+        width: 28px !important;
+        height: 28px !important;
+    }
+
+    .notification-title {
+        font-size: 0.85rem !important;
+    }
+
+    .notification-time {
+        font-size: 0.7rem !important;
+    }
+
+    .notification-message {
+        font-size: 0.8rem !important;
+        margin-bottom: 6px !important;
+    }
+
+    .tag {
+        font-size: 0.65rem !important;
+        padding: 1px 4px !important;
+    }
+
+    .unread-indicator {
+        width: 6px !important;
+        height: 6px !important;
+        top: 12px !important;
+        right: 12px !important;
+    }
+
+    /* 移动端底部优化 */
+    .card-footer {
+        padding: 8px 16px !important;
+    }
+
+    .card-footer .el-button {
+        font-size: 0.7rem !important;
+        padding: 4px 8px !important;
+    }
+}
+
+/* 移动端侧边栏专用样式 */
+@media (max-width: 768px) {
+
+    /* 在移动端侧边栏中进一步优化 */
+    .sidebar-container .notifications-container {
+        border: none !important;
+        background: transparent !important;
+        box-shadow: none !important;
+        margin: 0 !important;
+    }
+
+    .sidebar-container .card-header {
+        display: none !important;
+    }
+
+    .sidebar-container .notifications-list {
+        padding: 0 !important;
+    }
+
+    .sidebar-container .notification-item {
+        margin: 0 6px 6px 6px !important;
+        box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05) !important;
+    }
+
+    .sidebar-container .card-footer {
+        padding: 8px 6px !important;
+        margin-top: 8px !important;
+        background: #f8fafc !important;
+        border-radius: 6px !important;
+        border: 1px solid #e2e8f0 !important;
+    }
+}
 </style>

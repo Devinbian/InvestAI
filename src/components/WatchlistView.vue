@@ -436,49 +436,106 @@ onUnmounted(() => {
 
 /* 使用StockList组件，移除重复的股票样式 */
 
-/* 响应式设计 */
+/* 移动端响应式样式 */
 @media (max-width: 768px) {
+
+    /* 移动端容器优化 */
     .watchlist-container {
-        padding: 8px;
+        min-height: auto !important;
+        margin: 0 !important;
+        border-radius: 8px !important;
+        overflow: visible !important;
     }
 
-    .header-section {
-        padding: 12px;
-        flex-direction: column;
-        gap: 8px;
-        align-items: stretch;
+    /* 移动端头部优化 */
+    .card-header {
+        padding: 12px 16px 8px 16px !important;
+        border-radius: 8px 8px 0 0 !important;
     }
 
-    .header-left {
-        flex-direction: column;
-        align-items: flex-start;
-        gap: 4px;
+    .card-title {
+        font-size: 1rem !important;
     }
 
-    .header-title {
-        font-size: 1rem;
+    .header-actions .el-button {
+        padding: 4px 8px !important;
+        font-size: 0.7rem !important;
     }
 
-    .header-subtitle {
-        font-size: 0.8rem;
-    }
-
-    .header-right {
-        justify-content: flex-start;
-    }
-
-    .filter-buttons {
-        gap: 4px;
-    }
-
-    .filter-btn {
-        font-size: 0.7rem;
-        padding: 4px 8px;
+    /* 移动端内容区域优化 */
+    .watchlist-content {
+        overflow: visible !important;
+        flex: none !important;
     }
 
     .watchlist-list {
-        padding: 8px;
-        gap: 8px;
+        padding: 8px !important;
+        gap: 8px !important;
+        overflow: visible !important;
+        flex: none !important;
+    }
+
+    /* 移动端空状态优化 */
+    .empty-state {
+        padding: 30px 16px !important;
+        height: auto !important;
+        min-height: 200px !important;
+    }
+
+    .empty-icon {
+        font-size: 2.5rem !important;
+        margin-bottom: 12px !important;
+    }
+
+    .empty-title {
+        font-size: 0.9rem !important;
+        margin-bottom: 6px !important;
+    }
+
+    .empty-desc {
+        font-size: 0.8rem !important;
+    }
+
+    /* 移动端底部优化 */
+    .card-footer {
+        padding: 8px 16px !important;
+    }
+
+    .card-footer .el-button {
+        font-size: 0.7rem !important;
+        padding: 4px 8px !important;
+    }
+}
+
+/* 移动端侧边栏专用样式 */
+@media (max-width: 768px) {
+
+    /* 在移动端侧边栏中进一步优化 */
+    .sidebar-container .watchlist-container {
+        border: none !important;
+        background: transparent !important;
+        box-shadow: none !important;
+        margin: 0 !important;
+    }
+
+    .sidebar-container .card-header {
+        display: none !important;
+    }
+
+    .sidebar-container .watchlist-content {
+        padding: 0 !important;
+    }
+
+    .sidebar-container .watchlist-list {
+        padding: 0 6px 12px 6px !important;
+    }
+
+    .sidebar-container .card-footer {
+        padding: 8px 6px !important;
+        margin-top: 8px !important;
+        background: #f8fafc !important;
+        border-radius: 6px !important;
+        border: 1px solid #e2e8f0 !important;
     }
 }
 

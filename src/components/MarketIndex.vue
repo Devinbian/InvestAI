@@ -213,4 +213,95 @@ onUnmounted(() => {
 .change-percent {
     opacity: 0.8;
 }
+
+/* 移动端响应式样式 */
+@media (max-width: 768px) {
+
+    /* 移动端容器优化 */
+    .market-index-card {
+        min-height: auto !important;
+        margin: 0 !important;
+        border-radius: 8px !important;
+        overflow: visible !important;
+    }
+
+    /* 移动端头部优化 */
+    .card-header {
+        padding: 12px 16px 8px 16px !important;
+        border-radius: 8px 8px 0 0 !important;
+    }
+
+    .card-title {
+        font-size: 1rem !important;
+    }
+
+    .update-time {
+        font-size: 0.7rem !important;
+    }
+
+    /* 移动端列表优化 */
+    .index-list {
+        padding: 8px 0 12px 0 !important;
+        overflow: visible !important;
+        flex: none !important;
+    }
+
+    .index-item {
+        padding: 8px 12px !important;
+        border-radius: 6px !important;
+        margin: 0 8px 6px 8px !important;
+        background: #f8fafc !important;
+        border: 1px solid #e2e8f0 !important;
+    }
+
+    .index-item:hover {
+        background: #f1f5f9 !important;
+        transform: translateY(-1px) !important;
+        box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1) !important;
+    }
+
+    .index-name {
+        font-size: 0.85rem !important;
+        margin-bottom: 1px !important;
+    }
+
+    .index-code {
+        font-size: 0.7rem !important;
+    }
+
+    .index-price {
+        font-size: 0.9rem !important;
+        margin-bottom: 1px !important;
+    }
+
+    .index-change {
+        font-size: 0.75rem !important;
+        gap: 3px !important;
+    }
+}
+
+/* 移动端侧边栏专用样式 */
+@media (max-width: 768px) {
+
+    /* 在移动端侧边栏中进一步优化 */
+    .sidebar-container .market-index-card {
+        border: none !important;
+        background: transparent !important;
+        box-shadow: none !important;
+        margin: 0 !important;
+    }
+
+    .sidebar-container .card-header {
+        display: none !important;
+    }
+
+    .sidebar-container .index-list {
+        padding: 0 6px 12px 6px !important;
+    }
+
+    .sidebar-container .index-item {
+        margin: 0 0 6px 0 !important;
+        box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05) !important;
+    }
+}
 </style>

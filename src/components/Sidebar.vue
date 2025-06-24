@@ -13,16 +13,7 @@
         </button>
 
         <div class="sidebar-content" v-show="(isMobileView && isMobileExpanded) || (!isMobileView && !isCollapsed)">
-            <!-- 移动端顶部标题栏 -->
-            <div v-if="isMobileView" class="mobile-header">
-                <h3 class="mobile-title">功能面板</h3>
-                <button class="mobile-close-btn" @click="closeMobileSidebar">
-                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none">
-                        <path d="M18 6L6 18M6 6l12 12" stroke="currentColor" stroke-width="2" stroke-linecap="round"
-                            stroke-linejoin="round" />
-                    </svg>
-                </button>
-            </div>
+            <!-- 移动端不显示头部，PC端也不需要头部 -->
 
             <!-- Tab导航 -->
             <div class="tab-nav" :class="{ 'mobile-nav': isMobileView }">
@@ -537,7 +528,7 @@ defineExpose({
         transform: scale(1.05) !important;
     }
 
-    /* 移动端tab导航优化 - 紧凑版 */
+    /* 移动端tab导航优化 - 超紧凑版 */
     .tab-nav.mobile-nav {
         flex-wrap: nowrap !important;
         overflow-x: auto !important;
@@ -549,9 +540,9 @@ defineExpose({
         display: flex !important;
         flex-shrink: 0 !important;
         background: rgba(249, 250, 251, 0.95) !important;
-        border-bottom: 2px solid #e5e7eb !important;
-        padding: 6px 0 !important;
-        min-height: 56px !important;
+        border-bottom: 1px solid #e5e7eb !important;
+        padding: 4px 0 !important;
+        min-height: 40px !important;
     }
 
     .tab-nav.mobile-nav::-webkit-scrollbar {
@@ -561,15 +552,17 @@ defineExpose({
 
     .mobile-nav .tab-item {
         flex: 0 0 auto !important;
-        min-width: 75px !important;
-        padding: 8px 8px !important;
-        font-size: 0.7rem !important;
+        min-width: 70px !important;
+        padding: 6px 6px !important;
+        font-size: 0.65rem !important;
         font-weight: 500 !important;
         white-space: nowrap !important;
-        flex-direction: column !important;
-        gap: 3px !important;
-        border-radius: 10px !important;
-        margin: 0 3px !important;
+        flex-direction: row !important;
+        align-items: center !important;
+        justify-content: flex-start !important;
+        gap: 4px !important;
+        border-radius: 8px !important;
+        margin: 0 2px !important;
         transition: all 0.2s ease !important;
     }
 
@@ -586,27 +579,76 @@ defineExpose({
     }
 
     .mobile-nav .tab-text {
-        font-size: 0.7rem !important;
+        font-size: 0.65rem !important;
         line-height: 1.2 !important;
-        text-align: center !important;
+        text-align: left !important;
+        flex: 1 !important;
     }
 
     .mobile-nav .tab-icon {
-        font-size: 1.1rem !important;
+        font-size: 0.9rem !important;
         line-height: 1 !important;
+        flex-shrink: 0 !important;
+        width: 14px !important;
+        height: 14px !important;
+        display: flex !important;
+        align-items: center !important;
+        justify-content: center !important;
     }
 
-    /* 移动端tab内容区域 - 紧凑版 */
-    .tab-content {
-        height: calc(100vh - 100px) !important;
-        /* 减去标题栏(44px)和tab导航(56px) */
+    /* SVG图标在移动端的优化 */
+    .mobile-nav .tab-item svg {
+        width: 14px !important;
+        height: 14px !important;
+        flex-shrink: 0 !important;
+    }
+
+    /* 移动端徽章样式优化 */
+    .mobile-nav .count-badge,
+    .mobile-nav .unread-badge {
+        position: relative !important;
+        top: auto !important;
+        right: auto !important;
+        margin-left: 4px !important;
+        font-size: 0.55rem !important;
+        min-width: 16px !important;
+        height: 16px !important;
+        line-height: 16px !important;
+        padding: 0 4px !important;
+        border-radius: 8px !important;
+        flex-shrink: 0 !important;
+    }
+
+    /* PC端tab内容区域保持原样 */
+    .sidebar-container:not(.mobile-expanded) .tab-content {
+        height: calc(100vh - 106px) !important;
+        /* PC端：56px(顶部) + 50px(tab导航) */
+        padding: 0 !important;
+        background: transparent !important;
+    }
+
+    /* 移动端tab内容区域 - 无头部版本 */
+    .sidebar-container.mobile-expanded .tab-content {
+        height: calc(100vh - 40px) !important;
+        /* 只减去tab导航(40px)，无头部 */
         padding: 6px !important;
         flex: 1 !important;
         overflow-y: auto !important;
         background: #f8fafc !important;
     }
 
-    .tab-panel {
+    /* PC端tab-panel保持原样 */
+    .sidebar-container:not(.mobile-expanded) .tab-panel {
+        padding: 4px !important;
+        padding-bottom: 20px !important;
+        background: transparent !important;
+        border-radius: 0 !important;
+        box-shadow: none !important;
+        overflow: visible !important;
+    }
+
+    /* 移动端tab-panel */
+    .sidebar-container.mobile-expanded .tab-panel {
         padding: 0 !important;
         padding-bottom: 100px !important;
         /* 底部留出空间避免与聊天框冲突 */
@@ -616,26 +658,50 @@ defineExpose({
         overflow: visible !important;
     }
 
-    /* 移动端侧边栏内的股票列表优化 */
-    .tab-panel .mobile-stock-list-container {
+    /* 移动端移除组件外层容器的样式 */
+    .sidebar-container.mobile-expanded .tab-panel .portfolio-view,
+    .sidebar-container.mobile-expanded .tab-panel .recommendations-container,
+    .sidebar-container.mobile-expanded .tab-panel .watchlist-container,
+    .sidebar-container.mobile-expanded .tab-panel .market-index-container,
+    .sidebar-container.mobile-expanded .tab-panel .notifications-container {
+        padding: 0 !important;
+        margin: 0 !important;
+        background: transparent !important;
+        border: none !important;
+        box-shadow: none !important;
+        border-radius: 0 !important;
+    }
+
+    /* 移动端侧边栏内的股票列表优化 - 直接显示版本 */
+    .sidebar-container.mobile-expanded .tab-panel .mobile-stock-list-container,
+    .sidebar-container.mobile-expanded .tab-panel .stock-list-container {
+        background: transparent !important;
+        padding: 0 !important;
+        margin: 0 !important;
+    }
+
+    .sidebar-container.mobile-expanded .tab-panel .mobile-stock-list,
+    .sidebar-container.mobile-expanded .tab-panel .stock-list {
+        padding: 0 !important;
+        margin: 0 !important;
         background: transparent !important;
     }
 
-    .tab-panel .mobile-stock-card {
-        margin: 0 0 8px 0 !important;
-        padding: 10px !important;
-        border-radius: 8px !important;
-        box-shadow: 0 1px 3px rgba(0, 0, 0, 0.08) !important;
+    .sidebar-container.mobile-expanded .tab-panel .mobile-stock-card {
+        margin: 0 6px 6px 6px !important;
+        padding: 8px !important;
+        border-radius: 6px !important;
+        box-shadow: 0 1px 2px rgba(0, 0, 0, 0.06) !important;
         border: 1px solid #e2e8f0 !important;
         background: white !important;
     }
 
-    .tab-panel .stock-name {
+    .sidebar-container.mobile-expanded .tab-panel .stock-name {
         font-size: 0.9rem !important;
         line-height: 1.3 !important;
     }
 
-    .tab-panel .current-price {
+    .sidebar-container.mobile-expanded .tab-panel .current-price {
         font-size: 1.05rem !important;
     }
 
@@ -677,8 +743,6 @@ defineExpose({
         align-items: center !important;
         justify-content: center !important;
         gap: 3px !important;
-        /* 调试边框 */
-        border: 1px solid #00ff00 !important;
     }
 
     .sidebar-container.mobile-expanded .tab-panel .action-text {
@@ -733,47 +797,49 @@ defineExpose({
         font-weight: bold !important;
     }
 
-    /* 移动端侧边栏组件标题优化 */
-    .tab-panel .card-header {
-        padding: 12px 16px 8px 16px !important;
-        background: white !important;
-        border-bottom: 1px solid #f1f5f9 !important;
-        border-radius: 8px 8px 0 0 !important;
-        margin-bottom: 8px !important;
+    /* 移动端移除组件头部 */
+    .sidebar-container.mobile-expanded .tab-panel .card-header {
+        display: none !important;
     }
 
-    .tab-panel .card-title {
-        font-size: 0.95rem !important;
-        color: #1e293b !important;
+    /* 移动端移除组件内部容器的样式 */
+    .sidebar-container.mobile-expanded .tab-panel .recommendations-list,
+    .sidebar-container.mobile-expanded .tab-panel .portfolio-content,
+    .sidebar-container.mobile-expanded .tab-panel .watchlist-content,
+    .sidebar-container.mobile-expanded .tab-panel .watchlist-list,
+    .sidebar-container.mobile-expanded .tab-panel .market-content,
+    .sidebar-container.mobile-expanded .tab-panel .notifications-content {
+        padding: 0 !important;
+        margin: 0 !important;
+        background: transparent !important;
+        border: none !important;
+        box-shadow: none !important;
+        border-radius: 0 !important;
     }
 
-    .tab-panel .update-time {
-        font-size: 0.7rem !important;
-        color: #64748b !important;
-    }
-
-    /* 移动端空状态优化 */
-    .tab-panel .empty-state {
-        padding: 30px 20px !important;
+    /* 移动端空状态优化 - 直接显示版本 */
+    .sidebar-container.mobile-expanded .tab-panel .empty-state {
+        padding: 20px 12px !important;
         text-align: center !important;
         background: white !important;
-        border-radius: 8px !important;
-        margin: 8px 0 !important;
+        border-radius: 6px !important;
+        margin: 6px !important;
+        border: 1px solid #f1f5f9 !important;
     }
 
-    .tab-panel .empty-icon {
+    .sidebar-container.mobile-expanded .tab-panel .empty-icon {
         font-size: 2rem !important;
         margin-bottom: 8px !important;
         opacity: 0.6 !important;
     }
 
-    .tab-panel .empty-title {
+    .sidebar-container.mobile-expanded .tab-panel .empty-title {
         font-size: 0.9rem !important;
         color: #6b7280 !important;
         margin-bottom: 4px !important;
     }
 
-    .tab-panel .empty-desc {
+    .sidebar-container.mobile-expanded .tab-panel .empty-desc {
         font-size: 0.75rem !important;
         color: #9ca3af !important;
         line-height: 1.4 !important;
@@ -1075,171 +1141,49 @@ defineExpose({
         flex-shrink: 0 !important;
     }
 
-    /* 移动端资产卡片重新设计 - 现代化布局 */
-    .sidebar-container.mobile-expanded .tab-panel .account-summary {
-        background: transparent !important;
-        padding: 8px !important;
-        margin: 0 !important;
-    }
-
-    /* 移动端隐藏刷新按钮和标题，优化布局 */
-    .sidebar-container.mobile-expanded .tab-panel .account-summary .summary-header {
-        display: none !important;
-    }
-
-    /* 总资产卡片 - 紧凑现代化设计 */
-    .sidebar-container.mobile-expanded .tab-panel .account-summary .total-assets-card {
-        background: linear-gradient(135deg, #4f46e5 0%, #7c3aed 100%) !important;
-        color: white !important;
-        border: none !important;
-        border-radius: 10px !important;
-        padding: 10px 12px !important;
-        box-shadow: 0 2px 12px rgba(79, 70, 229, 0.25) !important;
-        backdrop-filter: blur(20px) !important;
-        display: flex !important;
-        align-items: center !important;
-        gap: 10px !important;
-        margin-bottom: 8px !important;
-        margin-top: 0 !important;
+    /* 移动端持仓组件修复 - 简化版本，主要样式由组件自身处理 */
+    .sidebar-container.mobile-expanded .tab-panel .portfolio-view {
+        max-height: none !important;
+        height: auto !important;
+        overflow: visible !important;
         min-height: auto !important;
-        max-height: none !important;
+        contain: none !important;
     }
 
-    /* 三个子卡片 - 紧凑白色卡片设计 */
-    .sidebar-container.mobile-expanded .tab-panel .account-summary .summary-card {
-        background: #ffffff !important;
-        color: #1f2937 !important;
-        border: 1px solid #e5e7eb !important;
-        border-radius: 6px !important;
-        padding: 8px 6px !important;
-        box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1) !important;
-        backdrop-filter: none !important;
-        display: flex !important;
-        flex-direction: column !important;
-        align-items: center !important;
-        justify-content: center !important;
-        gap: 2px !important;
-        text-align: center !important;
-        transition: all 0.2s ease !important;
-        min-height: 48px !important;
-        max-height: none !important;
-    }
-
-    .sidebar-container.mobile-expanded .tab-panel .account-summary .summary-card:hover {
-        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15) !important;
-        transform: translateY(-1px) !important;
-    }
-
-    /* 总资产卡片内部元素样式 - 紧凑版 */
-    .sidebar-container.mobile-expanded .tab-panel .account-summary .asset-icon {
-        width: 32px !important;
-        height: 32px !important;
-        font-size: 1.2rem !important;
-        background: rgba(255, 255, 255, 0.2) !important;
-        border-radius: 50% !important;
-        display: flex !important;
-        align-items: center !important;
-        justify-content: center !important;
-        flex-shrink: 0 !important;
-    }
-
-    .sidebar-container.mobile-expanded .tab-panel .account-summary .asset-info {
-        flex: 1 !important;
-        display: flex !important;
-        flex-direction: column !important;
-        gap: 2px !important;
-    }
-
-    .sidebar-container.mobile-expanded .tab-panel .account-summary .asset-label {
-        font-size: 0.7rem !important;
-        line-height: 1.1 !important;
-        color: rgba(255, 255, 255, 0.8) !important;
-        font-weight: 500 !important;
-        margin: 0 !important;
-    }
-
-    .sidebar-container.mobile-expanded .tab-panel .account-summary .asset-value {
-        font-size: 1.1rem !important;
-        line-height: 1.2 !important;
-        color: #ffffff !important;
-        font-weight: 700 !important;
-        margin: 0 !important;
-    }
-
-    .sidebar-container.mobile-expanded .tab-panel .account-summary .asset-change {
-        font-size: 0.65rem !important;
-        padding: 1px 4px !important;
-        border-radius: 3px !important;
-        gap: 1px !important;
-        font-weight: 600 !important;
-        display: flex !important;
-        align-items: center !important;
-        width: fit-content !important;
-    }
-
-    .sidebar-container.mobile-expanded .tab-panel .account-summary .asset-change.positive {
-        color: #ffffff !important;
-        background: rgba(34, 197, 94, 0.3) !important;
-    }
-
-    .sidebar-container.mobile-expanded .tab-panel .account-summary .asset-change.negative {
-        color: #ffffff !important;
-        background: rgba(239, 68, 68, 0.3) !important;
-    }
-
-    /* 三个子卡片网格布局 - 紧凑版 */
-    .sidebar-container.mobile-expanded .tab-panel .account-summary .summary-grid {
-        display: grid !important;
-        grid-template-columns: 1fr 1fr 1fr !important;
-        gap: 6px !important;
-        padding: 0 !important;
-    }
-
-    /* 子卡片图标样式 - 紧凑版 */
-    .sidebar-container.mobile-expanded .tab-panel .account-summary .card-icon {
-        font-size: 1rem !important;
-        margin-bottom: 1px !important;
-        flex-shrink: 0 !important;
-        color: #6366f1 !important;
-    }
-
-    .sidebar-container.mobile-expanded .tab-panel .account-summary .card-content {
-        display: flex !important;
-        flex-direction: column !important;
-        align-items: center !important;
-        gap: 1px !important;
-        width: 100% !important;
-    }
-
-    .sidebar-container.mobile-expanded .tab-panel .account-summary .card-label {
-        font-size: 0.65rem !important;
-        line-height: 1.1 !important;
-        color: #6b7280 !important;
-        font-weight: 500 !important;
-        text-align: center !important;
-        margin: 0 !important;
-    }
-
-    .sidebar-container.mobile-expanded .tab-panel .account-summary .card-value {
-        font-size: 0.75rem !important;
-        line-height: 1.1 !important;
-        color: #1f2937 !important;
-        font-weight: 700 !important;
-        text-align: center !important;
-        margin: 0 !important;
-    }
-
-    .sidebar-container.mobile-expanded .tab-panel .account-summary .card-value.positive {
-        color: #059669 !important;
-    }
-
-    .sidebar-container.mobile-expanded .tab-panel .account-summary .card-value.negative {
-        color: #dc2626 !important;
-    }
-
-    /* 移动端持仓列表底部间距 */
     .sidebar-container.mobile-expanded .tab-panel .portfolio-content {
         padding-bottom: 12px !important;
+        overflow: visible !important;
+        height: auto !important;
+        flex: none !important;
+        scrollbar-gutter: auto !important;
+    }
+
+    /* 移动端特定容器移除滚动，使用外部tab容器的滚动 */
+    .sidebar-container.mobile-expanded .tab-panel .portfolio-view,
+    .sidebar-container.mobile-expanded .tab-panel .recommendations-container,
+    .sidebar-container.mobile-expanded .tab-panel .watchlist-container,
+    .sidebar-container.mobile-expanded .tab-panel .market-index-container,
+    .sidebar-container.mobile-expanded .tab-panel .notifications-container,
+    .sidebar-container.mobile-expanded .tab-panel .mobile-stock-list-container,
+    .sidebar-container.mobile-expanded .tab-panel .mobile-stock-list,
+    .sidebar-container.mobile-expanded .tab-panel .stock-list-container,
+    .sidebar-container.mobile-expanded .tab-panel .stock-list,
+    .sidebar-container.mobile-expanded .tab-panel .portfolio-content,
+    .sidebar-container.mobile-expanded .tab-panel .recommendations-list,
+    .sidebar-container.mobile-expanded .tab-panel .watchlist-content,
+    .sidebar-container.mobile-expanded .tab-panel .watchlist-list,
+    .sidebar-container.mobile-expanded .tab-panel .market-content,
+    .sidebar-container.mobile-expanded .tab-panel .notifications-content {
+        max-height: none !important;
+        overflow: visible !important;
+    }
+
+    /* 移动端其他可能的滚动容器 */
+    .sidebar-container.mobile-expanded .tab-panel .market-index-content,
+    .sidebar-container.mobile-expanded .tab-panel .notifications-list,
+    .sidebar-container.mobile-expanded .tab-panel .message-list {
+        max-height: none !important;
+        overflow: visible !important;
     }
 
     /* 操作按钮相关样式 */

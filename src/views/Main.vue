@@ -4353,6 +4353,53 @@ onMounted(() => {
 });
 </script>
 
+<!-- 非scoped样式用于移动端按钮优化 -->
+<style>
+/* 移动端侧边栏悬浮按钮优化 - 小巧圆形设计 */
+@media (max-width: 768px) {
+    button.floating-sidebar-toggle {
+        width: 30px !important;
+        height: 30px !important;
+        min-width: 30px !important;
+        min-height: 30px !important;
+        max-width: 30px !important;
+        max-height: 30px !important;
+        right: 12px !important;
+        top: 72px !important;
+        background: rgba(59, 130, 246, 0.8) !important;
+        border: 1px solid rgba(255, 255, 255, 0.25) !important;
+        box-shadow: 0 1px 6px rgba(59, 130, 246, 0.2) !important;
+        backdrop-filter: blur(4px) !important;
+        color: white !important;
+        border-radius: 50% !important;
+        opacity: 0.75 !important;
+        transition: all 0.2s ease !important;
+    }
+
+    button.floating-sidebar-toggle:hover {
+        background: rgba(59, 130, 246, 1) !important;
+        opacity: 1 !important;
+        transform: scale(1.1) !important;
+        box-shadow: 0 2px 8px rgba(59, 130, 246, 0.3) !important;
+        width: 30px !important;
+        height: 30px !important;
+    }
+
+    button.floating-sidebar-toggle:active {
+        transform: scale(0.9) !important;
+        background: rgba(37, 99, 235, 1) !important;
+        width: 30px !important;
+        height: 30px !important;
+    }
+
+    button.floating-sidebar-toggle svg {
+        width: 14px !important;
+        height: 14px !important;
+        stroke-width: 2.2 !important;
+    }
+}
+</style>
+
 <style scoped>
 .main-modern {
     min-height: 100vh;
@@ -4563,16 +4610,20 @@ body.onboarding-mode {
     transition: all 0.2s ease;
 }
 
-/* 移动端优化 */
+/* 移动端优化 - 使用更高优先级选择器 */
 @media (max-width: 768px) {
-    .floating-sidebar-toggle {
-        width: 56px;
-        height: 56px;
-        right: 20px;
-        top: 80px;
-        background: rgba(59, 130, 246, 1) !important;
-        border: 3px solid rgba(255, 255, 255, 0.3);
-        box-shadow: 0 6px 24px rgba(59, 130, 246, 0.5) !important;
+    button.floating-sidebar-toggle {
+        width: 24px !important;
+        height: 24px !important;
+        min-width: 24px !important;
+        min-height: 24px !important;
+        max-width: 24px !important;
+        max-height: 24px !important;
+        right: 16px !important;
+        top: 76px !important;
+        background: rgba(59, 130, 246, 0.95) !important;
+        border: 2px solid rgba(255, 255, 255, 0.2) !important;
+        box-shadow: 0 3px 12px rgba(59, 130, 246, 0.35) !important;
 
         /* 移动端触摸优化 */
         -webkit-tap-highlight-color: transparent;
@@ -4582,19 +4633,23 @@ body.onboarding-mode {
         touch-action: manipulation;
     }
 
-    .floating-sidebar-toggle:hover {
-        background: rgba(59, 130, 246, 1);
-        transform: translateY(-1px) scale(1.02);
+    button.floating-sidebar-toggle:hover {
+        background: rgba(59, 130, 246, 1) !important;
+        transform: translateY(-1px) scale(1.05) !important;
+        width: 40px !important;
+        height: 40px !important;
     }
 
-    .floating-sidebar-toggle:active {
-        transform: translateY(0) scale(0.98);
-        background: rgba(37, 99, 235, 1);
+    button.floating-sidebar-toggle:active {
+        transform: translateY(0) scale(0.95) !important;
+        background: rgba(37, 99, 235, 1) !important;
+        width: 40px !important;
+        height: 40px !important;
     }
 
-    .floating-sidebar-toggle svg {
-        width: 22px;
-        height: 22px;
+    button.floating-sidebar-toggle svg {
+        width: 18px !important;
+        height: 18px !important;
     }
 }
 

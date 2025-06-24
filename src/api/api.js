@@ -10,6 +10,10 @@ const api = {
   // user portrait
   getUserPortrait: "/user-portrait/detail",
   updateUserPortrait: "/user-portrait/update",
+
+  // stock
+  recommendStock: "/chat/recommendStock",
+  
 };
 
 export default api;
@@ -29,3 +33,8 @@ export const getUserPortrait = () => request.get(api.getUserPortrait);
 // 更新用户偏好
 export const updateUserPortrait = (params) => request.post(api.updateUserPortrait, params);
 
+// 获取推荐股票
+export const recommendStock = (params) => request.get(api.recommendStock, {
+  params,
+  timeout: 30000 // 设置30秒超时
+});

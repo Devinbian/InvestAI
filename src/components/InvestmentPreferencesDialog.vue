@@ -354,7 +354,7 @@ const previousStep = () => {
 /**
  * 根据子分类value数组生成包含父子关系的结构
  * @param {string[]} subCategoryValues 子分类value数组
- * @returns {Array} 格式化后的数据结构：[{"parent": {"value": "","label": ""},"children": [{"value": "","label": ""}]}]
+ * @returns {Array} 格式化后的数据结构：[{"value": "","label": "","children": [{"value": "","label": ""}]}]
  */
 /**
  * 将子分类value数组转换为树形结构

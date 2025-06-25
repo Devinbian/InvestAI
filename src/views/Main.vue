@@ -174,9 +174,17 @@
                                             stroke-linejoin="round" />
                                     </svg>
                                 </el-button>
-                                <el-button class="ai-send-btn" type="primary" circle @click="sendMessage"
-                                    :disabled="!inputMessage.trim()">
-                                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none">
+                                <el-button class="ai-send-btn" :class="{ 'generating': isGenerating }"
+                                    :type="isGenerating ? 'danger' : 'primary'" circle
+                                    @click="isGenerating ? stopGeneration() : sendMessage()"
+                                    :disabled="!isGenerating && !inputMessage.trim()"
+                                    :title="isGenerating ? '停止生成' : '发送消息'">
+                                    <!-- 生成中显示停止图标 -->
+                                    <svg v-if="isGenerating" width="18" height="18" viewBox="0 0 24 24" fill="none">
+                                        <rect x="6" y="6" width="12" height="12" fill="currentColor" rx="2" />
+                                    </svg>
+                                    <!-- 正常状态显示发送图标 -->
+                                    <svg v-else width="18" height="18" viewBox="0 0 24 24" fill="none">
                                         <path d="M22 2L11 13" stroke="currentColor" stroke-width="2"
                                             stroke-linecap="round" stroke-linejoin="round" />
                                         <path d="M22 2L15 22L11 13L2 9L22 2Z" stroke="currentColor" stroke-width="2"
@@ -214,9 +222,17 @@
                                             stroke-linejoin="round" />
                                     </svg>
                                 </el-button>
-                                <el-button class="ai-send-btn" type="primary" circle @click="sendMessage"
-                                    :disabled="!inputMessage.trim()">
-                                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none">
+                                <el-button class="ai-send-btn" :class="{ 'generating': isGenerating }"
+                                    :type="isGenerating ? 'danger' : 'primary'" circle
+                                    @click="isGenerating ? stopGeneration() : sendMessage()"
+                                    :disabled="!isGenerating && !inputMessage.trim()"
+                                    :title="isGenerating ? '停止生成' : '发送消息'">
+                                    <!-- 生成中显示停止图标 -->
+                                    <svg v-if="isGenerating" width="18" height="18" viewBox="0 0 24 24" fill="none">
+                                        <rect x="6" y="6" width="12" height="12" fill="currentColor" rx="2" />
+                                    </svg>
+                                    <!-- 正常状态显示发送图标 -->
+                                    <svg v-else width="18" height="18" viewBox="0 0 24 24" fill="none">
                                         <path d="M22 2L11 13" stroke="currentColor" stroke-width="2"
                                             stroke-linecap="round" stroke-linejoin="round" />
                                         <path d="M22 2L15 22L11 13L2 9L22 2Z" stroke="currentColor" stroke-width="2"
@@ -412,13 +428,13 @@
                                         <div class="asset-amount">
                                             <span class="amount-label">总资产</span>
                                             <span class="amount-value">¥{{ formatCurrency(message.assetData.totalAssets)
-                                                }}</span>
+                                            }}</span>
                                         </div>
                                         <div class="asset-change"
                                             :class="[message.assetData.totalProfitPercent >= 0 ? 'profit' : 'loss']">
                                             <span class="change-icon">{{ message.assetData.totalProfitPercent >= 0 ?
                                                 '📈' : '📉'
-                                                }}</span>
+                                            }}</span>
                                             <span class="change-label">今日盈亏：</span>
                                             <span class="change-text">
                                                 {{ message.assetData.totalProfitPercent >= 0 ? '+' : '' }}¥{{
@@ -444,7 +460,7 @@
                                         <div class="stat-info">
                                             <div class="stat-label">持仓市值</div>
                                             <div class="stat-value">¥{{ formatCurrency(message.assetData.portfolioValue)
-                                                }}
+                                            }}
                                             </div>
                                         </div>
                                     </div>
@@ -565,6 +581,28 @@
                     </div>
                 </div>
 
+                <!-- AI生成状态指示器 -->
+                <div v-if="isGenerating" class="generating-indicator">
+                    <div class="generating-content">
+                        <div class="generating-avatar">
+                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none">
+                                <path d="M9.663 17h4.673M12 3a6 6 0 0 1 6 6c0 3-2 4-2 4h-8s-2-1-2-4a6 6 0 0 1 6-6z"
+                                    stroke="currentColor" stroke-width="2" />
+                                <path d="M12 17v4" stroke="currentColor" stroke-width="2" />
+                                <circle cx="12" cy="12" r="1" fill="currentColor" />
+                            </svg>
+                        </div>
+                        <div class="generating-text">
+                            <div class="generating-dots">
+                                <span class="dot"></span>
+                                <span class="dot"></span>
+                                <span class="dot"></span>
+                            </div>
+                            <span class="generating-label">AI正在思考中...</span>
+                        </div>
+                    </div>
+                </div>
+
                 <!-- 移动端聊天历史底部占位元素，防止被新建聊天按钮遮挡 -->
                 <div class="mobile-chat-spacer" v-if="isMobileView"></div>
             </div>
@@ -664,9 +702,17 @@
                                             stroke-linejoin="round" />
                                     </svg>
                                 </el-button>
-                                <el-button class="ai-send-btn" type="primary" circle @click="sendMessage"
-                                    :disabled="!inputMessage.trim()">
-                                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none">
+                                <el-button class="ai-send-btn" :class="{ 'generating': isGenerating }"
+                                    :type="isGenerating ? 'danger' : 'primary'" circle
+                                    @click="isGenerating ? stopGeneration() : sendMessage()"
+                                    :disabled="!isGenerating && !inputMessage.trim()"
+                                    :title="isGenerating ? '停止生成' : '发送消息'">
+                                    <!-- 生成中显示停止图标 -->
+                                    <svg v-if="isGenerating" width="16" height="16" viewBox="0 0 24 24" fill="none">
+                                        <rect x="6" y="6" width="12" height="12" fill="currentColor" rx="2" />
+                                    </svg>
+                                    <!-- 正常状态显示发送图标 -->
+                                    <svg v-else width="16" height="16" viewBox="0 0 24 24" fill="none">
                                         <path d="M22 2L11 13" stroke="currentColor" stroke-width="2"
                                             stroke-linecap="round" stroke-linejoin="round" />
                                         <path d="M22 2L15 22L11 13L2 9L22 2Z" stroke="currentColor" stroke-width="2"
@@ -704,9 +750,17 @@
                                             stroke-linejoin="round" />
                                     </svg>
                                 </el-button>
-                                <el-button class="ai-send-btn" type="primary" circle @click="sendMessage"
-                                    :disabled="!inputMessage.trim()">
-                                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none">
+                                <el-button class="ai-send-btn" :class="{ 'generating': isGenerating }"
+                                    :type="isGenerating ? 'danger' : 'primary'" circle
+                                    @click="isGenerating ? stopGeneration() : sendMessage()"
+                                    :disabled="!isGenerating && !inputMessage.trim()"
+                                    :title="isGenerating ? '停止生成' : '发送消息'">
+                                    <!-- 生成中显示停止图标 -->
+                                    <svg v-if="isGenerating" width="16" height="16" viewBox="0 0 24 24" fill="none">
+                                        <rect x="6" y="6" width="12" height="12" fill="currentColor" rx="2" />
+                                    </svg>
+                                    <!-- 正常状态显示发送图标 -->
+                                    <svg v-else width="16" height="16" viewBox="0 0 24 24" fill="none">
                                         <path d="M22 2L11 13" stroke="currentColor" stroke-width="2"
                                             stroke-linecap="round" stroke-linejoin="round" />
                                         <path d="M22 2L15 22L11 13L2 9L22 2Z" stroke="currentColor" stroke-width="2"
@@ -879,7 +933,7 @@
                 </div>
                 <div class="guide-actions">
                     <el-button type="primary" size="small" @click="handleGuideAction">{{ guideActionText
-                    }}</el-button>
+                        }}</el-button>
                     <el-button size="small" @click="dismissGuide">稍后</el-button>
                 </div>
             </div>
@@ -917,7 +971,7 @@
                         <div class="summary-item">
                             <span class="summary-label">买入信号</span>
                             <span class="summary-value signal-score">{{ currentQuantAnalysis.buySignalScore
-                                }}/100</span>
+                            }}/100</span>
                         </div>
                         <div class="summary-item">
                             <span class="summary-label">量化评级</span>
@@ -1398,6 +1452,10 @@ const preferencesDialogVisible = ref(false);
 const preferencesFormRef = ref(null);
 const preferencesLoading = ref(false);
 
+// 聊天发送状态管理
+const isGenerating = ref(false);
+const currentAbortController = ref(null);
+
 // 步骤配置
 const preferenceSteps = [
     {
@@ -1562,7 +1620,7 @@ const handleMobileCommand = async (command) => {
 };
 
 const sendMessage = async () => {
-    if (!inputMessage.value.trim()) return;
+    if (!inputMessage.value.trim() || isGenerating.value) return;
 
     // 检查用户是否已登录
     if (!userStore.isLoggedIn) {
@@ -1574,7 +1632,8 @@ const sendMessage = async () => {
     const message = inputMessage.value;
     inputMessage.value = '';
 
-
+    // 设置生成状态
+    isGenerating.value = true;
 
     // 发送消息后切换到聊天模式
     isChatMode.value = true;
@@ -1598,65 +1657,76 @@ const sendMessage = async () => {
     scrollToBottom();
 
     try {
-            let aiContent = '';
-            const abortController = new AbortController(); // 用于取消请求
-            fetchEventSource(`${api.devPrefix}${api.recommendStock}?userInput=${encodeURIComponent(message)}`, {
-                method: 'GET', // GET 是默认方法，可省略
-                headers: {
-                    'Content-Type': 'text/event-stream', // 设置内容类型为 SSE
-                    'Authorization': `${userStore.token}` // 添加用户令牌
-                },
-                signal: abortController.signal, // 绑定取消信号
+        let aiContent = '';
+        const abortController = new AbortController(); // 用于取消请求
+        currentAbortController.value = abortController; // 保存到全局状态
 
-                // 添加重试配置
-                retryInterval: 0,       // 不重试
-                backoffMultiplier: 0,    // 退避系数
+        fetchEventSource(`${api.devPrefix}${api.recommendStock}?userInput=${encodeURIComponent(message)}`, {
+            method: 'GET', // GET 是默认方法，可省略
+            headers: {
+                'Content-Type': 'text/event-stream', // 设置内容类型为 SSE
+                'Authorization': `${userStore.token}` // 添加用户令牌
+            },
+            signal: abortController.signal, // 绑定取消信号
 
-                onopen: async (response) => {
-                    // 连接建立时触发
-                    if (response.ok) {
-                        console.log('连接成功');
-                    } else {
-                        throw new Error(`服务器错误: ${response.status}`);
-                    }
-                },
-                onmessage: (event) => {
-                    // 处理每条消息
-                    try {
-                        console.log('智能荐股：收到数据:', event.data);
-                        let data = event.data;
-                        // 如果 data 是空格，则新增一个空格（SSE 协议规范：data: 后的第一个空格是固定分隔符，一定会被丢弃）
-                        if (data.trim().length === 0) {
-                            data += ' ';
-                        }
-                        aiContent += data;
-                        aiMessage.content = aiContent;
+            // 添加重试配置
+            retryInterval: 0,       // 不重试
+            backoffMultiplier: 0,    // 退避系数
 
-                        chatHistory.value[chatHistory.value.length - 1].content = aiContent;
-                        // 这里强制替换数组，确保响应式
-                        chatHistory.value = [...chatHistory.value];
-                        // 使用 requestAnimationFrame 优化滚动
-                        requestAnimationFrame(() => {
-                            scrollToBottom();
-                        });
-                    } catch (err) {
-                        console.error('解析错误:', err);
-                    }
-                },
-                onclose: () => {
-                    console.log('连接关闭');
-                },
-                onerror: (err) => {
-                    // 错误处理（网络错误、解析异常等）
-                    console.error('发生错误:', err);
-                    abortController.abort(); // 取消请求
-                    aiMessage.content += '\n\n[服务器繁忙，已终止]';
-                    throw err; // 重新抛出以终止流
+            onopen: async (response) => {
+                // 连接建立时触发
+                if (response.ok) {
+                    console.log('连接成功');
+                } else {
+                    throw new Error(`服务器错误: ${response.status}`);
                 }
-            });
+            },
+            onmessage: (event) => {
+                // 处理每条消息
+                try {
+                    console.log('智能荐股：收到数据:', event.data);
+                    let data = event.data;
+                    // 如果 data 是空格，则新增一个空格（SSE 协议规范：data: 后的第一个空格是固定分隔符，一定会被丢弃）
+                    if (data.trim().length === 0) {
+                        data += ' ';
+                    }
+                    aiContent += data;
+                    aiMessage.content = aiContent;
+
+                    chatHistory.value[chatHistory.value.length - 1].content = aiContent;
+                    // 这里强制替换数组，确保响应式
+                    chatHistory.value = [...chatHistory.value];
+                    // 使用 requestAnimationFrame 优化滚动
+                    requestAnimationFrame(() => {
+                        scrollToBottom();
+                    });
+                } catch (err) {
+                    console.error('解析错误:', err);
+                }
+            },
+            onclose: () => {
+                console.log('连接关闭');
+                // 重置生成状态
+                isGenerating.value = false;
+                currentAbortController.value = null;
+            },
+            onerror: (err) => {
+                // 错误处理（网络错误、解析异常等）
+                console.error('发生错误:', err);
+                abortController.abort(); // 取消请求
+                aiMessage.content += '\n\n[服务器繁忙，已终止]';
+                // 重置生成状态
+                isGenerating.value = false;
+                currentAbortController.value = null;
+                throw err; // 重新抛出以终止流
+            }
+        });
     } catch (err) {
         aiMessage.content = '响应失败，请重试';
         chatHistory.value = [...chatHistory.value];
+        // 重置生成状态
+        isGenerating.value = false;
+        currentAbortController.value = null;
     }
     if (isMobileView.value) {
         console.log('准备调用fixMobileChatBox - sendMessage');
@@ -1664,6 +1734,28 @@ const sendMessage = async () => {
             fixMobileChatBox(); // 确保输入框不被遮挡
             scrollToBottom();
         }, 100);
+    }
+};
+
+// 停止生成函数
+const stopGeneration = () => {
+    if (currentAbortController.value) {
+        currentAbortController.value.abort();
+        currentAbortController.value = null;
+        isGenerating.value = false;
+
+        // 更新最后一条AI消息，添加停止标识
+        if (chatHistory.value.length > 0 && chatHistory.value[chatHistory.value.length - 1].role === 'assistant') {
+            const lastMessage = chatHistory.value[chatHistory.value.length - 1];
+            if (lastMessage.content) {
+                lastMessage.content += '\n\n[已停止生成]';
+            } else {
+                lastMessage.content = '[已停止生成]';
+            }
+            chatHistory.value = [...chatHistory.value];
+        }
+
+        ElMessage.info('已停止生成');
     }
 };
 
@@ -3376,66 +3468,66 @@ const updateWatchlistInChatHistory = () => {
 };
 
 const continueAnalysis = async (stockInfo, isPaid = false) => {
-    
+
     chatHistory.value.push(
         { role: 'assistant', content: `正在为您量化分析【${stockInfo.name}(${stockInfo.code})】，请等待片刻......` },
     );
 
     try {
-            let aiContent = '';
-            const abortController = new AbortController(); // 用于取消请求
-            fetchEventSource(`${api.devPrefix}${api.analyzeStock}?stock=${encodeURIComponent(stockInfo.code)}`, {
-                method: 'GET', // GET 是默认方法，可省略
-                headers: {
-                    'Content-Type': 'text/event-stream', // 设置内容类型为 SSE
-                    'Authorization': `${userStore.token}` // 添加用户令牌
-                },
-                signal: abortController.signal, // 绑定取消信号
+        let aiContent = '';
+        const abortController = new AbortController(); // 用于取消请求
+        fetchEventSource(`${api.devPrefix}${api.analyzeStock}?stock=${encodeURIComponent(stockInfo.code)}`, {
+            method: 'GET', // GET 是默认方法，可省略
+            headers: {
+                'Content-Type': 'text/event-stream', // 设置内容类型为 SSE
+                'Authorization': `${userStore.token}` // 添加用户令牌
+            },
+            signal: abortController.signal, // 绑定取消信号
 
-                // 添加重试配置
-                retryInterval: 0,       // 不重试
-                backoffMultiplier: 0,    // 退避系数
+            // 添加重试配置
+            retryInterval: 0,       // 不重试
+            backoffMultiplier: 0,    // 退避系数
 
-                onopen: async (response) => {
-                    // 连接建立时触发
-                    if (response.ok) {
-                        console.log('连接成功');
-                    } else {
-                        throw new Error(`服务器错误: ${response.status}`);
-                    }
-                },
-                onmessage: (event) => {
-                    // 处理每条消息
-                    try {
-                        console.log('量化分析：收到数据:', event.data);
-                        let data = event.data;
-                        // 如果 data 是空格，则新增一个空格（SSE 协议规范：data: 后的第一个空格是固定分隔符，一定会被丢弃）
-                        if (data.trim().length === 0) {
-                            data += ' ';
-                        }
-                        aiContent += data;
-
-                        chatHistory.value[chatHistory.value.length - 1].content = aiContent;
-                        chatHistory.value = [...chatHistory.value]; // 触发响应式更新
-                        // 使用 requestAnimationFrame 优化滚动
-                        requestAnimationFrame(() => {
-                            scrollToBottom();
-                        });
-                    } catch (err) {
-                        console.error('解析错误:', err);
-                    }
-                },
-                onclose: () => {
-                    console.log('连接关闭');
-                },
-                onerror: (err) => {
-                    // 错误处理（网络错误、解析异常等）
-                    console.error('发生错误:', err);
-                    abortController.abort(); // 取消请求
-                    aiContent += '\n\n[服务器繁忙，已终止]';
-                    throw err; // 重新抛出以终止流
+            onopen: async (response) => {
+                // 连接建立时触发
+                if (response.ok) {
+                    console.log('连接成功');
+                } else {
+                    throw new Error(`服务器错误: ${response.status}`);
                 }
-            });
+            },
+            onmessage: (event) => {
+                // 处理每条消息
+                try {
+                    console.log('量化分析：收到数据:', event.data);
+                    let data = event.data;
+                    // 如果 data 是空格，则新增一个空格（SSE 协议规范：data: 后的第一个空格是固定分隔符，一定会被丢弃）
+                    if (data.trim().length === 0) {
+                        data += ' ';
+                    }
+                    aiContent += data;
+
+                    chatHistory.value[chatHistory.value.length - 1].content = aiContent;
+                    chatHistory.value = [...chatHistory.value]; // 触发响应式更新
+                    // 使用 requestAnimationFrame 优化滚动
+                    requestAnimationFrame(() => {
+                        scrollToBottom();
+                    });
+                } catch (err) {
+                    console.error('解析错误:', err);
+                }
+            },
+            onclose: () => {
+                console.log('连接关闭');
+            },
+            onerror: (err) => {
+                // 错误处理（网络错误、解析异常等）
+                console.error('发生错误:', err);
+                abortController.abort(); // 取消请求
+                aiContent += '\n\n[服务器繁忙，已终止]';
+                throw err; // 重新抛出以终止流
+            }
+        });
     } catch (err) {
         aiContent = '响应失败，请重试';
         chatHistory.value = [...chatHistory.value];
@@ -5654,6 +5746,300 @@ body.onboarding-mode {
     }
 }
 
+/* AI生成状态指示器样式 */
+.generating-indicator {
+    display: flex;
+    justify-content: flex-start;
+    margin: 16px 0;
+    padding: 0 20px;
+    animation: fadeIn 0.3s ease-in;
+}
+
+.generating-content {
+    display: flex;
+    align-items: flex-start;
+    gap: 12px;
+    max-width: 80%;
+}
+
+.generating-avatar {
+    width: 32px;
+    height: 32px;
+    border-radius: 50%;
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: white;
+    flex-shrink: 0;
+    animation: pulse-avatar 2s ease-in-out infinite;
+}
+
+.generating-text {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    background: #f8fafc;
+    border: 1px solid #e2e8f0;
+    border-radius: 16px;
+    padding: 12px 16px;
+    position: relative;
+}
+
+.generating-text::before {
+    content: '';
+    position: absolute;
+    left: -8px;
+    top: 12px;
+    width: 0;
+    height: 0;
+    border-top: 8px solid transparent;
+    border-bottom: 8px solid transparent;
+    border-right: 8px solid #f8fafc;
+}
+
+.generating-dots {
+    display: flex;
+    gap: 4px;
+    align-items: center;
+    margin-bottom: 2px;
+}
+
+.generating-dots .dot {
+    width: 6px;
+    height: 6px;
+    border-radius: 50%;
+    background: #667eea;
+    animation: typing-dots 1.4s ease-in-out infinite;
+}
+
+.generating-dots .dot:nth-child(1) {
+    animation-delay: 0s;
+}
+
+.generating-dots .dot:nth-child(2) {
+    animation-delay: 0.2s;
+}
+
+.generating-dots .dot:nth-child(3) {
+    animation-delay: 0.4s;
+}
+
+.generating-label {
+    font-size: 0.875rem;
+    color: #64748b;
+    font-weight: 500;
+}
+
+@keyframes pulse-avatar {
+
+    0%,
+    100% {
+        transform: scale(1);
+        box-shadow: 0 0 0 0 rgba(102, 126, 234, 0.4);
+    }
+
+    50% {
+        transform: scale(1.05);
+        box-shadow: 0 0 0 8px rgba(102, 126, 234, 0);
+    }
+}
+
+@keyframes typing-dots {
+
+    0%,
+    60%,
+    100% {
+        transform: translateY(0);
+        opacity: 0.4;
+    }
+
+    30% {
+        transform: translateY(-8px);
+        opacity: 1;
+    }
+}
+
+@keyframes fadeIn {
+    from {
+        opacity: 0;
+        transform: translateY(10px);
+    }
+
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+/* 移动端生成状态指示器优化 */
+@media (max-width: 768px) {
+    .generating-indicator {
+        padding: 0 16px;
+        margin: 12px 0;
+    }
+
+    .generating-avatar {
+        width: 28px;
+        height: 28px;
+    }
+
+    .generating-text {
+        padding: 10px 14px;
+    }
+
+    .generating-label {
+        font-size: 0.8rem;
+    }
+}
+
+/* AI生成状态指示器样式 */
+.generating-indicator {
+    display: flex;
+    justify-content: flex-start;
+    margin: 16px 0;
+    padding: 0 20px;
+    animation: fadeIn 0.3s ease-in;
+}
+
+.generating-content {
+    display: flex;
+    align-items: flex-start;
+    gap: 12px;
+    max-width: 80%;
+}
+
+.generating-avatar {
+    width: 32px;
+    height: 32px;
+    border-radius: 50%;
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: white;
+    flex-shrink: 0;
+    animation: pulse-avatar 2s ease-in-out infinite;
+}
+
+.generating-text {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    background: #f8fafc;
+    border: 1px solid #e2e8f0;
+    border-radius: 16px;
+    padding: 12px 16px;
+    position: relative;
+}
+
+.generating-text::before {
+    content: '';
+    position: absolute;
+    left: -8px;
+    top: 12px;
+    width: 0;
+    height: 0;
+    border-top: 8px solid transparent;
+    border-bottom: 8px solid transparent;
+    border-right: 8px solid #f8fafc;
+}
+
+.generating-dots {
+    display: flex;
+    gap: 4px;
+    align-items: center;
+    margin-bottom: 2px;
+}
+
+.generating-dots .dot {
+    width: 6px;
+    height: 6px;
+    border-radius: 50%;
+    background: #667eea;
+    animation: typing-dots 1.4s ease-in-out infinite;
+}
+
+.generating-dots .dot:nth-child(1) {
+    animation-delay: 0s;
+}
+
+.generating-dots .dot:nth-child(2) {
+    animation-delay: 0.2s;
+}
+
+.generating-dots .dot:nth-child(3) {
+    animation-delay: 0.4s;
+}
+
+.generating-label {
+    font-size: 0.875rem;
+    color: #64748b;
+    font-weight: 500;
+}
+
+@keyframes pulse-avatar {
+
+    0%,
+    100% {
+        transform: scale(1);
+        box-shadow: 0 0 0 0 rgba(102, 126, 234, 0.4);
+    }
+
+    50% {
+        transform: scale(1.05);
+        box-shadow: 0 0 0 8px rgba(102, 126, 234, 0);
+    }
+}
+
+@keyframes typing-dots {
+
+    0%,
+    60%,
+    100% {
+        transform: translateY(0);
+        opacity: 0.4;
+    }
+
+    30% {
+        transform: translateY(-8px);
+        opacity: 1;
+    }
+}
+
+@keyframes fadeIn {
+    from {
+        opacity: 0;
+        transform: translateY(10px);
+    }
+
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+/* 移动端生成状态指示器优化 */
+@media (max-width: 768px) {
+    .generating-indicator {
+        padding: 0 16px;
+        margin: 12px 0;
+    }
+
+    .generating-avatar {
+        width: 28px;
+        height: 28px;
+    }
+
+    .generating-text {
+        padding: 10px 14px;
+    }
+
+    .generating-label {
+        font-size: 0.8rem;
+    }
+}
+
 .chat-history-area {
     width: 100%;
     max-width: 900px;
@@ -5962,11 +6348,6 @@ body.onboarding-mode {
     font-weight: bold;
     transition: all 0.2s ease;
     flex-shrink: 0;
-}
-
-.suggestion-item:hover .suggestion-arrow {
-    color: #3b82f6;
-    transform: translateX(2px);
 }
 
 .suggestion-time {
@@ -7919,6 +8300,31 @@ body.onboarding-mode {
     color: white;
 }
 
+/* 生成状态样式 */
+.ai-send-btn.generating {
+    background: #ef4444 !important;
+    animation: pulse-generating 1.5s ease-in-out infinite;
+}
+
+.ai-send-btn.generating:hover {
+    background: #dc2626 !important;
+    box-shadow: 0 4px 12px rgba(239, 68, 68, 0.3) !important;
+}
+
+@keyframes pulse-generating {
+    0% {
+        box-shadow: 0 0 0 0 rgba(239, 68, 68, 0.4);
+    }
+
+    70% {
+        box-shadow: 0 0 0 6px rgba(239, 68, 68, 0);
+    }
+
+    100% {
+        box-shadow: 0 0 0 0 rgba(239, 68, 68, 0);
+    }
+}
+
 .ai-suggestions {
     display: flex;
     flex-direction: column;
@@ -8225,6 +8631,17 @@ body.onboarding-mode {
         width: 16px;
         height: 16px;
         color: white;
+    }
+
+    /* 移动端生成状态样式 */
+    .ai-send-btn.generating {
+        background: #ef4444 !important;
+        animation: pulse-generating 1.5s ease-in-out infinite;
+    }
+
+    .ai-send-btn.generating:hover {
+        background: #dc2626 !important;
+        box-shadow: 0 4px 12px rgba(239, 68, 68, 0.3) !important;
     }
 
 
@@ -8665,6 +9082,17 @@ body.onboarding-mode {
         width: 14px;
         height: 14px;
         color: white;
+    }
+
+    /* 超小屏幕生成状态样式 */
+    .ai-send-btn.generating {
+        background: #ef4444 !important;
+        animation: pulse-generating 1.5s ease-in-out infinite;
+    }
+
+    .ai-send-btn.generating:hover {
+        background: #dc2626 !important;
+        box-shadow: 0 4px 12px rgba(239, 68, 68, 0.3) !important;
     }
 
     .mobile-shortcuts-container {
@@ -13490,760 +13918,5 @@ body {
         padding: 8px 12px;
         border-radius: 6px;
     }
-}
-
-/* 超小屏幕提醒对话框优化 */
-@media (max-width: 320px) {
-    :deep(.reminder-dialog) {
-        margin: 1vh auto !important;
-        width: 98% !important;
-        border-radius: 8px !important;
-    }
-
-    :deep(.reminder-dialog .el-dialog__header) {
-        padding: 8px 10px;
-    }
-
-    :deep(.reminder-dialog .el-dialog__title) {
-        font-size: 13px;
-    }
-
-    .reminder-dialog-content {
-        padding: 10px;
-        max-height: 65vh;
-    }
-
-    .stock-info-section,
-    .reminder-preview {
-        padding: 8px;
-    }
-
-    /* 移除重复的股票样式 - 由StockList组件提供 */
-
-    .form-label {
-        font-size: 12px;
-    }
-
-    .preview-content {
-        font-size: 12px;
-    }
-
-    .reminder-item {
-        padding: 6px;
-    }
-
-    .reminder-stock {
-        font-size: 13px;
-    }
-
-    .reminder-desc {
-        font-size: 11px;
-    }
-
-    .remove-btn {
-        font-size: 11px;
-        padding: 6px 12px;
-        min-height: 32px;
-    }
-
-    .dialog-footer {
-        flex-direction: row;
-        gap: 10px;
-        justify-content: center;
-        align-items: center;
-        padding-top: 14px;
-    }
-
-    .dialog-footer .el-button {
-        flex: 1;
-        max-width: 90px;
-        min-height: 36px;
-        font-size: 12px;
-        padding: 6px 10px;
-        border-radius: 5px;
-    }
-}
-
-/* 自选股展示容器 */
-.watchlist-display-container {
-    margin-top: 16px;
-    background: #f8fafc;
-    border: 1px solid #e2e8f0;
-    border-radius: 12px;
-    padding: 20px;
-    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
-}
-
-/* 自选股概览统计 */
-.watchlist-overview {
-    margin-bottom: 16px;
-}
-
-.watchlist-overview .overview-stats {
-    display: flex;
-    gap: 12px;
-    justify-content: center;
-
-}
-
-.watchlist-overview .stat-item {
-    display: flex;
-    flex-direction: row;
-    align-items: center;
-    gap: 8px;
-    background: white;
-    padding: 10px 16px;
-    border-radius: 8px;
-    border: 1px solid #e5e7eb;
-    transition: all 0.2s ease;
-    min-width: 80px;
-    justify-content: center;
-}
-
-.watchlist-overview .stat-item:hover {
-    transform: translateY(-1px);
-    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
-}
-
-.watchlist-overview .stat-item.total .stat-icon {
-    color: #f59e0b;
-    font-size: 1rem;
-}
-
-.watchlist-overview .stat-item.up .stat-icon {
-    color: #10b981;
-    font-size: 1rem;
-}
-
-.watchlist-overview .stat-item.down .stat-icon {
-    color: #ef4444;
-    font-size: 1rem;
-}
-
-.watchlist-overview .stat-info {
-    display: flex;
-    flex-direction: column;
-    align-items: flex-start;
-    gap: 2px;
-}
-
-.watchlist-overview .stat-label {
-    font-size: 0.75rem;
-    color: #6b7280;
-    line-height: 1;
-}
-
-.watchlist-overview .stat-value {
-    font-size: 1.1rem;
-    font-weight: 700;
-    color: #1f2937;
-    line-height: 1;
-}
-
-/* 自选股卡片列表 */
-.watchlist-stock-list {
-    display: grid;
-    gap: 16px;
-    margin-bottom: 20px;
-}
-
-/* PC端保持原有样式 */
-.watchlist-stock-card {
-    background: white;
-    border: 1px solid #e5e7eb;
-    border-radius: 12px;
-    padding: 20px;
-    transition: all 0.3s ease;
-    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.02);
-}
-
-.watchlist-stock-card:hover {
-    transform: translateY(-2px);
-    box-shadow: 0 8px 25px rgba(0, 0, 0, 0.1);
-    border-color: #3b82f6;
-}
-
-/* PC端布局显示，移动端布局隐藏 */
-.watchlist-stock-card .pc-card-layout {
-    display: block;
-}
-
-.watchlist-stock-card .mobile-card-layout {
-    display: none;
-}
-
-.watchlist-stock-card .stock-info {
-    margin-bottom: 16px;
-}
-
-.watchlist-stock-card .stock-header {
-    display: flex;
-    justify-content: space-between;
-    align-items: flex-start;
-    margin-bottom: 12px;
-}
-
-.watchlist-stock-card .stock-name-code {
-    flex: 1;
-}
-
-.watchlist-stock-card .name-code-row {
-    display: flex;
-    align-items: center;
-    gap: 8px;
-    margin-bottom: 6px;
-}
-
-.watchlist-stock-card .stock-name {
-    font-size: 1.1rem;
-    font-weight: 600;
-    color: #1f2937;
-}
-
-.watchlist-stock-card .stock-code {
-    font-size: 0.9rem;
-    color: #6b7280;
-    background: #f3f4f6;
-    padding: 2px 8px;
-    border-radius: 4px;
-}
-
-.watchlist-stock-card .watchlist-status {
-    margin-top: 4px;
-}
-
-.watchlist-stock-card .status-value {
-    font-size: 0.8rem;
-    color: #6b7280;
-    font-weight: 500;
-}
-
-.watchlist-stock-card .stock-price-change {
-    display: flex;
-    flex-direction: column;
-    align-items: flex-end;
-    gap: 4px;
-}
-
-.watchlist-stock-card .current-price {
-    font-size: 1.3rem;
-    font-weight: 700;
-    color: #1f2937;
-}
-
-.watchlist-stock-card .price-change {
-    font-size: 0.9rem;
-    font-weight: 600;
-    padding: 2px 8px;
-    border-radius: 4px;
-}
-
-.watchlist-stock-card .price-change.positive {
-    color: #10b981;
-    background: #ecfdf5;
-}
-
-.watchlist-stock-card .price-change.negative {
-    color: #ef4444;
-    background: #fef2f2;
-}
-
-.watchlist-stock-card .stock-details {
-    background: #f8fafc;
-    border-radius: 8px;
-    padding: 12px;
-}
-
-.watchlist-stock-card .detail-row {
-    display: grid;
-    grid-template-columns: auto 1fr auto 1fr;
-    gap: 8px 16px;
-    margin-bottom: 8px;
-    align-items: center;
-}
-
-.watchlist-stock-card .detail-row:last-child {
-    margin-bottom: 0;
-}
-
-.watchlist-stock-card .detail-label {
-    font-size: 0.85rem;
-    color: #6b7280;
-}
-
-.watchlist-stock-card .detail-value {
-    font-size: 0.9rem;
-    font-weight: 500;
-    color: #374151;
-}
-
-.watchlist-stock-card .detail-value.industry {
-    color: #7c3aed;
-    background: #f3f0ff;
-    padding: 2px 8px;
-    border-radius: 4px;
-    font-size: 0.8rem;
-}
-
-.watchlist-stock-card .detail-value.target-price {
-    color: #059669;
-    font-weight: 600;
-}
-
-.watchlist-stock-card .detail-value.positive {
-    color: #10b981;
-    font-weight: 600;
-}
-
-.watchlist-stock-card .detail-value.negative {
-    color: #ef4444;
-    font-weight: 600;
-}
-
-.watchlist-stock-card .stock-item-actions {
-    display: flex;
-    gap: 8px;
-    flex-wrap: wrap;
-    padding-top: 16px;
-    border-top: 1px solid #f1f5f9;
-}
-
-
-
-
-
-/* 移动端响应式 - 自选股展示 */
-@media (max-width: 768px) {
-    .watchlist-display-container {
-        margin: 8px 0;
-        padding: 8px;
-    }
-
-    .watchlist-overview .overview-stats {
-        gap: 6px;
-        flex-direction: row;
-    }
-
-    .watchlist-overview .stat-item {
-        padding: 8px 10px;
-        gap: 4px;
-        min-width: 65px;
-    }
-
-    .watchlist-overview .stat-icon {
-        font-size: 0.85rem !important;
-    }
-
-    .watchlist-overview .stat-label {
-        font-size: 0.65rem;
-    }
-
-    .watchlist-overview .stat-value {
-        font-size: 0.9rem;
-    }
-
-    /* 移动端卡片 - 完全仿照分析报告样式 */
-    .watchlist-stock-card {
-        background: white;
-        border: 1px solid #e5e7eb;
-        border-radius: 8px;
-        padding: 12px;
-        margin-bottom: 8px;
-        box-shadow: 0 1px 2px rgba(0, 0, 0, 0.03);
-        position: relative;
-        transition: all 0.2s ease;
-        cursor: pointer;
-    }
-
-    .watchlist-stock-card:active {
-        transform: scale(0.98);
-        background: #f8fafc;
-    }
-
-    /* 移动端隐藏PC布局，显示移动端布局 */
-    .watchlist-stock-card .pc-card-layout {
-        display: none !important;
-    }
-
-    .watchlist-stock-card .mobile-card-layout {
-        display: block !important;
-    }
-
-    /* 移动端头部布局 - 仿照分析报告 */
-    .mobile-stock-header {
-        display: flex;
-        justify-content: space-between;
-        align-items: flex-start;
-        margin-bottom: 8px;
-    }
-
-    .mobile-stock-left {
-        flex: 1;
-    }
-
-    /* 左上角标签 - 仿照AI量化交易标签 */
-    .industry-tag {
-        font-size: 0.65rem;
-        color: #3b82f6;
-        background: rgba(59, 130, 246, 0.1);
-        padding: 2px 6px;
-        border-radius: 4px;
-        font-weight: 500;
-        display: inline-block;
-        margin-bottom: 6px;
-    }
-
-    /* 股票标题 - 仿照分析报告标题 */
-    .mobile-stock-title {
-        width: 100%;
-        margin-bottom: 8px;
-    }
-
-    .mobile-stock-title .stock-name {
-        font-size: 0.85rem;
-        font-weight: 600;
-        color: #374151;
-        margin: 0;
-        line-height: 1.3;
-        display: block;
-        width: 100%;
-    }
-
-    .mobile-stock-right {
-        display: flex;
-        align-items: flex-start;
-    }
-
-    /* 移动端操作下拉菜单 - 仿照分析报告 */
-    .mobile-actions-dropdown {
-        position: relative;
-    }
-
-    .mobile-more-btn {
-        width: 24px;
-        height: 24px;
-        border-radius: 12px;
-        border: none !important;
-        background: transparent !important;
-        color: #9ca3af;
-        padding: 0;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        transition: all 0.2s ease;
-    }
-
-    .mobile-more-btn:hover,
-    .mobile-more-btn:focus {
-        background: transparent !important;
-        color: #374151 !important;
-        transform: none;
-        box-shadow: none !important;
-    }
-
-    /* 移除价格信息从右上角，改为在详情中显示 */
-
-    /* 移动端股票详情区域 - 仿照分析报告信息项 */
-    .mobile-stock-details {
-        margin-bottom: 8px;
-    }
-
-    .mobile-detail-row {
-        margin-bottom: 6px;
-    }
-
-    .mobile-detail-row:last-child {
-        margin-bottom: 0;
-    }
-
-    .mobile-detail-item {
-        display: flex;
-        align-items: center;
-        font-size: 0.7rem;
-        margin-bottom: 2px;
-    }
-
-    .mobile-detail-item .detail-label {
-        color: #9ca3af;
-        margin-right: 4px;
-        min-width: 50px;
-        font-weight: 400;
-    }
-
-    .mobile-detail-item .detail-value {
-        color: #374151;
-        flex: 1;
-        font-weight: 400;
-    }
-
-    .mobile-detail-item .detail-value.target-price {
-        color: #059669;
-        font-weight: 600;
-    }
-
-    .mobile-detail-item .detail-value.industry {
-        color: #7c3aed;
-        background: #f3f0ff;
-        padding: 2px 6px;
-        border-radius: 4px;
-        font-size: 0.65rem;
-        font-weight: 500;
-    }
-
-    .mobile-detail-item .detail-value.recommend-level {
-        color: #6366f1;
-        font-weight: 500;
-    }
-
-    .mobile-detail-item .detail-value.positive {
-        color: #10b981;
-        font-weight: 500;
-    }
-
-    .mobile-detail-item .detail-value.negative {
-        color: #ef4444;
-        font-weight: 500;
-    }
-
-    /* 移动端底部状态 - 自选状态 */
-    .mobile-stock-footer {
-        display: flex;
-        justify-content: flex-start;
-        align-items: center;
-        padding-top: 6px;
-        border-top: 1px solid #f1f5f9;
-        font-size: 0.7rem;
-        margin-top: 8px;
-    }
-
-    .stock-status {
-        display: flex;
-        align-items: center;
-        gap: 4px;
-        color: #10b981;
-        font-weight: 400;
-    }
-
-    /* 移动端下拉菜单样式 */
-    .mobile-card-layout .el-dropdown-menu {
-        background: rgba(255, 255, 255, 0.95);
-        backdrop-filter: blur(20px);
-        border: none;
-        border-radius: 12px;
-        box-shadow: 0 8px 30px rgba(0, 0, 0, 0.12);
-        padding: 8px;
-        min-width: 160px;
-    }
-
-    .mobile-card-layout .el-dropdown-menu .el-dropdown-menu__item {
-        padding: 12px 16px;
-        border-radius: 8px;
-        margin-bottom: 4px;
-        transition: all 0.2s ease;
-        display: flex;
-        align-items: center;
-        gap: 8px;
-        font-size: 0.85rem;
-        color: #1d1d1f;
-    }
-
-    .mobile-card-layout .el-dropdown-menu .el-dropdown-menu__item:last-child {
-        margin-bottom: 0;
-    }
-
-    .mobile-card-layout .el-dropdown-menu .el-dropdown-menu__item:hover {
-        background: #f2f2f7;
-        color: #1d1d1f;
-    }
-
-    .mobile-card-layout .el-dropdown-menu .el-dropdown-menu__item svg {
-        width: 14px;
-        height: 14px;
-        opacity: 0.7;
-    }
-
-    .watchlist-stock-card .stock-item-actions .el-button {
-        font-weight: 600;
-        border: none;
-        transition: all 0.2s ease;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        gap: 4px;
-    }
-
-    .watchlist-stock-card .stock-item-actions .el-button svg {
-        width: 12px;
-        height: 12px;
-    }
-
-    .watchlist-stock-card .remove-watchlist-btn {
-        background: rgba(255, 59, 48, 0.1);
-        color: #ff3b30;
-    }
-
-    .watchlist-stock-card .remove-watchlist-btn:hover {
-        background: rgba(255, 59, 48, 0.15);
-        transform: scale(0.98);
-    }
-
-    .watchlist-stock-card .paid-analysis-btn {
-        background: rgba(0, 122, 255, 0.1);
-        color: #007aff;
-    }
-
-    .watchlist-stock-card .paid-analysis-btn:hover {
-        background: rgba(0, 122, 255, 0.15);
-        transform: scale(0.98);
-    }
-
-    .watchlist-stock-card .quant-analysis-btn {
-        background: rgba(52, 199, 89, 0.1);
-        color: #34c759;
-    }
-
-    .watchlist-stock-card .quant-analysis-btn:hover {
-        background: rgba(52, 199, 89, 0.15);
-        transform: scale(0.98);
-    }
-
-    .watchlist-stock-card .buy-stock-btn-secondary {
-        background: rgba(255, 149, 0, 0.1);
-        color: #ff9500;
-    }
-
-    .watchlist-stock-card .buy-stock-btn-secondary:hover {
-        background: rgba(255, 149, 0, 0.15);
-        transform: scale(0.98);
-    }
-
-    /* 价格标签 */
-    .watchlist-stock-card .price-tag-container {
-        margin-left: 4px;
-        display: flex;
-        align-items: center;
-        gap: 2px;
-    }
-
-    .watchlist-stock-card .price-tag {
-        font-size: 0.6rem;
-        padding: 2px 4px;
-        border-radius: 4px;
-        font-weight: 600;
-        line-height: 1;
-    }
-
-    .watchlist-stock-card .original-price {
-        background: rgba(142, 142, 147, 0.12);
-        color: #8e8e93;
-        text-decoration: line-through;
-    }
-
-    .watchlist-stock-card .promo-price {
-        background: rgba(255, 59, 48, 0.1);
-        color: #ff3b30;
-    }
-}
-
-/* 超小屏幕优化 */
-@media (max-width: 480px) {
-    .watchlist-display-container {
-        padding: 6px;
-    }
-
-    .watchlist-stock-card {
-        padding: 14px;
-        border-radius: 14px;
-        margin-bottom: 10px;
-    }
-
-    .watchlist-stock-card .current-price {
-        font-size: 1.2rem;
-    }
-
-    .watchlist-stock-card .price-change {
-        font-size: 0.8rem;
-        padding: 3px 8px;
-    }
-
-    .watchlist-stock-card .stock-details {
-        padding: 12px;
-        margin: 12px 0;
-    }
-
-    .watchlist-stock-card .detail-item {
-        padding: 6px 0;
-    }
-
-    .watchlist-stock-card .detail-label {
-        font-size: 0.75rem;
-    }
-
-    .watchlist-stock-card .detail-value {
-        font-size: 0.8rem;
-    }
-
-    .watchlist-stock-card .stock-item-actions {
-        gap: 6px;
-        padding-top: 12px;
-    }
-
-    .watchlist-stock-card .stock-item-actions .el-button {
-        height: 32px;
-        font-size: 0.7rem;
-        padding: 0 10px;
-        border-radius: 10px;
-    }
-
-    .watchlist-stock-card .stock-item-actions .el-button svg {
-        width: 11px;
-        height: 11px;
-    }
-}
-
-/* 移动端刷新按钮样式 */
-.mobile-refresh-btn {
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    width: 20px;
-    height: 20px;
-    border: 1px solid #d1d5db;
-    border-radius: 4px;
-    background: #ffffff;
-    color: #6b7280;
-    cursor: pointer;
-    transition: all 0.2s ease;
-}
-
-.mobile-refresh-btn:hover {
-    background: #f3f4f6;
-    color: #3b82f6;
-    border-color: #3b82f6;
-}
-
-.mobile-refresh-btn:active {
-    transform: scale(0.95);
-    background: #e5e7eb;
-}
-
-.mobile-refresh-btn svg {
-    width: 10px;
-    height: 10px;
-}
-</style>
-
-<!-- 全局tooltip样式 -->
-<style>
-.recommend-tooltip {
-    max-width: 300px !important;
-}
-
-.recommend-tooltip .el-popper__content {
-    padding: 12px 16px !important;
-    background: rgba(55, 65, 81, 0.95) !important;
-    backdrop-filter: blur(8px) !important;
-    border-radius: 8px !important;
-    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.15) !important;
 }
 </style>

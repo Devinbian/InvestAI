@@ -438,13 +438,13 @@
                                         <div class="asset-amount">
                                             <span class="amount-label">总资产</span>
                                             <span class="amount-value">¥{{ formatCurrency(message.assetData.totalAssets)
-                                            }}</span>
+                                                }}</span>
                                         </div>
                                         <div class="asset-change"
                                             :class="[message.assetData.totalProfitPercent >= 0 ? 'profit' : 'loss']">
                                             <span class="change-icon">{{ message.assetData.totalProfitPercent >= 0 ?
                                                 '📈' : '📉'
-                                            }}</span>
+                                                }}</span>
                                             <span class="change-label">今日盈亏：</span>
                                             <span class="change-text">
                                                 {{ message.assetData.totalProfitPercent >= 0 ? '+' : '' }}¥{{
@@ -470,7 +470,7 @@
                                         <div class="stat-info">
                                             <div class="stat-label">持仓市值</div>
                                             <div class="stat-value">¥{{ formatCurrency(message.assetData.portfolioValue)
-                                            }}
+                                                }}
                                             </div>
                                         </div>
                                     </div>
@@ -844,7 +844,7 @@
                 </div>
                 <div class="guide-actions">
                     <el-button type="primary" size="small" @click="handleGuideAction">{{ guideActionText
-                        }}</el-button>
+                    }}</el-button>
                     <el-button size="small" @click="dismissGuide">稍后</el-button>
                 </div>
             </div>
@@ -882,7 +882,7 @@
                         <div class="summary-item">
                             <span class="summary-label">买入信号</span>
                             <span class="summary-value signal-score">{{ currentQuantAnalysis.buySignalScore
-                            }}/100</span>
+                                }}/100</span>
                         </div>
                         <div class="summary-item">
                             <span class="summary-label">量化评级</span>
@@ -2636,26 +2636,37 @@ const fixMobileChatBox = () => {
                     }
                 }
 
-                // 主界面模式：调整AI卡片的底部间距
+                // 主界面模式：自动应用60px上移效果（强制修复效果）
                 if (aiCard && !isChatMode.value) {
-                    // 使用更强的样式设置方法
-                    aiCard.style.setProperty('width', '100%', 'important');
-                    aiCard.style.setProperty('margin', '0', 'important');
-                    aiCard.style.setProperty('border-radius', '0', 'important');
-                    aiCard.style.setProperty('padding-bottom', `${finalBottomOffset}px`, 'important');
-                    aiCard.style.setProperty('box-sizing', 'border-box', 'important');
+                    // 检测是否有底部工具栏需要修复
+                    const needsFixing = finalBottomOffset > 30 || (isIOS && finalBottomOffset > 0);
 
-                    // iOS设备额外处理：确保有足够的底部间距
-                    if (isIOS) {
-                        aiCard.style.setProperty('transform', 'translateZ(0)', 'important'); // 启用硬件加速
-                        aiCard.style.setProperty('-webkit-transform', 'translateZ(0)', 'important');
+                    if (needsFixing) {
+                        // 应用60px上移效果（与强制修复按钮相同的效果）
+                        aiCard.style.setProperty('transform', 'translateY(-60px)', 'important');
+                        aiCard.style.setProperty('transition', 'transform 0.3s ease', 'important');
+
+                        // 同时调整前面内容的位置，避免被遮盖
+                        adjustContentForOffset(60);
+
+                        // 更新当前偏移量显示
+                        currentOffset.value = 60;
+
+                        console.log(`[主界面模式] 自动应用60px上移效果 + 内容调整`);
+                    } else {
+                        // 不需要修复时，确保没有偏移
+                        aiCard.style.removeProperty('transform');
+                        resetContentPosition();
+                        currentOffset.value = 0;
+
+                        console.log(`[主界面模式] 无需修复，保持原位`);
                     }
 
-                    console.log(`[主界面模式] 已调整AI卡片底部间距: ${finalBottomOffset}px (原始: ${bottomOffset}px)`);
-                    console.log('AI卡片修复后的样式:', {
-                        paddingBottom: aiCard.style.paddingBottom,
-                        marginBottom: aiCard.style.marginBottom,
-                        computedStyle: window.getComputedStyle(aiCard).paddingBottom
+                    console.log('AI卡片修复状态:', {
+                        needsFixing,
+                        finalBottomOffset,
+                        transform: aiCard.style.transform,
+                        currentOffset: currentOffset.value
                     });
                 }
 

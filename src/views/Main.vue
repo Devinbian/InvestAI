@@ -121,6 +121,7 @@
             <div class="debug-actions">
                 <button @click="refreshDebugInfo" class="debug-refresh">刷新数据</button>
                 <button @click="forceFixChatBox" class="debug-fix">强制修复</button>
+                <button @click="superForceFixChatBox" class="debug-super-fix">超级修复</button>
             </div>
         </div>
 
@@ -426,13 +427,13 @@
                                         <div class="asset-amount">
                                             <span class="amount-label">总资产</span>
                                             <span class="amount-value">¥{{ formatCurrency(message.assetData.totalAssets)
-                                            }}</span>
+                                                }}</span>
                                         </div>
                                         <div class="asset-change"
                                             :class="[message.assetData.totalProfitPercent >= 0 ? 'profit' : 'loss']">
                                             <span class="change-icon">{{ message.assetData.totalProfitPercent >= 0 ?
                                                 '📈' : '📉'
-                                            }}</span>
+                                                }}</span>
                                             <span class="change-label">今日盈亏：</span>
                                             <span class="change-text">
                                                 {{ message.assetData.totalProfitPercent >= 0 ? '+' : '' }}¥{{
@@ -458,7 +459,7 @@
                                         <div class="stat-info">
                                             <div class="stat-label">持仓市值</div>
                                             <div class="stat-value">¥{{ formatCurrency(message.assetData.portfolioValue)
-                                            }}
+                                                }}
                                             </div>
                                         </div>
                                     </div>
@@ -832,7 +833,7 @@
                 </div>
                 <div class="guide-actions">
                     <el-button type="primary" size="small" @click="handleGuideAction">{{ guideActionText
-                        }}</el-button>
+                    }}</el-button>
                     <el-button size="small" @click="dismissGuide">稍后</el-button>
                 </div>
             </div>
@@ -870,7 +871,7 @@
                         <div class="summary-item">
                             <span class="summary-label">买入信号</span>
                             <span class="summary-value signal-score">{{ currentQuantAnalysis.buySignalScore
-                            }}/100</span>
+                                }}/100</span>
                         </div>
                         <div class="summary-item">
                             <span class="summary-label">量化评级</span>
@@ -2141,42 +2142,37 @@ const forceFixChatBox = () => {
             const isWechat = userAgent.includes('micromessenger');
 
             if (!isWechat) {
-                // 非微信环境才应用大的偏移量
-                // 使用多种方法确保样式被应用
+                console.log('=== 强制修复开始 ===');
+
+                // 方案1: 直接使用transform，最可靠的方法
+                const transformOffset = Math.max(forceOffset - 20, 100); // 确保至少100px偏移
+                aiCard.style.setProperty('transform', `translateY(-${transformOffset}px)`, 'important');
+                aiCard.style.setProperty('transition', 'transform 0.3s ease', 'important');
+
+                // 方案2: 同时设置padding作为备用
                 aiCard.style.setProperty('padding-bottom', `${forceOffset}px`, 'important');
                 aiCard.style.setProperty('margin-bottom', '0px', 'important');
                 aiCard.style.setProperty('box-sizing', 'border-box', 'important');
 
-                // 添加一个自定义属性标记，防止被其他CSS覆盖
-                aiCard.setAttribute('data-fixed-bottom', 'true');
-                aiCard.style.setProperty('--bottom-offset', `${forceOffset}px`);
+                // 方案3: 添加CSS类，通过样式表强制覆盖
+                aiCard.classList.add('mobile-bottom-fixed');
 
-                // 延迟再次确认样式应用
-                setTimeout(() => {
-                    const computedStyle = window.getComputedStyle(aiCard);
-                    const actualPadding = computedStyle.paddingBottom;
-                    console.log('延迟检查样式应用结果:', {
-                        期望: `${forceOffset}px`,
-                        实际: actualPadding,
-                        是否成功: actualPadding.includes(forceOffset.toString())
-                    });
+                // 方案4: 修改父容器
+                const centerContainer = aiCard.closest('.center-container');
+                if (centerContainer) {
+                    centerContainer.style.setProperty('padding-bottom', `${forceOffset}px`, 'important');
+                    centerContainer.style.setProperty('margin-bottom', `-${transformOffset}px`, 'important');
+                }
 
-                    if (!actualPadding.includes(forceOffset.toString())) {
-                        console.warn('样式应用失败，尝试备用方案');
-                        // 备用方案：直接修改元素的transform
-                        aiCard.style.setProperty('transform', `translateY(-${forceOffset - 20}px)`, 'important');
-                        ElMessage.warning(`样式冲突，使用备用方案：向上偏移 ${forceOffset - 20}px`);
-                    }
-                }, 100);
-
-                console.log('AI卡片强制修复后的样式:', {
+                console.log('强制修复应用的所有方案:', {
+                    transform: aiCard.style.transform,
                     paddingBottom: aiCard.style.paddingBottom,
-                    marginBottom: aiCard.style.marginBottom,
-                    computedStyle: window.getComputedStyle(aiCard).paddingBottom,
-                    isWechat: isWechat
+                    classList: Array.from(aiCard.classList),
+                    parentPadding: centerContainer?.style.paddingBottom,
+                    实际计算样式: window.getComputedStyle(aiCard).transform
                 });
 
-                ElMessage.success(`[主界面模式] 已强制设置AI卡片底部间距为 ${forceOffset}px`);
+                ElMessage.success(`[强制修复] 使用多重方案，向上偏移 ${transformOffset}px`);
             } else {
                 ElMessage.info('[微信环境] 使用微信优化的底部间距');
             }
@@ -2186,6 +2182,108 @@ const forceFixChatBox = () => {
     } else {
         ElMessage.warning('当前不是移动端视图');
     }
+};
+
+// 超级强制修复 - 使用最激进的方法
+const superForceFixChatBox = () => {
+    console.log('=== 超级强制修复开始 ===');
+
+    if (!isMobileView.value) {
+        ElMessage.warning('当前不是移动端视图');
+        return;
+    }
+
+    const aiCard = document.querySelector('.ai-card');
+    if (!aiCard || isChatMode.value) {
+        ElMessage.warning('未找到主界面AI卡片或当前在聊天模式');
+        return;
+    }
+
+    // 方案1: 创建一个固定定位的容器
+    const fixedContainer = document.createElement('div');
+    fixedContainer.className = 'ai-card-fixed-container';
+    fixedContainer.style.cssText = `
+        position: fixed !important;
+        bottom: 150px !important;
+        left: 0 !important;
+        right: 0 !important;
+        z-index: 1000 !important;
+        background: white !important;
+        border-top: 1px solid #e5e7eb !important;
+        box-shadow: 0 -4px 20px rgba(0, 0, 0, 0.1) !important;
+    `;
+
+    // 将AI卡片移动到固定容器中
+    const aiCardParent = aiCard.parentNode;
+    const aiCardClone = aiCard.cloneNode(true);
+    aiCardClone.style.cssText = `
+        margin: 0 !important;
+        padding: 12px 0 12px 0 !important;
+        border-radius: 0 !important;
+        width: 100% !important;
+        background: transparent !important;
+    `;
+
+    fixedContainer.appendChild(aiCardClone);
+    document.body.appendChild(fixedContainer);
+
+    // 隐藏原始AI卡片
+    aiCard.style.display = 'none';
+
+    // 为克隆的卡片重新绑定事件
+    const clonedInput = aiCardClone.querySelector('.ai-input textarea');
+    const clonedSendBtn = aiCardClone.querySelector('.ai-send-btn');
+    const clonedVoiceBtn = aiCardClone.querySelector('.voice-btn');
+
+    if (clonedInput) {
+        clonedInput.addEventListener('input', (e) => {
+            inputMessage.value = e.target.value;
+        });
+        clonedInput.addEventListener('keyup', (e) => {
+            if (e.ctrlKey && e.key === 'Enter') {
+                sendMessage();
+            }
+        });
+    }
+
+    if (clonedSendBtn) {
+        clonedSendBtn.addEventListener('click', sendMessage);
+    }
+
+    if (clonedVoiceBtn) {
+        clonedVoiceBtn.addEventListener('click', onVoiceClick);
+    }
+
+    // 添加一个恢复按钮
+    const restoreBtn = document.createElement('button');
+    restoreBtn.textContent = '恢复原始布局';
+    restoreBtn.style.cssText = `
+        position: fixed !important;
+        top: 10px !important;
+        right: 10px !important;
+        z-index: 1001 !important;
+        background: #ff4757 !important;
+        color: white !important;
+        border: none !important;
+        padding: 8px 12px !important;
+        border-radius: 4px !important;
+        font-size: 12px !important;
+    `;
+    restoreBtn.addEventListener('click', () => {
+        document.body.removeChild(fixedContainer);
+        document.body.removeChild(restoreBtn);
+        aiCard.style.display = '';
+        ElMessage.success('已恢复原始布局');
+    });
+    document.body.appendChild(restoreBtn);
+
+    console.log('超级修复完成:', {
+        固定容器: fixedContainer,
+        克隆卡片: aiCardClone,
+        原始卡片隐藏: aiCard.style.display === 'none'
+    });
+
+    ElMessage.success('超级修复完成！AI输入框现在固定在底部上方150px');
 };
 
 // 移动端聊天框修复 - 使用visualViewport检测实际可视区域
@@ -4828,6 +4926,26 @@ onMounted(() => {
     transform: scale(1.05);
 }
 
+/* 移动端底部修复CSS类 */
+.mobile-bottom-fixed {
+    transform: translateY(-120px) !important;
+    transition: transform 0.3s ease !important;
+}
+
+/* iOS设备特殊处理 */
+@supports (-webkit-touch-callout: none) {
+    .mobile-bottom-fixed {
+        transform: translateY(-140px) !important;
+    }
+}
+
+/* iOS Chrome特殊处理 */
+@supports (-webkit-touch-callout: none) and (-webkit-appearance: none) {
+    .mobile-bottom-fixed {
+        transform: translateY(-150px) !important;
+    }
+}
+
 /* 移动端调试面板 */
 .mobile-debug-panel {
     position: fixed;
@@ -4918,7 +5036,8 @@ onMounted(() => {
 }
 
 .debug-refresh,
-.debug-fix {
+.debug-fix,
+.debug-super-fix {
     flex: 1;
     padding: 8px 12px;
     border: 1px solid #d1d5db;
@@ -4944,6 +5063,18 @@ onMounted(() => {
 .debug-fix:hover {
     background: #b91c1c;
     border-color: #b91c1c;
+}
+
+.debug-super-fix {
+    background: #6f42c1;
+    color: white;
+    border-color: #6f42c1;
+    font-weight: bold;
+}
+
+.debug-super-fix:hover {
+    background: #5a2d91;
+    border-color: #5a2d91;
 }
 </style>
 

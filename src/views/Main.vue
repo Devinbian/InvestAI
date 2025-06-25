@@ -74,6 +74,62 @@
             </svg>
         </button>
 
+        <!-- 移动端调试面板 -->
+        <div v-if="isMobileView && isChatMode && showDebugPanel" class="mobile-debug-panel">
+            <div class="debug-header">
+                <span>调试信息</span>
+                <button @click="showDebugPanel = false" class="debug-close">×</button>
+            </div>
+            <div class="debug-content">
+                <div class="debug-item">
+                    <span class="debug-label">浏览器:</span>
+                    <span class="debug-value">{{ debugInfo.browser }}</span>
+                </div>
+                <div class="debug-item">
+                    <span class="debug-label">屏幕高度:</span>
+                    <span class="debug-value">{{ debugInfo.screenHeight }}px</span>
+                </div>
+                <div class="debug-item">
+                    <span class="debug-label">窗口高度:</span>
+                    <span class="debug-value">{{ debugInfo.windowHeight }}px</span>
+                </div>
+                <div class="debug-item">
+                    <span class="debug-label">可视高度:</span>
+                    <span class="debug-value">{{ debugInfo.visualHeight }}px</span>
+                </div>
+                <div class="debug-item">
+                    <span class="debug-label">工具栏高度:</span>
+                    <span class="debug-value">{{ debugInfo.toolbarHeight }}px</span>
+                </div>
+                <div class="debug-item">
+                    <span class="debug-label">底部偏移:</span>
+                    <span class="debug-value highlight">{{ debugInfo.bottomOffset }}px</span>
+                </div>
+                <div class="debug-item">
+                    <span class="debug-label">最终偏移:</span>
+                    <span class="debug-value highlight">{{ debugInfo.finalOffset }}px</span>
+                </div>
+                <div class="debug-item">
+                    <span class="debug-label">iOS设备:</span>
+                    <span class="debug-value">{{ debugInfo.isIOS ? '是' : '否' }}</span>
+                </div>
+                <div class="debug-item">
+                    <span class="debug-label">有底部栏:</span>
+                    <span class="debug-value">{{ debugInfo.hasBottomBar ? '是' : '否' }}</span>
+                </div>
+            </div>
+            <div class="debug-actions">
+                <button @click="refreshDebugInfo" class="debug-refresh">刷新数据</button>
+                <button @click="forceFixChatBox" class="debug-fix">强制修复</button>
+            </div>
+        </div>
+
+        <!-- 移动端调试按钮 -->
+        <button v-if="isMobileView && !showDebugPanel" class="floating-debug-toggle" @click="showDebugPanel = true"
+            title="显示调试信息">
+            🐛
+        </button>
+
         <!-- 主体内容 -->
         <main class="modern-content main-container"
             :class="{ 'chatting': isChatMode, 'with-sidebar': userStore.isLoggedIn, 'with-chat-history': showChatHistory }"
@@ -1129,6 +1185,20 @@ const isMobileView = ref(false); // 检测是否为移动端视图
 // 移动端菜单相关
 const showMobileMenu = ref(false); // 控制移动端用户菜单显示
 
+// 移动端调试面板
+const showDebugPanel = ref(false);
+const debugInfo = ref({
+    browser: '',
+    screenHeight: 0,
+    windowHeight: 0,
+    visualHeight: 0,
+    toolbarHeight: 0,
+    bottomOffset: 0,
+    finalOffset: 0,
+    isIOS: false,
+    hasBottomBar: false
+});
+
 // 聊天历史相关
 const showChatHistory = ref(false); // 控制聊天历史面板显示
 const chatHistoryComponentRef = ref(null);
@@ -1602,7 +1672,7 @@ watch(chatHistory, () => {
     });
 }, { deep: true });
 
-// 监听聊天模式变化 - 简化处理，参照微信浏览器
+// 监听聊天模式变化 - 增强处理，确保输入框正确定位
 watch(isChatMode, (newVal) => {
     console.log('isChatMode变化:', { newVal, isMobileView: isMobileView.value });
 
@@ -1612,13 +1682,24 @@ watch(isChatMode, (newVal) => {
             scrollToBottom();
             updateChatHistoryHeight();
 
-            // 移动端处理
+            // 移动端处理 - 立即调整输入框位置
             if (isMobileView.value) {
                 console.log('准备调用fixMobileChatBox - isChatMode监听器');
+
+                // 立即执行一次修复
+                fixMobileChatBox();
+
+                // 延迟执行确保DOM完全渲染
                 setTimeout(() => {
-                    fixMobileChatBox(); // 确保输入框不被遮挡
-                    handleMobileKeyboard(); // 键盘监听
+                    fixMobileChatBox();
+                    handleMobileKeyboard();
+                    scrollToBottom();
                 }, 100);
+
+                // 再次确认修复（处理某些浏览器的延迟渲染）
+                setTimeout(() => {
+                    fixMobileChatBox();
+                }, 300);
             }
         });
     } else {
@@ -1981,6 +2062,19 @@ const updateChatHistoryHeight = () => {
     document.documentElement.style.setProperty('--input-area-height', `${totalInputHeight}px`);
 };
 
+// 防抖函数
+const debounce = (func, wait) => {
+    let timeout;
+    return function executedFunction(...args) {
+        const later = () => {
+            clearTimeout(timeout);
+            func(...args);
+        };
+        clearTimeout(timeout);
+        timeout = setTimeout(later, wait);
+    };
+};
+
 // 检测移动端视图
 const checkMobileView = () => {
     const newIsMobileView = window.innerWidth <= 768;
@@ -2008,12 +2102,44 @@ const toggleMobileSidebar = () => {
     }
 };
 
+// 调试面板相关方法
+const refreshDebugInfo = () => {
+    console.log('刷新调试信息');
+    fixMobileChatBox();
+};
+
+const forceFixChatBox = () => {
+    console.log('强制修复聊天框');
+    // 强制重新计算并应用更大的偏移量
+    const inputArea = document.querySelector('.input-area');
+    if (inputArea && isMobileView.value && isChatMode.value) {
+        const userAgent = navigator.userAgent.toLowerCase();
+        const isIOS = userAgent.includes('iphone') || userAgent.includes('ipad');
+        const isSafari = userAgent.includes('safari') && !userAgent.includes('chrome') && !userAgent.includes('crios');
+        const isChrome = userAgent.includes('chrome') || userAgent.includes('crios');
+
+        let forceOffset = 60; // 默认偏移量
+        if (isIOS && isSafari) {
+            forceOffset = 120; // iOS Safari强制偏移
+        } else if (isIOS && isChrome) {
+            forceOffset = 130; // iOS Chrome强制偏移
+        } else if (isIOS) {
+            forceOffset = 110; // 其他iOS浏览器
+        }
+
+        inputArea.style.cssText += `bottom: ${forceOffset}px !important;`;
+        debugInfo.value.finalOffset = forceOffset;
+
+        ElMessage.success(`已强制设置底部偏移为 ${forceOffset}px`);
+    }
+};
+
 // 移动端聊天框修复 - 使用visualViewport检测实际可视区域
 const fixMobileChatBox = () => {
     console.log('fixMobileChatBox被调用', { isMobileView: isMobileView.value, isChatMode: isChatMode.value });
 
-    // 只在移动端且聊天模式下才进行修复
-    if (isMobileView.value && isChatMode.value) {
+    // 移动端下才进行修复（无论是否聊天模式）
+    if (isMobileView.value) {
         nextTick(() => {
             const inputArea = document.querySelector('.input-area');
             const aiCard = document.querySelector('.ai-card');
@@ -2030,125 +2156,233 @@ const fixMobileChatBox = () => {
                 const isFirefox = userAgent.includes('firefox') || userAgent.includes('fxios'); // iOS Firefox使用FxiOS
                 const isWechat = userAgent.includes('micromessenger');
 
+                // 更新调试信息 - 浏览器类型
+                let browserType = '';
+                if (isWechat) browserType = '微信';
+                else if (isIOS && isSafari) browserType = 'iOS Safari';
+                else if (isIOS && isChrome) browserType = 'iOS Chrome';
+                else if (isIOS) browserType = 'iOS 其他';
+                else if (isAndroid && isChrome) browserType = 'Android Chrome';
+                else if (isFirefox) browserType = 'Firefox';
+                else browserType = '其他浏览器';
+
                 // 更精确的iOS Chrome检测 - iOS Chrome的User Agent包含CriOS而不是Chrome
                 const isIOSChrome = isIOS && (userAgent.includes('crios') || userAgent.includes('chrome'));
                 const isIOSSafari = isIOS && isSafari;
 
-                // 检测浏览器类型和版本，提供更精确的兼容性处理
-                const uaInfo = navigator.userAgent.toLowerCase();
+                // iOS设备的特殊处理：检测是否有底部安全区域
+                const hasIOSBottomBar = isIOS && (
+                    window.screen.height > window.innerHeight + 100 || // 有明显的高度差
+                    (window.CSS && window.CSS.supports && window.CSS.supports('padding-bottom', 'env(safe-area-inset-bottom)'))
+                );
 
                 // 使用visualViewport API检测实际可视区域
                 if (window.visualViewport) {
                     const visualHeight = window.visualViewport.height;
                     const windowHeight = window.innerHeight;
+                    const screenHeight = window.screen.height;
+
+                    // 更新调试信息 - 基础数据
+                    debugInfo.value.browser = browserType;
+                    debugInfo.value.screenHeight = screenHeight;
+                    debugInfo.value.windowHeight = windowHeight;
+                    debugInfo.value.visualHeight = visualHeight;
+                    debugInfo.value.toolbarHeight = screenHeight - windowHeight;
+                    debugInfo.value.isIOS = isIOS;
+                    debugInfo.value.hasBottomBar = hasIOSBottomBar;
+
+                    // 计算底部偏移量
                     bottomOffset = Math.max(0, windowHeight - visualHeight);
 
-                    // 针对不同浏览器的特殊调整
-                    if (isAndroid && isChrome && bottomOffset === 0) {
-                        // Android Chrome可能需要额外的工具栏高度检测
-                        const toolbarHeight = Math.max(0, window.screen.height - window.screen.availHeight - windowHeight);
-                        if (toolbarHeight > 0) {
-                            bottomOffset = Math.min(toolbarHeight, 80); // 限制最大高度
+                    // 如果visualViewport检测不到偏移，使用更精确的经验值
+                    if (bottomOffset < 10) {
+                        const browserToolbarHeight = Math.max(0, screenHeight - windowHeight);
+                        console.log('浏览器工具栏高度检测:', { browserToolbarHeight, screenHeight, windowHeight });
+
+                        // iOS设备需要更大的偏移量来避免底部工具栏遮挡
+                        if (isIOS) {
+                            if (isSafari) {
+                                // iOS Safari底部工具栏通常需要更大的偏移
+                                bottomOffset = hasIOSBottomBar ?
+                                    Math.max(100, Math.min(browserToolbarHeight * 0.9, 140)) :
+                                    Math.max(90, Math.min(browserToolbarHeight * 0.8, 120));
+                            } else if (isChrome) {
+                                // iOS Chrome也需要较大的偏移
+                                bottomOffset = hasIOSBottomBar ?
+                                    Math.max(110, Math.min(browserToolbarHeight * 1.0, 150)) :
+                                    Math.max(100, Math.min(browserToolbarHeight * 0.9, 130));
+                            } else {
+                                // 其他iOS浏览器
+                                bottomOffset = hasIOSBottomBar ?
+                                    Math.max(95, Math.min(browserToolbarHeight * 0.8, 125)) :
+                                    Math.max(85, Math.min(browserToolbarHeight * 0.7, 110));
+                            }
+                        } else if (isAndroid && isChrome) {
+                            bottomOffset = Math.max(70, Math.min(browserToolbarHeight * 0.6, 90));
+                        } else {
+                            bottomOffset = Math.max(60, Math.min(browserToolbarHeight * 0.5, 80));
                         }
+
+                        console.log('使用经验值偏移量:', bottomOffset);
                     }
 
                     console.log('VisualViewport检测:', {
                         visualHeight,
                         windowHeight,
+                        screenHeight,
                         bottomOffset,
-                        screenHeight: window.screen.height,
-                        screenAvailHeight: window.screen.availHeight,
-                        documentHeight: document.documentElement.clientHeight,
-                        bodyHeight: document.body.clientHeight,
+                        browserToolbarHeight: screenHeight - windowHeight,
                         browser: { isAndroid, isIOS, isChrome, isSafari, isFirefox, isWechat, isIOSChrome, isIOSSafari },
-                        userAgent: navigator.userAgent,
-                        offsetTop: window.visualViewport.offsetTop,
-                        offsetLeft: window.visualViewport.offsetLeft
+                        userAgent: navigator.userAgent
                     });
                 } else {
                     // 降级方案：根据浏览器类型提供不同的处理
                     const screenHeight = window.screen.height;
                     const windowHeight = window.innerHeight;
+                    const browserToolbarHeight = screenHeight - windowHeight;
+
+                    // 更新调试信息 - 降级方案
+                    debugInfo.value.browser = browserType;
+                    debugInfo.value.screenHeight = screenHeight;
+                    debugInfo.value.windowHeight = windowHeight;
+                    debugInfo.value.visualHeight = windowHeight; // 降级方案中使用windowHeight
+                    debugInfo.value.toolbarHeight = browserToolbarHeight;
+                    debugInfo.value.isIOS = isIOS;
+                    debugInfo.value.hasBottomBar = hasIOSBottomBar;
 
                     if (isWechat) {
-                        // 微信浏览器通常不需要额外偏移
-                        bottomOffset = 0;
+                        // 微信浏览器特殊处理：使用较小的偏移量
+                        bottomOffset = Math.min(20, Math.max(0, browserToolbarHeight * 0.2));
+                    } else if (isIOS) {
+                        // iOS设备统一处理，给予更大的偏移量
+                        if (isSafari) {
+                            // iOS Safari需要更大偏移来避开底部工具栏
+                            bottomOffset = Math.max(90, Math.min(browserToolbarHeight * 0.8, 120));
+                        } else if (isChrome) {
+                            // iOS Chrome需要最大的偏移量
+                            bottomOffset = Math.max(100, Math.min(browserToolbarHeight * 0.9, 130));
+                        } else {
+                            // 其他iOS浏览器
+                            bottomOffset = Math.max(85, Math.min(browserToolbarHeight * 0.7, 110));
+                        }
                     } else if (isAndroid && isChrome) {
-                        // Android Chrome 浏览器工具栏通常在56-72px
-                        bottomOffset = Math.min(72, Math.max(0, screenHeight - windowHeight - 100));
-                    } else if (isIOS && isSafari) {
-                        // iOS Safari 工具栏高度通常在44-88px
-                        bottomOffset = Math.min(88, Math.max(0, screenHeight - windowHeight - 150));
+                        // Android Chrome 浏览器工具栏处理
+                        bottomOffset = Math.max(70, Math.min(browserToolbarHeight * 0.6, 90));
                     } else if (isFirefox) {
                         // Firefox 工具栏高度
-                        bottomOffset = Math.min(60, Math.max(0, screenHeight - windowHeight - 80));
+                        bottomOffset = Math.max(60, Math.min(browserToolbarHeight * 0.5, 80));
                     } else {
                         // 其他浏览器的通用处理
-                        bottomOffset = Math.min(80, Math.max(0, screenHeight - windowHeight - 100));
+                        bottomOffset = Math.max(50, Math.min(browserToolbarHeight * 0.5, 80));
                     }
 
                     console.log('降级检测:', {
                         screenHeight,
                         windowHeight,
+                        browserToolbarHeight,
                         bottomOffset,
-                        screenAvailHeight: window.screen.availHeight,
-                        documentHeight: document.documentElement.clientHeight,
-                        bodyHeight: document.body.clientHeight,
                         browser: { isAndroid, isIOS, isChrome, isSafari, isFirefox, isWechat, isIOSChrome, isIOSSafari },
                         userAgent: navigator.userAgent
                     });
                 }
 
-                // 现在调整input-area的位置，ai-card会跟随父容器移动
-                // 这样新建聊天按钮等所有内容都会一起移动
-                if (inputArea) {
-                    // 临时测试：强制设置一个固定偏移量来验证修复是否有效
-                    let finalBottomOffset = bottomOffset;
+                // 计算最终偏移量
+                let finalBottomOffset = bottomOffset;
 
-                    // 微信浏览器特殊处理：始终不偏移
-                    if (isWechat) {
-                        finalBottomOffset = 0;
-                        console.log('微信浏览器检测，强制使用底部位置 0px');
-                    } else if (bottomOffset < 10) {
-                        // 非微信浏览器且检测偏移量太小时，使用经验值
-                        if (isIOS && isSafari) {
-                            finalBottomOffset = 80; // iOS Safari 强制偏移
-                        } else if (isIOS && isChrome) {
-                            finalBottomOffset = 110; // iOS Chrome 需要更大的偏移量
-                        } else if (isAndroid && isChrome) {
-                            finalBottomOffset = 70; // Android Chrome 强制偏移
-                        } else if (isChrome) {
-                            finalBottomOffset = 60; // 桌面Chrome移动模式
-                        } else {
-                            finalBottomOffset = 50; // 其他浏览器默认偏移
-                        }
-                        console.log(`检测偏移量过小(${bottomOffset}px)，使用经验值: ${finalBottomOffset}px`);
-                        console.log(`浏览器检测结果: iOS=${isIOS}, Chrome=${isChrome}, IOSChrome=${isIOSChrome}, Safari=${isSafari}`);
-                    }
-
-                    // 根据浏览器类型调整触发阈值
-                    const threshold = isWechat ? -1 : 5; // 微信浏览器阈值设为-1，确保永远不触发偏移
-
-                    if (finalBottomOffset > threshold) {
-                        // 强制设置样式，确保优先级足够高
-                        inputArea.style.cssText += `bottom: ${finalBottomOffset}px !important;`;
-                        console.log(`已调整输入区域位置，底部偏移: ${finalBottomOffset}px (原始: ${bottomOffset}px, 阈值: ${threshold}px)`);
-                        console.log(`输入区域当前bottom样式: ${inputArea.style.bottom}`);
-                    } else {
-                        inputArea.style.cssText += `bottom: 0px !important;`;
-                        console.log(`输入区域使用默认底部位置 (偏移: ${finalBottomOffset}px < 阈值: ${threshold}px)`);
-                    }
-
-                    // 确保输入区域的其他关键样式
-                    inputArea.style.setProperty('position', 'fixed', 'important');
-                    inputArea.style.setProperty('left', '0', 'important');
-                    inputArea.style.setProperty('right', '0', 'important');
-                    inputArea.style.setProperty('z-index', '1000', 'important');
+                // 微信浏览器特殊处理：使用较小的偏移量但不完全为0
+                if (isWechat) {
+                    finalBottomOffset = Math.min(15, bottomOffset);
+                    console.log('微信浏览器检测，使用较小偏移量:', finalBottomOffset);
                 }
 
-                // input-area不需要特殊处理，保持其原有样式
+                // 设置最小偏移量，确保在所有情况下都有一定的安全距离
+                let minOffset;
+                if (isWechat) {
+                    minOffset = 0;
+                } else if (isIOS) {
+                    // iOS设备需要更大的最小偏移量
+                    minOffset = isSafari ? 80 : (isChrome ? 90 : 75);
+                } else {
+                    minOffset = 30;
+                }
+                finalBottomOffset = Math.max(minOffset, finalBottomOffset);
 
-                // 调试：检查ai-card的位置和样式
+                // 更新调试信息 - 偏移量
+                debugInfo.value.bottomOffset = bottomOffset;
+                debugInfo.value.finalOffset = finalBottomOffset;
+
+                // 聊天模式：调整input-area的位置
+                if (inputArea && isChatMode.value) {
+                    // 应用样式
+                    const inputAreaStyles = [
+                        `bottom: ${finalBottomOffset}px !important`,
+                        'position: fixed !important',
+                        'left: 0 !important',
+                        'right: 0 !important',
+                        'z-index: 1000 !important',
+                        'width: 100% !important',
+                        'box-sizing: border-box !important'
+                    ];
+
+                    // iOS设备额外处理：确保有足够的底部间距
+                    if (isIOS) {
+                        inputAreaStyles.push(`padding-bottom: ${Math.max(20, finalBottomOffset * 0.2)}px !important`);
+                        inputAreaStyles.push('transform: translateZ(0) !important'); // 启用硬件加速
+                        inputAreaStyles.push('-webkit-transform: translateZ(0) !important');
+                    }
+
+                    inputArea.style.cssText += inputAreaStyles.join('; ') + ';';
+
+                    console.log(`[聊天模式] 已调整输入区域位置，底部偏移: ${finalBottomOffset}px (原始: ${bottomOffset}px)`);
+
+                    // 确保ai-card也有正确的样式
+                    if (aiCard) {
+                        const aiCardStyles = [
+                            'position: relative !important',
+                            'width: 100% !important',
+                            'margin: 0 !important',
+                            'border-radius: 0 !important',
+                            'background: white !important',
+                            'border-top: 1px solid #e5e7eb !important',
+                            'box-shadow: 0 -4px 20px rgba(0, 0, 0, 0.1) !important'
+                        ];
+
+                        aiCard.style.cssText += aiCardStyles.join('; ') + ';';
+                    }
+                }
+
+                // 主界面模式：调整AI卡片的底部间距
+                if (aiCard && !isChatMode.value) {
+                    // 应用底部间距到AI卡片
+                    const aiCardStyles = [
+                        'width: 100% !important',
+                        'margin: 0 !important',
+                        'border-radius: 0 !important',
+                        `padding-bottom: ${finalBottomOffset}px !important`,
+                        'box-sizing: border-box !important'
+                    ];
+
+                    // iOS设备额外处理：确保有足够的底部间距
+                    if (isIOS) {
+                        aiCardStyles.push('transform: translateZ(0) !important'); // 启用硬件加速
+                        aiCardStyles.push('-webkit-transform: translateZ(0) !important');
+                    }
+
+                    aiCard.style.cssText += aiCardStyles.join('; ') + ';';
+
+                    console.log(`[主界面模式] 已调整AI卡片底部间距: ${finalBottomOffset}px (原始: ${bottomOffset}px)`);
+                }
+
+                console.log(`浏览器信息: iOS=${isIOS}, Safari=${isSafari}, Chrome=${isChrome}, 微信=${isWechat}`);
+                console.log(`当前模式: ${isChatMode.value ? '聊天模式' : '主界面模式'}`);
+                if (inputArea && isChatMode.value) {
+                    console.log(`输入区域当前样式: ${inputArea.style.cssText}`);
+                }
+                if (aiCard && !isChatMode.value) {
+                    console.log(`AI卡片当前样式: ${aiCard.style.cssText}`);
+                }
+
+                // 调试信息
                 if (aiCard) {
                     const aiCardStyles = window.getComputedStyle(aiCard);
                     const inputAreaRect = inputArea.getBoundingClientRect();
@@ -2157,7 +2391,6 @@ const fixMobileChatBox = () => {
                     console.log('AI卡片调试信息:', {
                         aiCardPosition: aiCardStyles.position,
                         aiCardBottom: aiCardStyles.bottom,
-                        aiCardTop: aiCardStyles.top,
                         inputAreaRect: {
                             top: inputAreaRect.top,
                             bottom: inputAreaRect.bottom,
@@ -2167,16 +2400,10 @@ const fixMobileChatBox = () => {
                             top: aiCardRect.top,
                             bottom: aiCardRect.bottom,
                             height: aiCardRect.height
-                        }
+                        },
+                        viewportHeight: window.innerHeight,
+                        visualViewportHeight: window.visualViewport?.height || 'N/A'
                     });
-
-                    // 检查ai-card是否有可能影响定位的样式
-                    const problematicStyles = ['position', 'top', 'bottom', 'left', 'right', 'transform', 'margin-bottom'];
-                    const aiCardComputedStyles = {};
-                    problematicStyles.forEach(prop => {
-                        aiCardComputedStyles[prop] = aiCardStyles.getPropertyValue(prop);
-                    });
-                    console.log('AI卡片样式检查:', aiCardComputedStyles);
                 }
             }
         });
@@ -3337,20 +3564,85 @@ onMounted(() => {
 
     // 移动端聊天框修复
     if (isMobileView.value) {
-        // 初始状态只重置布局，不调用修复函数
+        // 初始状态也需要调用修复函数，确保主界面AI卡片正确显示
         resetMobileLayout();
         handleMobileKeyboard();
 
-        // 监听visualViewport变化来处理浏览器工具栏显示/隐藏
-        if (window.visualViewport) {
-            const handleViewportChange = () => {
-                if (isMobileView.value && isChatMode.value) {
-                    setTimeout(fixMobileChatBox, 100); // 延迟执行确保变化完成
+        // 延迟调用修复函数，确保DOM完全渲染
+        setTimeout(() => {
+            fixMobileChatBox();
+        }, 100);
+
+        // 增强的移动端视口监听 - 处理浏览器工具栏显示/隐藏
+        const setupMobileViewportListeners = () => {
+            const handleViewportChange = debounce(() => {
+                if (isMobileView.value) {
+                    console.log('视口变化检测，重新调整移动端布局');
+                    fixMobileChatBox();
                 }
-            };
-            window.visualViewport.addEventListener('resize', handleViewportChange);
-            window.visualViewport.addEventListener('scroll', handleViewportChange);
-        }
+            }, 150);
+
+            // 监听visualViewport变化（现代浏览器）
+            if (window.visualViewport) {
+                window.visualViewport.addEventListener('resize', handleViewportChange);
+                window.visualViewport.addEventListener('scroll', handleViewportChange);
+            }
+
+            // 监听window resize作为备用方案
+            const handleWindowResize = debounce(() => {
+                if (isMobileView.value) {
+                    console.log('窗口尺寸变化检测，重新调整移动端布局');
+                    setTimeout(fixMobileChatBox, 200);
+                }
+            }, 300);
+
+            window.addEventListener('resize', handleWindowResize);
+
+            // 监听屏幕方向变化
+            window.addEventListener('orientationchange', () => {
+                setTimeout(() => {
+                    if (isMobileView.value) {
+                        console.log('屏幕方向变化，重新调整移动端布局');
+                        fixMobileChatBox();
+                        if (isChatMode.value) {
+                            scrollToBottom();
+                        }
+                    }
+                }, 500);
+            });
+
+            // 监听焦点变化（可能触发虚拟键盘）
+            const handleFocusChange = debounce(() => {
+                if (isMobileView.value) {
+                    setTimeout(fixMobileChatBox, 300);
+                }
+            }, 200);
+
+            document.addEventListener('focusin', handleFocusChange);
+            document.addEventListener('focusout', handleFocusChange);
+
+            // 监听页面可见性变化（用户切换应用后回来）
+            document.addEventListener('visibilitychange', () => {
+                if (!document.hidden && isMobileView.value) {
+                    setTimeout(() => {
+                        console.log('页面重新可见，重新调整移动端布局');
+                        fixMobileChatBox();
+                    }, 500);
+                }
+            });
+
+            // 监听页面聚焦（浏览器标签页切换）
+            window.addEventListener('focus', () => {
+                if (isMobileView.value) {
+                    setTimeout(() => {
+                        console.log('页面重新聚焦，重新调整移动端布局');
+                        fixMobileChatBox();
+                    }, 300);
+                }
+            });
+        };
+
+        setupMobileViewportListeners();
     }
 });
 
@@ -4443,6 +4735,149 @@ onMounted(() => {
         height: 14px !important;
         stroke-width: 2 !important;
     }
+}
+
+/* 移动端调试按钮 */
+.floating-debug-toggle {
+    position: fixed;
+    top: 110px;
+    right: 12px;
+    width: 30px;
+    height: 30px;
+    border-radius: 50%;
+    background: rgba(255, 193, 7, 0.9);
+    border: 1px solid #ffc107;
+    box-shadow: 0 2px 8px rgba(255, 193, 7, 0.3);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    z-index: 1001;
+    font-size: 14px;
+}
+
+.floating-debug-toggle:hover {
+    background: rgba(255, 193, 7, 1);
+    transform: scale(1.05);
+}
+
+/* 移动端调试面板 */
+.mobile-debug-panel {
+    position: fixed;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    width: 90%;
+    max-width: 350px;
+    max-height: 80vh;
+    background: rgba(255, 255, 255, 0.98);
+    border: 1px solid #e5e7eb;
+    border-radius: 12px;
+    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.2);
+    z-index: 10000;
+    overflow: hidden;
+    backdrop-filter: blur(10px);
+}
+
+.debug-header {
+    background: #f8fafc;
+    padding: 12px 16px;
+    border-bottom: 1px solid #e5e7eb;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    font-weight: 600;
+    color: #374151;
+}
+
+.debug-close {
+    background: none;
+    border: none;
+    font-size: 20px;
+    color: #6b7280;
+    cursor: pointer;
+    padding: 0;
+    width: 24px;
+    height: 24px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.debug-content {
+    padding: 16px;
+    max-height: 50vh;
+    overflow-y: auto;
+}
+
+.debug-item {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 8px 0;
+    border-bottom: 1px solid #f1f5f9;
+}
+
+.debug-item:last-child {
+    border-bottom: none;
+}
+
+.debug-label {
+    font-size: 14px;
+    color: #6b7280;
+    font-weight: 500;
+}
+
+.debug-value {
+    font-size: 14px;
+    color: #374151;
+    font-weight: 600;
+    font-family: 'Monaco', 'Menlo', monospace;
+}
+
+.debug-value.highlight {
+    color: #dc2626;
+    background: #fef2f2;
+    padding: 2px 6px;
+    border-radius: 4px;
+}
+
+.debug-actions {
+    padding: 12px 16px;
+    border-top: 1px solid #e5e7eb;
+    background: #f8fafc;
+    display: flex;
+    gap: 8px;
+}
+
+.debug-refresh,
+.debug-fix {
+    flex: 1;
+    padding: 8px 12px;
+    border: 1px solid #d1d5db;
+    border-radius: 6px;
+    background: white;
+    color: #374151;
+    font-size: 12px;
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+.debug-refresh:hover {
+    background: #f3f4f6;
+    border-color: #9ca3af;
+}
+
+.debug-fix {
+    background: #dc2626;
+    color: white;
+    border-color: #dc2626;
+}
+
+.debug-fix:hover {
+    background: #b91c1c;
+    border-color: #b91c1c;
 }
 </style>
 
@@ -7515,6 +7950,24 @@ body.onboarding-mode {
         border: none !important;
         box-sizing: border-box !important;
         width: 100% !important;
+        /* 使用CSS环境变量处理安全区域和键盘高度 */
+        bottom: env(keyboard-inset-height, 0px) !important;
+        padding-bottom: env(safe-area-inset-bottom, 0px) !important;
+    }
+
+    /* 支持iOS和Android的键盘处理 */
+    @supports (bottom: env(keyboard-inset-height)) {
+        .input-area {
+            bottom: env(keyboard-inset-height, 0px) !important;
+        }
+    }
+
+    /* 备用方案：使用viewport单位 */
+    @supports not (bottom: env(keyboard-inset-height)) {
+        .input-area {
+            bottom: 0 !important;
+            /* 通过JavaScript动态调整 */
+        }
     }
 
     /* 聊天输入框相对于父容器定位 */
@@ -11502,6 +11955,49 @@ body {
     body.wechat-browser .ai-buttons-row {
         padding-bottom: 8px !important;
         /* 微信环境下给按钮行添加底部间距，确保不贴底边 */
+    }
+
+    /* 非微信环境下的底部安全间距 */
+    body:not(.wechat-browser) .ai-card {
+        padding-bottom: calc(16px + env(safe-area-inset-bottom, 0px)) !important;
+        /* 非微信环境下给AI卡片底部更多间距，防止被浏览器工具栏遮挡 */
+    }
+
+    /* 移动端浏览器工具栏适配 */
+    @media (max-width: 768px) {
+        .input-area {
+            /* 默认给底部一些安全间距，防止被工具栏遮挡 */
+            padding-bottom: 30px !important;
+        }
+
+        /* iOS设备特殊处理 - 需要更大的底部间距 */
+        @supports (-webkit-touch-callout: none) {
+            .input-area {
+                padding-bottom: calc(80px + env(safe-area-inset-bottom, 0px)) !important;
+                /* iOS设备底部工具栏较高，需要更大的安全间距 */
+            }
+        }
+
+        /* iOS Safari特殊处理 */
+        @supports (-webkit-touch-callout: none) and (not (-webkit-appearance: none)) {
+            .input-area {
+                padding-bottom: calc(85px + env(safe-area-inset-bottom, 0px)) !important;
+            }
+        }
+
+        /* iOS Chrome特殊处理 */
+        @supports (-webkit-touch-callout: none) and (-webkit-appearance: none) {
+            .input-area {
+                padding-bottom: calc(95px + env(safe-area-inset-bottom, 0px)) !important;
+            }
+        }
+
+        /* Android Chrome浏览器处理 */
+        @supports (-webkit-appearance: none) and (not (-webkit-touch-callout: none)) {
+            .input-area {
+                padding-bottom: calc(60px + env(safe-area-inset-bottom, 0px)) !important;
+            }
+        }
     }
 
     /* 微信环境下欢迎区域优化 */

@@ -426,13 +426,13 @@
                                         <div class="asset-amount">
                                             <span class="amount-label">总资产</span>
                                             <span class="amount-value">¥{{ formatCurrency(message.assetData.totalAssets)
-                                                }}</span>
+                                            }}</span>
                                         </div>
                                         <div class="asset-change"
                                             :class="[message.assetData.totalProfitPercent >= 0 ? 'profit' : 'loss']">
                                             <span class="change-icon">{{ message.assetData.totalProfitPercent >= 0 ?
                                                 '📈' : '📉'
-                                                }}</span>
+                                            }}</span>
                                             <span class="change-label">今日盈亏：</span>
                                             <span class="change-text">
                                                 {{ message.assetData.totalProfitPercent >= 0 ? '+' : '' }}¥{{
@@ -458,7 +458,7 @@
                                         <div class="stat-info">
                                             <div class="stat-label">持仓市值</div>
                                             <div class="stat-value">¥{{ formatCurrency(message.assetData.portfolioValue)
-                                                }}
+                                            }}
                                             </div>
                                         </div>
                                     </div>
@@ -832,7 +832,7 @@
                 </div>
                 <div class="guide-actions">
                     <el-button type="primary" size="small" @click="handleGuideAction">{{ guideActionText
-                    }}</el-button>
+                        }}</el-button>
                     <el-button size="small" @click="dismissGuide">稍后</el-button>
                 </div>
             </div>
@@ -870,7 +870,7 @@
                         <div class="summary-item">
                             <span class="summary-label">买入信号</span>
                             <span class="summary-value signal-score">{{ currentQuantAnalysis.buySignalScore
-                                }}/100</span>
+                            }}/100</span>
                         </div>
                         <div class="summary-item">
                             <span class="summary-label">量化评级</span>
@@ -2137,18 +2137,49 @@ const forceFixChatBox = () => {
 
         // 主界面模式：修复AI卡片
         if (aiCard && !isChatMode.value) {
-            // 使用更强的样式覆盖
-            aiCard.style.setProperty('padding-bottom', `${forceOffset}px`, 'important');
-            aiCard.style.setProperty('margin-bottom', '0px', 'important');
-            aiCard.style.setProperty('box-sizing', 'border-box', 'important');
+            // 检查是否是微信环境
+            const isWechat = userAgent.includes('micromessenger');
 
-            console.log('AI卡片强制修复后的样式:', {
-                paddingBottom: aiCard.style.paddingBottom,
-                marginBottom: aiCard.style.marginBottom,
-                computedStyle: window.getComputedStyle(aiCard).paddingBottom
-            });
+            if (!isWechat) {
+                // 非微信环境才应用大的偏移量
+                // 使用多种方法确保样式被应用
+                aiCard.style.setProperty('padding-bottom', `${forceOffset}px`, 'important');
+                aiCard.style.setProperty('margin-bottom', '0px', 'important');
+                aiCard.style.setProperty('box-sizing', 'border-box', 'important');
 
-            ElMessage.success(`[主界面模式] 已强制设置AI卡片底部间距为 ${forceOffset}px`);
+                // 添加一个自定义属性标记，防止被其他CSS覆盖
+                aiCard.setAttribute('data-fixed-bottom', 'true');
+                aiCard.style.setProperty('--bottom-offset', `${forceOffset}px`);
+
+                // 延迟再次确认样式应用
+                setTimeout(() => {
+                    const computedStyle = window.getComputedStyle(aiCard);
+                    const actualPadding = computedStyle.paddingBottom;
+                    console.log('延迟检查样式应用结果:', {
+                        期望: `${forceOffset}px`,
+                        实际: actualPadding,
+                        是否成功: actualPadding.includes(forceOffset.toString())
+                    });
+
+                    if (!actualPadding.includes(forceOffset.toString())) {
+                        console.warn('样式应用失败，尝试备用方案');
+                        // 备用方案：直接修改元素的transform
+                        aiCard.style.setProperty('transform', `translateY(-${forceOffset - 20}px)`, 'important');
+                        ElMessage.warning(`样式冲突，使用备用方案：向上偏移 ${forceOffset - 20}px`);
+                    }
+                }, 100);
+
+                console.log('AI卡片强制修复后的样式:', {
+                    paddingBottom: aiCard.style.paddingBottom,
+                    marginBottom: aiCard.style.marginBottom,
+                    computedStyle: window.getComputedStyle(aiCard).paddingBottom,
+                    isWechat: isWechat
+                });
+
+                ElMessage.success(`[主界面模式] 已强制设置AI卡片底部间距为 ${forceOffset}px`);
+            } else {
+                ElMessage.info('[微信环境] 使用微信优化的底部间距');
+            }
         }
 
         debugInfo.value.finalOffset = forceOffset;
@@ -11969,8 +12000,11 @@ body {
 
     /* 微信环境下的底部间距优化 */
     body.wechat-browser .ai-card {
-        padding: 12px 0 16px 0 !important;
-        /* 微信环境下给底部一点间距，左右padding为0确保占满全屏 */
+        padding-top: 12px !important;
+        padding-left: 0 !important;
+        padding-right: 0 !important;
+        padding-bottom: 16px !important;
+        /* 微信环境下给底部较小间距 */
         width: 100% !important;
         border-radius: 0 !important;
         /* 微信环境下移除圆角确保占满全屏 */
@@ -11996,11 +12030,7 @@ body {
         /* 微信环境下给按钮行添加底部间距，确保不贴底边 */
     }
 
-    /* 非微信环境下的底部安全间距 */
-    body:not(.wechat-browser) .ai-card {
-        padding-bottom: calc(16px + env(safe-area-inset-bottom, 0px)) !important;
-        /* 非微信环境下给AI卡片底部更多间距，防止被浏览器工具栏遮挡 */
-    }
+    /* 非微信环境下的底部安全间距 - 已移除，由JavaScript动态控制 */
 
     /* 移动端浏览器工具栏适配 */
     @media (max-width: 768px) {
@@ -12159,8 +12189,10 @@ body {
     .ai-card {
         margin: 0 !important;
         /* 移除margin */
-        padding: 12px 0 calc(env(safe-area-inset-bottom) + 12px) 0 !important;
-        /* 左右padding为0确保占满全屏，底部padding考虑安全区域 */
+        padding-top: 12px !important;
+        padding-left: 0 !important;
+        padding-right: 0 !important;
+        /* 底部padding由JavaScript动态控制，不在此设置 */
         width: 100% !important;
         border-radius: 0 !important;
         /* 移除圆角确保占满全屏 */

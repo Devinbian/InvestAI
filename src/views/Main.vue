@@ -264,7 +264,20 @@
             <div class="chat-history-area chat-area" v-if="isChatMode && chatHistory.length" ref="chatHistoryRef">
                 <div v-for="(message, idx) in chatHistory" :key="idx" :class="['chat-message', message.role]">
                     <div class="chat-message-content">
-                        <div v-if="message.content" class="message-text">
+                        <!-- AI生成中状态显示 -->
+                        <div v-if="message.role === 'assistant' && !message.content && isGenerating && idx === chatHistory.length - 1"
+                            class="message-text generating-message">
+                            <div class="generating-content-inline">
+                                <div class="generating-dots">
+                                    <span class="dot"></span>
+                                    <span class="dot"></span>
+                                    <span class="dot"></span>
+                                </div>
+                                <span class="generating-label">AI正在思考中...</span>
+                            </div>
+                        </div>
+                        <!-- 正常消息内容 -->
+                        <div v-else-if="message.content" class="message-text">
                             <MarkdownRenderer :content="message.content" />
                         </div>
 
@@ -428,13 +441,13 @@
                                         <div class="asset-amount">
                                             <span class="amount-label">总资产</span>
                                             <span class="amount-value">¥{{ formatCurrency(message.assetData.totalAssets)
-                                                }}</span>
+                                            }}</span>
                                         </div>
                                         <div class="asset-change"
                                             :class="[message.assetData.totalProfitPercent >= 0 ? 'profit' : 'loss']">
                                             <span class="change-icon">{{ message.assetData.totalProfitPercent >= 0 ?
                                                 '📈' : '📉'
-                                                }}</span>
+                                            }}</span>
                                             <span class="change-label">今日盈亏：</span>
                                             <span class="change-text">
                                                 {{ message.assetData.totalProfitPercent >= 0 ? '+' : '' }}¥{{
@@ -460,7 +473,7 @@
                                         <div class="stat-info">
                                             <div class="stat-label">持仓市值</div>
                                             <div class="stat-value">¥{{ formatCurrency(message.assetData.portfolioValue)
-                                                }}
+                                            }}
                                             </div>
                                         </div>
                                     </div>
@@ -581,27 +594,7 @@
                     </div>
                 </div>
 
-                <!-- AI生成状态指示器 -->
-                <div v-if="isGenerating" class="generating-indicator">
-                    <div class="generating-content">
-                        <div class="generating-avatar">
-                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none">
-                                <path d="M9.663 17h4.673M12 3a6 6 0 0 1 6 6c0 3-2 4-2 4h-8s-2-1-2-4a6 6 0 0 1 6-6z"
-                                    stroke="currentColor" stroke-width="2" />
-                                <path d="M12 17v4" stroke="currentColor" stroke-width="2" />
-                                <circle cx="12" cy="12" r="1" fill="currentColor" />
-                            </svg>
-                        </div>
-                        <div class="generating-text">
-                            <div class="generating-dots">
-                                <span class="dot"></span>
-                                <span class="dot"></span>
-                                <span class="dot"></span>
-                            </div>
-                            <span class="generating-label">AI正在思考中...</span>
-                        </div>
-                    </div>
-                </div>
+
 
                 <!-- 移动端聊天历史底部占位元素，防止被新建聊天按钮遮挡 -->
                 <div class="mobile-chat-spacer" v-if="isMobileView"></div>
@@ -933,7 +926,7 @@
                 </div>
                 <div class="guide-actions">
                     <el-button type="primary" size="small" @click="handleGuideAction">{{ guideActionText
-                    }}</el-button>
+                        }}</el-button>
                     <el-button size="small" @click="dismissGuide">稍后</el-button>
                 </div>
             </div>
@@ -971,7 +964,7 @@
                         <div class="summary-item">
                             <span class="summary-label">买入信号</span>
                             <span class="summary-value signal-score">{{ currentQuantAnalysis.buySignalScore
-                                }}/100</span>
+                            }}/100</span>
                         </div>
                         <div class="summary-item">
                             <span class="summary-label">量化评级</span>
@@ -3470,8 +3463,10 @@ const updateWatchlistInChatHistory = () => {
 const continueAnalysis = async (stockInfo, isPaid = false) => {
 
     chatHistory.value.push(
-        { role: 'assistant', content: `正在为您量化分析【${stockInfo.name}(${stockInfo.code})】，请等待片刻......` ,
-        hasStockInfo: true, stockInfo: stockInfo},
+        {
+            role: 'assistant', content: `正在为您量化分析【${stockInfo.name}(${stockInfo.code})】，请等待片刻......`,
+            hasStockInfo: true, stockInfo: stockInfo
+        },
     );
 
     try {
@@ -5873,77 +5868,16 @@ body.onboarding-mode {
     }
 }
 
-/* 移动端生成状态指示器优化 */
-@media (max-width: 768px) {
-    .generating-indicator {
-        padding: 0 16px;
-        margin: 12px 0;
-    }
-
-    .generating-avatar {
-        width: 28px;
-        height: 28px;
-    }
-
-    .generating-text {
-        padding: 10px 14px;
-    }
-
-    .generating-label {
-        font-size: 0.8rem;
-    }
-}
-
-/* AI生成状态指示器样式 */
-.generating-indicator {
-    display: flex;
-    justify-content: flex-start;
-    margin: 16px 0;
-    padding: 0 20px;
+/* AI生成状态内联样式（在消息气泡内显示） */
+.generating-message {
     animation: fadeIn 0.3s ease-in;
 }
 
-.generating-content {
-    display: flex;
-    align-items: flex-start;
-    gap: 12px;
-    max-width: 80%;
-}
-
-.generating-avatar {
-    width: 32px;
-    height: 32px;
-    border-radius: 50%;
-    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+.generating-content-inline {
     display: flex;
     align-items: center;
-    justify-content: center;
-    color: white;
-    flex-shrink: 0;
-    animation: pulse-avatar 2s ease-in-out infinite;
-}
-
-.generating-text {
-    display: flex;
-    flex-direction: column;
-    gap: 4px;
-    background: #f8fafc;
-    border: 1px solid #e2e8f0;
-    border-radius: 16px;
-    padding: 12px 16px;
-    position: relative;
-}
-
-.generating-text::before {
-    content: '';
-    position: absolute;
-    left: -8px;
-    top: 12px;
-    width: 0;
-    height: 0;
-    border-top: 8px solid transparent;
-    border-bottom: 8px solid transparent;
-    border-right: 8px solid #f8fafc;
+    gap: 8px;
+    padding: 4px 0;
 }
 
 .generating-dots {
@@ -6020,22 +5954,8 @@ body.onboarding-mode {
     }
 }
 
-/* 移动端生成状态指示器优化 */
+/* 移动端生成状态内联样式优化 */
 @media (max-width: 768px) {
-    .generating-indicator {
-        padding: 0 16px;
-        margin: 12px 0;
-    }
-
-    .generating-avatar {
-        width: 28px;
-        height: 28px;
-    }
-
-    .generating-text {
-        padding: 10px 14px;
-    }
-
     .generating-label {
         font-size: 0.8rem;
     }

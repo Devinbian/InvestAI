@@ -2133,7 +2133,7 @@ const forceFixChatBox = () => {
         const isSafari = userAgent.includes('safari') && !userAgent.includes('chrome') && !userAgent.includes('crios');
         const isChrome = userAgent.includes('chrome') || userAgent.includes('crios');
 
-        let forceOffset = 60; // 默认偏移量
+        let forceOffset = 115; // 默认偏移量
         if (isIOS && isSafari) {
             forceOffset = 120; // iOS Safari强制偏移
         } else if (isIOS && isChrome) {
@@ -2157,7 +2157,7 @@ const forceFixChatBox = () => {
                 console.log('=== 强制修复开始 ===');
 
                 // 方案1: 直接使用transform，最可靠的方法
-                const transformOffset = 60; // 固定使用60px偏移量，根据用户反馈的最佳值
+                const transformOffset = 120; // 固定使用120px偏移量，根据用户反馈的最佳值
                 aiCard.style.setProperty('transform', `translateY(-${transformOffset}px)`, 'important');
                 aiCard.style.setProperty('transition', 'transform 0.3s ease', 'important');
 
@@ -2442,7 +2442,7 @@ const ensureMobileFixApplied = () => {
     const isChrome = userAgent.includes('chrome') || userAgent.includes('crios');
     const isSafari = userAgent.includes('safari') && !userAgent.includes('chrome') && !userAgent.includes('crios');
 
-    // 如果是移动端浏览器（非微信），强制应用60px上移
+    // 如果是移动端浏览器（非微信），强制应用120px上移
     const shouldApplyFix = !isWechat && (
         (isIOS && (isSafari || isChrome)) ||
         (isAndroid && isChrome)
@@ -2452,15 +2452,15 @@ const ensureMobileFixApplied = () => {
         const aiCard = document.querySelector('.ai-card');
         if (aiCard) {
             const currentTransform = aiCard.style.transform;
-            if (!currentTransform.includes('translateY(-60px)')) {
-                console.log('检测到移动端浏览器，强制应用60px上移效果');
-                aiCard.style.setProperty('transform', 'translateY(-60px)', 'important');
+            if (!currentTransform.includes('translateY(-120px)')) {
+                console.log('检测到移动端浏览器，强制应用120px上移效果');
+                aiCard.style.setProperty('transform', 'translateY(-120px)', 'important');
                 aiCard.style.setProperty('transition', 'transform 0.3s ease', 'important');
-                adjustContentForOffset(60);
-                currentOffset.value = 60;
+                adjustContentForOffset(120);
+                currentOffset.value = 120;
                 console.log('强制修复已应用');
             } else {
-                console.log('60px上移效果已正确应用');
+                console.log('120px上移效果已正确应用');
             }
         }
     } else {
@@ -2692,7 +2692,7 @@ const fixMobileChatBox = () => {
                     }
                 }
 
-                // 主界面模式：自动应用60px上移效果（仅限移动端浏览器，微信端除外）
+                // 主界面模式：自动应用120px上移效果（仅限移动端浏览器，微信端除外）
                 if (aiCard && !isChatMode.value) {
                     // 强化检测逻辑：移动端浏览器环境下更积极地应用修复
                     const isMobileBrowser = !isWechat && (
@@ -2705,17 +2705,17 @@ const fixMobileChatBox = () => {
                     const needsFixing = isMobileBrowser;
 
                     if (needsFixing) {
-                        // 应用60px上移效果（与强制修复按钮相同的效果）
-                        aiCard.style.setProperty('transform', 'translateY(-60px)', 'important');
+                        // 应用120px上移效果（与强制修复按钮相同的效果）
+                        aiCard.style.setProperty('transform', 'translateY(-120px)', 'important');
                         aiCard.style.setProperty('transition', 'transform 0.3s ease', 'important');
 
                         // 同时调整前面内容的位置，避免被遮盖
-                        adjustContentForOffset(60);
+                        adjustContentForOffset(120);
 
                         // 更新当前偏移量显示
-                        currentOffset.value = 60;
+                        currentOffset.value = 120;
 
-                        console.log(`[主界面模式] 自动应用60px上移效果 + 内容调整 (移动端浏览器)`);
+                        console.log(`[主界面模式] 自动应用120px上移效果 + 内容调整 (移动端浏览器)`);
                         console.log('触发条件:', {
                             isIOS,
                             isSafari,
@@ -3955,7 +3955,7 @@ onMounted(() => {
         // 延迟调用修复函数，确保DOM完全渲染
         setTimeout(() => {
             fixMobileChatBox();
-            // 额外检查：确保60px上移效果正确应用
+            // 额外检查：确保120px上移效果正确应用
             ensureMobileFixApplied();
         }, 100);
 

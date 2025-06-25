@@ -123,6 +123,16 @@
                 <button @click="forceFixChatBox" class="debug-fix">强制修复</button>
                 <button @click="superForceFixChatBox" class="debug-super-fix">超级修复</button>
             </div>
+            <div class="debug-fine-tune">
+                <div class="fine-tune-label">微调偏移量:</div>
+                <div class="fine-tune-controls">
+                    <button @click="adjustOffset(-10)" class="fine-tune-btn">-10px</button>
+                    <button @click="adjustOffset(-5)" class="fine-tune-btn">-5px</button>
+                    <span class="current-offset">{{ currentOffset }}px</span>
+                    <button @click="adjustOffset(5)" class="fine-tune-btn">+5px</button>
+                    <button @click="adjustOffset(10)" class="fine-tune-btn">+10px</button>
+                </div>
+            </div>
         </div>
 
         <!-- 移动端调试按钮 -->
@@ -427,13 +437,13 @@
                                         <div class="asset-amount">
                                             <span class="amount-label">总资产</span>
                                             <span class="amount-value">¥{{ formatCurrency(message.assetData.totalAssets)
-                                                }}</span>
+                                            }}</span>
                                         </div>
                                         <div class="asset-change"
                                             :class="[message.assetData.totalProfitPercent >= 0 ? 'profit' : 'loss']">
                                             <span class="change-icon">{{ message.assetData.totalProfitPercent >= 0 ?
                                                 '📈' : '📉'
-                                                }}</span>
+                                            }}</span>
                                             <span class="change-label">今日盈亏：</span>
                                             <span class="change-text">
                                                 {{ message.assetData.totalProfitPercent >= 0 ? '+' : '' }}¥{{
@@ -459,7 +469,7 @@
                                         <div class="stat-info">
                                             <div class="stat-label">持仓市值</div>
                                             <div class="stat-value">¥{{ formatCurrency(message.assetData.portfolioValue)
-                                                }}
+                                            }}
                                             </div>
                                         </div>
                                     </div>
@@ -833,7 +843,7 @@
                 </div>
                 <div class="guide-actions">
                     <el-button type="primary" size="small" @click="handleGuideAction">{{ guideActionText
-                    }}</el-button>
+                        }}</el-button>
                     <el-button size="small" @click="dismissGuide">稍后</el-button>
                 </div>
             </div>
@@ -871,7 +881,7 @@
                         <div class="summary-item">
                             <span class="summary-label">买入信号</span>
                             <span class="summary-value signal-score">{{ currentQuantAnalysis.buySignalScore
-                                }}/100</span>
+                            }}/100</span>
                         </div>
                         <div class="summary-item">
                             <span class="summary-label">量化评级</span>
@@ -1188,6 +1198,7 @@ const showMobileMenu = ref(false); // 控制移动端用户菜单显示
 
 // 移动端调试面板
 const showDebugPanel = ref(false);
+const currentOffset = ref(0); // 当前偏移量
 const debugInfo = ref({
     browser: '',
     screenHeight: 0,
@@ -2145,7 +2156,7 @@ const forceFixChatBox = () => {
                 console.log('=== 强制修复开始 ===');
 
                 // 方案1: 直接使用transform，最可靠的方法
-                const transformOffset = Math.max(forceOffset - 20, 100); // 确保至少100px偏移
+                const transformOffset = Math.max(forceOffset - 60, 60); // 减少偏移量，更精确
                 aiCard.style.setProperty('transform', `translateY(-${transformOffset}px)`, 'important');
                 aiCard.style.setProperty('transition', 'transform 0.3s ease', 'important');
 
@@ -2171,6 +2182,9 @@ const forceFixChatBox = () => {
                     parentPadding: centerContainer?.style.paddingBottom,
                     实际计算样式: window.getComputedStyle(aiCard).transform
                 });
+
+                // 更新当前偏移量显示
+                currentOffset.value = transformOffset;
 
                 ElMessage.success(`[强制修复] 使用多重方案，向上偏移 ${transformOffset}px`);
             } else {
@@ -2284,6 +2298,29 @@ const superForceFixChatBox = () => {
     });
 
     ElMessage.success('超级修复完成！AI输入框现在固定在底部上方150px');
+};
+
+// 微调偏移量
+const adjustOffset = (delta) => {
+    if (!isMobileView.value || isChatMode.value) {
+        ElMessage.warning('微调功能仅在移动端主界面可用');
+        return;
+    }
+
+    const aiCard = document.querySelector('.ai-card');
+    if (!aiCard) {
+        ElMessage.warning('未找到AI卡片');
+        return;
+    }
+
+    const newOffset = Math.max(0, currentOffset.value + delta);
+    currentOffset.value = newOffset;
+
+    // 应用新的偏移量
+    aiCard.style.setProperty('transform', `translateY(-${newOffset}px)`, 'important');
+
+    console.log(`微调偏移量: ${delta > 0 ? '+' : ''}${delta}px, 当前偏移: ${newOffset}px`);
+    ElMessage.success(`已调整偏移量到 ${newOffset}px`);
 };
 
 // 移动端聊天框修复 - 使用visualViewport检测实际可视区域
@@ -4928,21 +4965,21 @@ onMounted(() => {
 
 /* 移动端底部修复CSS类 */
 .mobile-bottom-fixed {
-    transform: translateY(-120px) !important;
+    transform: translateY(-80px) !important;
     transition: transform 0.3s ease !important;
 }
 
 /* iOS设备特殊处理 */
 @supports (-webkit-touch-callout: none) {
     .mobile-bottom-fixed {
-        transform: translateY(-140px) !important;
+        transform: translateY(-90px) !important;
     }
 }
 
 /* iOS Chrome特殊处理 */
 @supports (-webkit-touch-callout: none) and (-webkit-appearance: none) {
     .mobile-bottom-fixed {
-        transform: translateY(-150px) !important;
+        transform: translateY(-100px) !important;
     }
 }
 
@@ -5075,6 +5112,54 @@ onMounted(() => {
 .debug-super-fix:hover {
     background: #5a2d91;
     border-color: #5a2d91;
+}
+
+.debug-fine-tune {
+    margin-top: 12px;
+    padding-top: 12px;
+    border-top: 1px solid #e5e7eb;
+}
+
+.fine-tune-label {
+    font-size: 12px;
+    color: #6b7280;
+    margin-bottom: 8px;
+    text-align: center;
+}
+
+.fine-tune-controls {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 4px;
+}
+
+.fine-tune-btn {
+    padding: 4px 8px;
+    border: 1px solid #d1d5db;
+    border-radius: 4px;
+    background: white;
+    color: #374151;
+    font-size: 11px;
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+.fine-tune-btn:hover {
+    background: #f3f4f6;
+    border-color: #9ca3af;
+}
+
+.current-offset {
+    padding: 4px 8px;
+    background: #f0f9ff;
+    border: 1px solid #0ea5e9;
+    border-radius: 4px;
+    font-size: 11px;
+    font-weight: bold;
+    color: #0c4a6e;
+    min-width: 50px;
+    text-align: center;
 }
 </style>
 

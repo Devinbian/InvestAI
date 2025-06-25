@@ -3378,7 +3378,8 @@ const updateWatchlistInChatHistory = () => {
 const continueAnalysis = async (stockInfo, isPaid = false) => {
     
     chatHistory.value.push(
-        { role: 'assistant', content: `正在为您量化分析【${stockInfo.name}(${stockInfo.code})】，请等待片刻......` },
+        { role: 'assistant', content: `正在为您量化分析【${stockInfo.name}(${stockInfo.code})】，请等待片刻......` ,
+        hasStockInfo: true, stockInfo: stockInfo},
     );
 
     try {

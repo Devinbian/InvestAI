@@ -1038,7 +1038,7 @@ import MarkdownRenderer from '../components/MarkdownRenderer.vue';
 import StockList from '../components/StockList.vue';
 import MobileStockList from '../components/MobileStockList.vue';
 import { getStockListConfig } from '../config/stockListConfig';
-import { recommendStock, analyzeStock, api } from '@/api/api';
+import { recommendStock, api } from '@/api/api';
 import { riskOptions } from '@/config/userPortrait';
 import { fetchEventSource } from '@microsoft/fetch-event-source';
 

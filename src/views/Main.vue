@@ -3504,7 +3504,8 @@ const showPaidAnalysisDialog = (stock) => {
             confirmButtonText: '确认支付 1智点',
             cancelButtonText: '取消',
             type: 'warning',
-            customClass: 'paid-service-dialog'
+            customClass: 'paid-service-dialog high-z-index-dialog',
+            appendTo: 'body'
         }
     ).then(() => {
         // 检查余额（按1智点计算）
@@ -7658,7 +7659,8 @@ body.onboarding-mode {
         right: 0 !important;
         bottom: 0 !important;
         background: rgba(0, 0, 0, 0.4) !important;
-        z-index: 9999 !important;
+        z-index: 10100 !important;
+        /* 提高z-index确保在移动端侧边栏上方显示 */
         display: flex !important;
         align-items: flex-end !important;
         justify-content: center !important;
@@ -7777,7 +7779,8 @@ body.onboarding-mode {
         right: 0 !important;
         bottom: 0 !important;
         background: rgba(0, 0, 0, 0.4) !important;
-        z-index: 10000 !important;
+        z-index: 10101 !important;
+        /* 用户菜单使用更高的z-index */
         display: flex !important;
         align-items: flex-end !important;
         justify-content: center !important;
@@ -8131,6 +8134,97 @@ body {
 }
 
 /* 防止弹窗遮罩层影响页面布局 */
+
+/* 确保Element Plus组件在移动端侧边栏上方显示 */
+:deep(.el-message-box) {
+    z-index: 15000 !important;
+    /* 保持默认定位，确保正确居中 */
+}
+
+:deep(.el-message-box__wrapper) {
+    z-index: 15000 !important;
+    /* 保持默认定位，确保正确居中 */
+}
+
+/* Element Plus弹窗全局设置 */
+:deep(.el-dialog) {
+    z-index: 11000 !important;
+}
+
+:deep(.el-dialog__wrapper) {
+    z-index: 11000 !important;
+}
+
+:deep(.el-overlay) {
+    z-index: 10999 !important;
+}
+
+/* Element Plus下拉菜单 */
+:deep(.el-dropdown-menu) {
+    z-index: 11150 !important;
+}
+
+/* Element Plus日期选择器 */
+:deep(.el-date-picker) {
+    z-index: 11150 !important;
+}
+
+:deep(.el-picker-panel) {
+    z-index: 11150 !important;
+}
+
+/* Element Plus选择器 */
+:deep(.el-select-dropdown) {
+    z-index: 11150 !important;
+}
+
+/* 高优先级弹窗设置 - 大幅提高z-index确保显示在侧边栏上方 */
+:deep(.high-z-index-dialog) {
+    z-index: 15000 !important;
+}
+
+:deep(.high-z-index-dialog .el-message-box) {
+    z-index: 15000 !important;
+    /* 保持默认定位，确保正确居中 */
+}
+
+:deep(.high-z-index-dialog .el-overlay) {
+    z-index: 14999 !important;
+}
+
+/* MessageBox全局强制设置 */
+:deep(.el-message-box__wrapper) {
+    z-index: 15000 !important;
+}
+
+:deep(.el-message-box) {
+    z-index: 15000 !important;
+    /* 移除 position: fixed，保持默认居中定位 */
+}
+
+/* 全局MessageBox强制设置 - 使用更具体的选择器 */
+:deep(.el-overlay.is-message-box) {
+    z-index: 14999 !important;
+}
+
+:deep(.el-overlay.is-message-box .el-message-box) {
+    z-index: 15000 !important;
+    /* 保持默认定位方式，确保居中显示 */
+}
+
+/* 针对Element Plus的MessageBox容器 */
+:deep(.el-message-box__wrapper.is-message-box) {
+    z-index: 15000 !important;
+}
+
+/* 确保所有MessageBox相关元素都有最高优先级 */
+.el-message-box,
+.el-message-box__wrapper,
+.el-overlay.is-message-box {
+    z-index: 15000 !important;
+    /* 移除强制定位，让Element Plus处理默认居中定位 */
+}
+
 :deep(.el-overlay) {
     backdrop-filter: blur(2px);
 }

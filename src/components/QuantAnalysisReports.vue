@@ -353,6 +353,8 @@ const deleteReport = async (report) => {
                 confirmButtonText: '确定删除',
                 cancelButtonText: '取消',
                 type: 'warning',
+                customClass: 'high-z-index-dialog',
+                appendTo: 'body',
             }
         );
 
@@ -855,5 +857,14 @@ const exportAllReports = () => {
         padding: 24px 16px;
         height: 200px;
     }
+}
+
+/* 确保弹窗在移动端侧边栏上方显示 */
+:deep(.el-dialog) {
+    z-index: 11000 !important;
+}
+
+:deep(.el-overlay) {
+    z-index: 10999 !important;
 }
 </style>

@@ -1,5 +1,5 @@
 <template>
-    <el-dialog v-model="visible" title="" width="800px" class="buy-dialog" :show-close="false">
+    <el-dialog v-model="visible" title="" width="800px" class="buy-dialog" :show-close="false" :z-index="11000">
         <div class="trading-interface" v-if="stock">
             <!-- 股票信息头部 -->
             <div class="stock-header-section">
@@ -610,7 +610,9 @@ const cancelOrder = async (orderId) => {
                 confirmButtonText: '确定撤单',
                 cancelButtonText: '取消',
                 type: 'warning',
-                dangerouslyUseHTMLString: false
+                dangerouslyUseHTMLString: false,
+                customClass: 'high-z-index-dialog',
+                appendTo: 'body',
             }
         );
 
@@ -1484,5 +1486,23 @@ watch(visible, (newVisible) => {
     font-size: 11px;
     height: auto;
     min-height: 24px;
+}
+
+/* 确保弹窗在移动端侧边栏上方显示 */
+:deep(.el-dialog) {
+    z-index: 11000 !important;
+}
+
+:deep(.el-overlay) {
+    z-index: 10999 !important;
+}
+
+/* 强制设置弹窗容器的z-index */
+.buy-dialog {
+    z-index: 11000 !important;
+}
+
+.buy-dialog :deep(.el-dialog__wrapper) {
+    z-index: 11000 !important;
 }
 </style>

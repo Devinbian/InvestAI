@@ -5,6 +5,8 @@ import "element-plus/dist/index.css";
 import zhCn from "element-plus/dist/locale/zh-cn.mjs";
 import App from "./App.vue";
 import router from "./router";
+// 导入 MessageBox z-index 修复样式
+import "./assets/global-messagebox.css";
 
 // 添加调试信息
 console.log("Base URL:", import.meta.env.BASE_URL);

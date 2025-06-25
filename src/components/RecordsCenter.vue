@@ -415,7 +415,8 @@ const tradingRecordsCount = computed(() => userStore.aiTradingRecords?.length ||
     right: 0 !important;
     bottom: 0 !important;
     background: rgba(0, 0, 0, 0.4) !important;
-    z-index: 1000 !important;
+    z-index: 10100 !important;
+    /* 提高z-index确保在移动端侧边栏上方显示 */
     display: flex !important;
     align-items: flex-end !important;
     justify-content: center !important;

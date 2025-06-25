@@ -476,7 +476,8 @@ defineExpose({
         position: fixed !important;
         transform: translateX(0) !important;
         transition: right 0.3s cubic-bezier(0.25, 0.46, 0.45, 0.94) !important;
-        z-index: 10001 !important;
+        z-index: 9000 !important;
+        /* 降低侧边栏z-index，确保弹窗能在其上方显示 */
         background: white !important;
         border-left: none !important;
         box-shadow: -4px 0 20px rgba(0, 0, 0, 0.15) !important;
@@ -507,7 +508,8 @@ defineExpose({
         justify-content: center !important;
         cursor: pointer !important;
         transition: all 0.2s ease !important;
-        z-index: 10002 !important;
+        z-index: 9001 !important;
+        /* 调整关闭按钮z-index与侧边栏保持一致 */
         box-shadow: -2px 0 8px rgba(0, 0, 0, 0.1) !important;
         color: #6b7280 !important;
         border-right: none !important;
@@ -1082,7 +1084,8 @@ defineExpose({
         width: 100vw !important;
         height: 100vh !important;
         background: rgba(0, 0, 0, 0.5) !important;
-        z-index: 9998 !important;
+        z-index: 8999 !important;
+        /* 降低遮罩层z-index，确保弹窗能在其上方显示 */
         opacity: 0 !important;
         visibility: hidden !important;
         transition: opacity 0.3s ease, visibility 0.3s ease !important;

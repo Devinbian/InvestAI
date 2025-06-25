@@ -1,7 +1,7 @@
 <template>
     <el-dialog v-model="dialogVisible" title="AI委托交易设置" :width="isMobile ? '95vw' : '750px'"
         :top="isMobile ? '5vh' : '15vh'" class="ai-trading-dialog" :class="{ 'mobile-dialog': isMobile }"
-        destroy-on-close append-to-body>
+        destroy-on-close append-to-body :z-index="11000">
         <div v-if="stock" class="ai-trading-content">
             <!-- 股票信息头部 -->
             <div class="stock-header">
@@ -305,6 +305,8 @@ const handleConfirm = async () => {
                 confirmButtonText: '确认支付 1智点',
                 cancelButtonText: '取消',
                 type: 'info',
+                customClass: 'high-z-index-dialog',
+                appendTo: 'body'
             }
         );
     } catch {
@@ -1188,5 +1190,23 @@ watch(() => props.modelValue, (newVal) => {
 
 .mobile-dialog .confirm-text-mobile {
     display: inline !important;
+}
+
+/* 确保弹窗在移动端侧边栏上方显示 */
+:deep(.el-dialog) {
+    z-index: 11000 !important;
+}
+
+:deep(.el-overlay) {
+    z-index: 10999 !important;
+}
+
+/* 强制设置弹窗容器的z-index */
+.ai-trading-dialog {
+    z-index: 11000 !important;
+}
+
+.ai-trading-dialog :deep(.el-dialog__wrapper) {
+    z-index: 11000 !important;
 }
 </style>

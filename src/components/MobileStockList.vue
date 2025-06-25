@@ -26,11 +26,7 @@
                             <span class="stock-code">{{ stock.code }}</span>
                         </div>
 
-                        <!-- 推荐等级标签 -->
-                        <div v-if="showRecommendIndex && stock.recommendLevel" class="recommend-badge"
-                            :class="getRecommendLevelClass(stock.recommendLevel)">
-                            {{ stock.recommendLevel }}
-                        </div>
+                        <!-- 推荐等级标签已移到推荐指数区域，这里不再显示 -->
                     </div>
 
                     <!-- 价格信息 -->
@@ -43,9 +39,15 @@
                     </div>
                 </div>
 
-                <!-- 推荐指数（星级评分） -->
-                <div v-if="showRecommendIndex && stock.recommendIndex" class="recommend-rating">
-                    <div class="rating-content">
+                <!-- 推荐指数（星级评分）- 与推荐标签融合显示 -->
+                <div v-if="showRecommendIndex && stock.recommendIndex" class="recommend-rating-integrated">
+                    <!-- 推荐等级标签（移到这里与星级同行） -->
+                    <div v-if="stock.recommendLevel" class="recommend-badge-inline"
+                        :class="getRecommendLevelClass(stock.recommendLevel)">
+                        {{ stock.recommendLevel }}
+                    </div>
+
+                    <div class="rating-content-inline">
                         <div class="rating-stars">
                             <span v-for="i in 5" :key="i" :class="['star', i <= Math.floor(stock.recommendIndex) ? 'filled' :
                                 i <= stock.recommendIndex ? 'half' : 'empty']">
@@ -72,13 +74,13 @@
                         <span class="status-text">{{ formatAddedTime(stock.addedAt) }}关注</span>
                     </div>
 
-                    <!-- 持仓状态 -->
-                    <div v-if="showPositionStatus && stock.quantity" class="status-item position-status"
+                    <!-- 持仓状态 - 一行显示 -->
+                    <div v-if="showPositionStatus && stock.quantity" class="status-item position-status-inline"
                         :class="getPositionProfitLoss(stock) >= 0 ? 'profit' : 'loss'">
                         <div class="status-icon">📊</div>
-                        <div class="position-info">
+                        <div class="position-info-inline">
                             <span class="position-text">持仓 {{ stock.quantity.toLocaleString() }}股</span>
-                            <span class="profit-loss">
+                            <span class="profit-loss-inline">
                                 {{ getPositionProfitLoss(stock) >= 0 ? '+' : '' }}¥{{
                                     Math.abs(getPositionProfitLoss(stock)).toFixed(2) }}
                                 ({{ getPositionProfitPercent(stock) >= 0 ? '+' : '' }}{{
@@ -437,7 +439,7 @@ const getPositionProfitPercent = (stock) => {
 };
 
 const isInWatchlist = (stock) => {
-    return !!stock.addedAt;
+    return userStore.isInWatchlist(stock.code);
 };
 
 const getVisibleActions = (stock) => {
@@ -588,6 +590,9 @@ const handleStockClick = (stock) => {
 };
 
 const handleAction = (actionKey, stock) => {
+    // 隐藏下拉菜单
+    expandedActions.value = null;
+
     emit('action-click', { action: actionKey, stock });
     emit(actionKey.replace(/([A-Z])/g, '-$1').toLowerCase(), stock);
 };
@@ -725,14 +730,14 @@ onUnmounted(() => {
     display: flex;
     justify-content: space-between;
     align-items: flex-start;
-    margin-bottom: 12px;
+    margin-bottom: 8px;
 }
 
 .stock-identity {
     flex: 1;
     display: flex;
     flex-direction: column;
-    gap: 8px;
+    gap: 6px;
 }
 
 .stock-name-wrapper {
@@ -803,13 +808,18 @@ onUnmounted(() => {
 
 .price-change {
     display: flex;
-    flex-direction: column;
-    align-items: flex-end;
-    gap: 2px;
+    flex-direction: row;
+    /* 改为水平排列 */
+    align-items: center;
+    /* 垂直居中对齐 */
+    gap: 4px;
+    /* 增加水平间距 */
     padding: 4px 8px;
     border-radius: 6px;
     font-size: 0.75rem;
     font-weight: 600;
+    white-space: nowrap;
+    /* 防止换行 */
 }
 
 .price-change.positive {
@@ -827,29 +837,87 @@ onUnmounted(() => {
     color: #64748b;
 }
 
-/* 推荐指数 */
+/* 推荐指数 - 移动端侧边栏优化版本（与推荐标签融合） */
+.recommend-rating-integrated {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    /* 推荐标签和星级之间的间隔 */
+    margin-bottom: 6px;
+    /* 减少间隔从8px到6px */
+}
+
+.recommend-badge-inline {
+    display: inline-block;
+    font-size: 0.75rem;
+    font-weight: 600;
+    padding: 4px 8px;
+    border-radius: 12px;
+    text-align: center;
+    flex-shrink: 0;
+    /* 防止压缩 */
+}
+
+.recommend-badge-inline.strong-recommend {
+    background: #dcfce7;
+    color: #166534;
+}
+
+.recommend-badge-inline.recommend {
+    background: #dbeafe;
+    color: #1d4ed8;
+}
+
+.recommend-badge-inline.neutral {
+    background: #fef3c7;
+    color: #92400e;
+}
+
+.recommend-badge-inline.caution {
+    background: #fee2e2;
+    color: #dc2626;
+}
+
+.rating-content-inline {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    /* 减少间隔从8px到6px */
+    padding: 6px 10px;
+    /* 减少内边距从8px 12px到6px 10px */
+    background: #f8fafc;
+    border-radius: 8px;
+    min-height: 32px;
+    /* 设置最小高度确保紧凑 */
+    flex: 1;
+    /* 占据剩余空间 */
+}
+
+/* 保留原有样式以兼容其他场景 */
 .recommend-rating {
-    margin-bottom: 8px;
+    margin-bottom: 6px;
 }
 
 .rating-content {
     display: flex;
     align-items: center;
-    gap: 8px;
-    padding: 8px 12px;
+    gap: 6px;
+    padding: 6px 10px;
     background: #f8fafc;
     border-radius: 8px;
+    min-height: 32px;
 }
 
 .rating-stars {
     display: flex;
     align-items: center;
-    gap: 2px;
+    gap: 1px;
 }
 
 .star {
-    font-size: 1rem;
+    font-size: 0.875rem;
     transition: all 0.2s ease;
+    line-height: 1;
 }
 
 .star.filled {
@@ -867,26 +935,29 @@ onUnmounted(() => {
 }
 
 .rating-score {
-    font-size: 0.875rem;
+    font-size: 0.75rem;
     font-weight: 600;
     color: #374151;
     background: #ffffff;
-    padding: 4px 8px;
+    padding: 3px 6px;
     border-radius: 4px;
     border: 1px solid #e5e7eb;
+    line-height: 1;
+    white-space: nowrap;
 }
 
 .rating-info-btn {
     display: flex;
     align-items: center;
     justify-content: center;
-    width: 24px;
-    height: 24px;
+    width: 20px;
+    height: 20px;
     border: none;
-    border-radius: 8px;
+    border-radius: 6px;
     background: rgba(99, 102, 241, 0.1);
     cursor: pointer;
     transition: all 0.2s ease;
+    flex-shrink: 0;
 }
 
 .rating-info-btn:hover {
@@ -899,6 +970,8 @@ onUnmounted(() => {
 
 .rating-info-btn svg {
     color: #6366f1;
+    width: 12px;
+    height: 12px;
 }
 
 /* 推荐指数说明弹窗 */
@@ -1012,8 +1085,10 @@ onUnmounted(() => {
 .stock-status-info {
     display: flex;
     flex-direction: column;
-    gap: 8px;
-    margin-bottom: 8px;
+    gap: 6px;
+    /* 减少间隔从8px到6px */
+    margin-bottom: 6px;
+    /* 减少间隔从8px到6px */
 }
 
 .status-item {
@@ -1044,10 +1119,27 @@ onUnmounted(() => {
     gap: 2px;
 }
 
+/* 持仓信息一行显示版本 */
+.position-info-inline {
+    display: flex;
+    flex-direction: row;
+    /* 水平排列 */
+    align-items: center;
+    /* 垂直居中 */
+    gap: 8px;
+    /* 持仓数量和盈亏之间的间隔 */
+    flex-wrap: nowrap;
+    /* 防止换行 */
+}
+
 .position-text {
     font-size: 0.875rem;
     color: #64748b;
     font-weight: 500;
+    white-space: nowrap;
+    /* 防止换行 */
+    flex-shrink: 0;
+    /* 防止压缩 */
 }
 
 .profit-loss {
@@ -1055,11 +1147,31 @@ onUnmounted(() => {
     font-weight: 600;
 }
 
+/* 盈亏内联显示样式 */
+.profit-loss-inline {
+    font-size: 0.75rem;
+    /* 稍微减小字体以适应一行显示 */
+    font-weight: 600;
+    white-space: nowrap;
+    /* 防止换行 */
+    flex-shrink: 0;
+    /* 防止压缩 */
+}
+
 .position-status.profit .profit-loss {
     color: #16a34a;
 }
 
 .position-status.loss .profit-loss {
+    color: #dc2626;
+}
+
+/* 持仓状态内联版本的颜色 */
+.position-status-inline.profit .profit-loss-inline {
+    color: #16a34a;
+}
+
+.position-status-inline.loss .profit-loss-inline {
     color: #dc2626;
 }
 
@@ -1071,15 +1183,18 @@ onUnmounted(() => {
 .details-grid {
     display: grid;
     grid-template-columns: 1fr 1fr;
-    gap: 6px 12px;
-    padding: 8px 0;
+    gap: 4px 12px;
+    /* 减少垂直间隔从6px到4px */
+    padding: 6px 0;
+    /* 减少内边距从8px到6px */
 }
 
 .detail-item {
     display: flex;
     justify-content: space-between;
     align-items: center;
-    min-height: 20px;
+    min-height: 18px;
+    /* 减少最小高度从20px到18px */
 }
 
 .detail-label {
@@ -1110,7 +1225,8 @@ onUnmounted(() => {
 
 /* 推荐理由 */
 .recommend-reason {
-    margin-bottom: 8px;
+    margin-bottom: 6px;
+    /* 减少间隔从8px到6px */
     background: #fefce8;
     border-radius: 8px;
     border: 1px solid #fde047;
@@ -1121,7 +1237,8 @@ onUnmounted(() => {
     display: flex;
     align-items: center;
     justify-content: space-between;
-    padding: 10px 12px;
+    padding: 8px 12px;
+    /* 减少内边距从10px到8px */
     cursor: pointer;
     transition: background-color 0.2s ease;
 }
@@ -1193,10 +1310,13 @@ onUnmounted(() => {
     display: flex;
     align-items: center;
     justify-content: space-between;
-    margin-top: 16px;
-    padding-top: 16px;
+    margin-top: 12px;
+    /* 减少间隔从16px到12px */
+    padding-top: 12px;
+    /* 减少内边距从16px到12px */
     border-top: 1px solid #e2e8f0;
-    gap: 8px;
+    gap: 6px;
+    /* 减少间隔从8px到6px */
 }
 
 .primary-actions {
@@ -1322,7 +1442,8 @@ onUnmounted(() => {
     left: 0;
     right: 0;
     bottom: 0;
-    z-index: 999999;
+    z-index: 10050;
+    /* 确保在侧边栏上方但低于弹窗 */
     background: transparent;
 }
 
@@ -1407,6 +1528,149 @@ onUnmounted(() => {
     text-align: center;
     background: #ffffff;
     border-top: 1px solid #e2e8f0;
+}
+
+/* 移动端侧边栏特殊优化 */
+.sidebar-container .mobile-stock-list {
+    gap: 6px;
+    /* 侧边栏中进一步减少卡片间隔 */
+}
+
+.sidebar-container .mobile-stock-card {
+    padding: 10px;
+    /* 侧边栏中减少内边距 */
+    margin: 0 6px;
+    /* 侧边栏中减少外边距 */
+    border-radius: 10px;
+}
+
+.sidebar-container .stock-main-info {
+    margin-bottom: 6px;
+    /* 侧边栏中进一步减少间隔 */
+}
+
+.sidebar-container .stock-identity {
+    gap: 4px;
+    /* 侧边栏中进一步减少间隔 */
+}
+
+.sidebar-container .recommend-rating-integrated {
+    margin-bottom: 4px;
+    /* 侧边栏中进一步减少间隔 */
+    gap: 6px;
+    /* 侧边栏中减少标签和星级间隔 */
+}
+
+.sidebar-container .recommend-badge-inline {
+    font-size: 0.6875rem;
+    /* 侧边栏中减少标签字体 */
+    padding: 3px 6px;
+    /* 侧边栏中减少标签内边距 */
+}
+
+.sidebar-container .rating-content-inline {
+    padding: 4px 8px;
+    /* 侧边栏中减少内边距 */
+    min-height: 28px;
+    /* 侧边栏中减少最小高度 */
+    gap: 4px;
+    /* 侧边栏中减少间隔 */
+}
+
+/* 保留原有样式兼容 */
+.sidebar-container .recommend-rating {
+    margin-bottom: 4px;
+    /* 侧边栏中进一步减少间隔 */
+}
+
+.sidebar-container .rating-content {
+    padding: 4px 8px;
+    /* 侧边栏中减少内边距 */
+    min-height: 28px;
+    /* 侧边栏中减少最小高度 */
+    gap: 4px;
+    /* 侧边栏中减少间隔 */
+}
+
+.sidebar-container .star {
+    font-size: 0.8125rem;
+    /* 侧边栏中进一步减少星级大小 */
+}
+
+.sidebar-container .rating-score {
+    font-size: 0.6875rem;
+    /* 侧边栏中进一步减少评分字体 */
+    padding: 2px 5px;
+    /* 侧边栏中减少内边距 */
+}
+
+.sidebar-container .rating-info-btn {
+    width: 18px;
+    /* 侧边栏中进一步减少按钮大小 */
+    height: 18px;
+}
+
+.sidebar-container .rating-info-btn svg {
+    width: 10px;
+    /* 侧边栏中进一步减少图标大小 */
+    height: 10px;
+}
+
+.sidebar-container .stock-status-info {
+    gap: 4px;
+    /* 侧边栏中减少间隔 */
+    margin-bottom: 4px;
+}
+
+.sidebar-container .position-info-inline {
+    gap: 6px;
+    /* 侧边栏中减少间隔 */
+}
+
+.sidebar-container .position-text {
+    font-size: 0.6875rem;
+    /* 侧边栏中减少字体大小 */
+}
+
+.sidebar-container .profit-loss-inline {
+    font-size: 0.6875rem;
+    /* 侧边栏中保持一致的字体大小 */
+}
+
+.sidebar-container .stock-details-optimized {
+    margin-bottom: 6px;
+    /* 侧边栏中减少间隔 */
+}
+
+.sidebar-container .details-grid {
+    gap: 3px 10px;
+    /* 侧边栏中进一步减少间隔 */
+    padding: 4px 0;
+    /* 侧边栏中减少内边距 */
+}
+
+.sidebar-container .detail-item {
+    min-height: 16px;
+    /* 侧边栏中进一步减少高度 */
+}
+
+.sidebar-container .recommend-reason {
+    margin-bottom: 4px;
+    /* 侧边栏中减少间隔 */
+}
+
+.sidebar-container .reason-header {
+    padding: 6px 10px;
+    /* 侧边栏中减少内边距 */
+}
+
+.sidebar-container .native-mobile-actions {
+    margin-top: 10px;
+    /* 侧边栏中减少间隔 */
+    padding-top: 10px;
+    /* 侧边栏中减少内边距 */
+    gap: 4px;
+    /* 侧边栏中减少间隔 */
 }
 
 /* 响应式优化 */

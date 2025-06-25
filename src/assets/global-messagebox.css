@@ -1,0 +1,60 @@
+/* MessageBox 全局 z-index 修复 */
+/* 确保 MessageBox 显示在移动端侧边栏上方 */
+
+/* Element Plus MessageBox 容器 */
+.el-message-box__wrapper {
+    z-index: 15000 !important;
+}
+
+/* MessageBox 主体 */
+.el-message-box {
+    z-index: 15000 !important;
+    /* 移除 position: fixed，让 Element Plus 自己处理定位 */
+}
+
+/* MessageBox 遮罩层 */
+.el-overlay.is-message-box {
+    z-index: 14999 !important;
+}
+
+/* MessageBox 内容区域 */
+.el-overlay.is-message-box .el-message-box {
+    z-index: 15000 !important;
+    /* 保持默认定位，确保居中显示 */
+}
+
+/* 高优先级 MessageBox */
+.high-z-index-dialog.el-message-box__wrapper {
+    z-index: 15000 !important;
+}
+
+.high-z-index-dialog .el-message-box {
+    z-index: 15000 !important;
+    /* 保持默认定位方式 */
+}
+
+.high-z-index-dialog .el-overlay {
+    z-index: 14999 !important;
+}
+
+/* 强制所有 MessageBox 相关元素使用最高 z-index */
+[class*="el-message-box"] {
+    z-index: 15000 !important;
+}
+
+[class*="el-overlay"][class*="message-box"] {
+    z-index: 14999 !important;
+}
+
+/* 针对可能的嵌套情况 */
+.el-message-box__wrapper .el-message-box {
+    z-index: 15000 !important;
+}
+
+/* 确保 MessageBox 在所有情况下都能正确显示 */
+.el-message-box__wrapper,
+.el-message-box,
+.el-overlay.is-message-box {
+    z-index: 15000 !important;
+    /* 移除强制定位，保持 Element Plus 默认的居中定位 */
+} 

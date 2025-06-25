@@ -539,7 +539,8 @@ watch(() => props.tradeType, (newType) => {
     display: flex;
     align-items: center;
     justify-content: center;
-    z-index: 9999;
+    z-index: 10100;
+    /* 提高z-index确保在移动端侧边栏上方显示 */
     animation: fadeIn 0.3s ease-out;
 }
 

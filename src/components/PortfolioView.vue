@@ -270,6 +270,8 @@ const handlePaidAnalysis = (stock) => {
             confirmButtonText: '确认支付 1智点',
             cancelButtonText: '取消',
             type: 'info',
+            customClass: 'high-z-index-dialog',
+            appendTo: 'body'
         }
     ).then(() => {
         // 扣费（扣除1智点）

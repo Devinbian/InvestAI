@@ -266,8 +266,8 @@ watch(currentStep, () => {
 });
 
 // Initialize with existing user preferences when dialog opens
-const initializePreferences = async() => {
-    console.log(localStorage.getItem('userInfo'))
+const initializePreferences = async () => {
+    console.log(localStorage.getItem('userInfo'));
 
     let preferences = await getUserPortraitDetail();
 
@@ -311,17 +311,17 @@ const getUserPortraitDetail = async () => {
             parentNode.children.forEach(childNode => {
                 subCategories.push(childNode.value);
             });
-        }); 
+        });
         let preferences = {
             experience: userPortrait.investExperience, // 投资经验
             riskLevel: userPortrait.investStyle, // 投资风格
-            userTraits:{
+            userTraits: {
                 active_participation: userPortrait.involveLevel,
                 innovation_trial: userPortrait.innovationAcceptance,
                 learning_willingness: userPortrait.learnIntention,
                 risk_tolerance: userPortrait.riskTolerance,
-                strategy_dependency: userPortrait.strategyComplexity, 
-                trading_frequency: userPortrait.tradeFrequency, 
+                strategy_dependency: userPortrait.strategyComplexity,
+                trading_frequency: userPortrait.tradeFrequency,
             },
             sectors: {
                 majorCategories: majorCategories,
@@ -362,47 +362,47 @@ const previousStep = () => {
  * @returns {Array} 格式化后的树形结构
  */
 function formatSectorTree(subCategoryValues) {
-  // 1. 创建父分类查找表 (value -> majorSector)
-  const parentLookup = majorSectors.reduce((acc, sector) => {
-    acc[sector.value] = {
-      value: sector.value,
-      label: sector.label
-    };
-    return acc;
-  }, {});
-  // 2. 创建子分类查找表 (value -> subSector)
-  const childLookup = subSectors.reduce((acc, sector) => {
-    acc[sector.value] = {
-      value: sector.value,
-      label: sector.label,
-      parent: sector.parent
-    };
-    return acc;
-  }, {});
-  // 3. 按父分类分组
-  const treeMap = subCategoryValues.reduce((acc, subValue) => {
-    const child = childLookup[subValue];
-    if (child) {
-      const parentValue = child.parent;
-      const parent = parentLookup[parentValue];
-      
-      if (!acc[parentValue]) {
-        acc[parentValue] = {
-          value: parent.value,
-          label: parent.label,
-          children: []
+    // 1. 创建父分类查找表 (value -> majorSector)
+    const parentLookup = majorSectors.reduce((acc, sector) => {
+        acc[sector.value] = {
+            value: sector.value,
+            label: sector.label
         };
-      }
-      
-      acc[parentValue].children.push({
-        value: child.value,
-        label: child.label
-      });
-    }
-    return acc;
-  }, {});
-  // 4. 转换为数组
-  return Object.values(treeMap);
+        return acc;
+    }, {});
+    // 2. 创建子分类查找表 (value -> subSector)
+    const childLookup = subSectors.reduce((acc, sector) => {
+        acc[sector.value] = {
+            value: sector.value,
+            label: sector.label,
+            parent: sector.parent
+        };
+        return acc;
+    }, {});
+    // 3. 按父分类分组
+    const treeMap = subCategoryValues.reduce((acc, subValue) => {
+        const child = childLookup[subValue];
+        if (child) {
+            const parentValue = child.parent;
+            const parent = parentLookup[parentValue];
+
+            if (!acc[parentValue]) {
+                acc[parentValue] = {
+                    value: parent.value,
+                    label: parent.label,
+                    children: []
+                };
+            }
+
+            acc[parentValue].children.push({
+                value: child.value,
+                label: child.label
+            });
+        }
+        return acc;
+    }, {});
+    // 4. 转换为数组
+    return Object.values(treeMap);
 }
 
 
@@ -449,7 +449,7 @@ const handlePreferencesSubmit = async () => {
         currentStep.value = 0; // Reset for next time
 
         emit('preferences-completed', preferences);
-    }else{
+    } else {
         ElMessage.error('保存偏好设置失败，请稍后重试');
         preferencesLoading.value = false;
     }
@@ -643,15 +643,15 @@ watch(visible, (newValue) => {
 
 /* 确保对话框显示在最顶层 */
 :deep(.el-dialog) {
-    z-index: 9999 !important;
+    z-index: 11000 !important;
 }
 
 :deep(.el-overlay) {
-    z-index: 9998 !important;
+    z-index: 10999 !important;
 }
 
 .preferences-dialog {
-    z-index: 10000 !important;
+    z-index: 11001 !important;
 }
 
 /* 移动端logo尺寸优化 */

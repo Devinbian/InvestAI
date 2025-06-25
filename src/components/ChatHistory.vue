@@ -445,6 +445,8 @@ const handleChatAction = (command, chat) => {
                     confirmButtonText: '删除',
                     cancelButtonText: '取消',
                     type: 'warning',
+                    customClass: 'high-z-index-dialog',
+                    appendTo: 'body',
                 }
             ).then(() => {
                 emit('delete-chat', chat.id);

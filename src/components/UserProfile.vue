@@ -3233,7 +3233,8 @@ onMounted(() => {
         right: 0 !important;
         bottom: 0 !important;
         background: rgba(0, 0, 0, 0.4) !important;
-        z-index: 10001 !important;
+        z-index: 10102 !important;
+        /* 使用更高的z-index确保在侧边栏上方显示 */
         display: flex !important;
         align-items: flex-end !important;
         justify-content: center !important;
@@ -3840,7 +3841,8 @@ onMounted(() => {
     right: 0;
     bottom: 0;
     background: rgba(0, 0, 0, 0.5);
-    z-index: 3000;
+    z-index: 10100;
+    /* 提高z-index确保在移动端侧边栏上方显示 */
     display: none;
 }
 
@@ -4205,7 +4207,8 @@ onMounted(() => {
     right: 0;
     bottom: 0;
     background: rgba(0, 0, 0, 0.5);
-    z-index: 3100;
+    z-index: 10101;
+    /* 提高z-index确保在移动端侧边栏上方显示 */
     display: none;
 }
 

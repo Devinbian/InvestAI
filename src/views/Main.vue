@@ -75,7 +75,7 @@
         </button>
 
         <!-- 移动端调试面板 -->
-        <div v-if="isMobileView && isChatMode && showDebugPanel" class="mobile-debug-panel">
+        <div v-if="isMobileView && showDebugPanel" class="mobile-debug-panel">
             <div class="debug-header">
                 <span>调试信息</span>
                 <button @click="showDebugPanel = false" class="debug-close">×</button>
@@ -426,13 +426,13 @@
                                         <div class="asset-amount">
                                             <span class="amount-label">总资产</span>
                                             <span class="amount-value">¥{{ formatCurrency(message.assetData.totalAssets)
-                                                }}</span>
+                                            }}</span>
                                         </div>
                                         <div class="asset-change"
                                             :class="[message.assetData.totalProfitPercent >= 0 ? 'profit' : 'loss']">
                                             <span class="change-icon">{{ message.assetData.totalProfitPercent >= 0 ?
                                                 '📈' : '📉'
-                                                }}</span>
+                                            }}</span>
                                             <span class="change-label">今日盈亏：</span>
                                             <span class="change-text">
                                                 {{ message.assetData.totalProfitPercent >= 0 ? '+' : '' }}¥{{
@@ -458,7 +458,7 @@
                                         <div class="stat-info">
                                             <div class="stat-label">持仓市值</div>
                                             <div class="stat-value">¥{{ formatCurrency(message.assetData.portfolioValue)
-                                                }}
+                                            }}
                                             </div>
                                         </div>
                                     </div>
@@ -832,7 +832,7 @@
                 </div>
                 <div class="guide-actions">
                     <el-button type="primary" size="small" @click="handleGuideAction">{{ guideActionText
-                    }}</el-button>
+                        }}</el-button>
                     <el-button size="small" @click="dismissGuide">稍后</el-button>
                 </div>
             </div>
@@ -870,7 +870,7 @@
                         <div class="summary-item">
                             <span class="summary-label">买入信号</span>
                             <span class="summary-value signal-score">{{ currentQuantAnalysis.buySignalScore
-                                }}/100</span>
+                            }}/100</span>
                         </div>
                         <div class="summary-item">
                             <span class="summary-label">量化评级</span>
@@ -2109,10 +2109,12 @@ const refreshDebugInfo = () => {
 };
 
 const forceFixChatBox = () => {
-    console.log('强制修复聊天框');
+    console.log('强制修复移动端布局');
     // 强制重新计算并应用更大的偏移量
     const inputArea = document.querySelector('.input-area');
-    if (inputArea && isMobileView.value && isChatMode.value) {
+    const aiCard = document.querySelector('.ai-card');
+
+    if (isMobileView.value) {
         const userAgent = navigator.userAgent.toLowerCase();
         const isIOS = userAgent.includes('iphone') || userAgent.includes('ipad');
         const isSafari = userAgent.includes('safari') && !userAgent.includes('chrome') && !userAgent.includes('crios');
@@ -2127,10 +2129,21 @@ const forceFixChatBox = () => {
             forceOffset = 110; // 其他iOS浏览器
         }
 
-        inputArea.style.cssText += `bottom: ${forceOffset}px !important;`;
-        debugInfo.value.finalOffset = forceOffset;
+        // 聊天模式：修复输入区域
+        if (inputArea && isChatMode.value) {
+            inputArea.style.cssText += `bottom: ${forceOffset}px !important;`;
+            ElMessage.success(`[聊天模式] 已强制设置底部偏移为 ${forceOffset}px`);
+        }
 
-        ElMessage.success(`已强制设置底部偏移为 ${forceOffset}px`);
+        // 主界面模式：修复AI卡片
+        if (aiCard && !isChatMode.value) {
+            aiCard.style.cssText += `padding-bottom: ${forceOffset}px !important;`;
+            ElMessage.success(`[主界面模式] 已强制设置AI卡片底部间距为 ${forceOffset}px`);
+        }
+
+        debugInfo.value.finalOffset = forceOffset;
+    } else {
+        ElMessage.warning('当前不是移动端视图');
     }
 };
 
@@ -2144,7 +2157,8 @@ const fixMobileChatBox = () => {
             const inputArea = document.querySelector('.input-area');
             const aiCard = document.querySelector('.ai-card');
 
-            if (inputArea) {
+            // 只有在聊天模式下有输入区域，或者主界面模式下有AI卡片时才执行
+            if ((inputArea && isChatMode.value) || (aiCard && !isChatMode.value)) {
                 let bottomOffset = 0;
 
                 // 检测浏览器类型和版本，提供更精确的兼容性处理
@@ -2375,6 +2389,7 @@ const fixMobileChatBox = () => {
 
                 console.log(`浏览器信息: iOS=${isIOS}, Safari=${isSafari}, Chrome=${isChrome}, 微信=${isWechat}`);
                 console.log(`当前模式: ${isChatMode.value ? '聊天模式' : '主界面模式'}`);
+                console.log(`元素检测: inputArea=${!!inputArea}, aiCard=${!!aiCard}`);
                 if (inputArea && isChatMode.value) {
                     console.log(`输入区域当前样式: ${inputArea.style.cssText}`);
                 }
@@ -2405,8 +2420,17 @@ const fixMobileChatBox = () => {
                         visualViewportHeight: window.visualViewport?.height || 'N/A'
                     });
                 }
+            } else {
+                console.log('未找到目标元素:', {
+                    inputArea: !!inputArea,
+                    aiCard: !!aiCard,
+                    isChatMode: isChatMode.value,
+                    需要的元素: isChatMode.value ? 'input-area' : 'ai-card'
+                });
             }
         });
+    } else {
+        console.log('非移动端视图，跳过修复');
     }
 };
 

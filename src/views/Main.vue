@@ -122,6 +122,7 @@
                 <button @click="refreshDebugInfo" class="debug-refresh">刷新数据</button>
                 <button @click="forceFixChatBox" class="debug-fix">强制修复</button>
                 <button @click="superForceFixChatBox" class="debug-super-fix">超级修复</button>
+                <button @click="resetAllPositions" class="debug-reset">重置位置</button>
             </div>
             <div class="debug-fine-tune">
                 <div class="fine-tune-label">微调偏移量:</div>
@@ -2156,9 +2157,12 @@ const forceFixChatBox = () => {
                 console.log('=== 强制修复开始 ===');
 
                 // 方案1: 直接使用transform，最可靠的方法
-                const transformOffset = Math.max(forceOffset - 60, 60); // 减少偏移量，更精确
+                const transformOffset = 60; // 固定使用60px偏移量，根据用户反馈的最佳值
                 aiCard.style.setProperty('transform', `translateY(-${transformOffset}px)`, 'important');
                 aiCard.style.setProperty('transition', 'transform 0.3s ease', 'important');
+
+                // 同时调整前面内容的位置，避免被遮盖
+                adjustContentForOffset(transformOffset);
 
                 // 方案2: 同时设置padding作为备用
                 aiCard.style.setProperty('padding-bottom', `${forceOffset}px`, 'important');
@@ -2300,6 +2304,61 @@ const superForceFixChatBox = () => {
     ElMessage.success('超级修复完成！AI输入框现在固定在底部上方150px');
 };
 
+// 调整内容位置以适应AI卡片偏移
+const adjustContentForOffset = (offset) => {
+    // 查找主要内容区域
+    const mainContent = document.querySelector('.main-content');
+    const contentWrapper = document.querySelector('.content-wrapper');
+    const stockSection = document.querySelector('.stock-section');
+
+    // 为主要内容添加底部padding，避免被上移的AI卡片遮盖
+    const paddingOffset = Math.min(offset, 80); // 限制最大padding为80px
+
+    if (mainContent) {
+        mainContent.style.setProperty('padding-bottom', `${paddingOffset + 20}px`, 'important');
+        mainContent.style.setProperty('transition', 'padding-bottom 0.3s ease', 'important');
+        console.log(`调整主内容区域底部padding: ${paddingOffset + 20}px`);
+    }
+
+    if (contentWrapper) {
+        contentWrapper.style.setProperty('padding-bottom', `${paddingOffset + 15}px`, 'important');
+        contentWrapper.style.setProperty('transition', 'padding-bottom 0.3s ease', 'important');
+        console.log(`调整内容包装器底部padding: ${paddingOffset + 15}px`);
+    }
+
+    if (stockSection) {
+        stockSection.style.setProperty('margin-bottom', `${paddingOffset + 10}px`, 'important');
+        stockSection.style.setProperty('transition', 'margin-bottom 0.3s ease', 'important');
+        console.log(`调整股票区域底部margin: ${paddingOffset + 10}px`);
+    }
+
+    // 如果找不到特定元素，尝试调整body的padding
+    if (!mainContent && !contentWrapper && !stockSection) {
+        document.body.style.setProperty('padding-bottom', `${paddingOffset + 30}px`, 'important');
+        console.log(`调整body底部padding: ${paddingOffset + 30}px`);
+    }
+};
+
+// 重置内容位置
+const resetContentPosition = () => {
+    const mainContent = document.querySelector('.main-content');
+    const contentWrapper = document.querySelector('.content-wrapper');
+    const stockSection = document.querySelector('.stock-section');
+
+    if (mainContent) {
+        mainContent.style.removeProperty('padding-bottom');
+    }
+    if (contentWrapper) {
+        contentWrapper.style.removeProperty('padding-bottom');
+    }
+    if (stockSection) {
+        stockSection.style.removeProperty('margin-bottom');
+    }
+    document.body.style.removeProperty('padding-bottom');
+
+    console.log('已重置所有内容位置');
+};
+
 // 微调偏移量
 const adjustOffset = (delta) => {
     if (!isMobileView.value || isChatMode.value) {
@@ -2319,8 +2378,44 @@ const adjustOffset = (delta) => {
     // 应用新的偏移量
     aiCard.style.setProperty('transform', `translateY(-${newOffset}px)`, 'important');
 
+    // 同时调整内容位置
+    adjustContentForOffset(newOffset);
+
     console.log(`微调偏移量: ${delta > 0 ? '+' : ''}${delta}px, 当前偏移: ${newOffset}px`);
     ElMessage.success(`已调整偏移量到 ${newOffset}px`);
+};
+
+// 重置所有位置
+const resetAllPositions = () => {
+    // 重置AI卡片位置
+    const aiCard = document.querySelector('.ai-card');
+    if (aiCard) {
+        aiCard.style.removeProperty('transform');
+        aiCard.style.removeProperty('transition');
+        aiCard.classList.remove('mobile-bottom-fixed');
+        console.log('已重置AI卡片位置');
+    }
+
+    // 重置内容位置
+    resetContentPosition();
+
+    // 重置偏移量显示
+    currentOffset.value = 0;
+
+    // 移除超级修复的固定容器
+    const fixedContainer = document.querySelector('.ai-card-fixed-container');
+    if (fixedContainer) {
+        fixedContainer.remove();
+        console.log('已移除超级修复容器');
+    }
+
+    // 显示原始AI卡片
+    if (aiCard) {
+        aiCard.style.display = '';
+    }
+
+    ElMessage.success('已重置所有位置到初始状态');
+    console.log('重置完成：所有位置已恢复到初始状态');
 };
 
 // 移动端聊天框修复 - 使用visualViewport检测实际可视区域
@@ -5112,6 +5207,17 @@ onMounted(() => {
 .debug-super-fix:hover {
     background: #5a2d91;
     border-color: #5a2d91;
+}
+
+.debug-reset {
+    background: #f59e0b;
+    border-color: #f59e0b;
+    color: white;
+}
+
+.debug-reset:hover {
+    background: #d97706;
+    border-color: #d97706;
 }
 
 .debug-fine-tune {

@@ -36,64 +36,98 @@
 
         <!-- 消息列表 -->
         <div class="notifications-list">
-            <div class="list-header" v-if="filteredNotifications.length > 0">
-                <span class="list-title">{{ getCurrentTabName() }}</span>
-                <span class="list-count">{{ filteredNotifications.length }}条消息</span>
+            <!-- 统计信息 -->
+            <div class="message-stats" v-if="messageStats.total > 0">
+                <div class="stats-item">
+                    <span class="stats-label">总计:</span>
+                    <span class="stats-value">{{ messageStats.total }}</span>
+                </div>
+                <div class="stats-item">
+                    <span class="stats-label">未读:</span>
+                    <span class="stats-value unread-count">{{ messageStats.unread }}</span>
+                </div>
+                <div class="stats-item">
+                    <span class="stats-label">已加载:</span>
+                    <span class="stats-value">{{ messageStats.loaded }}</span>
+                </div>
             </div>
 
             <!-- 空状态 -->
-            <div v-if="filteredNotifications.length === 0" class="empty-state">
+            <div v-if="Object.keys(groupedNotifications).length === 0 && !isLoading" class="empty-state">
                 <div class="empty-icon">📭</div>
                 <div class="empty-text">暂无{{ getCurrentTabName() }}消息</div>
             </div>
 
-            <!-- 消息项 -->
+            <!-- 按时间分组的消息项 -->
             <div v-else class="message-items">
-                <div v-for="notification in filteredNotifications" :key="notification.id" class="notification-item"
-                    :class="{
+                <div v-for="(messages, groupKey) in groupedNotifications" :key="groupKey" class="message-group">
+                    <div class="group-header">
+                        <span class="group-title">{{ groupKey }}</span>
+                        <span class="group-count">({{ messages.length }}条)</span>
+                    </div>
+
+                    <div v-for="notification in messages" :key="notification.id" class="notification-item" :class="{
                         'unread': !notification.read,
                         'important': notification.priority === 'high',
                         'urgent': notification.priority === 'urgent'
                     }" @click="showMessageDetail(notification)">
-                    <!-- 消息图标 -->
-                    <div class="notification-icon">
-                        <div class="icon-wrapper" :class="getIconClass(notification.type)">
-                            {{ getIconComponent(notification.type) }}
+                        <!-- 消息图标 -->
+                        <div class="notification-icon">
+                            <div class="icon-wrapper" :class="getIconClass(notification.type)">
+                                {{ getIconComponent(notification.type) }}
+                            </div>
+                            <div v-if="notification.priority === 'urgent'" class="urgent-indicator">!</div>
                         </div>
-                        <div v-if="notification.priority === 'urgent'" class="urgent-indicator">!</div>
+
+                        <!-- 消息内容 -->
+                        <div class="notification-content">
+                            <div class="notification-header">
+                                <div class="notification-title">{{ notification.title }}</div>
+                                <div class="notification-time">{{ formatTime(notification.time) }}</div>
+                            </div>
+                            <div class="notification-message">{{ notification.message }}</div>
+
+                            <!-- 消息标签 -->
+                            <div v-if="notification.tags && notification.tags.length > 0" class="notification-tags">
+                                <span v-for="tag in notification.tags.slice(0, 3)" :key="tag" class="tag"
+                                    :class="getTagClass(notification.type)">
+                                    {{ tag }}
+                                </span>
+                                <span v-if="notification.tags.length > 3" class="tag-more">
+                                    +{{ notification.tags.length - 3 }}
+                                </span>
+                            </div>
+
+                            <!-- 消息操作 -->
+                            <div class="notification-actions" v-if="notification.actions">
+                                <button v-for="action in notification.actions.slice(0, 2)" :key="action.key"
+                                    class="action-btn" :class="action.type || 'default'"
+                                    @click.stop="handleAction(action, notification)">
+                                    {{ action.text }}
+                                </button>
+                            </div>
+                        </div>
+
+                        <!-- 未读指示器 -->
+                        <div v-if="!notification.read" class="unread-indicator"></div>
                     </div>
+                </div>
 
-                    <!-- 消息内容 -->
-                    <div class="notification-content">
-                        <div class="notification-header">
-                            <div class="notification-title">{{ notification.title }}</div>
-                            <div class="notification-time">{{ formatTime(notification.time) }}</div>
-                        </div>
-                        <div class="notification-message">{{ notification.message }}</div>
+                <!-- 加载更多按钮 -->
+                <div v-if="hasMore && !isLoading" class="load-more-container">
+                    <button class="load-more-btn" @click="loadMore">
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none">
+                            <path d="M12 5v14m7-7l-7 7-7-7" stroke="currentColor" stroke-width="2"
+                                stroke-linecap="round" stroke-linejoin="round" />
+                        </svg>
+                        加载更多
+                    </button>
+                </div>
 
-                        <!-- 消息标签 -->
-                        <div v-if="notification.tags && notification.tags.length > 0" class="notification-tags">
-                            <span v-for="tag in notification.tags.slice(0, 3)" :key="tag" class="tag"
-                                :class="getTagClass(notification.type)">
-                                {{ tag }}
-                            </span>
-                            <span v-if="notification.tags.length > 3" class="tag-more">
-                                +{{ notification.tags.length - 3 }}
-                            </span>
-                        </div>
-
-                        <!-- 消息操作 -->
-                        <div class="notification-actions" v-if="notification.actions">
-                            <button v-for="action in notification.actions.slice(0, 2)" :key="action.key"
-                                class="action-btn" :class="action.type || 'default'"
-                                @click.stop="handleAction(action, notification)">
-                                {{ action.text }}
-                            </button>
-                        </div>
-                    </div>
-
-                    <!-- 未读指示器 -->
-                    <div v-if="!notification.read" class="unread-indicator"></div>
+                <!-- 加载状态 -->
+                <div v-if="isLoading" class="loading-container">
+                    <div class="loading-spinner"></div>
+                    <span class="loading-text">加载中...</span>
                 </div>
             </div>
         </div>
@@ -442,7 +476,7 @@
 </template>
 
 <script setup>
-import { ref, computed } from 'vue';
+import { ref, computed, onMounted } from 'vue';
 import { ElMessage } from 'element-plus';
 
 // 定义emit
@@ -459,6 +493,13 @@ const showSettingsDialog = ref(false);
 const searchKeyword = ref('');
 const filterType = ref('');
 const filterPriority = ref('');
+
+// 分页和加载状态
+const currentPage = ref(1);
+const pageSize = ref(15);
+const isLoading = ref(false);
+const hasMore = ref(true);
+const totalMessages = ref(0);
 
 // 推送设置
 const pushSettings = ref({
@@ -483,121 +524,142 @@ const messageCategories = ref([
     { key: 'trade', name: '交易', icon: '💰', iconClass: 'trade-icon' }
 ]);
 
-// 模拟消息数据
-const notifications = ref([
-    {
-        id: 1,
-        type: 'market',
-        priority: 'urgent',
-        title: '市场异动提醒',
-        message: '芯片板块大幅上涨，建议关注相关龙头股票机会',
-        time: new Date(Date.now() - 5 * 60 * 1000),
-        read: false,
-        tags: ['芯片股', '异动', '机会'],
-        details: {
-            '涨幅': '+8.5%',
-            '成交量': '放大120%',
-            '龙头股票': '中芯国际、韦尔股份'
-        },
-        links: [
-            { title: '查看芯片板块详情', url: '#' }
-        ],
-        actions: [
-            { key: 'analyze', text: '深度分析', type: 'primary' },
-            { key: 'follow', text: '关注', type: 'secondary' }
-        ]
-    },
-    {
-        id: 2,
-        type: 'news',
-        priority: 'high',
-        title: '重要资讯',
-        message: '央行宣布降准0.25个百分点，利好银行和地产板块',
-        time: new Date(Date.now() - 30 * 60 * 1000),
-        read: false,
-        tags: ['货币政策', '银行', '地产', '利好'],
-        details: {
-            '政策影响': '释放流动性约5000亿元',
-            '受益板块': '银行、地产、基建',
-            '生效时间': '2024年1月15日'
-        },
-        actions: [
-            { key: 'impact', text: '影响分析', type: 'primary' }
-        ]
-    },
-    {
-        id: 3,
-        type: 'alert',
-        priority: 'high',
-        title: '价格提醒',
-        message: '您关注的平安银行跌幅超过5%，请注意风险控制',
-        time: new Date(Date.now() - 2 * 60 * 60 * 1000),
-        read: true,
-        tags: ['风险提醒', '平安银行'],
-        details: {
-            '当前价格': '¥12.85',
-            '跌幅': '-5.2%',
-            '触发条件': '跌幅超过5%'
-        },
-        actions: [
-            { key: 'risk', text: '风险评估', type: 'warning' }
-        ]
-    },
-    {
-        id: 4,
-        type: 'system',
-        priority: 'medium',
-        title: '系统通知',
-        message: '您的投资偏好设置已更新，推荐算法将为您提供更精准的建议',
-        time: new Date(Date.now() - 4 * 60 * 60 * 1000),
-        read: true,
-        tags: ['系统更新', '算法优化'],
-        details: {
-            '更新内容': '风险偏好、行业偏好',
-            '生效时间': '立即生效',
-            '影响范围': '股票推荐、资讯推送'
-        }
-    },
-    {
-        id: 5,
-        type: 'trade',
-        priority: 'medium',
-        title: '交易执行',
-        message: '您的买入订单已成功执行：茅台 100股 @ ¥1850.00',
-        time: new Date(Date.now() - 6 * 60 * 60 * 1000),
-        read: false,
-        tags: ['买入成功', '茅台'],
-        details: {
-            '股票代码': '600519',
-            '交易数量': '100股',
-            '成交价格': '¥1850.00',
-            '交易费用': '¥5.55'
-        },
-        actions: [
-            { key: 'detail', text: '查看详情', type: 'primary' }
-        ]
-    },
-    {
-        id: 6,
-        type: 'market',
-        priority: 'medium',
-        title: '盘后分析',
-        message: '今日A股三大指数收涨，成交量较昨日放大15%',
-        time: new Date(Date.now() - 8 * 60 * 60 * 1000),
-        read: true,
-        tags: ['盘后分析', '指数上涨'],
-        details: {
-            '上证指数': '+1.2%',
-            '深证成指': '+0.8%',
-            '创业板指': '+1.5%',
-            '成交量': '8500亿元'
-        }
+// 生成模拟消息数据的函数
+const generateMockMessages = () => {
+    const types = ['market', 'news', 'alert', 'system', 'trade'];
+    const priorities = ['urgent', 'high', 'medium', 'low'];
+    const messages = [];
+
+    const baseMessages = [
+        { type: 'market', title: '市场异动提醒', content: '芯片板块大幅上涨，建议关注相关龙头股票机会' },
+        { type: 'news', title: '重要资讯', content: '央行宣布降准0.25个百分点，利好银行和地产板块' },
+        { type: 'alert', title: '价格提醒', content: '您关注的平安银行跌幅超过5%，请注意风险控制' },
+        { type: 'system', title: '系统通知', content: '您的投资偏好设置已更新，推荐算法将为您提供更精准的建议' },
+        { type: 'trade', title: '交易执行', content: '您的买入订单已成功执行：茅台 100股 @ ¥1850.00' },
+        { type: 'market', title: '板块异动', content: '新能源汽车板块午后拉升，比亚迪涨停' },
+        { type: 'news', title: '政策解读', content: '工信部发布新能源汽车发展规划，行业迎来利好' },
+        { type: 'alert', title: '止损提醒', content: '您设置的止损单已触发，股票已自动卖出' },
+        { type: 'system', title: '功能更新', content: '智能投顾功能已升级，新增风险评估模块' },
+        { type: 'trade', title: '分红到账', content: '您持有的工商银行分红已到账，金额￥128.50' }
+    ];
+
+    // 生成150条消息
+    for (let i = 1; i <= 150; i++) {
+        const baseMsg = baseMessages[i % baseMessages.length];
+        const timeOffset = Math.random() * 30 * 24 * 60 * 60 * 1000; // 30天内随机时间
+
+        messages.push({
+            id: i,
+            type: baseMsg.type,
+            priority: priorities[Math.floor(Math.random() * priorities.length)],
+            title: `${baseMsg.title} ${i}`,
+            message: baseMsg.content,
+            time: new Date(Date.now() - timeOffset),
+            read: Math.random() > 0.3, // 70% 已读
+            tags: generateTags(baseMsg.type),
+            details: generateDetails(baseMsg.type),
+            actions: generateActions(baseMsg.type)
+        });
     }
-]);
+
+    return messages.sort((a, b) => new Date(b.time) - new Date(a.time));
+};
+
+const generateTags = (type) => {
+    const tagMap = {
+        market: ['市场动态', '板块异动', '涨停', '跌停'],
+        news: ['政策', '财经', '公告', '利好'],
+        alert: ['风险提醒', '价格预警', '止损'],
+        system: ['系统更新', '功能升级', '维护'],
+        trade: ['交易记录', '成交', '分红', '资金']
+    };
+
+    const tags = tagMap[type] || ['其他'];
+    return tags.slice(0, Math.floor(Math.random() * 3) + 1);
+};
+
+const generateDetails = (type) => {
+    const detailsMap = {
+        market: { '涨幅': '+' + (Math.random() * 10).toFixed(2) + '%', '成交量': '放大' + Math.floor(Math.random() * 200) + '%' },
+        news: { '影响程度': '重大', '相关板块': '银行、地产' },
+        alert: { '触发价格': '¥' + (Math.random() * 100).toFixed(2), '风险等级': '中等' },
+        system: { '更新版本': 'v2.1.0', '影响范围': '全部用户' },
+        trade: { '成交价格': '¥' + (Math.random() * 500 + 10).toFixed(2), '手续费': '¥' + (Math.random() * 10).toFixed(2) }
+    };
+
+    return detailsMap[type] || {};
+};
+
+const generateActions = (type) => {
+    const actionsMap = {
+        market: [{ key: 'analyze', text: '深度分析', type: 'primary' }],
+        news: [{ key: 'impact', text: '影响分析', type: 'primary' }],
+        alert: [{ key: 'risk', text: '风险评估', type: 'warning' }],
+        system: [{ key: 'detail', text: '查看详情', type: 'secondary' }],
+        trade: [{ key: 'detail', text: '交易详情', type: 'primary' }]
+    };
+
+    return actionsMap[type] || [];
+};
+
+// 所有消息数据
+const allMessages = ref(generateMockMessages());
+// 当前显示的消息（分页加载）
+const notifications = ref([]);
+
+// 初始化时设置总数
+totalMessages.value = allMessages.value.length;
+
+// 分页加载逻辑
+const loadMessages = (reset = false) => {
+    if (isLoading.value) return;
+
+    isLoading.value = true;
+
+    // 模拟网络延迟
+    setTimeout(() => {
+        const filteredMessages = getFilteredMessages();
+        const startIndex = reset ? 0 : notifications.value.length;
+        const endIndex = startIndex + pageSize.value;
+        const newMessages = filteredMessages.slice(startIndex, endIndex);
+
+        if (reset) {
+            notifications.value = newMessages;
+            currentPage.value = 1;
+        } else {
+            notifications.value.push(...newMessages);
+            currentPage.value++;
+        }
+
+        hasMore.value = endIndex < filteredMessages.length;
+        isLoading.value = false;
+    }, 500);
+};
+
+// 获取过滤后的消息
+const getFilteredMessages = () => {
+    return allMessages.value.filter(notification => {
+        const categoryMatch = activeTab.value === 'all' || notification.type === activeTab.value;
+        return categoryMatch;
+    });
+};
+
+// 滚动加载更多
+const loadMore = () => {
+    if (hasMore.value && !isLoading.value) {
+        loadMessages();
+    }
+};
+
+// 重置并加载
+const resetAndLoad = () => {
+    notifications.value = [];
+    loadMessages(true);
+};
 
 // 计算属性
 const unreadCount = computed(() => {
-    return notifications.value.filter(n => !n.read).length;
+    return allMessages.value.filter(n => !n.read).length;
 });
 
 const filteredNotifications = computed(() => {
@@ -607,9 +669,51 @@ const filteredNotifications = computed(() => {
     return notifications.value.filter(n => n.type === activeTab.value);
 });
 
+// 按时间分组的消息
+const groupedNotifications = computed(() => {
+    const groups = {};
+    const now = new Date();
+
+    filteredNotifications.value.forEach(notification => {
+        const messageTime = new Date(notification.time);
+        let groupKey;
+
+        const diffDays = Math.floor((now - messageTime) / (1000 * 60 * 60 * 24));
+
+        if (diffDays === 0) {
+            groupKey = '今天';
+        } else if (diffDays === 1) {
+            groupKey = '昨天';
+        } else if (diffDays <= 7) {
+            groupKey = `${diffDays}天前`;
+        } else if (diffDays <= 30) {
+            groupKey = `${Math.floor(diffDays / 7)}周前`;
+        } else {
+            groupKey = `${Math.floor(diffDays / 30)}个月前`;
+        }
+
+        if (!groups[groupKey]) {
+            groups[groupKey] = [];
+        }
+        groups[groupKey].push(notification);
+    });
+
+    return groups;
+});
+
+// 统计信息
+const messageStats = computed(() => {
+    return {
+        total: allMessages.value.length,
+        unread: allMessages.value.filter(n => !n.read).length,
+        loaded: notifications.value.length,
+        hasMore: hasMore.value
+    };
+});
+
 // 全部消息的搜索和筛选
 const allFilteredMessages = computed(() => {
-    let filtered = notifications.value;
+    let filtered = allMessages.value;
 
     // 搜索关键词筛选
     if (searchKeyword.value) {
@@ -638,6 +742,7 @@ const allFilteredMessages = computed(() => {
 // 方法
 const switchTab = (tabKey) => {
     activeTab.value = tabKey;
+    resetAndLoad(); // 切换标签时重新加载消息
 };
 
 const getCurrentTabName = () => {
@@ -649,7 +754,7 @@ const getUnreadCountByType = (type) => {
     if (type === 'all') {
         return unreadCount.value;
     }
-    return notifications.value.filter(n => n.type === type && !n.read).length;
+    return allMessages.value.filter(n => n.type === type && !n.read).length;
 };
 
 const getIconClass = (type) => {
@@ -851,6 +956,11 @@ const resetSettings = () => {
     };
     ElMessage.info('设置已重置为默认值');
 };
+
+// 组件初始化
+onMounted(() => {
+    loadMessages(true); // 初始加载第一页数据
+});
 </script>
 
 <style scoped>
@@ -926,6 +1036,134 @@ const resetSettings = () => {
     background: #f9fafb;
     border-color: #9ca3af;
     color: #374151;
+}
+
+/* 统计信息样式 */
+.message-stats {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    padding: 12px 20px;
+    background: #f8fafc;
+    border-bottom: 1px solid #f0f0f0;
+    font-size: 0.85rem;
+}
+
+.stats-item {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+}
+
+.stats-label {
+    color: #6b7280;
+    font-weight: 500;
+}
+
+.stats-value {
+    color: #374151;
+    font-weight: 600;
+}
+
+.stats-value.unread-count {
+    color: #ef4444;
+    background: #fef2f2;
+    padding: 2px 6px;
+    border-radius: 4px;
+    font-size: 0.8rem;
+}
+
+/* 消息分组样式 */
+.message-group {
+    margin-bottom: 16px;
+}
+
+.group-header {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 8px 20px 4px 20px;
+    margin-bottom: 8px;
+    position: sticky;
+    top: 0;
+    background: rgba(255, 255, 255, 0.95);
+    backdrop-filter: blur(10px);
+    z-index: 2;
+}
+
+.group-title {
+    font-size: 0.85rem;
+    font-weight: 600;
+    color: #374151;
+}
+
+.group-count {
+    font-size: 0.75rem;
+    color: #6b7280;
+    background: #f3f4f6;
+    padding: 2px 6px;
+    border-radius: 4px;
+}
+
+/* 加载更多按钮样式 */
+.load-more-container {
+    display: flex;
+    justify-content: center;
+    padding: 16px 20px;
+    border-top: 1px solid #f0f0f0;
+}
+
+.load-more-btn {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    padding: 8px 16px;
+    background: #f8fafc;
+    border: 1px solid #e2e8f0;
+    border-radius: 8px;
+    color: #374151;
+    font-size: 0.85rem;
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+.load-more-btn:hover {
+    background: #f1f5f9;
+    border-color: #cbd5e1;
+    transform: translateY(-1px);
+}
+
+/* 加载状态样式 */
+.loading-container {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    padding: 16px 20px;
+    color: #6b7280;
+}
+
+.loading-spinner {
+    width: 16px;
+    height: 16px;
+    border: 2px solid #f3f4f6;
+    border-top: 2px solid #3b82f6;
+    border-radius: 50%;
+    animation: spin 1s linear infinite;
+}
+
+.loading-text {
+    font-size: 0.85rem;
+}
+
+@keyframes spin {
+    0% {
+        transform: rotate(0deg);
+    }
+
+    100% {
+        transform: rotate(360deg);
+    }
 }
 
 /* 消息分类选项卡 */
@@ -2130,6 +2368,65 @@ const resetSettings = () => {
         padding: 2px 6px !important;
     }
 
+    /* 移动端统计信息优化 */
+    .message-stats {
+        padding: 8px 16px !important;
+        gap: 12px !important;
+        font-size: 0.8rem !important;
+    }
+
+    .stats-label {
+        font-size: 0.75rem !important;
+    }
+
+    .stats-value {
+        font-size: 0.8rem !important;
+    }
+
+    .stats-value.unread-count {
+        font-size: 0.75rem !important;
+        padding: 1px 4px !important;
+    }
+
+    /* 移动端分组样式优化 */
+    .group-header {
+        padding: 6px 16px 4px 16px !important;
+        margin-bottom: 6px !important;
+    }
+
+    .group-title {
+        font-size: 0.8rem !important;
+    }
+
+    .group-count {
+        font-size: 0.7rem !important;
+        padding: 1px 4px !important;
+    }
+
+    /* 移动端加载更多优化 */
+    .load-more-container {
+        padding: 12px 16px !important;
+    }
+
+    .load-more-btn {
+        padding: 6px 12px !important;
+        font-size: 0.8rem !important;
+    }
+
+    /* 移动端加载状态优化 */
+    .loading-container {
+        padding: 12px 16px !important;
+    }
+
+    .loading-spinner {
+        width: 14px !important;
+        height: 14px !important;
+    }
+
+    .loading-text {
+        font-size: 0.8rem !important;
+    }
+
     /* 移动端选项卡优化 */
     .message-tabs {
         padding: 0 12px !important;
@@ -2593,6 +2890,69 @@ const resetSettings = () => {
         font-size: 0.65rem !important;
         padding: 1px 4px !important;
         border-color: #e2e8f0 !important;
+    }
+
+    /* 侧边栏统计信息优化 */
+    .sidebar-container .message-stats {
+        padding: 6px 12px !important;
+        gap: 8px !important;
+        font-size: 0.75rem !important;
+        background: #f8fafc !important;
+        border-radius: 6px !important;
+        margin: 0 6px 6px 6px !important;
+        border: 1px solid #e2e8f0 !important;
+    }
+
+    .sidebar-container .stats-label {
+        font-size: 0.7rem !important;
+    }
+
+    .sidebar-container .stats-value {
+        font-size: 0.75rem !important;
+    }
+
+    .sidebar-container .stats-value.unread-count {
+        font-size: 0.7rem !important;
+        padding: 1px 3px !important;
+    }
+
+    /* 侧边栏分组样式优化 */
+    .sidebar-container .group-header {
+        padding: 4px 8px 2px 8px !important;
+        margin-bottom: 4px !important;
+    }
+
+    .sidebar-container .group-title {
+        font-size: 0.75rem !important;
+    }
+
+    .sidebar-container .group-count {
+        font-size: 0.65rem !important;
+        padding: 1px 3px !important;
+    }
+
+    /* 侧边栏加载更多优化 */
+    .sidebar-container .load-more-container {
+        padding: 8px 8px !important;
+    }
+
+    .sidebar-container .load-more-btn {
+        padding: 4px 8px !important;
+        font-size: 0.7rem !important;
+    }
+
+    /* 侧边栏加载状态优化 */
+    .sidebar-container .loading-container {
+        padding: 8px 8px !important;
+    }
+
+    .sidebar-container .loading-spinner {
+        width: 12px !important;
+        height: 12px !important;
+    }
+
+    .sidebar-container .loading-text {
+        font-size: 0.7rem !important;
     }
 
     .sidebar-container .message-tabs {

@@ -388,7 +388,7 @@
                                     <div class="account-balance">
                                         <div class="balance-amount points-balance">
                                             <span class="amount">{{ (userStore.smartPointsBalance || 0).toFixed(0)
-                                                }}</span>
+                                            }}</span>
                                             <span class="currency">智点</span>
                                         </div>
                                         <div class="balance-actions">
@@ -469,24 +469,38 @@
                                 <div class="notification-settings">
                                     <div class="notification-item">
                                         <div class="notification-info">
-                                            <h4>价格提醒</h4>
-                                            <p>股票价格达到设定值时通知</p>
+                                            <h4>市场动态推送</h4>
+                                            <p>股价变动、板块异动、指数波动等</p>
                                         </div>
-                                        <el-switch v-model="notificationSettings.priceAlert" />
+                                        <el-switch v-model="notificationSettings.marketAlert" />
                                     </div>
                                     <div class="notification-item">
                                         <div class="notification-info">
-                                            <h4>交易提醒</h4>
-                                            <p>买卖交易完成时通知</p>
-                                        </div>
-                                        <el-switch v-model="notificationSettings.tradeAlert" />
-                                    </div>
-                                    <div class="notification-item">
-                                        <div class="notification-info">
-                                            <h4>市场资讯</h4>
-                                            <p>重要市场消息推送</p>
+                                            <h4>财经资讯推送</h4>
+                                            <p>政策新闻、公司公告、行业分析等</p>
                                         </div>
                                         <el-switch v-model="notificationSettings.newsAlert" />
+                                    </div>
+                                    <div class="notification-item">
+                                        <div class="notification-info">
+                                            <h4>风险提醒推送</h4>
+                                            <p>价格预警、风险评估、止损提醒等</p>
+                                        </div>
+                                        <el-switch v-model="notificationSettings.riskAlert" />
+                                    </div>
+                                    <div class="notification-item">
+                                        <div class="notification-info">
+                                            <h4>系统通知推送</h4>
+                                            <p>系统更新、设置变更、功能通知等</p>
+                                        </div>
+                                        <el-switch v-model="notificationSettings.systemAlert" />
+                                    </div>
+                                    <div class="notification-item">
+                                        <div class="notification-info">
+                                            <h4>交易记录推送</h4>
+                                            <p>买卖记录、委托状态、资金变动等</p>
+                                        </div>
+                                        <el-switch v-model="notificationSettings.tradeAlert" />
                                     </div>
                                 </div>
                             </div>
@@ -842,7 +856,7 @@
                             <div class="summary-row">
                                 <span>充值后余额</span>
                                 <span class="amount">¥{{ ((userStore.balance || 0) + getFinalAmount()).toFixed(2)
-                                    }}</span>
+                                }}</span>
                             </div>
                         </div>
                     </div>
@@ -923,7 +937,7 @@
                             <span>购买后余额：</span>
                             <span class="amount">{{ ((userStore.smartPointsBalance || 0) +
                                 getSmartPointsFinalAmount()).toFixed(0)
-                            }}智点</span>
+                                }}智点</span>
                         </div>
                     </div>
                 </div>
@@ -958,7 +972,7 @@
                             <div class="balance-row">
                                 <span class="balance-label">当前智点</span>
                                 <span class="balance-value">{{ (userStore.smartPointsBalance || 0).toFixed(0)
-                                    }}智点</span>
+                                }}智点</span>
                             </div>
                             <div class="balance-row">
                                 <span class="balance-label">账户余额</span>
@@ -1047,31 +1061,23 @@
 
                     <!-- 内容 -->
                     <div class="mobile-settings-content">
+                        <!-- 消息推送开关 -->
                         <div class="mobile-notification-section">
+                            <div class="mobile-section-title">消息推送开关</div>
                             <div class="mobile-notification-item">
                                 <div class="notification-info">
-                                    <div class="notification-title">价格提醒</div>
-                                    <div class="notification-desc">股票价格变动通知</div>
+                                    <div class="notification-title">市场动态推送</div>
+                                    <div class="notification-desc">股价变动、板块异动、指数波动等</div>
                                 </div>
-                                <div class="notification-switch" :class="{ active: notificationSettings.priceAlert }"
-                                    @click="notificationSettings.priceAlert = !notificationSettings.priceAlert">
+                                <div class="notification-switch" :class="{ active: notificationSettings.marketAlert }"
+                                    @click="notificationSettings.marketAlert = !notificationSettings.marketAlert">
                                     <div class="switch-handle"></div>
                                 </div>
                             </div>
                             <div class="mobile-notification-item">
                                 <div class="notification-info">
-                                    <div class="notification-title">交易提醒</div>
-                                    <div class="notification-desc">买入卖出交易通知</div>
-                                </div>
-                                <div class="notification-switch" :class="{ active: notificationSettings.tradeAlert }"
-                                    @click="notificationSettings.tradeAlert = !notificationSettings.tradeAlert">
-                                    <div class="switch-handle"></div>
-                                </div>
-                            </div>
-                            <div class="mobile-notification-item">
-                                <div class="notification-info">
-                                    <div class="notification-title">新闻推送</div>
-                                    <div class="notification-desc">相关财经新闻推送</div>
+                                    <div class="notification-title">财经资讯推送</div>
+                                    <div class="notification-desc">政策新闻、公司公告、行业分析等</div>
                                 </div>
                                 <div class="notification-switch" :class="{ active: notificationSettings.newsAlert }"
                                     @click="notificationSettings.newsAlert = !notificationSettings.newsAlert">
@@ -1080,12 +1086,81 @@
                             </div>
                             <div class="mobile-notification-item">
                                 <div class="notification-info">
-                                    <div class="notification-title">系统通知</div>
-                                    <div class="notification-desc">系统维护、更新通知</div>
+                                    <div class="notification-title">风险提醒推送</div>
+                                    <div class="notification-desc">价格预警、风险评估、止损提醒等</div>
+                                </div>
+                                <div class="notification-switch" :class="{ active: notificationSettings.riskAlert }"
+                                    @click="notificationSettings.riskAlert = !notificationSettings.riskAlert">
+                                    <div class="switch-handle"></div>
+                                </div>
+                            </div>
+                            <div class="mobile-notification-item">
+                                <div class="notification-info">
+                                    <div class="notification-title">系统通知推送</div>
+                                    <div class="notification-desc">系统更新、设置变更、功能通知等</div>
                                 </div>
                                 <div class="notification-switch" :class="{ active: notificationSettings.systemAlert }"
                                     @click="notificationSettings.systemAlert = !notificationSettings.systemAlert">
                                     <div class="switch-handle"></div>
+                                </div>
+                            </div>
+                            <div class="mobile-notification-item">
+                                <div class="notification-info">
+                                    <div class="notification-title">交易记录推送</div>
+                                    <div class="notification-desc">买卖记录、委托状态、资金变动等</div>
+                                </div>
+                                <div class="notification-switch" :class="{ active: notificationSettings.tradeAlert }"
+                                    @click="notificationSettings.tradeAlert = !notificationSettings.tradeAlert">
+                                    <div class="switch-handle"></div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- 推送时间设置 -->
+                        <div class="mobile-notification-section">
+                            <div class="mobile-section-title">推送时间设置</div>
+                            <div class="mobile-time-setting">
+                                <div class="mobile-time-item">
+                                    <label class="mobile-time-label">开始时间</label>
+                                    <input type="time" v-model="notificationSettings.startTime"
+                                        class="mobile-time-input" />
+                                </div>
+                                <div class="mobile-time-item">
+                                    <label class="mobile-time-label">结束时间</label>
+                                    <input type="time" v-model="notificationSettings.endTime"
+                                        class="mobile-time-input" />
+                                </div>
+                            </div>
+                            <div class="mobile-notification-item">
+                                <div class="notification-info">
+                                    <div class="notification-title">免打扰模式</div>
+                                    <div class="notification-desc">在指定时间段内不接收推送通知</div>
+                                </div>
+                                <div class="notification-switch" :class="{ active: notificationSettings.doNotDisturb }"
+                                    @click="notificationSettings.doNotDisturb = !notificationSettings.doNotDisturb">
+                                    <div class="switch-handle"></div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- 推送频率设置 -->
+                        <div class="mobile-notification-section">
+                            <div class="mobile-section-title">推送频率设置</div>
+                            <div class="mobile-frequency-setting">
+                                <div class="mobile-frequency-item">
+                                    <input type="radio" id="mobile-realtime" value="realtime"
+                                        v-model="notificationSettings.frequency" />
+                                    <label for="mobile-realtime" class="mobile-frequency-label">实时推送</label>
+                                </div>
+                                <div class="mobile-frequency-item">
+                                    <input type="radio" id="mobile-hourly" value="hourly"
+                                        v-model="notificationSettings.frequency" />
+                                    <label for="mobile-hourly" class="mobile-frequency-label">每小时汇总</label>
+                                </div>
+                                <div class="mobile-frequency-item">
+                                    <input type="radio" id="mobile-daily" value="daily"
+                                        v-model="notificationSettings.frequency" />
+                                    <label for="mobile-daily" class="mobile-frequency-label">每日汇总</label>
                                 </div>
                             </div>
                         </div>
@@ -1331,10 +1406,15 @@ const smartPointsAmounts = [10, 50, 100, 200, 500, 1000];
 
 // 通知设置
 const notificationSettings = reactive({
-    priceAlert: true,
-    tradeAlert: true,
-    newsAlert: false,
-    systemAlert: true
+    marketAlert: true,      // 市场动态推送
+    newsAlert: true,        // 财经资讯推送
+    riskAlert: true,        // 风险提醒推送
+    systemAlert: true,      // 系统通知推送
+    tradeAlert: true,       // 交易记录推送
+    startTime: '09:00',     // 开始时间
+    endTime: '21:00',       // 结束时间
+    doNotDisturb: false,    // 免打扰模式
+    frequency: 'realtime'   // 推送频率：realtime/hourly/daily
 });
 
 // 编辑表单
@@ -1554,6 +1634,20 @@ const getPortfolioValue = () => {
 
 // 保存通知设置
 const saveNotificationSettings = () => {
+    // 这里可以调用API保存设置到后端
+    console.log('保存通知设置:', notificationSettings);
+
+    // 验证时间设置
+    if (notificationSettings.startTime && notificationSettings.endTime) {
+        const startTime = new Date(`2024-01-01 ${notificationSettings.startTime}`);
+        const endTime = new Date(`2024-01-01 ${notificationSettings.endTime}`);
+
+        if (startTime >= endTime) {
+            ElMessage.warning('开始时间不能晚于或等于结束时间');
+            return;
+        }
+    }
+
     ElMessage.success('通知设置保存成功');
     showNotificationSettings.value = false;
 };
@@ -3942,13 +4036,27 @@ onMounted(() => {
 /* 通知设置样式 */
 .mobile-notification-section {
     padding: 20px;
+    border-bottom: 1px solid #f3f4f6;
+}
+
+.mobile-notification-section:last-child {
+    border-bottom: none;
+}
+
+.mobile-section-title {
+    font-size: 0.95rem;
+    font-weight: 600;
+    color: #18181b;
+    margin-bottom: 12px;
+    padding-bottom: 6px;
+    border-bottom: 1px solid #e5e7eb;
 }
 
 .mobile-notification-item {
     display: flex;
     align-items: center;
     justify-content: space-between;
-    padding: 16px 0;
+    padding: 14px 0;
     border-bottom: 1px solid #f3f4f6;
 }
 
@@ -3961,34 +4069,35 @@ onMounted(() => {
 }
 
 .notification-title {
-    font-size: 1rem;
+    font-size: 0.9rem;
     font-weight: 500;
     color: #18181b;
-    margin-bottom: 4px;
+    margin-bottom: 3px;
 }
 
 .notification-desc {
-    font-size: 0.875rem;
+    font-size: 0.8rem;
     color: #6b7280;
+    line-height: 1.3;
 }
 
 .notification-switch {
-    width: 50px;
-    height: 30px;
+    width: 46px;
+    height: 26px;
     background: #d1d5db;
-    border-radius: 15px;
+    border-radius: 13px;
     position: relative;
     cursor: pointer;
     transition: all 0.3s ease;
 }
 
 .notification-switch.active {
-    background: #3b82f6;
+    background: #18181b;
 }
 
 .switch-handle {
-    width: 26px;
-    height: 26px;
+    width: 22px;
+    height: 22px;
     background: white;
     border-radius: 50%;
     position: absolute;
@@ -4000,6 +4109,73 @@ onMounted(() => {
 
 .notification-switch.active .switch-handle {
     transform: translateX(20px);
+}
+
+/* 时间设置样式 */
+.mobile-time-setting {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    margin-bottom: 16px;
+}
+
+.mobile-time-item {
+    width: 100%;
+}
+
+.mobile-time-label {
+    display: block;
+    font-size: 0.8rem;
+    font-weight: 500;
+    color: #18181b;
+    margin-bottom: 6px;
+}
+
+.mobile-time-input {
+    width: 100%;
+    height: 40px;
+    padding: 0 12px;
+    border: 1px solid #d1d5db;
+    border-radius: 6px;
+    font-size: 0.9rem;
+    color: #18181b;
+    background: white;
+    transition: all 0.2s ease;
+    box-sizing: border-box;
+}
+
+.mobile-time-input:focus {
+    outline: none;
+    border-color: #18181b;
+    box-shadow: 0 0 0 2px rgba(24, 24, 27, 0.1);
+}
+
+/* 频率设置样式 */
+.mobile-frequency-setting {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+
+.mobile-frequency-item {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 10px 0;
+}
+
+.mobile-frequency-item input[type="radio"] {
+    width: 18px;
+    height: 18px;
+    margin: 0;
+    accent-color: #18181b;
+}
+
+.mobile-frequency-label {
+    font-size: 0.9rem;
+    color: #18181b;
+    font-weight: 500;
+    cursor: pointer;
 }
 
 /* 安全设置样式 */

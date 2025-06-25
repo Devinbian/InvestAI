@@ -2,65 +2,15 @@ import { defineStore } from "pinia";
 
 export const useUserStore = defineStore("user", {
   state: () => ({
-    token: localStorage.getItem("token") || "test_token_for_demo",
-    userInfo: JSON.parse(
-      localStorage.getItem("userInfo") ||
-        JSON.stringify({
-          nickname: "测试用户",
-          email: "test@example.com",
-        }),
-    ),
-    isLoggedIn: !!localStorage.getItem("token") || true, // 临时设为true用于演示
-    watchlist: JSON.parse(
-      localStorage.getItem("watchlist") ||
-        JSON.stringify([
-          {
-            code: "000001",
-            name: "平安银行",
-            price: "12.45",
-            change: "+0.23",
-            changePercent: "+1.88%",
-            addedAt: new Date().toISOString(),
-          },
-          {
-            code: "600519",
-            name: "贵州茅台",
-            price: "1663.87",
-            change: "-12.5",
-            changePercent: "-0.74%",
-            addedAt: new Date().toISOString(),
-          },
-        ]),
-    ), // 自选股列表，添加默认测试数据
-    portfolio: JSON.parse(
-      localStorage.getItem("portfolio") ||
-        JSON.stringify([
-          {
-            code: "000001",
-            name: "平安银行",
-            price: "12.45",
-            currentPrice: 12.68,
-            quantity: 1000,
-            avgPrice: 12.2,
-            buyTime: "2024-01-15T10:30:00.000Z",
-            lastBuyTime: "2024-01-15T10:30:00.000Z",
-          },
-          {
-            code: "000858",
-            name: "五粮液",
-            price: "52.30",
-            currentPrice: 52.3,
-            quantity: 200,
-            avgPrice: 51.8,
-            buyTime: "2024-01-10T14:20:00.000Z",
-            lastBuyTime: "2024-01-10T14:20:00.000Z",
-          },
-        ]),
-    ), // 持仓列表，添加默认测试数据
-    balance: parseFloat(localStorage.getItem("balance") || "100000"), // 股票交易账户余额，默认10万
+    token: localStorage.getItem("token") || "",
+    userInfo: JSON.parse(localStorage.getItem("userInfo") || "{}"),
+    isLoggedIn: !!localStorage.getItem("token"), // 根据token判断登录状态
+    watchlist: JSON.parse(localStorage.getItem("watchlist") || "[]"), // 自选股列表
+    portfolio: JSON.parse(localStorage.getItem("portfolio") || "[]"), // 持仓列表
+    balance: parseFloat(localStorage.getItem("balance") || "0"), // 股票交易账户余额
     smartPointsBalance: parseFloat(
       localStorage.getItem("smartPointsBalance") || "0",
-    ), // 智点账户余额，默认0
+    ), // 智点账户余额
 
     // 记录中心数据
     quantAnalysisReports: JSON.parse(
@@ -110,7 +60,7 @@ export const useUserStore = defineStore("user", {
       this.isLoggedIn = false;
       this.watchlist = [];
       this.portfolio = [];
-      this.balance = 100000;
+      this.balance = 0;
       this.smartPointsBalance = 0;
       this.quantAnalysisReports = [];
       this.smartPointsTransactions = [];

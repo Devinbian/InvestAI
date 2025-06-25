@@ -184,7 +184,7 @@ const showIconPicker = ref(null);
 const defaultShortcuts = ref([
     {
         id: 'smart_review',
-        icon: '🧠',
+        icon: '📊',
         title: '智能复盘',
         shortTitle: '复盘',
         description: '智能分析市场表现和投资策略',
@@ -202,7 +202,7 @@ const defaultShortcuts = ref([
     },
     {
         id: 'smart_recommendation',
-        icon: '🎯',
+        icon: '📈',
         title: '智能荐股',
         shortTitle: '荐股',
         description: '基于AI算法推荐优质股票',
@@ -211,7 +211,7 @@ const defaultShortcuts = ref([
     },
     {
         id: 'news_update',
-        icon: '📰',
+        icon: '📄',
         title: '资讯推送',
         shortTitle: '资讯',
         description: '获取最新市场资讯和重要公告',
@@ -220,7 +220,7 @@ const defaultShortcuts = ref([
     },
     {
         id: 'asset_analysis',
-        icon: '💰',
+        icon: '💼',
         title: '我的资产',
         shortTitle: '资产',
         description: '查看投资组合和账户分析',

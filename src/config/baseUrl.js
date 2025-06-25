@@ -11,4 +11,4 @@ const getProductionHeadUrl = () => {
 };
 
 export const headUrl =
-  env === "development" ? "http://192.168.0.206:8080" : getProductionHeadUrl();
+  env === "development" ? "http://192.168.0.208:8080" : getProductionHeadUrl();

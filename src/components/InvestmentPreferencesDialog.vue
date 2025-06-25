@@ -654,6 +654,19 @@ watch(visible, (newValue) => {
     z-index: 11001 !important;
 }
 
+/* 确保投资偏好弹窗在侧边栏唤醒按钮上方显示 */
+:deep(.preferences-dialog) {
+    z-index: 11001 !important;
+}
+
+:deep(.preferences-dialog .el-dialog) {
+    z-index: 11001 !important;
+}
+
+:deep(.preferences-dialog .el-overlay) {
+    z-index: 11000 !important;
+}
+
 /* 移动端logo尺寸优化 */
 @media (max-width: 767px) {
     .logo-image {
@@ -840,7 +853,7 @@ watch(visible, (newValue) => {
     right: 0 !important;
     bottom: 0 !important;
     background: rgba(0, 0, 0, 0.4) !important;
-    z-index: 1000 !important;
+    z-index: 10200 !important;
     display: flex !important;
     align-items: flex-end !important;
     justify-content: center !important;

@@ -175,10 +175,11 @@
 
                             <el-button class="ai-send-btn" type="primary" circle @click="sendMessage"
                                 :disabled="!inputMessage.trim()">
-                                <svg width="20" height="20" viewBox="0 0 24 24" fill="none">
-                                    <line x1="22" y1="2" x2="11" y2="13" stroke="white" stroke-width="2" />
-                                    <polygon points="22,2 15,22 11,13 2,9 22,2" stroke="white" stroke-width="2"
-                                        fill="white" />
+                                <svg width="18" height="18" viewBox="0 0 24 24" fill="none">
+                                    <path d="M22 2L11 13" stroke="currentColor" stroke-width="2" stroke-linecap="round"
+                                        stroke-linejoin="round" />
+                                    <path d="M22 2L15 22L11 13L2 9L22 2Z" stroke="currentColor" stroke-width="2"
+                                        stroke-linecap="round" stroke-linejoin="round" />
                                 </svg>
                             </el-button>
                         </div>
@@ -369,13 +370,13 @@
                                         <div class="asset-amount">
                                             <span class="amount-label">总资产</span>
                                             <span class="amount-value">¥{{ formatCurrency(message.assetData.totalAssets)
-                                            }}</span>
+                                                }}</span>
                                         </div>
                                         <div class="asset-change"
                                             :class="[message.assetData.totalProfitPercent >= 0 ? 'profit' : 'loss']">
                                             <span class="change-icon">{{ message.assetData.totalProfitPercent >= 0 ?
                                                 '📈' : '📉'
-                                            }}</span>
+                                                }}</span>
                                             <span class="change-label">今日盈亏：</span>
                                             <span class="change-text">
                                                 {{ message.assetData.totalProfitPercent >= 0 ? '+' : '' }}¥{{
@@ -401,7 +402,7 @@
                                         <div class="stat-info">
                                             <div class="stat-label">持仓市值</div>
                                             <div class="stat-value">¥{{ formatCurrency(message.assetData.portfolioValue)
-                                            }}
+                                                }}
                                             </div>
                                         </div>
                                     </div>
@@ -604,9 +605,10 @@
                             <el-button class="ai-send-btn" type="primary" circle @click="sendMessage"
                                 :disabled="!inputMessage.trim()">
                                 <svg width="16" height="16" viewBox="0 0 24 24" fill="none">
-                                    <line x1="22" y1="2" x2="11" y2="13" stroke="white" stroke-width="2" />
-                                    <polygon points="22,2 15,22 11,13 2,9 22,2" stroke="white" stroke-width="2"
-                                        fill="white" />
+                                    <path d="M22 2L11 13" stroke="currentColor" stroke-width="2" stroke-linecap="round"
+                                        stroke-linejoin="round" />
+                                    <path d="M22 2L15 22L11 13L2 9L22 2Z" stroke="currentColor" stroke-width="2"
+                                        stroke-linecap="round" stroke-linejoin="round" />
                                 </svg>
                             </el-button>
                         </div>
@@ -774,7 +776,7 @@
                 </div>
                 <div class="guide-actions">
                     <el-button type="primary" size="small" @click="handleGuideAction">{{ guideActionText
-                        }}</el-button>
+                    }}</el-button>
                     <el-button size="small" @click="dismissGuide">稍后</el-button>
                 </div>
             </div>
@@ -812,7 +814,7 @@
                         <div class="summary-item">
                             <span class="summary-label">买入信号</span>
                             <span class="summary-value signal-score">{{ currentQuantAnalysis.buySignalScore
-                            }}/100</span>
+                                }}/100</span>
                         </div>
                         <div class="summary-item">
                             <span class="summary-label">量化评级</span>
@@ -1141,7 +1143,7 @@ const currentExampleGroupIndex = ref(0);
 const defaultShortcuts = ref([
     {
         id: 'smart_review',
-        icon: '🧠',
+        icon: '📊',
         title: '智能复盘',
         shortTitle: '复盘',
         description: '智能分析市场表现和投资策略',
@@ -1171,7 +1173,7 @@ const defaultShortcuts = ref([
     },
     {
         id: 'smart_recommendation',
-        icon: '🎯',
+        icon: '📈',
         title: '智能荐股',
         shortTitle: '荐股',
         description: '基于AI算法推荐优质股票',
@@ -1181,7 +1183,7 @@ const defaultShortcuts = ref([
     },
     {
         id: 'news_update',
-        icon: '📰',
+        icon: '📄',
         title: '资讯推送',
         shortTitle: '资讯',
         description: '获取最新市场资讯和重要公告',
@@ -1191,7 +1193,7 @@ const defaultShortcuts = ref([
     },
     {
         id: 'asset_analysis',
-        icon: '💰',
+        icon: '💼',
         title: '我的资产',
         shortTitle: '资产',
         description: '查看投资组合和账户分析',
@@ -3320,10 +3322,7 @@ onMounted(() => {
         }
     }
 
-    // 初始化测试数据（仅在开发环境）
-    if (userStore.isLoggedIn && userStore.quantAnalysisReports.length === 0) {
-        userStore.generateMockRecords();
-    }
+    // 移除测试数据生成逻辑，现在用户从空白状态开始
 
     // 添加窗口大小变化监听
     window.addEventListener('resize', handleResize);
@@ -4746,42 +4745,26 @@ body.onboarding-mode {
 
 .welcome-section {
     text-align: center;
-    margin-bottom: 40px;
+    margin-bottom: 32px;
 }
 
 .greeting-container {
     display: flex;
     align-items: center;
     justify-content: center;
-    gap: 16px;
-    margin-bottom: 20px;
+    gap: 12px;
+    margin-bottom: 16px;
 }
 
 .greeting-avatar-large {
-    width: 60px;
-    height: 60px;
-    background: linear-gradient(135deg, #3b82f6 0%, #1d4ed8 100%);
+    width: 48px;
+    height: 48px;
+    background: #3b82f6;
     border-radius: 50%;
     display: flex;
     align-items: center;
     justify-content: center;
     color: white;
-    box-shadow: 0 8px 24px rgba(59, 130, 246, 0.3);
-    animation: gentle-pulse 3s ease-in-out infinite;
-}
-
-@keyframes gentle-pulse {
-
-    0%,
-    100% {
-        transform: scale(1);
-        box-shadow: 0 8px 24px rgba(59, 130, 246, 0.3);
-    }
-
-    50% {
-        transform: scale(1.05);
-        box-shadow: 0 12px 32px rgba(59, 130, 246, 0.4);
-    }
 }
 
 .greeting-message {
@@ -4792,64 +4775,61 @@ body.onboarding-mode {
 }
 
 .modern-title {
-    font-size: 2.8rem;
-    font-weight: 800;
-    color: #18181b;
+    font-size: 2.5rem;
+    font-weight: 600;
+    color: #1f2937;
     margin: 0;
-    letter-spacing: -1px;
-    line-height: 1.2;
+    line-height: 1.3;
 }
 
 .modern-subtitle {
     font-size: 1rem;
     color: #6b7280;
-    margin: 4px 0 0 0;
+    margin: 2px 0 0 0;
     font-weight: 400;
 }
 
 .modern-desc {
     font-size: 1.1rem;
     color: #6b7280;
-    margin-bottom: 24px;
+    margin-bottom: 20px;
     text-align: center;
-    line-height: 1.6;
+    line-height: 1.5;
 }
 
-/* 快捷示例标签 */
+/* 简化快捷示例标签 */
 .quick-examples {
-    margin-top: 16px;
+    margin-top: 12px;
 }
 
 .examples-content {
     display: flex;
     flex-wrap: wrap;
-    gap: 8px;
+    gap: 6px;
     justify-content: center;
-    margin-bottom: 16px;
+    margin-bottom: 12px;
 }
 
 .examples-control {
     display: flex;
     justify-content: center;
-    margin-top: 8px;
+    margin-top: 6px;
 }
 
 .control-container {
     display: flex;
     align-items: center;
-    gap: 12px;
-    padding: 8px 16px;
-    background: rgba(248, 250, 252, 0.8);
-    border: 1px solid rgba(226, 232, 240, 0.6);
-    border-radius: 20px;
-    backdrop-filter: blur(4px);
+    gap: 8px;
+    padding: 6px 12px;
+    background: #f8fafc;
+    border: 1px solid #e2e8f0;
+    border-radius: 16px;
     transition: all 0.2s ease;
 }
 
 .control-container:hover {
-    background: rgba(248, 250, 252, 0.9);
-    border-color: rgba(59, 130, 246, 0.2);
-    box-shadow: 0 2px 8px rgba(59, 130, 246, 0.1);
+    background: #f1f5f9;
+    border-color: #cbd5e1;
 }
 
 .examples-label {
@@ -4862,27 +4842,26 @@ body.onboarding-mode {
 .control-group {
     display: flex;
     align-items: center;
-    gap: 8px;
+    gap: 6px;
 }
 
 .examples-indicator {
     font-size: 0.75rem;
     color: #475569;
-    font-weight: 600;
-    padding: 2px 8px;
-    background: rgba(59, 130, 246, 0.1);
-    border-radius: 10px;
-    border: 1px solid rgba(59, 130, 246, 0.2);
+    font-weight: 500;
+    padding: 1px 6px;
+    background: #e2e8f0;
+    border-radius: 8px;
 }
 
 .refresh-examples-btn {
-    background: rgba(59, 130, 246, 0.1);
-    border: 1px solid rgba(59, 130, 246, 0.2);
-    color: #1d4ed8;
+    background: #f1f5f9;
+    border: 1px solid #e2e8f0;
+    color: #475569;
     transition: all 0.2s ease;
     border-radius: 50%;
-    width: 28px;
-    height: 28px;
+    width: 24px;
+    height: 24px;
     padding: 0;
     display: flex;
     align-items: center;
@@ -4890,31 +4869,30 @@ body.onboarding-mode {
 }
 
 .refresh-examples-btn:hover {
-    background: rgba(59, 130, 246, 0.2);
-    border-color: rgba(59, 130, 246, 0.4);
-    transform: rotate(180deg) scale(1.1);
-    box-shadow: 0 2px 6px rgba(59, 130, 246, 0.3);
+    background: #e2e8f0;
+    border-color: #cbd5e1;
+    transform: rotate(90deg);
 }
 
 .example-tag {
     display: inline-flex;
     align-items: center;
     padding: 6px 12px;
-    background: rgba(59, 130, 246, 0.1);
-    color: #1d4ed8;
-    border: 1px solid rgba(59, 130, 246, 0.2);
-    border-radius: 16px;
+    background: #f8fafc;
+    color: #475569;
+    border: 1px solid #e2e8f0;
+    border-radius: 12px;
     font-size: 0.875rem;
-    font-weight: 500;
+    font-weight: 400;
     cursor: pointer;
     transition: all 0.2s ease;
     white-space: nowrap;
 }
 
 .example-tag:hover {
-    background: rgba(59, 130, 246, 0.15);
-    border-color: rgba(59, 130, 246, 0.3);
-    transform: translateY(-1px);
+    background: #f1f5f9;
+    border-color: #cbd5e1;
+    color: #374151;
 }
 
 /* 响应式设计 */
@@ -4936,21 +4914,21 @@ body.onboarding-mode {
     }
 
     .modern-title {
-        font-size: 2rem;
+        font-size: 1.8rem;
     }
 
     .modern-subtitle {
-        font-size: 0.9rem;
+        font-size: 0.85rem;
         text-align: center;
     }
 
     .examples-content {
-        gap: 6px;
+        gap: 4px;
     }
 
     .example-tag {
-        font-size: 0.8rem;
-        padding: 5px 10px;
+        font-size: 0.75rem;
+        padding: 4px 8px;
     }
 
     .examples-indicator {
@@ -4958,8 +4936,8 @@ body.onboarding-mode {
     }
 
     .refresh-examples-btn {
-        width: 28px;
-        height: 28px;
+        width: 24px;
+        height: 24px;
     }
 
     /* 移动端聊天消息字体优化 */
@@ -5057,41 +5035,30 @@ body.onboarding-mode {
 
     /* 移动端欢迎页面字体优化 */
     .modern-title {
-        font-size: 2rem;
-        margin-bottom: 16px;
-        /* 增加标题下方间距 */
-        letter-spacing: -0.5px;
+        font-size: 1.8rem;
+        margin-bottom: 12px;
     }
 
     .modern-desc {
-        font-size: 0.95rem;
-        margin-bottom: 32px;
-        /* 增加描述下方间距 */
-        line-height: 1.6;
-        /* 增加行高，提升可读性 */
+        font-size: 0.9rem;
+        margin-bottom: 24px;
+        line-height: 1.5;
         padding: 0 16px;
     }
 
     /* 移动端欢迎区域间距优化 */
     .welcome-section {
-        margin-bottom: 32px;
-        /* 增加欢迎区域下方间距 */
-        padding-top: 20px;
-        /* 增加欢迎区域上方间距 */
-        padding-left: 20px;
-        padding-right: 20px;
-        /* 给欢迎区域添加左右间距，避免内容贴边 */
-    }
-
-    /* 移动端AI输入卡片间距优化 - 仅适用于非移动端 */
-    .ai-card {
-        margin-top: 24px;
-        /* 增加AI输入卡片上方间距 */
         margin-bottom: 24px;
-        /* 增加AI输入卡片下方间距 */
+        padding-top: 16px;
+        padding-left: 16px;
+        padding-right: 16px;
     }
 
-    /* 移动端覆盖：AI卡片占满全屏 */
+    .ai-card {
+        margin-top: 20px;
+        margin-bottom: 20px;
+    }
+
     @media (max-width: 768px) {
         .ai-card {
             margin: 0 !important;
@@ -5099,28 +5066,23 @@ body.onboarding-mode {
             border-radius: 0 !important;
             width: 100% !important;
             box-sizing: border-box !important;
-            /* 移除左右padding，让AI卡片完全占满屏幕宽度 */
         }
 
-        /* AI输入行添加左右内边距 */
         .ai-input-row {
             padding: 0 16px !important;
         }
 
-        /* AI按钮行添加左右内边距 */
         .ai-buttons-row {
             padding: 0 16px !important;
         }
     }
 
     .quick-examples {
-        margin-top: 16px;
-        /* 增加快捷示例上方间距 */
+        margin-top: 12px;
     }
 
     .examples-content {
-        margin-bottom: 16px;
-        /* 增加示例内容下方间距 */
+        margin-bottom: 12px;
     }
 }
 
@@ -5341,10 +5303,11 @@ body.onboarding-mode {
 /* 互动建议样式 */
 .interaction-suggestions {
     margin-top: 16px;
-    padding: 12px;
-    background: linear-gradient(135deg, #f8fafc 0%, #f1f5f9 100%);
+    padding: 16px;
+    background: #ffffff;
     border-radius: 12px;
-    border: 1px dashed #cbd5e1;
+    border: 1px solid #e5e7eb;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
 }
 
 .suggestion-intro {
@@ -5353,7 +5316,7 @@ body.onboarding-mode {
     gap: 6px;
     margin-bottom: 12px;
     font-size: 0.85rem;
-    color: #475569;
+    color: #6b7280;
 }
 
 .intro-text {
@@ -5370,19 +5333,19 @@ body.onboarding-mode {
     display: flex;
     align-items: center;
     gap: 10px;
-    padding: 8px 12px;
-    background: rgba(255, 255, 255, 0.7);
+    padding: 10px 14px;
+    background: #f9fafb;
     border-radius: 8px;
-    border: 1px solid transparent;
+    border: 1px solid #f3f4f6;
     cursor: pointer;
     transition: all 0.2s ease;
     font-size: 0.85rem;
 }
 
 .suggestion-item:hover {
-    background: rgba(59, 130, 246, 0.08);
-    border-color: rgba(59, 130, 246, 0.2);
-    transform: translateX(4px);
+    background: #f3f4f6;
+    border-color: #e5e7eb;
+    transform: translateX(2px);
 }
 
 .suggestion-icon {
@@ -6968,29 +6931,62 @@ body.onboarding-mode {
     }
 }
 
+/* Element Plus 快捷按钮样式覆盖 */
+:deep(.el-button.chat-shortcut-btn) {
+    display: flex !important;
+    flex-direction: column !important;
+    align-items: center !important;
+    gap: 2px !important;
+    padding: 8px 12px !important;
+    border-radius: 12px !important;
+    background: #ffffff !important;
+    border: 1px solid #e5e7eb !important;
+    color: #6b7280 !important;
+    font-weight: 500 !important;
+    transition: all 0.2s ease !important;
+    min-height: 50px !important;
+    min-width: 60px !important;
+    justify-content: center !important;
+    /* 统一简洁的白色背景设计 */
+}
+
+:deep(.el-button.chat-shortcut-btn:hover) {
+    background: #f9fafb !important;
+    border-color: #d1d5db !important;
+    color: #374151 !important;
+    /* 轻微的悬停效果 */
+}
+
+:deep(.el-button.chat-shortcut-btn:focus) {
+    background: #f9fafb !important;
+    border-color: #d1d5db !important;
+    color: #374151 !important;
+}
+
+/* 兼容性：保留原始类名选择器作为备用 */
 .chat-shortcut-btn {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    gap: 2px;
-    padding: 8px 12px;
-    border-radius: 12px;
-    background: #f8fafc;
-    border: 1px solid #e5e7eb;
-    color: #374151;
-    font-weight: 500;
-    transition: all 0.2s ease;
-    min-height: 50px;
-    min-width: 60px;
-    justify-content: center;
-    /* 移除阴影，实现无浮层设计 */
+    display: flex !important;
+    flex-direction: column !important;
+    align-items: center !important;
+    gap: 2px !important;
+    padding: 8px 12px !important;
+    border-radius: 12px !important;
+    background: #ffffff !important;
+    border: 1px solid #e5e7eb !important;
+    color: #6b7280 !important;
+    font-weight: 500 !important;
+    transition: all 0.2s ease !important;
+    min-height: 50px !important;
+    min-width: 60px !important;
+    justify-content: center !important;
+    /* 统一简洁的白色背景设计 */
 }
 
 .chat-shortcut-btn:hover {
-    background: #f1f5f9;
-    border-color: #cbd5e1;
-    color: #1f2937;
-    /* 移除悬停阴影和位移效果 */
+    background: #f9fafb !important;
+    border-color: #d1d5db !important;
+    color: #374151 !important;
+    /* 轻微的悬停效果 */
 }
 
 .chat-shortcut-btn .btn-icon {
@@ -7111,12 +7107,9 @@ body.onboarding-mode {
     max-width: 900px;
     margin: 0 auto;
     background: #fff;
-    border-radius: 20px;
-    /* 减少圆角 */
-    box-shadow: 0 4px 16px 0 rgba(0, 0, 0, 0.06);
-    /* 减少阴影 */
+    border-radius: 12px;
+    box-shadow: 0 2px 8px 0 rgba(0, 0, 0, 0.04);
     padding: 16px 20px;
-    /* 减少padding */
     display: flex;
     flex-direction: column;
     align-items: stretch;
@@ -7126,8 +7119,7 @@ body.onboarding-mode {
 
 .ai-input-row {
     background: #f8f9fa;
-    border-radius: 16px;
-    box-shadow: 0 1px 4px 0 rgba(0, 0, 0, 0.03);
+    border-radius: 12px;
     padding: 12px 16px;
     display: flex;
     flex-direction: column;
@@ -7262,16 +7254,37 @@ body.onboarding-mode {
     height: 36px;
     min-width: 36px;
     min-height: 36px;
-    /* 减小发送按钮尺寸 */
     display: flex;
     align-items: center;
     justify-content: center;
     padding: 0;
     box-shadow: none;
+    background: #3b82f6 !important;
+    border: none !important;
+    transition: all 0.2s ease;
+}
+
+.ai-send-btn:hover {
+    background: #2563eb !important;
+    transform: scale(1.05);
+    box-shadow: 0 4px 12px rgba(59, 130, 246, 0.3) !important;
+}
+
+.ai-send-btn:active {
+    transform: scale(0.95);
+}
+
+.ai-send-btn:disabled {
+    background: #e5e7eb !important;
+    color: #9ca3af !important;
+    transform: none !important;
+    box-shadow: none !important;
+    cursor: not-allowed;
 }
 
 .ai-send-btn svg {
     display: block;
+    color: white;
 }
 
 .ai-suggestions {
@@ -7289,84 +7302,93 @@ body.onboarding-mode {
     flex-wrap: wrap;
 }
 
+/* Element Plus 按钮样式覆盖 */
+:deep(.el-button.ai-suggestion-btn) {
+    border-radius: 12px !important;
+    background: #f8fafc !important;
+    color: #64748b !important;
+    font-weight: 400 !important;
+    border: 1px solid #e2e8f0 !important;
+    padding: 8px 14px !important;
+    transition: all 0.2s ease !important;
+    font-size: 0.8rem !important;
+    display: flex !important;
+    align-items: center !important;
+    gap: 4px !important;
+    min-width: 100px !important;
+    justify-content: center !important;
+}
+
+:deep(.el-button.ai-suggestion-btn:hover) {
+    background: #f1f5f9 !important;
+    border-color: #cbd5e1 !important;
+    color: #475569 !important;
+}
+
+:deep(.el-button.ai-suggestion-btn:focus) {
+    background: #f9fafb !important;
+    border-color: #d1d5db !important;
+    color: #374151 !important;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1) !important;
+}
+
+:deep(.el-button.ai-suggestion-btn.hot) {
+    background: #f8fafc !important;
+    border-color: #e2e8f0 !important;
+    color: #64748b !important;
+}
+
+:deep(.el-button.ai-suggestion-btn.hot:hover) {
+    background: #f1f5f9 !important;
+    border-color: #cbd5e1 !important;
+    color: #475569 !important;
+}
+
+:deep(.el-button.ai-suggestion-btn.warning) {
+    background: #f8fafc !important;
+    border-color: #e2e8f0 !important;
+    color: #64748b !important;
+}
+
+:deep(.el-button.ai-suggestion-btn.warning:hover) {
+    background: #f1f5f9 !important;
+    border-color: #cbd5e1 !important;
+    color: #475569 !important;
+}
+
+:deep(.el-button.ai-suggestion-btn.quant) {
+    background: #f8fafc !important;
+    border-color: #e2e8f0 !important;
+    color: #64748b !important;
+}
+
+:deep(.el-button.ai-suggestion-btn.quant:hover) {
+    background: #f1f5f9 !important;
+    border-color: #cbd5e1 !important;
+    color: #475569 !important;
+}
+
+/* 兼容性：保留原始类名选择器作为备用 */
 .ai-suggestion-btn {
-    border-radius: 16px;
-    background: #f8fafc;
-    color: #374151;
-    font-weight: 500;
-    border: 1px solid #e5e7eb;
-    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
-    padding: 10px 16px;
-    transition: all 0.2s ease;
-    font-size: 0.875rem;
-    display: flex;
-    align-items: center;
-    gap: 6px;
-    min-width: 120px;
-    justify-content: center;
-    position: relative;
-    overflow: hidden;
+    border-radius: 12px !important;
+    background: #f8fafc !important;
+    color: #64748b !important;
+    font-weight: 400 !important;
+    border: 1px solid #e2e8f0 !important;
+    padding: 8px 14px !important;
+    transition: all 0.2s ease !important;
+    font-size: 0.8rem !important;
+    display: flex !important;
+    align-items: center !important;
+    gap: 4px !important;
+    min-width: 100px !important;
+    justify-content: center !important;
 }
 
 .ai-suggestion-btn:hover {
-    background: #f1f5f9;
-    border-color: #cbd5e1;
-    transform: translateY(-1px);
-    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
-}
-
-.ai-suggestion-btn.hot {
-    background: linear-gradient(135deg, #fef3c7 0%, #fde68a 100%);
-    border-color: #f59e0b;
-    color: #92400e;
-    animation: pulse-glow 2s infinite;
-}
-
-.ai-suggestion-btn.hot:hover {
-    background: linear-gradient(135deg, #fde68a 0%, #fcd34d 100%);
-    border-color: #d97706;
-    color: #78350f;
-}
-
-.ai-suggestion-btn.warning {
-    background: linear-gradient(135deg, #fee2e2 0%, #fecaca 100%);
-    border-color: #f87171;
-    color: #991b1b;
-}
-
-.ai-suggestion-btn.warning:hover {
-    background: linear-gradient(135deg, #fecaca 0%, #fca5a5 100%);
-    border-color: #ef4444;
-    color: #7f1d1d;
-}
-
-.ai-suggestion-btn.quant {
-    background: linear-gradient(135deg, #e0e7ff 0%, #c7d2fe 100%);
-    border-color: #6366f1;
-    color: #3730a3;
-    position: relative;
-    overflow: hidden;
-}
-
-.ai-suggestion-btn.quant::before {
-    content: '';
-    position: absolute;
-    top: 0;
-    left: -100%;
-    width: 100%;
-    height: 100%;
-    background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.4), transparent);
-    transition: left 0.5s ease;
-}
-
-.ai-suggestion-btn.quant:hover::before {
-    left: 100%;
-}
-
-.ai-suggestion-btn.quant:hover {
-    background: linear-gradient(135deg, #c7d2fe 0%, #a5b4fc 100%);
-    border-color: #4f46e5;
-    color: #312e81;
+    background: #f1f5f9 !important;
+    border-color: #cbd5e1 !important;
+    color: #475569 !important;
 }
 
 .btn-icon {
@@ -7375,27 +7397,23 @@ body.onboarding-mode {
     filter: drop-shadow(0 1px 2px rgba(0, 0, 0, 0.1));
 }
 
-/* 低调的自定义按钮样式 - 内联版本 */
+/* 简化的自定义按钮样式 */
 .customize-btn-inline {
     border: none;
-    background: rgba(156, 163, 175, 0.1);
+    background: #f1f5f9;
     border-radius: 50%;
-    width: 36px;
-    height: 36px;
+    width: 32px;
+    height: 32px;
     display: flex;
     align-items: center;
     justify-content: center;
     cursor: pointer;
     transition: all 0.2s ease;
-    opacity: 0.8;
-    margin-left: 8px;
+    margin-left: 6px;
 }
 
 .customize-btn-inline:hover {
-    background: rgba(156, 163, 175, 0.2);
-    opacity: 1;
-    transform: scale(1.05);
-    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+    background: #e2e8f0;
 }
 
 .customize-icon {
@@ -7421,17 +7439,7 @@ body.onboarding-mode {
     color: #374151;
 }
 
-@keyframes pulse-glow {
 
-    0%,
-    100% {
-        box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05), 0 0 0 0 rgba(245, 158, 11, 0.4);
-    }
-
-    50% {
-        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1), 0 0 0 4px rgba(245, 158, 11, 0.2);
-    }
-}
 
 /* 响应式设计 */
 @media (max-width: 768px) {
@@ -7571,11 +7579,20 @@ body.onboarding-mode {
         height: 36px;
         min-width: 36px;
         min-height: 36px;
+        background: #3b82f6 !important;
+        border: none !important;
+    }
+
+    .ai-send-btn:hover {
+        background: #2563eb !important;
+        transform: scale(1.05);
+        box-shadow: 0 4px 12px rgba(59, 130, 246, 0.3) !important;
     }
 
     .ai-send-btn svg {
         width: 16px;
         height: 16px;
+        color: white;
     }
 
 
@@ -8002,11 +8019,20 @@ body.onboarding-mode {
         height: 32px;
         min-width: 32px;
         min-height: 32px;
+        background: #3b82f6 !important;
+        border: none !important;
+    }
+
+    .ai-send-btn:hover {
+        background: #2563eb !important;
+        transform: scale(1.05);
+        box-shadow: 0 4px 12px rgba(59, 130, 246, 0.3) !important;
     }
 
     .ai-send-btn svg {
         width: 14px;
         height: 14px;
+        color: white;
     }
 
     .mobile-shortcuts-container {

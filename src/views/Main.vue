@@ -1499,6 +1499,7 @@ const sendMessage = async () => {
                 method: 'GET', // GET 是默认方法，可省略
                 headers: {
                     'Content-Type': 'text/event-stream', // 设置内容类型为 SSE
+                    'Authorization': `${userStore.token}` // 添加用户令牌
                 },
                 signal: abortController.signal, // 绑定取消信号
 
@@ -2919,6 +2920,7 @@ const continueAnalysis = async (stockInfo, isPaid = false) => {
                 method: 'GET', // GET 是默认方法，可省略
                 headers: {
                     'Content-Type': 'text/event-stream', // 设置内容类型为 SSE
+                    'Authorization': `${userStore.token}` // 添加用户令牌
                 },
                 signal: abortController.signal, // 绑定取消信号
 

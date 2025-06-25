@@ -438,13 +438,13 @@
                                         <div class="asset-amount">
                                             <span class="amount-label">总资产</span>
                                             <span class="amount-value">¥{{ formatCurrency(message.assetData.totalAssets)
-                                            }}</span>
+                                                }}</span>
                                         </div>
                                         <div class="asset-change"
                                             :class="[message.assetData.totalProfitPercent >= 0 ? 'profit' : 'loss']">
                                             <span class="change-icon">{{ message.assetData.totalProfitPercent >= 0 ?
                                                 '📈' : '📉'
-                                            }}</span>
+                                                }}</span>
                                             <span class="change-label">今日盈亏：</span>
                                             <span class="change-text">
                                                 {{ message.assetData.totalProfitPercent >= 0 ? '+' : '' }}¥{{
@@ -470,7 +470,7 @@
                                         <div class="stat-info">
                                             <div class="stat-label">持仓市值</div>
                                             <div class="stat-value">¥{{ formatCurrency(message.assetData.portfolioValue)
-                                            }}
+                                                }}
                                             </div>
                                         </div>
                                     </div>
@@ -844,7 +844,7 @@
                 </div>
                 <div class="guide-actions">
                     <el-button type="primary" size="small" @click="handleGuideAction">{{ guideActionText
-                        }}</el-button>
+                    }}</el-button>
                     <el-button size="small" @click="dismissGuide">稍后</el-button>
                 </div>
             </div>
@@ -882,7 +882,7 @@
                         <div class="summary-item">
                             <span class="summary-label">买入信号</span>
                             <span class="summary-value signal-score">{{ currentQuantAnalysis.buySignalScore
-                            }}/100</span>
+                                }}/100</span>
                         </div>
                         <div class="summary-item">
                             <span class="summary-label">量化评级</span>
@@ -2310,6 +2310,7 @@ const adjustContentForOffset = (offset) => {
     const mainContent = document.querySelector('.main-content');
     const contentWrapper = document.querySelector('.content-wrapper');
     const stockSection = document.querySelector('.stock-section');
+    const welcomeSection = document.querySelector('.welcome-section');
 
     // 为主要内容添加底部padding，避免被上移的AI卡片遮盖
     const paddingOffset = Math.min(offset, 80); // 限制最大padding为80px
@@ -2332,6 +2333,14 @@ const adjustContentForOffset = (offset) => {
         console.log(`调整股票区域底部margin: ${paddingOffset + 10}px`);
     }
 
+    // 移动端特别调整welcome-section的底部间距，确保不会太紧
+    if (welcomeSection && isMobileView.value) {
+        const additionalMargin = Math.min(offset * 0.5, 30); // 额外增加最多30px间距
+        welcomeSection.style.setProperty('margin-bottom', `${50 + additionalMargin}px`, 'important');
+        welcomeSection.style.setProperty('transition', 'margin-bottom 0.3s ease', 'important');
+        console.log(`移动端调整欢迎区域底部margin: ${50 + additionalMargin}px`);
+    }
+
     // 如果找不到特定元素，尝试调整body的padding
     if (!mainContent && !contentWrapper && !stockSection) {
         document.body.style.setProperty('padding-bottom', `${paddingOffset + 30}px`, 'important');
@@ -2344,6 +2353,7 @@ const resetContentPosition = () => {
     const mainContent = document.querySelector('.main-content');
     const contentWrapper = document.querySelector('.content-wrapper');
     const stockSection = document.querySelector('.stock-section');
+    const welcomeSection = document.querySelector('.welcome-section');
 
     if (mainContent) {
         mainContent.style.removeProperty('padding-bottom');
@@ -2353,6 +2363,9 @@ const resetContentPosition = () => {
     }
     if (stockSection) {
         stockSection.style.removeProperty('margin-bottom');
+    }
+    if (welcomeSection) {
+        welcomeSection.style.removeProperty('margin-bottom');
     }
     document.body.style.removeProperty('padding-bottom');
 
@@ -5439,8 +5452,8 @@ body.onboarding-mode {
 
     /* 在非聊天模式下（首页）的位置优化 */
     .main-container:not(.chatting) .floating-history-toggle {
-        bottom: 140px;
-        /* 在首页时上移，避免遮挡AI输入框 */
+        bottom: 100px;
+        /* 在首页时适当位置，避免过于偏上 */
     }
 
     /* 在有键盘弹出时的适配 */
@@ -5454,7 +5467,7 @@ body.onboarding-mode {
         }
 
         .main-container:not(.chatting) .floating-history-toggle {
-            bottom: calc(140px + env(keyboard-inset-height, 0px));
+            bottom: calc(100px + env(keyboard-inset-height, 0px));
         }
     }
 }
@@ -5585,6 +5598,13 @@ body.onboarding-mode {
 .welcome-section {
     text-align: center;
     margin-bottom: 32px;
+}
+
+/* 移动端增加welcome-section和AI卡片之间的间距 */
+@media (max-width: 768px) {
+    .welcome-section {
+        margin-bottom: 40px !important;
+    }
 }
 
 .greeting-container {

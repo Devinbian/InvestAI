@@ -438,13 +438,13 @@
                                         <div class="asset-amount">
                                             <span class="amount-label">总资产</span>
                                             <span class="amount-value">¥{{ formatCurrency(message.assetData.totalAssets)
-                                                }}</span>
+                                            }}</span>
                                         </div>
                                         <div class="asset-change"
                                             :class="[message.assetData.totalProfitPercent >= 0 ? 'profit' : 'loss']">
                                             <span class="change-icon">{{ message.assetData.totalProfitPercent >= 0 ?
                                                 '📈' : '📉'
-                                                }}</span>
+                                            }}</span>
                                             <span class="change-label">今日盈亏：</span>
                                             <span class="change-text">
                                                 {{ message.assetData.totalProfitPercent >= 0 ? '+' : '' }}¥{{
@@ -470,7 +470,7 @@
                                         <div class="stat-info">
                                             <div class="stat-label">持仓市值</div>
                                             <div class="stat-value">¥{{ formatCurrency(message.assetData.portfolioValue)
-                                                }}
+                                            }}
                                             </div>
                                         </div>
                                     </div>
@@ -844,7 +844,7 @@
                 </div>
                 <div class="guide-actions">
                     <el-button type="primary" size="small" @click="handleGuideAction">{{ guideActionText
-                    }}</el-button>
+                        }}</el-button>
                     <el-button size="small" @click="dismissGuide">稍后</el-button>
                 </div>
             </div>
@@ -882,7 +882,7 @@
                         <div class="summary-item">
                             <span class="summary-label">买入信号</span>
                             <span class="summary-value signal-score">{{ currentQuantAnalysis.buySignalScore
-                                }}/100</span>
+                            }}/100</span>
                         </div>
                         <div class="summary-item">
                             <span class="summary-label">量化评级</span>
@@ -2431,6 +2431,49 @@ const resetAllPositions = () => {
     console.log('重置完成：所有位置已恢复到初始状态');
 };
 
+// 确保移动端修复正确应用
+const ensureMobileFixApplied = () => {
+    if (!isMobileView.value || isChatMode.value) return;
+
+    const userAgent = navigator.userAgent.toLowerCase();
+    const isWechat = userAgent.includes('micromessenger');
+    const isIOS = userAgent.includes('iphone') || userAgent.includes('ipad');
+    const isAndroid = userAgent.includes('android');
+    const isChrome = userAgent.includes('chrome') || userAgent.includes('crios');
+    const isSafari = userAgent.includes('safari') && !userAgent.includes('chrome') && !userAgent.includes('crios');
+
+    // 如果是移动端浏览器（非微信），强制应用60px上移
+    const shouldApplyFix = !isWechat && (
+        (isIOS && (isSafari || isChrome)) ||
+        (isAndroid && isChrome)
+    );
+
+    if (shouldApplyFix) {
+        const aiCard = document.querySelector('.ai-card');
+        if (aiCard) {
+            const currentTransform = aiCard.style.transform;
+            if (!currentTransform.includes('translateY(-60px)')) {
+                console.log('检测到移动端浏览器，强制应用60px上移效果');
+                aiCard.style.setProperty('transform', 'translateY(-60px)', 'important');
+                aiCard.style.setProperty('transition', 'transform 0.3s ease', 'important');
+                adjustContentForOffset(60);
+                currentOffset.value = 60;
+                console.log('强制修复已应用');
+            } else {
+                console.log('60px上移效果已正确应用');
+            }
+        }
+    } else {
+        console.log('当前环境无需应用移动端修复:', {
+            isWechat,
+            isIOS,
+            isAndroid,
+            isSafari,
+            isChrome
+        });
+    }
+};
+
 // 移动端聊天框修复 - 使用visualViewport检测实际可视区域
 const fixMobileChatBox = () => {
     console.log('fixMobileChatBox被调用', { isMobileView: isMobileView.value, isChatMode: isChatMode.value });
@@ -2651,8 +2694,15 @@ const fixMobileChatBox = () => {
 
                 // 主界面模式：自动应用60px上移效果（仅限移动端浏览器，微信端除外）
                 if (aiCard && !isChatMode.value) {
-                    // 检测是否有底部工具栏需要修复，但排除微信环境
-                    const needsFixing = !isWechat && (finalBottomOffset > 30 || (isIOS && finalBottomOffset > 0));
+                    // 强化检测逻辑：移动端浏览器环境下更积极地应用修复
+                    const isMobileBrowser = !isWechat && (
+                        (isIOS && (isSafari || isChrome)) || // iOS Safari或Chrome
+                        (isAndroid && isChrome) || // Android Chrome
+                        finalBottomOffset > 30 || // 检测到底部工具栏
+                        (isIOS && finalBottomOffset > 0) // iOS设备有任何偏移
+                    );
+
+                    const needsFixing = isMobileBrowser;
 
                     if (needsFixing) {
                         // 应用60px上移效果（与强制修复按钮相同的效果）
@@ -2665,7 +2715,15 @@ const fixMobileChatBox = () => {
                         // 更新当前偏移量显示
                         currentOffset.value = 60;
 
-                        console.log(`[主界面模式] 自动应用60px上移效果 + 内容调整 (非微信环境)`);
+                        console.log(`[主界面模式] 自动应用60px上移效果 + 内容调整 (移动端浏览器)`);
+                        console.log('触发条件:', {
+                            isIOS,
+                            isSafari,
+                            isChrome,
+                            isAndroid,
+                            finalBottomOffset,
+                            isMobileBrowser
+                        });
                     } else {
                         // 不需要修复时，或微信环境时，确保没有偏移
                         aiCard.style.removeProperty('transform');
@@ -2681,6 +2739,7 @@ const fixMobileChatBox = () => {
 
                     console.log('AI卡片修复状态:', {
                         isWechat,
+                        isMobileBrowser,
                         needsFixing,
                         finalBottomOffset,
                         transform: aiCard.style.transform,
@@ -3896,6 +3955,8 @@ onMounted(() => {
         // 延迟调用修复函数，确保DOM完全渲染
         setTimeout(() => {
             fixMobileChatBox();
+            // 额外检查：确保60px上移效果正确应用
+            ensureMobileFixApplied();
         }, 100);
 
         // 增强的移动端视口监听 - 处理浏览器工具栏显示/隐藏
@@ -5924,8 +5985,8 @@ body.onboarding-mode {
             padding-top: 12px !important;
             padding-left: 0 !important;
             padding-right: 0 !important;
-            padding-bottom: calc(80px + env(safe-area-inset-bottom, 0px)) !important;
-            /* 默认底部间距，会被JavaScript覆盖 */
+            padding-bottom: 20px !important;
+            /* 减少默认底部间距，让JavaScript的transform生效 */
             border-radius: 0 !important;
             width: 100% !important;
             box-sizing: border-box !important;

@@ -426,13 +426,13 @@
                                         <div class="asset-amount">
                                             <span class="amount-label">总资产</span>
                                             <span class="amount-value">¥{{ formatCurrency(message.assetData.totalAssets)
-                                            }}</span>
+                                                }}</span>
                                         </div>
                                         <div class="asset-change"
                                             :class="[message.assetData.totalProfitPercent >= 0 ? 'profit' : 'loss']">
                                             <span class="change-icon">{{ message.assetData.totalProfitPercent >= 0 ?
                                                 '📈' : '📉'
-                                            }}</span>
+                                                }}</span>
                                             <span class="change-label">今日盈亏：</span>
                                             <span class="change-text">
                                                 {{ message.assetData.totalProfitPercent >= 0 ? '+' : '' }}¥{{
@@ -458,7 +458,7 @@
                                         <div class="stat-info">
                                             <div class="stat-label">持仓市值</div>
                                             <div class="stat-value">¥{{ formatCurrency(message.assetData.portfolioValue)
-                                            }}
+                                                }}
                                             </div>
                                         </div>
                                     </div>
@@ -832,7 +832,7 @@
                 </div>
                 <div class="guide-actions">
                     <el-button type="primary" size="small" @click="handleGuideAction">{{ guideActionText
-                        }}</el-button>
+                    }}</el-button>
                     <el-button size="small" @click="dismissGuide">稍后</el-button>
                 </div>
             </div>
@@ -870,7 +870,7 @@
                         <div class="summary-item">
                             <span class="summary-label">买入信号</span>
                             <span class="summary-value signal-score">{{ currentQuantAnalysis.buySignalScore
-                            }}/100</span>
+                                }}/100</span>
                         </div>
                         <div class="summary-item">
                             <span class="summary-label">量化评级</span>
@@ -2137,7 +2137,17 @@ const forceFixChatBox = () => {
 
         // 主界面模式：修复AI卡片
         if (aiCard && !isChatMode.value) {
-            aiCard.style.cssText += `padding-bottom: ${forceOffset}px !important;`;
+            // 使用更强的样式覆盖
+            aiCard.style.setProperty('padding-bottom', `${forceOffset}px`, 'important');
+            aiCard.style.setProperty('margin-bottom', '0px', 'important');
+            aiCard.style.setProperty('box-sizing', 'border-box', 'important');
+
+            console.log('AI卡片强制修复后的样式:', {
+                paddingBottom: aiCard.style.paddingBottom,
+                marginBottom: aiCard.style.marginBottom,
+                computedStyle: window.getComputedStyle(aiCard).paddingBottom
+            });
+
             ElMessage.success(`[主界面模式] 已强制设置AI卡片底部间距为 ${forceOffset}px`);
         }
 
@@ -2367,24 +2377,25 @@ const fixMobileChatBox = () => {
 
                 // 主界面模式：调整AI卡片的底部间距
                 if (aiCard && !isChatMode.value) {
-                    // 应用底部间距到AI卡片
-                    const aiCardStyles = [
-                        'width: 100% !important',
-                        'margin: 0 !important',
-                        'border-radius: 0 !important',
-                        `padding-bottom: ${finalBottomOffset}px !important`,
-                        'box-sizing: border-box !important'
-                    ];
+                    // 使用更强的样式设置方法
+                    aiCard.style.setProperty('width', '100%', 'important');
+                    aiCard.style.setProperty('margin', '0', 'important');
+                    aiCard.style.setProperty('border-radius', '0', 'important');
+                    aiCard.style.setProperty('padding-bottom', `${finalBottomOffset}px`, 'important');
+                    aiCard.style.setProperty('box-sizing', 'border-box', 'important');
 
                     // iOS设备额外处理：确保有足够的底部间距
                     if (isIOS) {
-                        aiCardStyles.push('transform: translateZ(0) !important'); // 启用硬件加速
-                        aiCardStyles.push('-webkit-transform: translateZ(0) !important');
+                        aiCard.style.setProperty('transform', 'translateZ(0)', 'important'); // 启用硬件加速
+                        aiCard.style.setProperty('-webkit-transform', 'translateZ(0)', 'important');
                     }
 
-                    aiCard.style.cssText += aiCardStyles.join('; ') + ';';
-
                     console.log(`[主界面模式] 已调整AI卡片底部间距: ${finalBottomOffset}px (原始: ${bottomOffset}px)`);
+                    console.log('AI卡片修复后的样式:', {
+                        paddingBottom: aiCard.style.paddingBottom,
+                        marginBottom: aiCard.style.marginBottom,
+                        computedStyle: window.getComputedStyle(aiCard).paddingBottom
+                    });
                 }
 
                 console.log(`浏览器信息: iOS=${isIOS}, Safari=${isSafari}, Chrome=${isChrome}, 微信=${isWechat}`);
@@ -5521,7 +5532,11 @@ body.onboarding-mode {
     @media (max-width: 768px) {
         .ai-card {
             margin: 0 !important;
-            padding: 12px 0 calc(12px + env(safe-area-inset-bottom, 0px)) 0 !important;
+            padding-top: 12px !important;
+            padding-left: 0 !important;
+            padding-right: 0 !important;
+            padding-bottom: calc(80px + env(safe-area-inset-bottom, 0px)) !important;
+            /* 默认底部间距，会被JavaScript覆盖 */
             border-radius: 0 !important;
             width: 100% !important;
             box-sizing: border-box !important;

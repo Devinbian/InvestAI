@@ -5654,8 +5654,6 @@ body.onboarding-mode {
     align-items: center;
     width: 100%;
     max-width: 900px;
-    min-height: calc(100vh - 200px);
-    /* 确保在移动端有足够的最小高度，为底部输入框留出空间 */
 }
 
 .welcome-section {
@@ -5666,15 +5664,7 @@ body.onboarding-mode {
 /* 移动端增加welcome-section和AI卡片之间的间距 */
 @media (max-width: 768px) {
     .welcome-section {
-        margin-bottom: 80px !important;
-        padding-top: 8px !important;
-        /* 减少顶部间距，增加底部间距避免与输入框重叠 */
-    }
-
-    .center-container {
-        min-height: calc(100vh - 160px) !important;
-        padding-bottom: 20px !important;
-        /* 移动端确保有足够的底部间距 */
+        margin-bottom: 40px !important;
     }
 }
 
@@ -5944,12 +5934,10 @@ body.onboarding-mode {
 
     /* 移动端主内容区域间距优化 */
     .modern-content {
-        padding-top: 60px;
-        /* 减少顶部间距，为底部留出更多空间 */
+        padding-top: 80px;
+        /* 增加顶部间距，避免太靠顶部 */
         padding-left: 0px !important;
         padding-right: 0px !important;
-        padding-bottom: 160px !important;
-        /* 增加底部间距，确保内容不会被输入框遮挡 */
         /* 移除左右padding，让AI卡片能够占满全屏 */
     }
 
@@ -5980,8 +5968,8 @@ body.onboarding-mode {
 
     /* 移动端欢迎区域间距优化 */
     .welcome-section {
-        margin-bottom: 60px;
-        padding-top: 8px;
+        margin-bottom: 24px;
+        padding-top: 16px;
         padding-left: 16px;
         padding-right: 16px;
     }
@@ -12308,9 +12296,9 @@ body {
 
     /* 超小屏幕欢迎区域间距优化 */
     .welcome-section {
-        margin-bottom: 80px;
-        padding-top: 12px;
-        /* 减少欢迎区域上方间距，增加底部间距避免重叠 */
+        margin-bottom: 28px;
+        padding-top: 24px;
+        /* 增加欢迎区域上方间距 */
     }
 
     /* 超小屏幕AI卡片间距优化 */
@@ -12497,6 +12485,32 @@ body {
             .input-area {
                 padding-bottom: calc(60px + env(safe-area-inset-bottom, 0px)) !important;
             }
+        }
+    }
+
+    /* 移动端浏览器环境下欢迎区域优化 - 避免与输入框重叠 */
+    body:not(.wechat-browser) .welcome-section {
+        margin-bottom: 60px !important;
+        /* 非微信环境下增加欢迎区域底部间距，避免与输入框重叠 */
+        padding-bottom: 20px !important;
+        /* 额外增加底部内边距 */
+    }
+
+    /* iOS设备下的欢迎区域特殊处理 */
+    @supports (-webkit-touch-callout: none) {
+        body:not(.wechat-browser) .welcome-section {
+            margin-bottom: 80px !important;
+            /* iOS设备需要更大的间距 */
+            padding-bottom: 30px !important;
+        }
+    }
+
+    /* Android Chrome浏览器下的欢迎区域处理 */
+    @supports (-webkit-appearance: none) and (not (-webkit-touch-callout: none)) {
+        body:not(.wechat-browser) .welcome-section {
+            margin-bottom: 70px !important;
+            /* Android Chrome需要中等间距 */
+            padding-bottom: 25px !important;
         }
     }
 

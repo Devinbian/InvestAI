@@ -4355,7 +4355,46 @@ onMounted(() => {
 
 <!-- 非scoped样式用于移动端按钮优化 -->
 <style>
-/* 移动端侧边栏悬浮按钮优化 - 小巧圆形设计 */
+/* 移动端侧边栏悬浮按钮基础样式 */
+.floating-sidebar-toggle {
+    position: fixed;
+    top: 72px;
+    right: 12px;
+    width: 30px;
+    height: 30px;
+    border-radius: 50%;
+    border: none;
+    background: rgba(255, 255, 255, 0.9);
+    backdrop-filter: blur(8px);
+    box-shadow: 0 1px 4px rgba(0, 0, 0, 0.08);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    color: #6b7280;
+    z-index: 1001;
+}
+
+.floating-sidebar-toggle:hover {
+    background: rgba(255, 255, 255, 1);
+    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.12);
+    color: #374151;
+    transform: scale(1.05);
+}
+
+.floating-sidebar-toggle:active {
+    transform: scale(0.95);
+    background: rgba(249, 250, 251, 1);
+}
+
+.floating-sidebar-toggle svg {
+    width: 14px;
+    height: 14px;
+    stroke-width: 2;
+}
+
+/* 移动端侧边栏悬浮按钮优化 - 低调白底设计 */
 @media (max-width: 768px) {
     button.floating-sidebar-toggle {
         width: 30px !important;
@@ -4366,28 +4405,35 @@ onMounted(() => {
         max-height: 30px !important;
         right: 12px !important;
         top: 72px !important;
-        background: rgba(59, 130, 246, 0.8) !important;
-        border: 1px solid rgba(255, 255, 255, 0.25) !important;
-        box-shadow: 0 1px 6px rgba(59, 130, 246, 0.2) !important;
-        backdrop-filter: blur(4px) !important;
-        color: white !important;
+        background: rgba(255, 255, 255, 0.9) !important;
+        border: 1px solid rgba(0, 0, 0, 0.1) !important;
+        box-shadow: 0 1px 4px rgba(0, 0, 0, 0.08) !important;
+        backdrop-filter: blur(8px) !important;
+        color: #6b7280 !important;
         border-radius: 50% !important;
-        opacity: 0.75 !important;
+        opacity: 0.85 !important;
         transition: all 0.2s ease !important;
+        position: fixed !important;
+        z-index: 1001 !important;
+        display: flex !important;
+        align-items: center !important;
+        justify-content: center !important;
+        cursor: pointer !important;
     }
 
     button.floating-sidebar-toggle:hover {
-        background: rgba(59, 130, 246, 1) !important;
+        background: rgba(255, 255, 255, 1) !important;
         opacity: 1 !important;
-        transform: scale(1.1) !important;
-        box-shadow: 0 2px 8px rgba(59, 130, 246, 0.3) !important;
+        transform: scale(1.05) !important;
+        box-shadow: 0 2px 6px rgba(0, 0, 0, 0.12) !important;
+        color: #374151 !important;
         width: 30px !important;
         height: 30px !important;
     }
 
     button.floating-sidebar-toggle:active {
-        transform: scale(0.9) !important;
-        background: rgba(37, 99, 235, 1) !important;
+        transform: scale(0.95) !important;
+        background: rgba(249, 250, 251, 1) !important;
         width: 30px !important;
         height: 30px !important;
     }
@@ -4395,7 +4441,7 @@ onMounted(() => {
     button.floating-sidebar-toggle svg {
         width: 14px !important;
         height: 14px !important;
-        stroke-width: 2.2 !important;
+        stroke-width: 2 !important;
     }
 }
 </style>
@@ -4574,84 +4620,7 @@ body.onboarding-mode {
     }
 }
 
-/* 移动端侧边栏悬浮切换按钮 */
-.floating-sidebar-toggle {
-    position: fixed;
-    top: 72px;
-    right: 20px;
-    width: 44px;
-    height: 44px;
-    border-radius: 50%;
-    border: none;
-    background: rgba(59, 130, 246, 0.9);
-    backdrop-filter: blur(10px);
-    box-shadow: 0 4px 20px rgba(59, 130, 246, 0.3);
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    cursor: pointer;
-    transition: all 0.3s ease;
-    color: white;
-    z-index: 10001;
-}
 
-.floating-sidebar-toggle:hover {
-    background: rgba(59, 130, 246, 1);
-    box-shadow: 0 6px 25px rgba(59, 130, 246, 0.4);
-    transform: translateY(-2px) scale(1.05);
-}
-
-.floating-sidebar-toggle:active {
-    transform: translateY(0) scale(0.95);
-    transition: all 0.1s ease;
-}
-
-.floating-sidebar-toggle svg {
-    transition: all 0.2s ease;
-}
-
-/* 移动端优化 - 使用更高优先级选择器 */
-@media (max-width: 768px) {
-    button.floating-sidebar-toggle {
-        width: 24px !important;
-        height: 24px !important;
-        min-width: 24px !important;
-        min-height: 24px !important;
-        max-width: 24px !important;
-        max-height: 24px !important;
-        right: 16px !important;
-        top: 76px !important;
-        background: rgba(59, 130, 246, 0.95) !important;
-        border: 2px solid rgba(255, 255, 255, 0.2) !important;
-        box-shadow: 0 3px 12px rgba(59, 130, 246, 0.35) !important;
-
-        /* 移动端触摸优化 */
-        -webkit-tap-highlight-color: transparent;
-        -webkit-touch-callout: none;
-        -webkit-user-select: none;
-        user-select: none;
-        touch-action: manipulation;
-    }
-
-    button.floating-sidebar-toggle:hover {
-        background: rgba(59, 130, 246, 1) !important;
-        transform: translateY(-1px) scale(1.05) !important;
-        width: 40px !important;
-        height: 40px !important;
-    }
-
-    button.floating-sidebar-toggle:active {
-        transform: translateY(0) scale(0.95) !important;
-        background: rgba(37, 99, 235, 1) !important;
-        width: 40px !important;
-        height: 40px !important;
-    }
-
-    button.floating-sidebar-toggle svg {
-        width: 18px !important;
-        height: 18px !important;
-    }
-}
 
 .modern-logo {
     width: 36px;

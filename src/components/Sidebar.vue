@@ -2,6 +2,8 @@
     <!-- 移动端遮罩层 -->
     <div class="sidebar-overlay" :class="{ 'show': isMobileExpanded }" @click="closeMobileSidebar"></div>
 
+
+
     <div class="sidebar-container" :class="{ 'collapsed': isCollapsed, 'mobile-expanded': isMobileExpanded }"
         @wheel.stop>
         <!-- 收起/展开按钮 - PC端显示 -->
@@ -12,9 +14,16 @@
             </svg>
         </button>
 
-        <div class="sidebar-content" v-show="(isMobileView && isMobileExpanded) || (!isMobileView && !isCollapsed)">
-            <!-- 移动端不显示头部，PC端也不需要头部 -->
+        <!-- 移动端关闭按钮 - 与侧边栏融合 -->
+        <button v-if="isMobileView && isMobileExpanded" class="mobile-close-btn" @click="closeMobileSidebar"
+            title="关闭面板">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none">
+                <path d="M21 12H3m9-9l-9 9 9 9" stroke="currentColor" stroke-width="2" stroke-linecap="round"
+                    stroke-linejoin="round" />
+            </svg>
+        </button>
 
+        <div class="sidebar-content" v-show="(isMobileView && isMobileExpanded) || (!isMobileView && !isCollapsed)">
             <!-- Tab导航 -->
             <div class="tab-nav" :class="{ 'mobile-nav': isMobileView }">
                 <!-- 1. 大盘指数 -->
@@ -168,6 +177,8 @@ const closeMobileSidebar = () => {
     }
 };
 
+
+
 // 监听窗口大小变化
 const handleResize = () => {
     checkMobileView();
@@ -250,7 +261,7 @@ defineExpose({
 .sidebar-content {
     height: 100%;
     overflow: hidden;
-    padding: 50px 0 0 0;
+    padding: 10px 0 0 0;
     display: flex;
     flex-direction: column;
 }
@@ -467,8 +478,8 @@ defineExpose({
         transition: right 0.3s cubic-bezier(0.25, 0.46, 0.45, 0.94) !important;
         z-index: 10001 !important;
         background: white !important;
-        border-left: 2px solid #3b82f6 !important;
-        box-shadow: -8px 0 32px rgba(0, 0, 0, 0.3) !important;
+        border-left: none !important;
+        box-shadow: -4px 0 20px rgba(0, 0, 0, 0.15) !important;
         display: flex !important;
         /* 覆盖之前的隐藏样式 */
         flex-direction: column !important;
@@ -477,6 +488,44 @@ defineExpose({
     /* 移动端展开状态 */
     .sidebar-container.mobile-expanded {
         right: 0 !important;
+    }
+
+    /* 移动端关闭按钮 - 与侧边栏融合设计 */
+    .mobile-close-btn {
+        position: absolute !important;
+        top: 12px !important;
+        left: -32px !important;
+        /* 调整位置，完全贴合侧边栏 */
+        width: 32px !important;
+        height: 32px !important;
+        background: white !important;
+        border: 1px solid #e5e7eb !important;
+        border-radius: 8px 0 0 8px !important;
+        /* 只有左侧圆角，与侧边栏融合 */
+        display: flex !important;
+        align-items: center !important;
+        justify-content: center !important;
+        cursor: pointer !important;
+        transition: all 0.2s ease !important;
+        z-index: 10002 !important;
+        box-shadow: -2px 0 8px rgba(0, 0, 0, 0.1) !important;
+        color: #6b7280 !important;
+        border-right: none !important;
+        /* 移除右边框，与侧边栏无缝连接 */
+        margin-right: 0 !important;
+    }
+
+    .mobile-close-btn:hover {
+        background: #f9fafb !important;
+        color: #374151 !important;
+        transform: translateX(-2px) !important;
+        /* 轻微向左移动 */
+        box-shadow: -4px 0 12px rgba(0, 0, 0, 0.15) !important;
+    }
+
+    .mobile-close-btn:active {
+        transform: translateX(0) !important;
+        background: #f3f4f6 !important;
     }
 
     /* 移动端侧边栏内容 */
@@ -489,44 +538,7 @@ defineExpose({
         flex-direction: column !important;
     }
 
-    /* 移动端顶部标题栏 - 紧凑版 */
-    .mobile-header {
-        display: flex !important;
-        align-items: center !important;
-        justify-content: space-between !important;
-        padding: 10px 16px !important;
-        background: linear-gradient(135deg, #3b82f6, #1d4ed8) !important;
-        color: white !important;
-        border-bottom: 1px solid rgba(255, 255, 255, 0.1) !important;
-        flex-shrink: 0 !important;
-        min-height: 44px !important;
-    }
 
-    .mobile-title {
-        margin: 0 !important;
-        font-size: 1rem !important;
-        font-weight: 600 !important;
-        color: white !important;
-    }
-
-    .mobile-close-btn {
-        background: rgba(255, 255, 255, 0.1) !important;
-        border: 1px solid rgba(255, 255, 255, 0.2) !important;
-        border-radius: 6px !important;
-        width: 32px !important;
-        height: 32px !important;
-        display: flex !important;
-        align-items: center !important;
-        justify-content: center !important;
-        cursor: pointer !important;
-        transition: all 0.2s ease !important;
-        color: white !important;
-    }
-
-    .mobile-close-btn:hover {
-        background: rgba(255, 255, 255, 0.2) !important;
-        transform: scale(1.05) !important;
-    }
 
     /* 移动端tab导航优化 - 超紧凑版 */
     .tab-nav.mobile-nav {
@@ -630,7 +642,7 @@ defineExpose({
     /* 移动端tab内容区域 - 无头部版本 */
     .sidebar-container.mobile-expanded .tab-content {
         height: calc(100vh - 40px) !important;
-        /* 只减去tab导航(40px)，无头部 */
+        /* 只减去tab导航(40px) */
         padding: 6px !important;
         flex: 1 !important;
         overflow-y: auto !important;
@@ -797,7 +809,7 @@ defineExpose({
         font-weight: bold !important;
     }
 
-    /* 移动端移除组件头部 */
+    /* 移动端移除组件内部头部，但保留侧边栏头部 */
     .sidebar-container.mobile-expanded .tab-panel .card-header {
         display: none !important;
     }

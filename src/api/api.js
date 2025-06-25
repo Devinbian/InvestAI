@@ -9,14 +9,17 @@ const api = {
 
   // user portrait
   getUserPortrait: "/user-portrait/detail",
-  updateUserPortrait: "/user-portrait/update",
+  updateUserPortrait: "/user-portrait/update", 
 
   // stock
-  recommendStock: "/chat/recommendStock",
+  recommendStock: "/chat/recommendStock", // 智能荐股
+  analyzeStock: "/chat/analyzeStock", // 量化分析股票
   
 };
 
 export default api;
+
+export { api };
 
 // 用户登录
 export const login = (params) => request.post(api.loginApi, params);
@@ -38,3 +41,4 @@ export const recommendStock = (params) => request.get(api.recommendStock, {
   params,
   timeout: 30000 // 设置30秒超时
 });
+

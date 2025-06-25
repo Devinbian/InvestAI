@@ -2760,17 +2760,17 @@ const fixMobileChatBox = () => {
                 // 调试信息
                 if (aiCard) {
                     const aiCardStyles = window.getComputedStyle(aiCard);
-                    const inputAreaRect = inputArea.getBoundingClientRect();
+                    const inputAreaRect = inputArea ? inputArea.getBoundingClientRect() : null;
                     const aiCardRect = aiCard.getBoundingClientRect();
 
                     console.log('AI卡片调试信息:', {
                         aiCardPosition: aiCardStyles.position,
                         aiCardBottom: aiCardStyles.bottom,
-                        inputAreaRect: {
+                        inputAreaRect: inputAreaRect ? {
                             top: inputAreaRect.top,
                             bottom: inputAreaRect.bottom,
                             height: inputAreaRect.height
-                        },
+                        } : null,
                         aiCardRect: {
                             top: aiCardRect.top,
                             bottom: aiCardRect.bottom,

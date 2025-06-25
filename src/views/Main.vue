@@ -1038,7 +1038,7 @@ import MarkdownRenderer from '../components/MarkdownRenderer.vue';
 import StockList from '../components/StockList.vue';
 import MobileStockList from '../components/MobileStockList.vue';
 import { getStockListConfig } from '../config/stockListConfig';
-import { recommendStock } from '@/api/api';
+import { recommendStock, analyzeStock, api } from '@/api/api';
 import { riskOptions } from '@/config/userPortrait';
 import { fetchEventSource } from '@microsoft/fetch-event-source';
 
@@ -1495,7 +1495,7 @@ const sendMessage = async () => {
     try {
             let aiContent = '';
             const abortController = new AbortController(); // 用于取消请求
-            fetchEventSource(`http://localhost:8080/chat/stream?userInput=${encodeURIComponent(message)}`, {
+            fetchEventSource(`${api.devPrefix}${api.recommendStock}?userInput=${encodeURIComponent(message)}`, {
                 method: 'GET', // GET 是默认方法，可省略
                 headers: {
                     'Content-Type': 'text/event-stream', // 设置内容类型为 SSE
@@ -1517,7 +1517,7 @@ const sendMessage = async () => {
                 onmessage: (event) => {
                     // 处理每条消息
                     try {
-                        console.log('收到数据:', event.data);
+                        console.log('智能荐股：收到数据:', event.data);
                         let data = event.data;
                         // 如果 data 是空格，则新增一个空格（SSE 协议规范：data: 后的第一个空格是固定分隔符，一定会被丢弃）
                         if (data.trim().length === 0) {
@@ -2907,31 +2907,69 @@ const updateWatchlistInChatHistory = () => {
 };
 
 const continueAnalysis = async (stockInfo, isPaid = false) => {
-    let message;
-    if (isPaid) {
-        message = `【付费量化分析】请对${stockInfo.name}(${stockInfo.code})进行全面量化分析，包括：
-1. 详细的基本面分析（财务指标、盈利能力、成长性）
-2. 技术面分析（K线形态、技术指标、支撑阻力位）
-3. 行业对比分析（同行业竞争优势、市场地位）
-4. 未来发展前景（业务增长点、风险因素）
-5. 具体投资建议（买入时机、目标价位、止损位）
-6. 资金配置建议（仓位管理、分批建仓策略）`;
-    } else {
-        message = `请进一步分析${stockInfo.name}的投资价值，包括同行业对比、未来发展前景和具体的买入时机建议。`;
-    }
-
-    const res = await mockApi.sendMessage(message);
+    
     chatHistory.value.push(
-        { role: 'user', content: isPaid ? `量化分析 ${stockInfo.name}(${stockInfo.code})` : message },
-        {
-            ...res.data,
-            hasStockInfo: true,
-            stockInfo: stockInfo
-        }
+        { role: 'assistant', content: `正在为您量化分析【${stockInfo.name}(${stockInfo.code})】，请等待片刻......` },
     );
 
-    await nextTick();
-    scrollToBottom();
+    try {
+            let aiContent = '';
+            const abortController = new AbortController(); // 用于取消请求
+            fetchEventSource(`${api.devPrefix}${api.analyzeStock}?stock=${encodeURIComponent(stockInfo.code)}`, {
+                method: 'GET', // GET 是默认方法，可省略
+                headers: {
+                    'Content-Type': 'text/event-stream', // 设置内容类型为 SSE
+                },
+                signal: abortController.signal, // 绑定取消信号
+
+                // 添加重试配置
+                retryInterval: 0,       // 不重试
+                backoffMultiplier: 0,    // 退避系数
+
+                onopen: async (response) => {
+                    // 连接建立时触发
+                    if (response.ok) {
+                        console.log('连接成功');
+                    } else {
+                        throw new Error(`服务器错误: ${response.status}`);
+                    }
+                },
+                onmessage: (event) => {
+                    // 处理每条消息
+                    try {
+                        console.log('量化分析：收到数据:', event.data);
+                        let data = event.data;
+                        // 如果 data 是空格，则新增一个空格（SSE 协议规范：data: 后的第一个空格是固定分隔符，一定会被丢弃）
+                        if (data.trim().length === 0) {
+                            data += ' ';
+                        }
+                        aiContent += data;
+
+                        chatHistory.value[chatHistory.value.length - 1].content = aiContent;
+                        chatHistory.value = [...chatHistory.value]; // 触发响应式更新
+                        // 使用 requestAnimationFrame 优化滚动
+                        requestAnimationFrame(() => {
+                            scrollToBottom();
+                        });
+                    } catch (err) {
+                        console.error('解析错误:', err);
+                    }
+                },
+                onclose: () => {
+                    console.log('连接关闭');
+                },
+                onerror: (err) => {
+                    // 错误处理（网络错误、解析异常等）
+                    console.error('发生错误:', err);
+                    abortController.abort(); // 取消请求
+                    aiContent += '\n\n[服务器繁忙，已终止]';
+                    throw err; // 重新抛出以终止流
+                }
+            });
+    } catch (err) {
+        aiContent = '响应失败，请重试';
+        chatHistory.value = [...chatHistory.value];
+    }
 };
 
 // AI委托交易方法

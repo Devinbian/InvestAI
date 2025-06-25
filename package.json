@@ -11,6 +11,7 @@
     "deploy": "npm run build && gh-pages -d dist"
   },
   "dependencies": {
+    "@microsoft/fetch-event-source": "^2.0.1",
     "axios": "^1.6.7",
     "dompurify": "^3.2.6",
     "element-plus": "^2.5.3",

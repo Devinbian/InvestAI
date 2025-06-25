@@ -58,11 +58,13 @@ const renderedContent = computed(() => {
     // 确保content是字符串类型
     const contentStr = typeof props.content === 'string' ? props.content : String(props.content);
 
-
+    console.log('Original Content:', contentStr);
 
     try {
         // 使用 marked 解析 markdown，使用自定义渲染器
         const parsed = marked(contentStr, { renderer });
+
+        console.log('Parsed Markdown:', parsed);
 
         // 使用 DOMPurify 清理 HTML，防止 XSS 攻击
         const result = DOMPurify.sanitize(parsed, {

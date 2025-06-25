@@ -1040,6 +1040,7 @@ import MobileStockList from '../components/MobileStockList.vue';
 import { getStockListConfig } from '../config/stockListConfig';
 import { recommendStock } from '@/api/api';
 import { riskOptions } from '@/config/userPortrait';
+import { fetchEventSource } from '@microsoft/fetch-event-source';
 
 const router = useRouter();
 const userStore = useUserStore();
@@ -1483,16 +1484,74 @@ const sendMessage = async () => {
     chatHistory.value.push(userMessage);
     chatHistoryStore.addMessageToCurrentChat(userMessage);
 
-    const res = await mockApi.sendMessage(message);
-
-    // 添加AI回复
-    chatHistory.value.push(res.data);
-    chatHistoryStore.addMessageToCurrentChat(res.data);
+    // 先插入一个空的AI回复
+    const aiMessage = { role: 'assistant', content: '' };
+    chatHistory.value.push(aiMessage);
+    chatHistoryStore.addMessageToCurrentChat(aiMessage);
 
     await nextTick();
     scrollToBottom();
 
-    // 移动端消息发送后的处理
+    try {
+            let aiContent = '';
+            const abortController = new AbortController(); // 用于取消请求
+            fetchEventSource(`http://localhost:8080/chat/stream?userInput=${encodeURIComponent(message)}`, {
+                method: 'GET', // GET 是默认方法，可省略
+                headers: {
+                    'Content-Type': 'text/event-stream', // 设置内容类型为 SSE
+                },
+                signal: abortController.signal, // 绑定取消信号
+
+                // 添加重试配置
+                retryInterval: 0,       // 不重试
+                backoffMultiplier: 0,    // 退避系数
+
+                onopen: async (response) => {
+                    // 连接建立时触发
+                    if (response.ok) {
+                        console.log('连接成功');
+                    } else {
+                        throw new Error(`服务器错误: ${response.status}`);
+                    }
+                },
+                onmessage: (event) => {
+                    // 处理每条消息
+                    try {
+                        console.log('收到数据:', event.data);
+                        let data = event.data;
+                        // 如果 data 是空格，则新增一个空格（SSE 协议规范：data: 后的第一个空格是固定分隔符，一定会被丢弃）
+                        if (data.trim().length === 0) {
+                            data += ' ';
+                        }
+                        aiContent += data;
+                        aiMessage.content = aiContent;
+
+                        chatHistory.value[chatHistory.value.length - 1].content = aiContent;
+                        // 这里强制替换数组，确保响应式
+                        chatHistory.value = [...chatHistory.value];
+                        // 使用 requestAnimationFrame 优化滚动
+                        requestAnimationFrame(() => {
+                            scrollToBottom();
+                        });
+                    } catch (err) {
+                        console.error('解析错误:', err);
+                    }
+                },
+                onclose: () => {
+                    console.log('连接关闭');
+                },
+                onerror: (err) => {
+                    // 错误处理（网络错误、解析异常等）
+                    console.error('发生错误:', err);
+                    abortController.abort(); // 取消请求
+                    aiMessage.content += '\n\n[服务器繁忙，已终止]';
+                    throw err; // 重新抛出以终止流
+                }
+            });
+    } catch (err) {
+        aiMessage.content = '响应失败，请重试';
+        chatHistory.value = [...chatHistory.value];
+    }
     if (isMobileView.value) {
         console.log('准备调用fixMobileChatBox - sendMessage');
         setTimeout(() => {

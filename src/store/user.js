@@ -2,15 +2,9 @@ import { defineStore } from "pinia";
 
 export const useUserStore = defineStore("user", {
   state: () => ({
-    token: localStorage.getItem("token") || "test_token_for_demo",
-    userInfo: JSON.parse(
-      localStorage.getItem("userInfo") ||
-        JSON.stringify({
-          nickname: "测试用户",
-          email: "test@example.com",
-        }),
-    ),
-    isLoggedIn: !!localStorage.getItem("token") || true, // 临时设为true用于演示
+    token: localStorage.getItem("token") || "",
+    userInfo: JSON.parse(localStorage.getItem("userInfo") || "{}"),
+    isLoggedIn: !!localStorage.getItem("token"),
     watchlist: JSON.parse(
       localStorage.getItem("watchlist") ||
         JSON.stringify([

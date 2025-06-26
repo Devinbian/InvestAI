@@ -217,16 +217,17 @@ onUnmounted(() => {
 
 <style scoped>
 .market-index-card {
-    background: #ffffff;
-    border-radius: 16px;
-    border: 1px solid #f0f0f0;
-    overflow: hidden;
+    background: transparent;
+    border-radius: 0;
+    border: none;
+    overflow: visible;
+    /* 改为visible，让内容可以自然流动 */
     min-height: calc(100vh - 200px);
     display: flex;
     flex-direction: column;
-    margin: 4px;
+    margin: 0;
     position: relative;
-    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
+    box-shadow: none;
 }
 
 
@@ -299,7 +300,7 @@ onUnmounted(() => {
 .index-list {
     padding: 16px 12px 20px 12px;
     flex: 1;
-    overflow-y: auto;
+    overflow-y: visible;
     min-height: 0;
     position: relative;
     z-index: 1;
@@ -587,8 +588,10 @@ onUnmounted(() => {
     .market-index-card {
         min-height: auto !important;
         margin: 0 !important;
-        border-radius: 12px !important;
-        box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1) !important;
+        border-radius: 0 !important;
+        box-shadow: none !important;
+        background: transparent !important;
+        border: none !important;
     }
 
     .card-header {
@@ -708,6 +711,16 @@ onUnmounted(() => {
         box-shadow: none !important;
         margin: 0 !important;
         border-radius: 0 !important;
+        /* 移除min-height限制，让内容自然流动 */
+        min-height: auto !important;
+    }
+
+    /* 移动端侧边栏中移除index-list的滚动条，使用tab-panel的统一滚动 */
+    .sidebar-container .index-list {
+        overflow-y: visible !important;
+        max-height: none !important;
+        height: auto !important;
+        flex: none !important;
     }
 
 

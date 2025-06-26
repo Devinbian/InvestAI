@@ -1228,7 +1228,9 @@ defineExpose({
     /* 移动端其他可能的滚动容器 */
     .sidebar-container.mobile-expanded .tab-panel .market-index-content,
     .sidebar-container.mobile-expanded .tab-panel .notifications-list,
-    .sidebar-container.mobile-expanded .tab-panel .message-list {
+    .sidebar-container.mobile-expanded .tab-panel .message-list,
+    .sidebar-container.mobile-expanded .tab-panel .market-index-card,
+    .sidebar-container.mobile-expanded .tab-panel .index-list {
         max-height: none !important;
         overflow: visible !important;
     }

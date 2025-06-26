@@ -1154,7 +1154,7 @@ import WelcomePerformanceHeader from '../components/WelcomePerformanceHeader.vue
 import { getStockListConfig } from '../config/stockListConfig';
 import { recommendStock, api } from '@/api/api';
 import { riskOptions } from '@/config/userPortrait';
-import { authFetchEventSource }  from '@/utils/request';
+import { authFetchEventSource } from '@/utils/request';
 
 const router = useRouter();
 const userStore = useUserStore();
@@ -11814,16 +11814,16 @@ body {
 }
 
 .price-input-group {
-    flex: 1;
-    display: flex;
-    gap: 6px;
-    align-items: flex-start;
-    height: 36px;
+    flex: 1 !important;
+    display: flex !important;
+    gap: 6px !important;
+    align-items: stretch !important;
+    height: 36px !important;
 }
 
 .price-input {
-    flex: 1;
-    height: 36px;
+    flex: 1 !important;
+    height: 36px !important;
 }
 
 .price-input :deep(.el-input__wrapper) {
@@ -11831,11 +11831,13 @@ body {
 }
 
 .price-controls {
-    display: flex;
-    flex-direction: column;
-    gap: 2px;
-    height: 36px;
-    width: 28px;
+    display: flex !important;
+    flex-direction: column !important;
+    gap: 2px !important;
+    height: 36px !important;
+    width: 28px !important;
+    justify-content: center !important;
+    align-items: center !important;
 }
 
 .price-btn {

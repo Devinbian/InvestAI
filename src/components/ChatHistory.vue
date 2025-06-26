@@ -2,15 +2,18 @@
     <div class="chat-history-container" :class="{ 'collapsed': isCollapsed }">
         <!-- 历史记录面板 -->
         <div class="history-panel" v-show="!isCollapsed">
-            <!-- 头部 -->
-            <div class="history-header">
-                <div class="header-title">
-                    <div class="greeting-section">
-                        <div class="greeting-text">
-                            <h3>{{ getGreeting() }}</h3>
-                            <p>{{ getGreetingSubtext() }}</p>
-                        </div>
-                    </div>
+            <!-- 搜索框和操作按钮 -->
+            <div class="search-container">
+                <div class="search-wrapper">
+                    <el-input v-model="searchKeyword" placeholder="搜索对话" size="small" clearable
+                        class="focus-border-input" @focus="onSearchFocus" @blur="onSearchBlur">
+                        <template #prefix>
+                            <svg width="14" height="14" viewBox="0 0 24 24" fill="none">
+                                <circle cx="11" cy="11" r="8" stroke="currentColor" stroke-width="2" />
+                                <path d="m21 21-4.35-4.35" stroke="currentColor" stroke-width="2" />
+                            </svg>
+                        </template>
+                    </el-input>
                 </div>
                 <div class="header-actions">
                     <el-button class="new-chat-btn" size="small" @click="createNewChat" title="新建聊天">
@@ -25,21 +28,6 @@
                                 stroke-linejoin="round" />
                         </svg>
                     </el-button>
-                </div>
-            </div>
-
-            <!-- 搜索框 - 聚焦边框特效 -->
-            <div class="search-container">
-                <div class="search-wrapper">
-                    <el-input v-model="searchKeyword" placeholder="搜索股票名称、关键词或日期..." size="small" clearable
-                        class="focus-border-input" @focus="onSearchFocus" @blur="onSearchBlur">
-                        <template #prefix>
-                            <svg width="14" height="14" viewBox="0 0 24 24" fill="none">
-                                <circle cx="11" cy="11" r="8" stroke="currentColor" stroke-width="2" />
-                                <path d="m21 21-4.35-4.35" stroke="currentColor" stroke-width="2" />
-                            </svg>
-                        </template>
-                    </el-input>
                 </div>
             </div>
 
@@ -256,28 +244,7 @@ const touchState = ref({
     currentChat: null
 });
 
-// 问候语功能
-const getGreeting = () => {
-    const hour = new Date().getHours();
-    if (hour < 6) return '夜深了';
-    if (hour < 9) return '早上好';
-    if (hour < 12) return '上午好';
-    if (hour < 14) return '中午好';
-    if (hour < 18) return '下午好';
-    if (hour < 22) return '晚上好';
-    return '夜深了';
-};
 
-const getGreetingSubtext = () => {
-    const hour = new Date().getHours();
-    if (hour < 6) return '休息时间也在关注投资，真棒！';
-    if (hour < 9) return '开始新的投资之旅吧';
-    if (hour < 12) return '今天的市场如何？';
-    if (hour < 14) return '午间休息，回顾一下？';
-    if (hour < 18) return '下午时光，分析一下';
-    if (hour < 22) return '晚间总结时间';
-    return '深夜思考投资，很专业！';
-};
 
 // 搜索框焦点事件
 const onSearchFocus = () => {
@@ -527,68 +494,40 @@ setInterval(updateChatHistoryList, 1000);
     overflow: hidden;
 }
 
-.history-header {
-    padding: 20px 16px;
-    border-bottom: 1px solid #f0f0f0;
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    flex-shrink: 0;
-    background: linear-gradient(135deg, #ffffff 0%, #f8fafc 100%);
-    box-sizing: border-box;
-}
 
-.greeting-section {
-    display: flex;
-    align-items: center;
-}
-
-.greeting-text h3 {
-    margin: 0;
-    font-size: 16px;
-    font-weight: 600;
-    color: #1f2937;
-    line-height: 1.3;
-}
-
-.greeting-text p {
-    margin: 2px 0 0 0;
-    font-size: 12px;
-    color: #6b7280;
-    line-height: 1.3;
-}
-
-.header-title {
-    display: flex;
-    align-items: center;
-    gap: 8px;
-    font-size: 16px;
-    font-weight: 600;
-    color: #1f2937;
-}
-
-.header-title svg {
-    color: #3b82f6;
-}
 
 .header-actions {
     display: flex;
-    gap: 8px;
+    margin-left: auto;
+    flex-shrink: 0;
+    gap: 0;
 }
 
 .new-chat-btn,
 .close-btn {
-    padding: 6px;
+    padding: 4px;
     border: 1px solid #e5e7eb;
-    border-radius: 6px;
+    border-radius: 4px;
     background: transparent;
     color: #6b7280;
     transition: all 0.2s ease;
-    width: 32px;
-    height: 32px;
+    width: 28px;
+    height: 28px;
     display: flex;
     align-items: center;
     justify-content: center;
+    font-size: 0;
+    margin: 0;
+}
+
+.new-chat-btn+.close-btn {
+    margin-left: 2px;
+}
+
+.new-chat-btn svg,
+.close-btn svg {
+    width: 12px;
+    height: 12px;
 }
 
 .new-chat-btn:hover,
@@ -604,9 +543,75 @@ setInterval(updateChatHistoryList, 1000);
     border-color: #fecaca;
 }
 
+/* 移动端按钮优化 */
+@media (max-width: 768px) {
+    .search-container {
+        padding: 12px;
+        gap: 8px;
+    }
+
+    .header-actions {
+        gap: 0;
+    }
+
+    .new-chat-btn,
+    .close-btn {
+        padding: 3px;
+        width: 24px;
+        height: 24px;
+        border-radius: 3px;
+        border-width: 1px;
+        margin: 0;
+    }
+
+    .new-chat-btn+.close-btn {
+        margin-left: 1px;
+    }
+
+    .new-chat-btn svg,
+    .close-btn svg {
+        width: 10px;
+        height: 10px;
+    }
+}
+
+/* 超小屏幕进一步优化 */
+@media (max-width: 480px) {
+    .search-container {
+        padding: 10px;
+        gap: 6px;
+    }
+
+    .header-actions {
+        gap: 0;
+    }
+
+    .new-chat-btn,
+    .close-btn {
+        padding: 2px;
+        width: 22px;
+        height: 22px;
+        border-radius: 2px;
+        margin: 0;
+    }
+
+    .new-chat-btn+.close-btn {
+        margin-left: 1px;
+    }
+
+    .new-chat-btn svg,
+    .close-btn svg {
+        width: 9px;
+        height: 9px;
+    }
+}
+
 .search-container {
     padding: 16px;
     flex-shrink: 0;
+    display: flex;
+    align-items: center;
+    gap: 12px;
 }
 
 .search-wrapper {
@@ -614,6 +619,7 @@ setInterval(updateChatHistoryList, 1000);
     background: #f8fafc;
     border-radius: 14px;
     padding: 2px;
+    flex: 1;
 }
 
 .focus-border-input :deep(.el-input__wrapper) {
@@ -644,7 +650,7 @@ setInterval(updateChatHistoryList, 1000);
 .section-divider {
     margin: 0 16px;
     padding: 0 0 8px 0;
-    border-bottom: 2px solid #f3f4f6;
+    border-bottom: 1px solid #f3f4f6;
     position: relative;
 }
 

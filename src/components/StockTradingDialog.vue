@@ -23,7 +23,7 @@
                                 <span class="buy-dialog-current-price">¥{{ stock.price }}</span>
                                 <div :class="['price-change-group', stock.change >= 0 ? 'up' : 'down']">
                                     <span class="change-amount">{{ stock.change >= 0 ? '+' : '' }}{{ stock.change
-                                    }}</span>
+                                        }}</span>
                                     <span class="change-percent">({{ stock.changePercent >= 0 ? '+' : '' }}{{
                                         stock.changePercent }}%)</span>
                                 </div>
@@ -156,7 +156,7 @@
                                                 <div class="info-item">
                                                     <span class="label">委托金额</span>
                                                     <span class="value">¥{{ (order.price * order.quantity).toFixed(2)
-                                                    }}</span>
+                                                        }}</span>
                                                 </div>
                                             </div>
                                             <div class="order-actions">
@@ -1250,27 +1250,42 @@ watch(visible, (newVisible) => {
 }
 
 .price-input-group {
-    display: flex;
-    gap: 8px;
-    align-items: center;
+    display: flex !important;
+    gap: 8px !important;
+    align-items: stretch !important;
 }
 
 .price-input {
-    flex: 1;
+    flex: 1 !important;
 }
 
 .price-controls {
-    display: flex;
-    flex-direction: column;
-    gap: 2px;
+    display: flex !important;
+    flex-direction: column !important;
+    gap: 2px !important;
+    justify-content: center !important;
+    align-items: center !important;
 }
 
 .price-btn {
-    width: 32px;
-    height: 20px;
-    padding: 0;
-    font-size: 12px;
-    font-weight: 600;
+    width: 32px !important;
+    height: 20px !important;
+    padding: 0 !important;
+    font-size: 12px !important;
+    font-weight: 600 !important;
+    margin: 0 !important;
+    min-height: 20px !important;
+}
+
+/* 更具体的选择器来覆盖Element Plus样式 */
+.price-section .price-controls .el-button {
+    width: 32px !important;
+    height: 20px !important;
+    padding: 0 !important;
+    font-size: 12px !important;
+    font-weight: 600 !important;
+    margin: 0 !important;
+    min-height: 20px !important;
 }
 
 .quantity-input-group {
@@ -1504,5 +1519,37 @@ watch(visible, (newVisible) => {
 
 .buy-dialog :deep(.el-dialog__wrapper) {
     z-index: 11000 !important;
+}
+
+/* 强制修复价格控制按钮的垂直居中对齐 */
+.trading-panel .price-section .price-input-group {
+    display: flex !important;
+    align-items: stretch !important;
+    gap: 8px !important;
+}
+
+.trading-panel .price-section .price-controls {
+    display: flex !important;
+    flex-direction: column !important;
+    justify-content: center !important;
+    align-items: center !important;
+    gap: 2px !important;
+    height: 100% !important;
+}
+
+.trading-panel .price-section .price-controls .el-button {
+    width: 32px !important;
+    height: 18px !important;
+    padding: 0 !important;
+    margin: 0 !important;
+    min-height: 18px !important;
+    font-size: 12px !important;
+    line-height: 1 !important;
+    border-radius: 2px !important;
+}
+
+.trading-panel .price-section .price-controls .el-button+.el-button {
+    margin-left: 0 !important;
+    margin-top: 2px !important;
 }
 </style>

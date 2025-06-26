@@ -1636,6 +1636,9 @@ const sendMessage = async () => {
         chatHistoryStore.createNewChat();
     }
 
+    const conversationId = chatHistoryStore.currentChatId;
+    console.log('当前聊天ID:', conversationId);
+
     // 添加用户消息
     const userMessage = { role: 'user', content: message };
     chatHistory.value.push(userMessage);
@@ -1653,7 +1656,7 @@ const sendMessage = async () => {
         let aiContent = '';
         const abortController = new AbortController(); // 用于取消请求
         currentAbortController.value = abortController; // 保存到全局状态
-        fetchEventSource(`${api.devPrefix}${api.chatStreamApi}?userInput=${encodeURIComponent(message)}`, {
+        fetchEventSource(`${api.devPrefix}${api.chatStreamApi}?conversationId=${conversationId}&userInput=${encodeURIComponent(message)}`, {
             method: 'GET', // GET 是默认方法，可省略
             headers: {
                 'Content-Type': 'text/event-stream', // 设置内容类型为 SSE
@@ -2918,9 +2921,16 @@ const handleSmartRecommendation = async () => {
     const processingMessage1 = { role: 'assistant', content: '正在为您分析市场数据，请等待片刻......' };
     chatHistory.value.push(processingMessage, processingMessage1);
 
+    // 如果是新聊天，创建聊天记录
+    if (!chatHistoryStore.currentChatId) {
+        chatHistoryStore.createNewChat();
+    }
+    const conversationId = chatHistoryStore.currentChatId;
+    console.log('当前聊天ID:', conversationId);
+
     const mockRes = await mockApi.sendMessage(message);
 
-    let response = await recommendStock({ pageNo: 1, pageSize: 3 });
+    let response = await recommendStock({ pageNo: 1, pageSize: 3, conversationId: conversationId });
     if (response && response.data && response.data.success) {
         let stockList = [];
         let data = response.data.data || [];
@@ -2975,6 +2985,7 @@ const handleSmartRecommendation = async () => {
             }, 300);
         }
     } else {
+        console.error('智能荐股API请求失败:', response);
         ElMessage.error('智能荐股失败，请稍后重试');
     }
 };
@@ -3462,14 +3473,22 @@ const updateWatchlistInChatHistory = () => {
 
 const continueAnalysis = async (stockInfo, isPaid = false) => {
 
+    // 如果是新聊天，创建聊天记录
+    if (!chatHistoryStore.currentChatId) {
+        chatHistoryStore.createNewChat();
+    }
+    const conversationId = chatHistoryStore.currentChatId;
+    console.log('当前聊天ID:', conversationId);
+
     chatHistory.value.push(
-        { role: 'assistant', content: `正在为您量化分析【${stockInfo.name}(${stockInfo.code})】，请等待片刻......` },
+        { role: 'assistant', content: `正在为您量化分析【${stockInfo.name}(${stockInfo.code})】，请等待片刻......`,
+            hasStockInfo: false, stockInfo: stockInfo },
     );
 
     try {
         let aiContent = '';
         const abortController = new AbortController(); // 用于取消请求
-        fetchEventSource(`${api.devPrefix}${api.analyzeStockApi}?stock=${encodeURIComponent(stockInfo.code)}`, {
+        fetchEventSource(`${api.devPrefix}${api.analyzeStockApi}?conversationId=${conversationId}&stock=${encodeURIComponent(stockInfo.code)}`, {
             method: 'GET', // GET 是默认方法，可省略
             headers: {
                 'Content-Type': 'text/event-stream', // 设置内容类型为 SSE
@@ -3512,6 +3531,8 @@ const continueAnalysis = async (stockInfo, isPaid = false) => {
                 }
             },
             onclose: () => {
+                // 显示购买等按钮
+                chatHistory.value[chatHistory.value.length - 1].hasStockInfo = true;
                 console.log('连接关闭');
             },
             onerror: (err) => {

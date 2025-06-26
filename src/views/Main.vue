@@ -1190,7 +1190,7 @@ import MobileStockList from '../components/MobileStockList.vue';
 import { getStockListConfig } from '../config/stockListConfig';
 import { recommendStock, api } from '@/api/api';
 import { riskOptions } from '@/config/userPortrait';
-import { fetchEventSource } from '@microsoft/fetch-event-source';
+import { authFetchEventSource }  from '@/utils/request';
 
 const router = useRouter();
 const userStore = useUserStore();
@@ -1656,12 +1656,8 @@ const sendMessage = async () => {
         let aiContent = '';
         const abortController = new AbortController(); // 用于取消请求
         currentAbortController.value = abortController; // 保存到全局状态
-        fetchEventSource(`${api.devPrefix}${api.chatStreamApi}?conversationId=${conversationId}&userInput=${encodeURIComponent(message)}`, {
+        authFetchEventSource(`${api.devPrefix}${api.chatStreamApi}?conversationId=${conversationId}&userInput=${encodeURIComponent(message)}`, {
             method: 'GET', // GET 是默认方法，可省略
-            headers: {
-                'Content-Type': 'text/event-stream', // 设置内容类型为 SSE
-                'Authorization': `${userStore.token}` // 添加用户令牌
-            },
             signal: abortController.signal, // 绑定取消信号
 
              // 添加重试配置
@@ -1670,17 +1666,13 @@ const sendMessage = async () => {
 
             onopen: async (response) => {
                 // 连接建立时触发
-                if (response.ok) {
-                    console.log('连接成功');
-                } else {
-                    throw new Error(`服务器错误: ${response.status}`);
-                }
+                console.log('连接成功');
             },
 
             onmessage: (event) => {
                 // 处理每条消息
                 try {
-                    console.log('智能荐股：收到数据:', event.data);
+                    console.log('通用聊天：收到数据:', event.data);
                     let data = event.data;
                     // 如果 data 是空格，则新增一个空格（SSE 协议规范：data: 后的第一个空格是固定分隔符，一定会被丢弃）
                     if (data.trim().length === 0) {
@@ -1708,9 +1700,8 @@ const sendMessage = async () => {
             },
             onerror: (err) => {
                 // 错误处理（网络错误、解析异常等）
-                console.error('发生错误:', err);
                 abortController.abort(); // 取消请求
-                aiMessage.content += '\n\n[服务器繁忙，已终止]';
+                aiMessage.content += `\n\n[${err.message || '请求中断'}]`;
                 // 重置生成状态
                 isGenerating.value = false;
                 currentAbortController.value = null;
@@ -2985,8 +2976,11 @@ const handleSmartRecommendation = async () => {
             }, 300);
         }
     } else {
-        console.error('智能荐股API请求失败:', response);
-        ElMessage.error('智能荐股失败，请稍后重试');
+        const lastMessage = chatHistory.value[chatHistory.value.length - 1];
+        if (lastMessage.content) {
+            lastMessage.content += '\n[服务器繁忙，已终止]';
+        }
+        chatHistory.value = [...chatHistory.value];
     }
 };
 
@@ -3488,25 +3482,15 @@ const continueAnalysis = async (stockInfo, isPaid = false) => {
     try {
         let aiContent = '';
         const abortController = new AbortController(); // 用于取消请求
-        fetchEventSource(`${api.devPrefix}${api.analyzeStockApi}?conversationId=${conversationId}&stock=${encodeURIComponent(stockInfo.code)}`, {
+        authFetchEventSource(`${api.devPrefix}${api.analyzeStockApi}?conversationId=${conversationId}&stock=${encodeURIComponent(stockInfo.code)}`, {
             method: 'GET', // GET 是默认方法，可省略
-            headers: {
-                'Content-Type': 'text/event-stream', // 设置内容类型为 SSE
-                'Authorization': `${userStore.token}` // 添加用户令牌
-            },
             signal: abortController.signal, // 绑定取消信号
-
             // 添加重试配置
             retryInterval: 0,       // 不重试
             backoffMultiplier: 0,    // 退避系数
 
             onopen: async (response) => {
-                // 连接建立时触发
-                if (response.ok) {
-                    console.log('连接成功');
-                } else {
-                    throw new Error(`服务器错误: ${response.status}`);
-                }
+                console.log('连接成功');
             },
             
             onmessage: (event) => {
@@ -3537,9 +3521,8 @@ const continueAnalysis = async (stockInfo, isPaid = false) => {
             },
             onerror: (err) => {
                 // 错误处理（网络错误、解析异常等）
-                console.error('发生错误:', err);
                 abortController.abort(); // 取消请求
-                aiContent += '\n\n[服务器繁忙，已终止]';
+                aiContent += `\n\n[${err.message || '请求中断'}]`;
                 throw err; // 重新抛出以终止流
             }
         });

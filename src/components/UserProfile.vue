@@ -1,6 +1,6 @@
 <template>
     <div class="user-profile-overlay">
-        <div class="user-profile">
+        <div class="user-profile" :class="{ 'wechat-env': isWechatEnv }">
             <!-- 关闭按钮 -->
             <div class="profile-close">
                 <el-button type="text" @click="$emit('close')" class="close-btn">
@@ -1358,6 +1358,12 @@ const userStore = useUserStore();
 const isMobile = () => {
     return window.innerWidth <= 768;
 };
+
+// 检测是否为微信环境
+const isWechatEnv = computed(() => {
+    const ua = navigator.userAgent.toLowerCase();
+    return ua.includes('micromessenger');
+});
 
 // 响应式数据
 const activeTab = ref('basic');
@@ -2908,6 +2914,13 @@ onMounted(() => {
         flex-direction: column;
     }
 
+    /* 只在非微信环境的移动端浏览器中添加顶部间距 */
+    .user-profile:not(.wechat-env) {
+        padding-top: 44px;
+        padding-bottom: 20px;
+        box-sizing: border-box;
+    }
+
     /* 隐藏原有的复杂头部，采用移动端简洁设计 */
     .profile-header {
         display: none;
@@ -2924,6 +2937,16 @@ onMounted(() => {
         display: flex !important;
         align-items: center;
         flex-shrink: 0;
+    }
+
+    /* 移动端关闭按钮需要更高的z-index */
+    .profile-close {
+        z-index: 101 !important;
+    }
+
+    /* 只在非微信环境下调整关闭按钮位置 */
+    .user-profile:not(.wechat-env) .profile-close {
+        top: 60px !important;
     }
 
     .mobile-user-info {

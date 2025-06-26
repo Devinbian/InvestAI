@@ -3951,6 +3951,48 @@ onMounted(() => {
         document.body.classList.add('wechat-browser');
     }
 
+    // 防止页面缩放的JavaScript控制
+    const preventZoom = () => {
+        // 防止双击缩放
+        let lastTouchEnd = 0;
+        document.addEventListener('touchend', function (event) {
+            const now = (new Date()).getTime();
+            if (now - lastTouchEnd <= 300) {
+                event.preventDefault();
+            }
+            lastTouchEnd = now;
+        }, false);
+
+        // 防止手势缩放
+        document.addEventListener('gesturestart', function (event) {
+            event.preventDefault();
+        });
+
+        document.addEventListener('gesturechange', function (event) {
+            event.preventDefault();
+        });
+
+        document.addEventListener('gestureend', function (event) {
+            event.preventDefault();
+        });
+
+        // 防止键盘快捷键缩放
+        document.addEventListener('keydown', function (event) {
+            if (event.ctrlKey && (event.keyCode === 61 || event.keyCode === 107 || event.keyCode === 173 || event.keyCode === 109 || event.keyCode === 187 || event.keyCode === 189)) {
+                event.preventDefault();
+            }
+        });
+
+        // 防止鼠标滚轮缩放
+        document.addEventListener('wheel', function (event) {
+            if (event.ctrlKey) {
+                event.preventDefault();
+            }
+        }, { passive: false });
+    };
+
+    preventZoom();
+
     // 初始状态不调用修复函数，让CSS自然生效
 
 
@@ -5175,12 +5217,35 @@ onMounted(() => {
 </style>
 
 <style scoped>
+/* 全局禁用缩放和双击缩放 */
+* {
+    touch-action: pan-x pan-y !important;
+    -webkit-touch-callout: none !important;
+    -webkit-user-select: none !important;
+    -khtml-user-select: none !important;
+    -moz-user-select: none !important;
+    -ms-user-select: none !important;
+    user-select: none !important;
+}
+
+/* 允许文本选择的元素 */
+input,
+textarea,
+[contenteditable] {
+    -webkit-user-select: text !important;
+    -khtml-user-select: text !important;
+    -moz-user-select: text !important;
+    -ms-user-select: text !important;
+    user-select: text !important;
+}
+
 .main-modern {
     min-height: 100vh;
     background: #fafbfc;
     display: flex;
     flex-direction: column;
     overflow-x: hidden;
+    touch-action: pan-x pan-y !important;
 }
 
 /* 当显示引导组件时允许滚动 */

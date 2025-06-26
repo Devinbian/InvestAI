@@ -3,6 +3,8 @@ import { headUrl } from "@/config/baseUrl";
 import { ElMessage } from "element-plus";
 import router from "@/router/index.js";
 import { useUserStore } from "@/store/user";
+import { fetchEventSource, EventStreamContentType } from '@microsoft/fetch-event-source';
+
 
 let flag = true;
 const userStore = useUserStore();
@@ -79,5 +81,117 @@ request.interceptors.response.use(
     return data;
   },
 );
+
+//============================= 封装的 fetchEventSource 方法 =================================
+let sseFlag = true; // 单独用于 SSE 的错误提示节流
+
+/**
+ * 封装的 fetchEventSource 方法，添加认证和错误拦截
+ * @param url 请求地址
+ * @param options 配置选项
+ */
+export const authFetchEventSource = async (url, options = {}) => {
+  const ctrl = new AbortController();
+
+  try {
+    await fetchEventSource(url, {
+      ...options,
+      headers: {
+        ...options.headers,
+        Authorization: userStore.userInfo?.token || '', // 添加认证 token
+      },
+      signal: ctrl.signal,
+      async onopen(response) {
+        // 处理 HTTP 错误响应
+        if (response.status !== 200) {
+          const errorData = await response.json().catch(() => ({}));
+          handleSSEError(response.status, errorData);
+          ctrl.abort(); // 中止连接
+          return;
+        }
+        
+        // 检查内容类型是否是事件流
+        const contentType = response.headers.get('content-type');
+        if (!contentType?.includes(EventStreamContentType)) {
+          throw new Error(`Expected event-stream content type, got: ${contentType}`);
+        }
+
+        // 调用用户自定义的 onopen
+        if (options.onopen) {
+          return options.onopen(response);
+        }
+      },
+      onerror(err) {
+        // 网络错误处理
+        err.message = getNetworkErrorMsg(err);
+        ctrl.abort(); // 中止连接
+        return options.onerror(err);
+      }
+    });
+  } catch (err) {
+      console.error('SSE Connection Error:', err);
+  }
+};
+
+/**
+ * 处理 SSE 的 HTTP 错误
+ * 
+ * @param status HTTP 状态码
+ * @param errorData 错误响应数据
+ */
+function handleSSEError(status, errorData) {
+  const { code, message } = errorData;
+  let errorMsg = message || `服务器错误 (${status})`;
+
+  // 认证错误处理
+  if (status === 401 || code === 'A0307' || code === 'B0301') {
+    userStore.logout();
+    router.push('/?showLogin=true').then(() => {
+      window.location.reload();
+    });
+    errorMsg = "登录已过期，请重新登录";
+  }
+
+  showThrottledMessage(errorMsg, 'warning');
+}
+
+/**
+ * 处理网络错误
+ * 
+ * @param err 错误对象
+ * @return 错误消息字符串
+ */
+function getNetworkErrorMsg(err) {
+  let msg = "网络连接错误，请检查网络设置";
+
+  if (err.name === 'AbortError') return; // 忽略手动中止的错误
+
+  if (err.message.includes('Failed to fetch')) {
+    msg = "无法连接到服务器，请检查网络";
+  } else if (err.message.includes('Timeout')) {
+    msg = "连接超时，请重试";
+  } else if (err.message.includes('CORS')) {
+    msg = "跨域请求被阻止，请联系管理员";
+  }
+
+  return msg;
+}
+
+/**
+ * 节流错误提示
+ * 
+ * @param msg 消息内容
+ * @param type 消息类型
+ */
+function showThrottledMessage(msg, type) {
+  if (!sseFlag) return;
+  
+  sseFlag = false;
+  ElMessage[type](msg);
+  
+  setTimeout(() => {
+    sseFlag = true;
+  }, 2000);
+}
 
 export default request;

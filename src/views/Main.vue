@@ -1642,7 +1642,7 @@ const sendMessage = async () => {
     chatHistoryStore.addMessageToCurrentChat(userMessage);
 
     // 先插入一个空的AI回复
-    const aiMessage = { role: 'assistant', content: '' };
+    const aiMessage = { role: 'assistant', content: '正在思考，请等待片刻......' };
     chatHistory.value.push(aiMessage);
     chatHistoryStore.addMessageToCurrentChat(aiMessage);
 
@@ -1653,8 +1653,7 @@ const sendMessage = async () => {
         let aiContent = '';
         const abortController = new AbortController(); // 用于取消请求
         currentAbortController.value = abortController; // 保存到全局状态
-
-        fetchEventSource(`${api.devPrefix}${api.recommendStock}?userInput=${encodeURIComponent(message)}`, {
+        fetchEventSource(`${api.devPrefix}${api.chatStreamApi}?userInput=${encodeURIComponent(message)}`, {
             method: 'GET', // GET 是默认方法，可省略
             headers: {
                 'Content-Type': 'text/event-stream', // 设置内容类型为 SSE
@@ -1662,7 +1661,7 @@ const sendMessage = async () => {
             },
             signal: abortController.signal, // 绑定取消信号
 
-            // 添加重试配置
+             // 添加重试配置
             retryInterval: 0,       // 不重试
             backoffMultiplier: 0,    // 退避系数
 
@@ -1674,6 +1673,7 @@ const sendMessage = async () => {
                     throw new Error(`服务器错误: ${response.status}`);
                 }
             },
+
             onmessage: (event) => {
                 // 处理每条消息
                 try {
@@ -3463,16 +3463,13 @@ const updateWatchlistInChatHistory = () => {
 const continueAnalysis = async (stockInfo, isPaid = false) => {
 
     chatHistory.value.push(
-        {
-            role: 'assistant', content: `正在为您量化分析【${stockInfo.name}(${stockInfo.code})】，请等待片刻......`,
-            hasStockInfo: true, stockInfo: stockInfo
-        },
+        { role: 'assistant', content: `正在为您量化分析【${stockInfo.name}(${stockInfo.code})】，请等待片刻......` },
     );
 
     try {
         let aiContent = '';
         const abortController = new AbortController(); // 用于取消请求
-        fetchEventSource(`${api.devPrefix}${api.analyzeStock}?stock=${encodeURIComponent(stockInfo.code)}`, {
+        fetchEventSource(`${api.devPrefix}${api.analyzeStockApi}?stock=${encodeURIComponent(stockInfo.code)}`, {
             method: 'GET', // GET 是默认方法，可省略
             headers: {
                 'Content-Type': 'text/event-stream', // 设置内容类型为 SSE
@@ -3492,6 +3489,7 @@ const continueAnalysis = async (stockInfo, isPaid = false) => {
                     throw new Error(`服务器错误: ${response.status}`);
                 }
             },
+            
             onmessage: (event) => {
                 // 处理每条消息
                 try {
@@ -3524,6 +3522,7 @@ const continueAnalysis = async (stockInfo, isPaid = false) => {
                 throw err; // 重新抛出以终止流
             }
         });
+        
     } catch (err) {
         aiContent = '响应失败，请重试';
         chatHistory.value = [...chatHistory.value];

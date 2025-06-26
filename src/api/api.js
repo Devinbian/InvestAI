@@ -8,12 +8,15 @@ const api = {
   logoutApi: "/logout",
 
   // user portrait
-  getUserPortrait: "/user-portrait/detail",
-  updateUserPortrait: "/user-portrait/update", 
+  getUserPortraitApi: "/user-portrait/detail",
+  updateUserPortraitApi: "/user-portrait/update", 
 
   // stock
-  recommendStock: "/chat/recommendStock", // 智能荐股
-  analyzeStock: "/chat/analyzeStock", // 量化分析股票
+  recommendStockApi: "/chat/recommendStock", // 智能荐股
+  analyzeStockApi: "/chat/analyzeStock", // 量化分析股票
+
+
+  chatStreamApi: "/chat/stream", // 聊天流式接口
   
 };
 
@@ -31,13 +34,13 @@ export const register = (params) => request.post(api.registerApi, params);
 export const logout = () => request.post(api.logoutApi);
 
 // 获取用户偏好
-export const getUserPortrait = () => request.get(api.getUserPortrait);
+export const getUserPortrait = () => request.get(api.getUserPortraitApi);
 
 // 更新用户偏好
-export const updateUserPortrait = (params) => request.post(api.updateUserPortrait, params);
+export const updateUserPortrait = (params) => request.post(api.updateUserPortraitApi, params);
 
 // 获取推荐股票
-export const recommendStock = (params) => request.get(api.recommendStock, {
+export const recommendStock = (params) => request.get(api.recommendStockApi, {
   params,
   timeout: 30000 // 设置30秒超时
 });

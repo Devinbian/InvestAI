@@ -354,6 +354,9 @@ defineExpose({
     min-height: 0;
     /* 调整高度计算，给账户总览更多空间 */
     height: calc(100vh - 106px);
+    height: calc(100dvh - 106px);
+    height: calc(var(--vh, 1vh) * 100 - 106px);
+    /* 使用动态视口高度，CSS变量作为备选方案 */
     /* 56px(顶部) + 50px(tab导航) */
     /* 添加滚动条稳定性 */
     scrollbar-gutter: stable;
@@ -370,6 +373,25 @@ defineExpose({
     min-height: 0;
     padding-bottom: 20px;
     /* 移除固定的最小高度，让内容自然流动 */
+}
+
+/* 移动端底部安全区域处理 */
+@media (max-width: 768px) {
+    .tab-panel {
+        padding-bottom: calc(20px + env(safe-area-inset-bottom, 0px)) !important;
+    }
+
+    .tab-content {
+        padding-bottom: env(safe-area-inset-bottom, 0px) !important;
+        /* 确保移动端滚动到底部时有足够的空间 */
+        height: calc(100dvh - 106px - env(safe-area-inset-bottom, 0px)) !important;
+        height: calc(var(--vh, 1vh) * 100 - 106px - env(safe-area-inset-bottom, 0px)) !important;
+    }
+
+    /* 移动端侧边栏整体容器的底部安全区域 */
+    .sidebar-container.mobile-expanded {
+        padding-bottom: env(safe-area-inset-bottom, 0px) !important;
+    }
 }
 
 /* Tab内容区域滚动条样式 */
@@ -470,6 +492,9 @@ defineExpose({
         width: 85vw !important;
         max-width: 380px !important;
         height: 100vh !important;
+        height: 100dvh !important;
+        height: calc(var(--vh, 1vh) * 100) !important;
+        /* 使用动态视口高度，CSS变量作为备选方案 */
         top: 0 !important;
         right: -100% !important;
         /* 默认隐藏在右侧 */
@@ -533,6 +558,9 @@ defineExpose({
     /* 移动端侧边栏内容 */
     .sidebar-content {
         height: 100% !important;
+        height: 100dvh !important;
+        height: calc(var(--vh, 1vh) * 100) !important;
+        /* 使用动态视口高度，CSS变量作为备选方案 */
         padding: 0 !important;
         /* 移除顶部间距 */
         overflow: hidden !important;
@@ -636,6 +664,8 @@ defineExpose({
     /* PC端tab内容区域保持原样 */
     .sidebar-container:not(.mobile-expanded) .tab-content {
         height: calc(100vh - 106px) !important;
+        height: calc(100dvh - 106px) !important;
+        height: calc(var(--vh, 1vh) * 100 - 106px) !important;
         /* PC端：56px(顶部) + 50px(tab导航) */
         padding: 0 !important;
         background: transparent !important;
@@ -644,6 +674,8 @@ defineExpose({
     /* 移动端tab内容区域 - 无头部版本 */
     .sidebar-container.mobile-expanded .tab-content {
         height: calc(100vh - 40px) !important;
+        height: calc(100dvh - 40px) !important;
+        height: calc(var(--vh, 1vh) * 100 - 40px) !important;
         /* 只减去tab导航(40px) */
         padding: 6px !important;
         flex: 1 !important;

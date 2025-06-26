@@ -854,10 +854,36 @@ setInterval(updateChatHistoryList, 1000);
 @media (max-width: 768px) {
     .chat-history-container {
         width: 280px;
+        height: 100vh;
+        height: 100dvh;
+        height: calc(var(--vh, 1vh) * 100);
+        /* 使用动态视口高度，CSS变量作为备选方案 */
     }
 
     .chat-history-container.collapsed {
         width: 0;
+    }
+
+    .history-panel {
+        height: 100vh;
+        height: 100dvh;
+        height: calc(var(--vh, 1vh) * 100);
+        /* 使用动态视口高度，CSS变量作为备选方案 */
+        padding-bottom: env(safe-area-inset-bottom, 0px);
+        /* 底部安全区域 */
+    }
+
+    .history-list-container {
+        padding-bottom: calc(20px + env(safe-area-inset-bottom, 0px));
+        /* 底部安全区域 */
+    }
+
+    .history-list {
+        /* 改善滚动体验 */
+        -webkit-overflow-scrolling: touch;
+        overscroll-behavior: contain;
+        padding-bottom: env(safe-area-inset-bottom, 0px);
+        /* 底部安全区域 */
     }
 
     /* 移动端触摸优化 */
@@ -881,12 +907,6 @@ setInterval(updateChatHistoryList, 1000);
         -webkit-tap-highlight-color: transparent;
         min-height: 56px;
         /* 确保足够的点击区域 */
-    }
-
-    .history-list {
-        /* 改善滚动体验 */
-        -webkit-overflow-scrolling: touch;
-        overscroll-behavior: contain;
     }
 }
 </style>

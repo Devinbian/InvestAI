@@ -2313,6 +2313,19 @@ const debounce = (func, wait) => {
     };
 };
 
+// 设置动态视口高度CSS变量
+const setDynamicViewportHeight = () => {
+    // 设置CSS变量以支持动态视口高度
+    const vh = window.innerHeight * 0.01;
+    document.documentElement.style.setProperty('--vh', `${vh}px`);
+
+    // 如果支持visualViewport API，使用更精确的值
+    if (window.visualViewport) {
+        const visualVh = window.visualViewport.height * 0.01;
+        document.documentElement.style.setProperty('--visual-vh', `${visualVh}px`);
+    }
+};
+
 // 检测移动端视图
 const checkMobileView = () => {
     const newIsMobileView = window.innerWidth <= 768;
@@ -2322,6 +2335,9 @@ const checkMobileView = () => {
         previousValue: isMobileView.value
     });
     isMobileView.value = newIsMobileView;
+
+    // 更新动态视口高度
+    setDynamicViewportHeight();
 };
 
 // 移动端侧边栏状态管理
@@ -3933,6 +3949,9 @@ onMounted(() => {
     // 检测移动端视图
     checkMobileView();
 
+    // 初始化动态视口高度
+    setDynamicViewportHeight();
+
     // 初始化聊天历史区域高度
     updateChatHistoryHeight();
 
@@ -4044,6 +4063,7 @@ onMounted(() => {
             const handleViewportChange = debounce(() => {
                 if (isMobileView.value) {
                     console.log('视口变化检测，重新调整移动端布局');
+                    setDynamicViewportHeight(); // 更新动态视口高度
                     fixMobileChatBox();
                 }
             }, 150);
@@ -4058,6 +4078,7 @@ onMounted(() => {
             const handleWindowResize = debounce(() => {
                 if (isMobileView.value) {
                     console.log('窗口尺寸变化检测，重新调整移动端布局');
+                    setDynamicViewportHeight(); // 更新动态视口高度
                     setTimeout(fixMobileChatBox, 200);
                 }
             }, 300);

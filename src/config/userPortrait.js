@@ -251,6 +251,14 @@ export const subSectors = [
         desc: 'AI芯片、机器学习、自动驾驶等',
         examples: '科大讯飞、寒武纪、四维图新'
     },
+    {
+        value: 'chip',
+        label: '芯片',
+        parent: 'technology',
+        icon: '🧩',
+        desc: '芯片',
+        examples: '中芯国际、北方华创、长电科技'
+    },
 
     // 金融板块下的小分类
     {

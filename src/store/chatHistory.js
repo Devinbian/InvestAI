@@ -1,4 +1,5 @@
 import { defineStore } from "pinia";
+import { createConversation } from "@/api/api";
 
 export const useChatHistoryStore = defineStore("chatHistory", {
   state: () => ({
@@ -107,8 +108,9 @@ export const useChatHistoryStore = defineStore("chatHistory", {
     },
 
     // 创建新聊天
-    createNewChat(messages = []) {
-      const chatId = `chat_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
+    async createNewChat(messages = []) {
+      let chatId = await this.getConversationId();
+      //let chatId = `chat_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
       const title = this.generateChatTitle(messages);
 
       const newChat = {
@@ -124,6 +126,21 @@ export const useChatHistoryStore = defineStore("chatHistory", {
       this.currentChatMessages = [...messages];
       this.saveChatHistory();
 
+      return chatId;
+    },
+
+    // 获取会话ID
+    async getConversationId() {
+      let chatId = `chat_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
+      try {
+          const response = await createConversation();
+          if (response && response.data && response.data.success) {
+              chatId = response.data.data;
+              console.log("获取会话ID成功:", chatId);
+          }
+      } catch (error) {
+        
+      }
       return chatId;
     },
 

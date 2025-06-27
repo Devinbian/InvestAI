@@ -16,6 +16,7 @@ const api = {
   analyzeStockApi: "/chat/analyzeStock", // 量化分析股票
 
 
+  createConversationApi: "/conversation/create", // 创建会话
   chatStreamApi: "/chat/stream", // 聊天流式接口
   
 };
@@ -42,6 +43,9 @@ export const updateUserPortrait = (params) => request.post(api.updateUserPortrai
 // 获取推荐股票
 export const recommendStock = (params) => request.get(api.recommendStockApi, {
   params,
-  timeout: 30000 // 设置30秒超时
+  timeout: 60000 // 设置60秒超时
 });
+
+// 创建会话
+export const createConversation = () => request.post(api.createConversationApi);
 

@@ -1644,7 +1644,7 @@ const sendMessage = async () => {
 
     // 如果是新聊天，创建聊天记录
     if (!chatHistoryStore.currentChatId) {
-        chatHistoryStore.createNewChat();
+       await chatHistoryStore.createNewChat();
     }
 
     const conversationId = chatHistoryStore.currentChatId;
@@ -1720,7 +1720,7 @@ const sendMessage = async () => {
             }
         });
     } catch (err) {
-        aiMessage.content = '响应失败，请重试';
+        aiMessage.content += `\n\n[${err.message || '请求中断'}]`;
         chatHistory.value = [...chatHistory.value];
         // 重置生成状态
         isGenerating.value = false;
@@ -2810,10 +2810,10 @@ const handleLoadChat = (chat) => {
     ElMessage.success('聊天记录已加载');
 };
 
-const handleCreateNewChat = () => {
+const handleCreateNewChat = async() => {
     // 如果当前有聊天内容，先保存到历史记录
     if (chatHistory.value.length > 0 && !chatHistoryStore.currentChatId) {
-        const chatId = chatHistoryStore.createNewChat(chatHistory.value);
+        const chatId = await chatHistoryStore.createNewChat(chatHistory.value);
         ElMessage.success('当前聊天已保存到历史记录');
     }
 
@@ -2865,71 +2865,80 @@ const handleSmartRecommendation = async () => {
 
     // 如果是新聊天，创建聊天记录
     if (!chatHistoryStore.currentChatId) {
-        chatHistoryStore.createNewChat();
+       await chatHistoryStore.createNewChat();
     }
     const conversationId = chatHistoryStore.currentChatId;
     console.log('当前聊天ID:', conversationId);
 
     const mockRes = await mockApi.sendMessage(message);
 
-    let response = await recommendStock({ pageNo: 1, pageSize: 3, conversationId: conversationId });
-    if (response && response.data && response.data.success) {
-        let stockList = [];
-        let data = response.data.data || [];
-        data.forEach(item => {
-            stockList.push({
-                name: item.name,
-                code: item.code,
-                recommendIndex: item.recommendScore,
-                recommendLevel: item.recommendLevel,
-                price: item.latestPrice, // 当前价格
-                change: item.change || 0, // 涨跌额
-                changePercent: (item.rise || 0).concat('%'), // 涨跌幅
-                targetPrice: item.targetPrice,
-                riskLevel: item.riskLevel,
-                industry: item.industry,
-                reason: item.recommendReason,
+    try{
+        let response = await recommendStock({ pageNo: 1, pageSize: 3, conversationId: conversationId });
+        if (response && response.data && response.data.success) {
+            let stockList = [];
+            let data = response.data.data || [];
+            data.forEach(item => {
+                stockList.push({
+                    name: item.name,
+                    code: item.code,
+                    recommendIndex: item.recommendScore,
+                    recommendLevel: item.recommendLevel,
+                    price: item.latestPrice, // 当前价格
+                    change: item.change || 0, // 涨跌额
+                    changePercent: (item.rise || 0).concat('%'), // 涨跌幅
+                    targetPrice: item.targetPrice,
+                    riskLevel: item.riskLevel,
+                    industry: item.industry,
+                    reason: item.recommendReason,
+                });
             });
-        });
-        stockList.sort((a, b) => b.recommendIndex - a.recommendIndex);
+            stockList.sort((a, b) => b.recommendIndex - a.recommendIndex);
 
-        console.log('智能荐股API响应:', stockList);
+            console.log('智能荐股API响应:', stockList);
 
-        // 构建荐股消息内容
-        const stockListMessage = {
-            content: mockRes.data.content,
-            hasStockInfo: stockList.length > 0,
-            isRecommendation: stockList.length > 0,
-            role: 'assistant',
-            stockList: stockList
-        };
+            // 构建荐股消息内容
+            const stockListMessage = {
+                content: mockRes.data.content,
+                hasStockInfo: stockList.length > 0,
+                isRecommendation: stockList.length > 0,
+                role: 'assistant',
+                stockList: stockList
+            };
 
-        // 为荐股消息添加持久化标识和唯一ID
-        const recommendationMessage = {
-            ...stockListMessage,
-            isPersistent: true,
-            messageId: `recommendation-${Date.now()}`,
-            timestamp: new Date().toISOString()
-        };
+            // 为荐股消息添加持久化标识和唯一ID
+            const recommendationMessage = {
+                ...stockListMessage,
+                isPersistent: true,
+                messageId: `recommendation-${Date.now()}`,
+                timestamp: new Date().toISOString()
+            };
 
-        chatHistory.value.push(
-            recommendationMessage
-        );
+            chatHistory.value.push(
+                recommendationMessage
+            );
 
-        await nextTick();
-        scrollToBottom();
-        ElMessage.success('已为您生成个性化股票推荐');
+            await nextTick();
+            scrollToBottom();
+            ElMessage.success('已为您生成个性化股票推荐');
 
-        // 使用快捷操作后自动收起
-        if (showChatShortcuts.value) {
-            setTimeout(() => {
-                showChatShortcuts.value = false;
-            }, 300);
+            // 使用快捷操作后自动收起
+            if (showChatShortcuts.value) {
+                setTimeout(() => {
+                    showChatShortcuts.value = false;
+                }, 300);
+            }
+        } else {
+            const lastMessage = chatHistory.value[chatHistory.value.length - 1];
+            if (lastMessage.content) {
+                lastMessage.content += `\n[已终止，${response.exceptionTip || '服务器繁忙'}]`;
+            }
+            chatHistory.value = [...chatHistory.value];
         }
-    } else {
+    }catch(err){
+        console.error('智能荐股API调用失败:', JSON.stringify(err));
         const lastMessage = chatHistory.value[chatHistory.value.length - 1];
         if (lastMessage.content) {
-            lastMessage.content += '\n[服务器繁忙，已终止]';
+            lastMessage.content += `\n[已终止，${err.message || '服务器繁忙'}]`;
         }
         chatHistory.value = [...chatHistory.value];
     }
@@ -3420,7 +3429,7 @@ const continueAnalysis = async (stockInfo, isPaid = false) => {
 
     // 如果是新聊天，创建聊天记录
     if (!chatHistoryStore.currentChatId) {
-        chatHistoryStore.createNewChat();
+       await chatHistoryStore.createNewChat();
     }
     const conversationId = chatHistoryStore.currentChatId;
     console.log('当前聊天ID:', conversationId);

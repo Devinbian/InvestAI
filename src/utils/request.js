@@ -91,7 +91,7 @@ let sseFlag = true; // 单独用于 SSE 的错误提示节流
  * @param options 配置选项
  */
 export const authFetchEventSource = async (url, options = {}) => {
-  const ctrl = new AbortController();
+ // const ctrl = options.signal;
 
   try {
     await fetchEventSource(url, {
@@ -100,13 +100,12 @@ export const authFetchEventSource = async (url, options = {}) => {
         ...options.headers,
         Authorization: userStore.userInfo?.token || '', // 添加认证 token
       },
-      signal: ctrl.signal,
+      signal: options.signal,
       async onopen(response) {
         // 处理 HTTP 错误响应
         if (response.status !== 200) {
           const errorData = await response.json().catch(() => ({}));
           handleSSEError(response.status, errorData);
-          ctrl.abort(); // 中止连接
           return;
         }
         
@@ -123,8 +122,7 @@ export const authFetchEventSource = async (url, options = {}) => {
       },
       onerror(err) {
         // 网络错误处理
-        err.message = getNetworkErrorMsg(err);
-        ctrl.abort(); // 中止连接
+        err.message = handleNetworkError(err);
         return options.onerror(err);
       }
     });
@@ -161,7 +159,7 @@ function handleSSEError(status, errorData) {
  * @param err 错误对象
  * @return 错误消息字符串
  */
-function getNetworkErrorMsg(err) {
+function handleNetworkError(err) {
   let msg = "网络连接错误，请检查网络设置";
 
   if (err.name === 'AbortError') return; // 忽略手动中止的错误
@@ -173,6 +171,8 @@ function getNetworkErrorMsg(err) {
   } else if (err.message.includes('CORS')) {
     msg = "跨域请求被阻止，请联系管理员";
   }
+
+  showThrottledMessage(msg, 'warning');
 
   return msg;
 }

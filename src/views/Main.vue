@@ -1661,7 +1661,7 @@ const sendMessage = async () => {
 
     // 如果是新聊天，创建聊天记录
     if (!chatHistoryStore.currentChatId) {
-       await chatHistoryStore.createNewChat();
+        await chatHistoryStore.createNewChat();
     }
 
     const conversationId = chatHistoryStore.currentChatId;
@@ -2827,7 +2827,7 @@ const handleLoadChat = (chat) => {
     ElMessage.success('聊天记录已加载');
 };
 
-const handleCreateNewChat = async() => {
+const handleCreateNewChat = async () => {
     // 如果当前有聊天内容，先保存到历史记录
     if (chatHistory.value.length > 0 && !chatHistoryStore.currentChatId) {
         const chatId = await chatHistoryStore.createNewChat(chatHistory.value);
@@ -2882,14 +2882,14 @@ const handleSmartRecommendation = async () => {
 
     // 如果是新聊天，创建聊天记录
     if (!chatHistoryStore.currentChatId) {
-       await chatHistoryStore.createNewChat();
+        await chatHistoryStore.createNewChat();
     }
     const conversationId = chatHistoryStore.currentChatId;
     console.log('当前聊天ID:', conversationId);
 
     const mockRes = await mockApi.sendMessage(message);
 
-    try{
+    try {
         let response = await recommendStock({ pageNo: 1, pageSize: 3, conversationId: conversationId });
         if (response && response.data && response.data.success) {
             let stockList = [];
@@ -2951,7 +2951,7 @@ const handleSmartRecommendation = async () => {
             }
             chatHistory.value = [...chatHistory.value];
         }
-    }catch(err){
+    } catch (err) {
         console.error('智能荐股API调用失败:', JSON.stringify(err));
         const lastMessage = chatHistory.value[chatHistory.value.length - 1];
         if (lastMessage.content) {
@@ -3446,7 +3446,7 @@ const continueAnalysis = async (stockInfo, isPaid = false) => {
 
     // 如果是新聊天，创建聊天记录
     if (!chatHistoryStore.currentChatId) {
-       await chatHistoryStore.createNewChat();
+        await chatHistoryStore.createNewChat();
     }
     const conversationId = chatHistoryStore.currentChatId;
     console.log('当前聊天ID:', conversationId);
@@ -4329,15 +4329,31 @@ const showPaidAnalysisDialog = (stock) => {
             appendTo: 'body'
         }
     ).then(() => {
-        // 检查余额（按1智点计算）
-        if (userStore.balance < 1) {
+        // 检查智点余额
+        if (userStore.smartPointsBalance < 1) {
             ElMessage.error('智点余额不足，请先充值');
             return;
         }
 
-        // 扣费并执行分析（扣除1智点）
-        userStore.deductBalance(1);
-        ElMessage.success('支付成功，正在生成量化分析报告...');
+        // 扣除智点并记录交易
+        if (userStore.deductSmartPoints(1)) {
+            // 记录智点消费
+            userStore.addSmartPointsTransaction({
+                type: 'consumption',
+                amount: 1,
+                description: `量化分析报告 - ${stock.name}`,
+                serviceType: 'quant-analysis',
+                stockInfo: {
+                    name: stock.name,
+                    code: stock.code,
+                },
+                balanceAfter: userStore.smartPointsBalance,
+            });
+            ElMessage.success('支付成功，正在生成量化分析报告...');
+        } else {
+            ElMessage.error('支付失败，智点余额不足');
+            return;
+        }
 
         // 执行量化分析
         continueAnalysis(stock, true);

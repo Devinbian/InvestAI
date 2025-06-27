@@ -257,9 +257,9 @@ const handleBuyStock = (stock) => {
 };
 
 const handlePaidAnalysis = (stock) => {
-    // 检查余额是否足够
-    if (userStore.balance < 1) {
-        ElMessage.warning('余额不足，请先充值');
+    // 检查智点余额是否足够
+    if (userStore.smartPointsBalance < 1) {
+        ElMessage.warning('智点余额不足，请先充值');
         return;
     }
 
@@ -274,8 +274,20 @@ const handlePaidAnalysis = (stock) => {
             appendTo: 'body'
         }
     ).then(() => {
-        // 扣费（扣除1智点）
-        if (userStore.deductBalance(1)) {
+        // 扣除智点并记录交易
+        if (userStore.deductSmartPoints(1)) {
+            // 记录智点消费
+            userStore.addSmartPointsTransaction({
+                type: 'consumption',
+                amount: 1,
+                description: `量化分析报告 - ${stock.name}`,
+                serviceType: 'quant-analysis',
+                stockInfo: {
+                    name: stock.name,
+                    code: stock.code,
+                },
+                balanceAfter: userStore.smartPointsBalance,
+            });
             ElMessage.success('支付成功，正在生成量化分析...');
             emit('send-to-chat', {
                 type: 'paid-analysis',

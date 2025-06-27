@@ -24,8 +24,7 @@
                                 <div :class="['price-change-group', stock.change >= 0 ? 'up' : 'down']">
                                     <span class="change-amount">{{ stock.change >= 0 ? '+' : '' }}{{ stock.change
                                         }}</span>
-                                    <span class="change-percent">({{ stock.changePercent >= 0 ? '+' : '' }}{{
-                                        stock.changePercent }}%)</span>
+                                    <span class="change-percent">({{ formatChangePercent(stock.changePercent) }})</span>
                                 </div>
                             </div>
                             <div class="price-stats">
@@ -175,21 +174,20 @@
                                 <div class="order-type-section">
                                     <div class="input-row">
                                         <span class="input-label">委托类型</span>
-                                        <el-select v-model="tradingForm.orderType" class="order-type-select"
-                                            placeholder="请选择委托类型">
-                                            <el-option label="限价委托" value="limit" />
-                                            <el-option label="市价委托" value="market" />
-                                        </el-select>
+                                        <select v-model="tradingForm.orderType" class="custom-order-select">
+                                            <option value="limit">限价委托</option>
+                                            <option value="market">市价委托</option>
+                                        </select>
                                     </div>
                                 </div>
 
-                                <!-- 价格输入 -->
-                                <div class="price-section">
+                                <!-- 价格输入 - 只在限价委托时显示 -->
+                                <div class="price-section" v-if="tradingForm.orderType === 'limit'">
                                     <div class="input-row">
                                         <span class="input-label">委托价格</span>
                                         <div class="price-input-group">
                                             <el-input v-model="tradingForm.price" class="price-input"
-                                                :disabled="tradingForm.orderType === 'market'" placeholder="185.50" />
+                                                placeholder="请输入委托价格" />
                                             <div class="price-controls">
                                                 <el-button size="small" class="price-btn"
                                                     @click="adjustPrice(0.01)">+</el-button>
@@ -197,6 +195,14 @@
                                                     @click="adjustPrice(-0.01)">-</el-button>
                                             </div>
                                         </div>
+                                    </div>
+                                </div>
+
+                                <!-- 市价委托说明 -->
+                                <div class="market-order-info" v-if="tradingForm.orderType === 'market'">
+                                    <div class="info-row">
+                                        <span class="info-icon">ℹ️</span>
+                                        <span class="info-text">市价委托将以当前市场价格 ¥{{ stock.price }} 执行交易</span>
                                     </div>
                                 </div>
 
@@ -299,7 +305,7 @@
                                         {{ stock.price }}
                                     </span>
                                     <span class="current-change">
-                                        {{ stock.change >= 0 ? '+' : '' }}{{ stock.changePercent }}%
+                                        {{ formatChangePercent(stock.changePercent) }}
                                     </span>
                                 </div>
 
@@ -457,6 +463,19 @@ const getCurrentTime = () => {
     return new Date().toLocaleTimeString('zh-CN', { hour12: false });
 };
 
+const formatChangePercent = (changePercent) => {
+    if (!changePercent) return '0.00%';
+
+    // 如果已经是字符串格式（包含%符号），直接返回
+    if (typeof changePercent === 'string' && changePercent.includes('%')) {
+        return changePercent;
+    }
+
+    // 如果是数字，格式化为带符号的百分比
+    const num = parseFloat(changePercent);
+    return num >= 0 ? `+${num.toFixed(2)}%` : `${num.toFixed(2)}%`;
+};
+
 const adjustPrice = (delta) => {
     const currentPrice = parseFloat(tradingForm.price) || 0;
     const newPrice = Math.max(0, currentPrice + delta);
@@ -489,15 +508,15 @@ const generateMarketData = () => {
     sellOrders.value = [];
     buyOrders.value = [];
 
-    // 生成卖盘数据（5档）
+    // 生成卖盘数据（5档）- 从高到低排序（卖5最高，卖1最低）
     for (let i = 0; i < 5; i++) {
         sellOrders.value.push({
-            price: (basePrice + (i + 1) * 0.05).toFixed(2),
+            price: (basePrice + (5 - i) * 0.05).toFixed(2), // 卖5价格最高，卖1价格最低
             volume: Math.floor(Math.random() * 500 + 100) + '手'
         });
     }
 
-    // 生成买盘数据（5档）
+    // 生成买盘数据（5档）- 从高到低排序（买1最高，买5最低）
     for (let i = 0; i < 5; i++) {
         buyOrders.value.push({
             price: (basePrice - (i + 1) * 0.05).toFixed(2),
@@ -681,6 +700,10 @@ watch(() => props.tradeType, (newType) => {
 // 监听对话框显示状态
 watch(visible, (newVisible) => {
     if (newVisible && props.stock) {
+        // 确保委托类型有默认值
+        if (!tradingForm.orderType) {
+            tradingForm.orderType = 'limit';
+        }
         nextTick(() => {
             generateMarketData();
         });
@@ -1567,5 +1590,61 @@ watch(visible, (newVisible) => {
 .trading-panel .price-section .price-controls .el-button+.el-button {
     margin-left: 0 !important;
     margin-top: 2px !important;
+}
+
+/* 委托类型选择器样式 */
+.custom-order-select {
+    width: 100%;
+    height: 36px;
+    padding: 0 12px;
+    border: 1px solid #dcdfe6;
+    border-radius: 4px;
+    background-color: #fff;
+    font-size: 13px;
+    color: #333;
+    outline: none;
+    cursor: pointer;
+    transition: border-color 0.2s;
+}
+
+.custom-order-select:hover {
+    border-color: #c0c4cc;
+}
+
+.custom-order-select:focus {
+    border-color: #409eff;
+    box-shadow: 0 0 0 2px rgba(64, 158, 255, 0.2);
+}
+
+.custom-order-select option {
+    padding: 8px 12px;
+    font-size: 13px;
+    color: #333;
+}
+
+/* 市价委托说明样式 */
+.market-order-info {
+    padding: 12px 16px;
+    background: #f0f9ff;
+    border: 1px solid #e0f2fe;
+    border-radius: 8px;
+    margin-bottom: 16px;
+}
+
+.market-order-info .info-row {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.market-order-info .info-icon {
+    font-size: 16px;
+    color: #0ea5e9;
+}
+
+.market-order-info .info-text {
+    font-size: 13px;
+    color: #0369a1;
+    line-height: 1.4;
 }
 </style>

@@ -279,8 +279,8 @@ const handleCancel = () => {
 
 // 处理确认
 const handleConfirm = async () => {
-    // 检查余额（按1智点计算）
-    if (userStore.balance < 1) {
+    // 检查智点余额
+    if (userStore.smartPointsBalance < 1) {
         ElMessage.error('智点余额不足，请先充值');
         return;
     }
@@ -363,9 +363,25 @@ const handleConfirm = async () => {
     try {
         loading.value = true;
 
-        // 扣费（扣除1智点）
-        userStore.deductBalance(1);
-        ElMessage.success('支付成功，正在设置AI委托交易...');
+        // 扣除智点并记录交易
+        if (userStore.deductSmartPoints(1)) {
+            // 记录智点消费
+            userStore.addSmartPointsTransaction({
+                type: 'consumption',
+                amount: 1,
+                description: `AI委托交易 - ${props.stock.name}`,
+                serviceType: 'ai-trading',
+                stockInfo: {
+                    name: props.stock.name,
+                    code: props.stock.code,
+                },
+                balanceAfter: userStore.smartPointsBalance,
+            });
+            ElMessage.success('支付成功，正在设置AI委托交易...');
+        } else {
+            ElMessage.error('支付失败，智点余额不足');
+            return;
+        }
 
         // 关闭对话框
         dialogVisible.value = false;

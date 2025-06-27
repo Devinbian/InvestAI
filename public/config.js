@@ -1,3 +1,3 @@
 var statics = {
-  headUrl: "http://localhost:8080",
+  headUrl: "http://36.111.148.197:8089",
 };

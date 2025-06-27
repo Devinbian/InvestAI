@@ -14,6 +14,17 @@
 
         <!-- 移动端股票列表 -->
         <div class="mobile-stock-list" :class="[listClass, { 'with-toolbar': showToolbar }]">
+
+
+            <!-- 空状态 -->
+            <div v-if="!stocks || stocks.length === 0" class="empty-state">
+                <div class="empty-icon">📊</div>
+                <div class="empty-text">
+                    <h4>暂无股票数据</h4>
+                    <p>请稍后再试或刷新页面</p>
+                </div>
+            </div>
+
             <div v-for="(stock, index) in stocks" :key="stock.code || index" class="mobile-stock-card"
                 :class="{ 'clickable': clickable }" @click="handleStockClick(stock)" @touchstart="handleTouchStart"
                 @touchend="handleTouchEnd">
@@ -49,12 +60,12 @@
 
                     <div class="rating-content-inline">
                         <div class="rating-stars">
-                            <span v-for="i in 5" :key="i" :class="['star', i <= Math.floor(stock.recommendIndex) ? 'filled' :
-                                i <= stock.recommendIndex ? 'half' : 'empty']">
+                            <span v-for="i in 5" :key="i" :class="['star', i <= Math.floor(getRecommendIndexNumber(stock.recommendIndex)) ? 'filled' :
+                                i <= getRecommendIndexNumber(stock.recommendIndex) ? 'half' : 'empty']">
                                 ★
                             </span>
                         </div>
-                        <span class="rating-score">{{ stock.recommendIndex.toFixed(1) }}</span>
+                        <span class="rating-score">{{ formatRecommendIndex(stock.recommendIndex) }}</span>
                         <div class="rating-info-btn" @click.stop="showRatingInfo = !showRatingInfo">
                             <svg width="14" height="14" viewBox="0 0 24 24" fill="none">
                                 <circle cx="12" cy="12" r="10" stroke="currentColor" stroke-width="2" fill="none" />
@@ -400,6 +411,44 @@ const formatTime = (timestamp) => {
     return date.toLocaleString('zh-CN');
 };
 
+// 格式化推荐指数，确保类型安全
+const formatRecommendIndex = (recommendIndex) => {
+    if (recommendIndex === null || recommendIndex === undefined) return '0.0';
+
+    // 如果是字符串，尝试转换为数字
+    if (typeof recommendIndex === 'string') {
+        const num = parseFloat(recommendIndex);
+        return isNaN(num) ? '0.0' : num.toFixed(1);
+    }
+
+    // 如果是数字，直接格式化
+    if (typeof recommendIndex === 'number') {
+        return recommendIndex.toFixed(1);
+    }
+
+    // 其他情况返回默认值
+    return '0.0';
+};
+
+// 获取推荐指数数字值，用于星级计算
+const getRecommendIndexNumber = (recommendIndex) => {
+    if (recommendIndex === null || recommendIndex === undefined) return 0;
+
+    // 如果是字符串，尝试转换为数字
+    if (typeof recommendIndex === 'string') {
+        const num = parseFloat(recommendIndex);
+        return isNaN(num) ? 0 : num;
+    }
+
+    // 如果是数字，直接返回
+    if (typeof recommendIndex === 'number') {
+        return recommendIndex;
+    }
+
+    // 其他情况返回默认值
+    return 0;
+};
+
 const hasStatusInfo = (stock) => {
     return (props.showWatchlistStatus && stock.addedAt) ||
         (props.showPositionStatus && stock.quantity);
@@ -453,22 +502,19 @@ const getVisibleActions = (stock) => {
 // 获取主要操作（最多2个）
 const getPrimaryActions = (stock) => {
     const visibleActions = getVisibleActions(stock);
-    // 按操作频率排序：买入/卖出 > 量化分析/AI交易 > 自选操作
-    const primaryKeys = ['buy', 'sell', 'analysis', 'aiTrading'];
+    // 移动端与PC端保持一致：显示所有操作按钮，但优先显示分析功能
+    const primaryKeys = ['paidAnalysis', 'quantAnalysis'];
 
-    // 优先显示高频操作
+    // 优先显示分析功能
     const primaryActions = visibleActions.filter(action =>
         primaryKeys.includes(action.key)
     );
 
-    // 如果主要操作不足2个，从其他操作中补充（但排除自选操作）
-    if (primaryActions.length < 2) {
-        const otherActions = visibleActions.filter(action =>
-            !primaryKeys.includes(action.key) &&
-            !['addWatchlist', 'removeWatchlist'].includes(action.key)
-        );
-        primaryActions.push(...otherActions.slice(0, 2 - primaryActions.length));
-    }
+    // 按指定顺序排序：AI委托交易 -> 量化分析
+    primaryActions.sort((a, b) => {
+        const orderMap = { 'quantAnalysis': 0, 'paidAnalysis': 1 };
+        return (orderMap[a.key] || 999) - (orderMap[b.key] || 999);
+    });
 
     return primaryActions.slice(0, 2);
 };
@@ -541,13 +587,13 @@ const getActionIcon = (action) => {
         'buy': '💰',
         'sell': '📤',
         'analysis': '🎯',
-        'quantAnalysis': '🎯',  // 统一使用智能荐股的分析图标
-        'paidAnalysis': '🎯',   // 统一使用智能荐股的分析图标
+        'quantAnalysis': '🤖',  // AI委托交易使用机器人图标
+        'paidAnalysis': '🎯',   // 量化分析使用目标图标
         'aiTrading': '🤖',      // 使用机器人图标表示AI智能交易
         'addPosition': '📈'
     };
 
-    return iconMap[action.key] || action.icon || '';
+    return action.icon || iconMap[action.key] || '';
 };
 
 // 获取移动端显示文本（优化按钮文本长度）
@@ -555,8 +601,8 @@ const getMobileActionText = (action) => {
     const mobileTextMap = {
         'analysis': '分析',
         'aiTrading': 'AI交易',
-        'quantAnalysis': '分析',
-        'paidAnalysis': '深度',
+        'quantAnalysis': 'AI交易',      // AI委托交易显示为"AI交易"
+        'paidAnalysis': '量化分析',      // 量化分析显示完整文本
         'addWatchlist': '加自选',
         'removeWatchlist': '移除',
         'buy': '买入',
@@ -638,6 +684,20 @@ watch(() => props.stocks, () => {
 onMounted(() => {
     document.addEventListener('click', handleClickOutside);
     initializeExpandedReasons();
+
+    // 调试信息
+    console.log('MobileStockList mounted:', {
+        stocksLength: props.stocks ? props.stocks.length : 0,
+        stocks: props.stocks,
+        showToolbar: props.showToolbar,
+        toolbarTitle: props.toolbarTitle,
+        showTime: props.showTime,
+        timestamp: props.timestamp,
+        showRecommendIndex: props.showRecommendIndex,
+        showDetails: props.showDetails,
+        showReason: props.showReason,
+        actionsLength: props.actions ? props.actions.length : 0
+    });
 });
 
 onUnmounted(() => {
@@ -1714,6 +1774,36 @@ onUnmounted(() => {
         grid-template-columns: 1fr;
         gap: 4px;
     }
+}
+
+/* 空状态样式 */
+.empty-state {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: 40px 20px;
+    text-align: center;
+    color: #6b7280;
+}
+
+.empty-icon {
+    font-size: 3rem;
+    margin-bottom: 12px;
+    opacity: 0.6;
+}
+
+.empty-text h4 {
+    font-size: 1.1rem;
+    font-weight: 600;
+    margin: 0 0 8px 0;
+    color: #374151;
+}
+
+.empty-text p {
+    font-size: 0.9rem;
+    margin: 0;
+    color: #9ca3af;
 }
 
 /* 触摸反馈优化 */

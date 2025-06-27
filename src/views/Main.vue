@@ -10,10 +10,6 @@
             @create-new-chat="handleCreateNewChat" @rename-chat="handleRenameChat" @delete-chat="handleDeleteChat"
             @close-panel="closeChatHistory" ref="chatHistoryComponentRef" />
 
-
-
-
-
         <!-- 移动端侧边栏悬浮切换按钮 -->
         <button v-show="userStore.isLoggedIn && isMobileView" class="floating-sidebar-toggle"
             @click="toggleMobileSidebar" title="打开功能面板">
@@ -22,8 +18,6 @@
                     stroke-linejoin="round" />
             </svg>
         </button>
-
-
 
         <!-- 主体内容 -->
         <main class="modern-content main-container"
@@ -94,70 +88,13 @@
                     </div>
                 </div>
 
-                <div class="ai-card">
-                    <!-- 输入框区域 -->
-                    <div class="ai-input-row">
-                        <el-input v-model="inputMessage" class="ai-input" type="textarea"
-                            :autosize="{ minRows: 2, maxRows: 6 }" placeholder="如：分析比亚迪近期走势及投资价值，考虑新能源政策影响..."
-                            @keyup.enter.ctrl="sendMessage" clearable maxlength="500" show-word-limit />
-                    </div>
-
-                    <!-- 按钮区域 -->
-                    <div class="ai-buttons-row" :class="{ 'with-history': userStore.isLoggedIn && !showChatHistory }">
-                        <!-- 历史记录按钮 - 左侧独立显示 -->
-                        <el-button v-if="userStore.isLoggedIn && !showChatHistory"
-                            class="ai-func-btn chat-history-btn history-left-btn" circle @click="toggleChatHistory"
-                            :title="'展开聊天记录'">
-                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none">
-                                <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"
-                                    stroke="currentColor" stroke-width="2" stroke-linecap="round"
-                                    stroke-linejoin="round" />
-                                <path d="M8 9h8M8 13h6" stroke="currentColor" stroke-width="2" stroke-linecap="round"
-                                    stroke-linejoin="round" />
-                            </svg>
-                        </el-button>
-
-                        <!-- 右侧功能按钮组 -->
-                        <div class="ai-buttons">
-                            <div class="voice-btn-container">
-                                <el-button class="ai-func-btn voice-btn" :class="{ 'recording': isRecording }" circle
-                                    @click="onVoiceClick"
-                                    :title="isRecording ? `录音中 ${recordingDuration}s` : '点击开始语音输入'">
-                                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none">
-                                        <path d="M12 1a3 3 0 0 0-3 3v8a3 3 0 0 0 6 0V4a3 3 0 0 0-3-3z"
-                                            :stroke="isRecording ? '#ff4757' : '#888'" stroke-width="2"
-                                            :fill="isRecording ? '#ff4757' : 'none'" />
-                                        <path d="M19 10v2a7 7 0 0 1-14 0v-2" :stroke="isRecording ? '#ff4757' : '#888'"
-                                            stroke-width="2" fill="none" />
-                                        <line x1="12" y1="19" x2="12" y2="23" :stroke="isRecording ? '#ff4757' : '#888'"
-                                            stroke-width="2" />
-                                        <line x1="8" y1="23" x2="16" y2="23" :stroke="isRecording ? '#ff4757' : '#888'"
-                                            stroke-width="2" />
-                                    </svg>
-                                </el-button>
-                                <!-- 录音计时显示 -->
-                                <div v-if="isRecording" class="recording-timer">{{ recordingDuration }}s</div>
-                            </div>
-                            <el-button class="ai-send-btn" :class="{ 'generating': isGenerating }"
-                                :type="isGenerating ? 'danger' : 'primary'" circle
-                                @click="isGenerating ? stopGeneration() : sendMessage()"
-                                :disabled="!isGenerating && !inputMessage.trim()"
-                                :title="isGenerating ? '停止生成' : '发送消息'">
-                                <!-- 生成中显示停止图标 -->
-                                <svg v-if="isGenerating" width="16" height="16" viewBox="0 0 24 24" fill="none">
-                                    <rect x="6" y="6" width="12" height="12" fill="currentColor" rx="2" />
-                                </svg>
-                                <!-- 正常状态显示发送图标 -->
-                                <svg v-else width="16" height="16" viewBox="0 0 24 24" fill="none">
-                                    <path d="M22 2L11 13" stroke="currentColor" stroke-width="2" stroke-linecap="round"
-                                        stroke-linejoin="round" />
-                                    <path d="M22 2L15 22L11 13L2 9L22 2Z" stroke="currentColor" stroke-width="2"
-                                        stroke-linecap="round" stroke-linejoin="round" />
-                                </svg>
-                            </el-button>
-                        </div>
-                    </div>
-                </div>
+                <AIInputCard v-model="inputMessage" :show-history-button="userStore.isLoggedIn && !showChatHistory"
+                    :is-chat-mode="false" :is-mobile-view="isMobileView" :is-recording="isRecording"
+                    :recording-duration="recordingDuration" :is-generating="isGenerating"
+                    :show-chat-shortcuts="showChatShortcuts" :is-logged-in="userStore.isLoggedIn"
+                    :show-chat-history="showChatHistory" @send-message="sendMessage"
+                    @toggle-chat-history="toggleChatHistory" @voice-click="onVoiceClick"
+                    @stop-generation="stopGeneration" @toggle-chat-shortcuts="toggleChatShortcuts" />
 
                 <div class="ai-suggestions" v-if="!isMobileView">
                     <!-- 快捷操作按钮 -->
@@ -356,13 +293,13 @@
                                         <div class="asset-amount">
                                             <span class="amount-label">总资产</span>
                                             <span class="amount-value">¥{{ formatCurrency(message.assetData.totalAssets)
-                                                }}</span>
+                                            }}</span>
                                         </div>
                                         <div class="asset-change"
                                             :class="[message.assetData.totalProfitPercent >= 0 ? 'profit' : 'loss']">
                                             <span class="change-icon">{{ message.assetData.totalProfitPercent >= 0 ?
                                                 '📈' : '📉'
-                                                }}</span>
+                                            }}</span>
                                             <span class="change-label">今日盈亏：</span>
                                             <span class="change-text">
                                                 {{ message.assetData.totalProfitPercent >= 0 ? '+' : '' }}¥{{
@@ -388,7 +325,7 @@
                                         <div class="stat-info">
                                             <div class="stat-label">持仓市值</div>
                                             <div class="stat-value">¥{{ formatCurrency(message.assetData.portfolioValue)
-                                                }}
+                                            }}
                                             </div>
                                         </div>
                                     </div>
@@ -556,143 +493,13 @@
                     </div>
                 </div>
 
-                <div class="ai-card">
-                    <!-- 输入框区域 -->
-                    <div class="ai-input-row">
-                        <el-input v-model="inputMessage" class="ai-input" type="textarea"
-                            :autosize="{ minRows: 2, maxRows: 6 }" placeholder="如：分析比亚迪近期走势及投资价值，考虑新能源政策影响..."
-                            @keyup.enter.ctrl="sendMessage" clearable maxlength="500" show-word-limit />
-                    </div>
-
-                    <!-- 按钮区域 -->
-                    <div class="ai-buttons-row"
-                        :class="{ 'with-left-btn': userStore.isLoggedIn && !showChatHistory && !isMobileView }">
-                        <!-- PC端聊天历史按钮 - 在输入区域左侧 -->
-                        <el-button v-if="userStore.isLoggedIn && !showChatHistory && !isMobileView"
-                            class="ai-func-btn chat-history-btn input-left-btn" circle @click="toggleChatHistory"
-                            :title="'展开聊天记录'">
-                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none">
-                                <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"
-                                    stroke="currentColor" stroke-width="2" stroke-linecap="round"
-                                    stroke-linejoin="round" />
-                                <path d="M8 9h8M8 13h6" stroke="currentColor" stroke-width="2" stroke-linecap="round"
-                                    stroke-linejoin="round" />
-                            </svg>
-                        </el-button>
-
-                        <div class="ai-buttons"
-                            :class="{ 'with-chat-history': userStore.isLoggedIn && !showChatHistory && isMobileView }">
-                            <!-- 聊天历史按钮 - 移动端左对齐 -->
-                            <el-button v-if="userStore.isLoggedIn && !showChatHistory && isMobileView"
-                                class="ai-func-btn chat-history-btn" circle @click="toggleChatHistory"
-                                :title="'展开聊天记录'">
-                                <svg width="16" height="16" viewBox="0 0 24 24" fill="none">
-                                    <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"
-                                        stroke="currentColor" stroke-width="2" stroke-linecap="round"
-                                        stroke-linejoin="round" />
-                                    <path d="M8 9h8M8 13h6" stroke="currentColor" stroke-width="2"
-                                        stroke-linecap="round" stroke-linejoin="round" />
-                                </svg>
-                            </el-button>
-
-                            <!-- 右侧按钮组 -->
-                            <div class="right-buttons" v-if="userStore.isLoggedIn && !showChatHistory && isMobileView">
-                                <div class="voice-btn-container">
-                                    <el-button class="ai-func-btn voice-btn" :class="{ 'recording': isRecording }"
-                                        circle @click="onVoiceClick"
-                                        :title="isRecording ? `录音中 ${recordingDuration}s` : '点击开始语音输入'">
-                                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none">
-                                            <path d="M12 1a3 3 0 0 0-3 3v8a3 3 0 0 0 6 0V4a3 3 0 0 0-3-3z"
-                                                :stroke="isRecording ? '#ff4757' : '#888'" stroke-width="2"
-                                                :fill="isRecording ? '#ff4757' : 'none'" />
-                                            <path d="M19 10v2a7 7 0 0 1-14 0v-2"
-                                                :stroke="isRecording ? '#ff4757' : '#888'" stroke-width="2"
-                                                fill="none" />
-                                            <line x1="12" y1="19" x2="12" y2="23"
-                                                :stroke="isRecording ? '#ff4757' : '#888'" stroke-width="2" />
-                                            <line x1="8" y1="23" x2="16" y2="23"
-                                                :stroke="isRecording ? '#ff4757' : '#888'" stroke-width="2" />
-                                        </svg>
-                                    </el-button>
-                                    <!-- 录音计时显示 -->
-                                    <div v-if="isRecording" class="recording-timer">{{ recordingDuration }}s</div>
-                                </div>
-                                <el-button class="ai-func-btn shortcuts-toggle-btn" circle @click="toggleChatShortcuts"
-                                    v-if="!showChatShortcuts && userStore.isLoggedIn">
-                                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none">
-                                        <path d="M12 5v14m-7-7h14" stroke="#888" stroke-width="2" stroke-linecap="round"
-                                            stroke-linejoin="round" />
-                                    </svg>
-                                </el-button>
-                                <el-button class="ai-send-btn" :class="{ 'generating': isGenerating }"
-                                    :type="isGenerating ? 'danger' : 'primary'" circle
-                                    @click="isGenerating ? stopGeneration() : sendMessage()"
-                                    :disabled="!isGenerating && !inputMessage.trim()"
-                                    :title="isGenerating ? '停止生成' : '发送消息'">
-                                    <!-- 生成中显示停止图标 -->
-                                    <svg v-if="isGenerating" width="16" height="16" viewBox="0 0 24 24" fill="none">
-                                        <rect x="6" y="6" width="12" height="12" fill="currentColor" rx="2" />
-                                    </svg>
-                                    <!-- 正常状态显示发送图标 -->
-                                    <svg v-else width="16" height="16" viewBox="0 0 24 24" fill="none">
-                                        <path d="M22 2L11 13" stroke="currentColor" stroke-width="2"
-                                            stroke-linecap="round" stroke-linejoin="round" />
-                                        <path d="M22 2L15 22L11 13L2 9L22 2Z" stroke="currentColor" stroke-width="2"
-                                            stroke-linecap="round" stroke-linejoin="round" />
-                                    </svg>
-                                </el-button>
-                            </div>
-
-                            <!-- 非移动端或无聊天历史按钮时的普通布局 -->
-                            <template v-if="!(userStore.isLoggedIn && !showChatHistory && isMobileView)">
-                                <div class="voice-btn-container">
-                                    <el-button class="ai-func-btn voice-btn" :class="{ 'recording': isRecording }"
-                                        circle @click="onVoiceClick"
-                                        :title="isRecording ? `录音中 ${recordingDuration}s` : '点击开始语音输入'">
-                                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none">
-                                            <path d="M12 1a3 3 0 0 0-3 3v8a3 3 0 0 0 6 0V4a3 3 0 0 0-3-3z"
-                                                :stroke="isRecording ? '#ff4757' : '#888'" stroke-width="2"
-                                                :fill="isRecording ? '#ff4757' : 'none'" />
-                                            <path d="M19 10v2a7 7 0 0 1-14 0v-2"
-                                                :stroke="isRecording ? '#ff4757' : '#888'" stroke-width="2"
-                                                fill="none" />
-                                            <line x1="12" y1="19" x2="12" y2="23"
-                                                :stroke="isRecording ? '#ff4757' : '#888'" stroke-width="2" />
-                                            <line x1="8" y1="23" x2="16" y2="23"
-                                                :stroke="isRecording ? '#ff4757' : '#888'" stroke-width="2" />
-                                        </svg>
-                                    </el-button>
-                                    <!-- 录音计时显示 -->
-                                    <div v-if="isRecording" class="recording-timer">{{ recordingDuration }}s</div>
-                                </div>
-                                <el-button class="ai-func-btn shortcuts-toggle-btn" circle @click="toggleChatShortcuts"
-                                    v-if="!showChatShortcuts && userStore.isLoggedIn">
-                                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none">
-                                        <path d="M12 5v14m-7-7h14" stroke="#888" stroke-width="2" stroke-linecap="round"
-                                            stroke-linejoin="round" />
-                                    </svg>
-                                </el-button>
-                                <el-button class="ai-send-btn" :class="{ 'generating': isGenerating }"
-                                    :type="isGenerating ? 'danger' : 'primary'" circle
-                                    @click="isGenerating ? stopGeneration() : sendMessage()"
-                                    :disabled="!isGenerating && !inputMessage.trim()"
-                                    :title="isGenerating ? '停止生成' : '发送消息'">
-                                    <!-- 生成中显示停止图标 -->
-                                    <svg v-if="isGenerating" width="16" height="16" viewBox="0 0 24 24" fill="none">
-                                        <rect x="6" y="6" width="12" height="12" fill="currentColor" rx="2" />
-                                    </svg>
-                                    <!-- 正常状态显示发送图标 -->
-                                    <svg v-else width="16" height="16" viewBox="0 0 24 24" fill="none">
-                                        <path d="M22 2L11 13" stroke="currentColor" stroke-width="2"
-                                            stroke-linecap="round" stroke-linejoin="round" />
-                                        <path d="M22 2L15 22L11 13L2 9L22 2Z" stroke="currentColor" stroke-width="2"
-                                            stroke-linecap="round" stroke-linejoin="round" />
-                                    </svg>
-                                </el-button>
-                            </template>
-                        </div>
-                    </div>
-                </div>
+                <AIInputCard v-model="inputMessage" :show-history-button="userStore.isLoggedIn && !showChatHistory"
+                    :is-chat-mode="true" :is-mobile-view="isMobileView" :is-recording="isRecording"
+                    :recording-duration="recordingDuration" :is-generating="isGenerating"
+                    :show-chat-shortcuts="showChatShortcuts" :is-logged-in="userStore.isLoggedIn"
+                    :show-chat-history="showChatHistory" @send-message="sendMessage"
+                    @toggle-chat-history="toggleChatHistory" @voice-click="onVoiceClick"
+                    @stop-generation="stopGeneration" @toggle-chat-shortcuts="toggleChatShortcuts" />
             </div>
         </main>
 
@@ -855,7 +662,7 @@
                 </div>
                 <div class="guide-actions">
                     <el-button type="primary" size="small" @click="handleGuideAction">{{ guideActionText
-                    }}</el-button>
+                        }}</el-button>
                     <el-button size="small" @click="dismissGuide">稍后</el-button>
                 </div>
             </div>
@@ -893,7 +700,7 @@
                         <div class="summary-item">
                             <span class="summary-label">买入信号</span>
                             <span class="summary-value signal-score">{{ currentQuantAnalysis.buySignalScore
-                                }}/100</span>
+                            }}/100</span>
                         </div>
                         <div class="summary-item">
                             <span class="summary-label">量化评级</span>
@@ -1118,6 +925,7 @@ import StockList from '../components/StockList.vue';
 import MobileStockList from '../components/MobileStockList.vue';
 import WelcomePerformanceHeader from '../components/WelcomePerformanceHeader.vue';
 import TopNavbar from '../components/TopNavbar.vue';
+import AIInputCard from '../components/AIInputCard.vue';
 import { getStockListConfig } from '../config/stockListConfig';
 import { recommendStock, api } from '@/api/api';
 import { riskOptions } from '@/config/userPortrait';

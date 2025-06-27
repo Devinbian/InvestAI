@@ -3968,6 +3968,23 @@ onMounted(() => {
     isWechatEnv.value = isWechatBrowser();
     if (isWechatEnv.value) {
         document.body.classList.add('wechat-browser');
+
+        // 微信环境下简单调整问候语间距
+        nextTick(() => {
+            const welcomeGuestHeader = document.querySelector('.welcome-guest-header');
+            const welcomeSection = document.querySelector('.welcome-section');
+
+            // 只调整问候语区域的上下间距，不改变外框大小
+            if (welcomeGuestHeader) {
+                welcomeGuestHeader.style.setProperty('margin-top', '60px', 'important');
+                welcomeGuestHeader.style.setProperty('margin-bottom', '40px', 'important');
+            }
+
+            // 调整快捷示例区域与问候语的间距
+            if (welcomeSection) {
+                welcomeSection.style.setProperty('margin-top', '20px', 'important');
+            }
+        });
     }
 
     // 防止页面缩放的JavaScript控制
@@ -12944,20 +12961,7 @@ body {
         /* 微信环境下允许滚动，防止内容被遮挡 */
     }
 
-    /* 微信环境下确保modern-content贴底部 */
-    body.wechat-browser .modern-content {
-        padding-bottom: 0 !important;
-        margin-bottom: 0 !important;
-        /* 微信环境下移除底部间距 */
-        height: 100vh !important;
-        /* 微信环境下确保占满整个视口高度 */
-        display: flex !important;
-        flex-direction: column !important;
-        justify-content: space-between !important;
-        /* 微信环境下让内容分布更均匀 */
-        padding-top: 60px !important;
-        /* 微信环境下给顶部一些间距 */
-    }
+
 
     /* 微信环境下确保整个页面容器贴底 */
     body.wechat-browser .app-container {
@@ -12972,6 +12976,19 @@ body {
 
 /* 移动端聊天布局最终修复 - 确保最高优先级 */
 @media (max-width: 768px) {
+
+    /* 微信环境下简单调整问候语间距 */
+    body.wechat-browser .welcome-guest-header {
+        margin-top: 60px !important;
+        /* 微信环境下增加问候语与顶部的间距 */
+        margin-bottom: 40px !important;
+        /* 微信环境下增加问候语与快捷示例的间距 */
+    }
+
+    body.wechat-browser .welcome-section {
+        margin-top: 20px !important;
+        /* 微信环境下调整快捷示例与问候语的间距 */
+    }
 
     /* 问题1: 聊天内容顶部遮挡 - 聊天模式下从导航栏底部开始，增加间距 */
     .modern-content.chatting {

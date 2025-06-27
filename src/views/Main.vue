@@ -1515,11 +1515,28 @@ const showLogin = (isRegister) => {
 
 // 处理登录成功事件
 const handleLoginSuccess = ({ isNewUser, userInfo }) => {
+    // 为用户设置初始余额和智点（如果没有的话）
+    if (userStore.balance <= 0) {
+        // 设置初始资金余额：100万元用于股票交易
+        userStore.addBalance(1000000);
+        console.log('已为用户设置初始资金余额：100万元');
+    }
+
+    if (userStore.smartPointsBalance <= 0) {
+        // 设置初始智点余额：10智点用于AI功能
+        userStore.addSmartPoints(10);
+        console.log('已为用户设置初始智点余额：10智点');
+    }
+
+    // 生成一些模拟数据（测试数据）
+    userStore.generateMockRecords();
+
     if (isNewUser) {
         // 新用户注册成功，显示引导流程
         setTimeout(() => {
             showOnboarding.value = true;
         }, 500);
+        ElMessage.success('注册成功！已为您准备了100万资金和10智点用于体验交易功能');
     } else {
         // 老用户登录成功，直接进入主界面，不进入引导流程
         dismissGuide();

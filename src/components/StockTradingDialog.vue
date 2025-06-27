@@ -171,12 +171,16 @@
 
                             <!-- 买入/卖出模式：显示交易表单 -->
                             <div v-else>
-                                <!-- 限价委托选择 -->
+                                <!-- 委托类型选择 -->
                                 <div class="order-type-section">
-                                    <el-select v-model="tradingForm.orderType" class="order-type-select">
-                                        <el-option label="限价委托" value="limit" />
-                                        <el-option label="市价委托" value="market" />
-                                    </el-select>
+                                    <div class="input-row">
+                                        <span class="input-label">委托类型</span>
+                                        <el-select v-model="tradingForm.orderType" class="order-type-select"
+                                            placeholder="请选择委托类型">
+                                            <el-option label="限价委托" value="limit" />
+                                            <el-option label="市价委托" value="market" />
+                                        </el-select>
+                                    </div>
                                 </div>
 
                                 <!-- 价格输入 -->
@@ -403,7 +407,19 @@ const availableBuyQuantity = computed(() => {
         : parseFloat(tradingForm.price) || parseFloat(props.stock.price);
 
     const availableFunds = userStore.balance;
-    return Math.floor(availableFunds / price / 100) * 100;
+    const calculatedQuantity = Math.floor(availableFunds / price / 100) * 100;
+
+    // 调试信息
+    console.log('可买股数计算:', {
+        stockPrice: props.stock.price,
+        orderType: tradingForm.orderType,
+        formPrice: tradingForm.price,
+        finalPrice: price,
+        availableFunds: availableFunds,
+        calculatedQuantity: calculatedQuantity
+    });
+
+    return calculatedQuantity;
 });
 
 const availableSellQuantity = computed(() => {

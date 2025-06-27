@@ -1,42 +1,8 @@
 ﻿<template>
     <div class="main-modern" :class="{ 'onboarding-active': showOnboarding, 'with-chat-history': showChatHistory }">
         <!-- 顶部导航栏 -->
-        <header class="modern-navbar">
-            <div class="navbar-left">
-                <img src="/logo.png" class="modern-logo" alt="InvestAI Logo" />
-                <span class="app-title">智投小助</span>
-            </div>
-            <div class="navbar-right">
-                <template v-if="userStore.isLoggedIn">
-                    <!-- PC端使用下拉菜单 -->
-                    <el-dropdown @command="handleCommand" class="pc-user-menu">
-                        <span class="modern-user">
-                            {{ userStore.userInfo.nickname }}
-                            <el-icon>
-                                <ArrowDown />
-                            </el-icon>
-                        </span>
-                        <template #dropdown>
-                            <el-dropdown-menu>
-                                <el-dropdown-item command="profile">个人中心</el-dropdown-item>
-                                <el-dropdown-item command="settings">偏好设置</el-dropdown-item>
-                                <el-dropdown-item command="records">记录中心</el-dropdown-item>
-                                <el-dropdown-item divided command="logout">退出登录</el-dropdown-item>
-                            </el-dropdown-menu>
-                        </template>
-                    </el-dropdown>
-
-                    <!-- 移动端使用头像按钮 -->
-                    <div class="mobile-user-avatar" @click="showMobileUserMenu">
-                        {{ userStore.userInfo?.nickname?.charAt(0)?.toUpperCase() || 'U' }}
-                    </div>
-                </template>
-                <template v-else>
-                    <el-button class="modern-btn" @click="showLogin(false)">登录</el-button>
-                    <el-button class="modern-btn" @click="showLogin(true)">注册</el-button>
-                </template>
-            </div>
-        </header>
+        <TopNavbar @show-login="showLogin" @show-profile="handleShowProfile" @show-preferences="handleShowPreferences"
+            @show-records="handleShowRecords" @show-mobile-menu="showMobileUserMenu" />
 
         <!-- 聊天历史记录 -->
         <ChatHistory v-if="userStore.isLoggedIn" :visible="showChatHistory"
@@ -390,13 +356,13 @@
                                         <div class="asset-amount">
                                             <span class="amount-label">总资产</span>
                                             <span class="amount-value">¥{{ formatCurrency(message.assetData.totalAssets)
-                                            }}</span>
+                                                }}</span>
                                         </div>
                                         <div class="asset-change"
                                             :class="[message.assetData.totalProfitPercent >= 0 ? 'profit' : 'loss']">
                                             <span class="change-icon">{{ message.assetData.totalProfitPercent >= 0 ?
                                                 '📈' : '📉'
-                                            }}</span>
+                                                }}</span>
                                             <span class="change-label">今日盈亏：</span>
                                             <span class="change-text">
                                                 {{ message.assetData.totalProfitPercent >= 0 ? '+' : '' }}¥{{
@@ -422,7 +388,7 @@
                                         <div class="stat-info">
                                             <div class="stat-label">持仓市值</div>
                                             <div class="stat-value">¥{{ formatCurrency(message.assetData.portfolioValue)
-                                            }}
+                                                }}
                                             </div>
                                         </div>
                                     </div>
@@ -889,7 +855,7 @@
                 </div>
                 <div class="guide-actions">
                     <el-button type="primary" size="small" @click="handleGuideAction">{{ guideActionText
-                        }}</el-button>
+                    }}</el-button>
                     <el-button size="small" @click="dismissGuide">稍后</el-button>
                 </div>
             </div>
@@ -927,7 +893,7 @@
                         <div class="summary-item">
                             <span class="summary-label">买入信号</span>
                             <span class="summary-value signal-score">{{ currentQuantAnalysis.buySignalScore
-                            }}/100</span>
+                                }}/100</span>
                         </div>
                         <div class="summary-item">
                             <span class="summary-label">量化评级</span>
@@ -1151,6 +1117,7 @@ import MarkdownRenderer from '../components/MarkdownRenderer.vue';
 import StockList from '../components/StockList.vue';
 import MobileStockList from '../components/MobileStockList.vue';
 import WelcomePerformanceHeader from '../components/WelcomePerformanceHeader.vue';
+import TopNavbar from '../components/TopNavbar.vue';
 import { getStockListConfig } from '../config/stockListConfig';
 import { recommendStock, api } from '@/api/api';
 import { riskOptions } from '@/config/userPortrait';
@@ -1624,6 +1591,19 @@ const handleCommand = async (command) => {
 // 移动端用户菜单相关方法
 const showMobileUserMenu = () => {
     showMobileMenu.value = true;
+};
+
+// TopNavbar 组件的事件处理方法
+const handleShowProfile = () => {
+    showUserProfile.value = true;
+};
+
+const handleShowPreferences = () => {
+    preferencesDialogVisible.value = true;
+};
+
+const handleShowRecords = () => {
+    showRecordsCenter.value = true;
 };
 
 const hideMobileUserMenu = () => {
@@ -5346,112 +5326,7 @@ body.onboarding-mode {
     overflow-y: auto !important;
 }
 
-.modern-navbar {
-    width: 100%;
-    max-width: 100vw;
-    height: 56px;
-    background: #fff;
-    border-bottom: 1px solid #f0f0f0;
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    padding: 0 32px;
-    position: fixed;
-    top: 0;
-    left: 0;
-    right: 0;
-    z-index: 100;
-    box-sizing: border-box;
-    overflow: hidden;
-}
 
-.navbar-left {
-    display: flex;
-    align-items: center;
-    gap: 12px;
-}
-
-
-
-
-
-.modern-logo {
-    width: 36px;
-    height: 36px;
-    object-fit: contain;
-    border-radius: 6px;
-    background: rgba(255, 255, 255, 0.9);
-    padding: 2px;
-    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
-}
-
-.app-title {
-    font-size: 1.25rem;
-    font-weight: 700;
-    color: #18181b;
-    letter-spacing: 0.5px;
-}
-
-.navbar-right {
-    display: flex;
-    align-items: center;
-    gap: 12px;
-}
-
-.modern-btn {
-    border-radius: 20px;
-    font-weight: 500;
-    background: #fff;
-    border: 1px solid #e0e0e0;
-    box-shadow: none;
-    padding: 6px 20px;
-    transition: background 0.2s;
-}
-
-.modern-btn:hover {
-    background: #f5f7fa;
-}
-
-.modern-user {
-    display: flex;
-    align-items: center;
-    font-weight: 500;
-    cursor: pointer;
-    outline: none !important;
-    border: none !important;
-}
-
-.modern-user:focus {
-    outline: none !important;
-    border: none !important;
-    box-shadow: none !important;
-}
-
-/* 移除Element Plus dropdown的focus样式 */
-:deep(.el-dropdown) {
-    outline: none !important;
-}
-
-:deep(.el-dropdown:focus) {
-    outline: none !important;
-    border: none !important;
-    box-shadow: none !important;
-}
-
-:deep(.el-dropdown .modern-user:focus) {
-    outline: none !important;
-    border: none !important;
-    box-shadow: none !important;
-}
-
-/* PC端显示下拉菜单，隐藏移动端头像 */
-.pc-user-menu {
-    display: flex;
-}
-
-.mobile-user-avatar {
-    display: none;
-}
 
 .modern-content {
     flex: 1;
@@ -9359,30 +9234,7 @@ body.onboarding-mode {
         background: #fef2f2 !important;
     }
 
-    /* 隐藏PC端下拉菜单，显示移动端头像 */
-    .pc-user-menu {
-        display: none !important;
-    }
 
-    .mobile-user-avatar {
-        display: flex !important;
-        width: 32px !important;
-        height: 32px !important;
-        border-radius: 50% !important;
-        background: #18181b !important;
-        color: white !important;
-        align-items: center !important;
-        justify-content: center !important;
-        font-weight: 600 !important;
-        font-size: 0.8rem !important;
-        cursor: pointer !important;
-        transition: all 0.2s ease !important;
-    }
-
-    .mobile-user-avatar:active {
-        transform: scale(0.95) !important;
-        background: #374151 !important;
-    }
 
     /* Footer优化 */
     .copyright-footer {

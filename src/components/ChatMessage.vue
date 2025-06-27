@@ -40,48 +40,12 @@
 
             <!-- 单只股票操作按钮 -->
             <div v-if="message.hasStockInfo && message.stockInfo" class="stock-actions">
-                <!-- 购买按钮（购买模式时优先显示） -->
-                <el-button v-if="message.isBuyMode" type="primary" size="small"
-                    @click="$emit('show-buy-dialog', message.stockInfo)" class="buy-stock-btn">
-                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none">
-                        <path d="M12 2v20M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6" stroke="currentColor"
-                            stroke-width="2" />
-                    </svg>
-                    立即购买
-                </el-button>
-
-                <!-- 自选股按钮 -->
-                <el-button v-if="!isInWatchlist(message.stockInfo.code)" type="primary" size="small"
-                    @click="$emit('add-to-watchlist', message.stockInfo)" class="add-watchlist-btn">
-                    ⭐
-                    加入自选
-                </el-button>
-                <el-button v-else type="success" size="small"
-                    @click="$emit('remove-from-watchlist', message.stockInfo.code)" class="remove-watchlist-btn">
-                    ⭐
-                    已加自选
-                </el-button>
-
-                <!-- AI委托交易按钮（付费） -->
-                <el-button v-if="!message.isBuyMode" size="small"
-                    @click="$emit('show-quant-analysis-dialog', message.stockInfo)" class="quant-analysis-btn">
-                    🤖
-                    AI委托交易
-                    <div class="price-tag-container">
-                        <span class="price-tag original-price">3智点</span>
-                        <span class="price-tag promo-price">1智点</span>
-                    </div>
-                </el-button>
-
-                <!-- 购买按钮（非购买模式时显示） -->
-                <el-button v-if="!message.isBuyMode" size="small" @click="$emit('show-buy-dialog', message.stockInfo)"
-                    class="buy-stock-btn-secondary">
-                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none">
-                        <path d="M12 2v20M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6" stroke="currentColor"
-                            stroke-width="2" />
-                    </svg>
-                    购买
-                </el-button>
+                <StockActionButtons :stock="message.stockInfo" :actions="getChatStockActions(message)"
+                    :is-mobile="isMobileView" :mode="message.isBuyMode ? 'minimal' : 'compact'"
+                    @action-click="handleChatStockAction" @add-watchlist="(stock) => $emit('add-to-watchlist', stock)"
+                    @remove-watchlist="(stock) => $emit('remove-from-watchlist', stock.code)"
+                    @show-buy-dialog="(stock) => $emit('show-buy-dialog', stock)"
+                    @show-ai-trading-dialog="(stock) => $emit('show-quant-analysis-dialog', stock)" />
 
                 <!-- 设置提醒按钮（仅在量化分析消息中显示） -->
                 <el-button v-if="message.isQuantAnalysis" size="small"
@@ -328,6 +292,8 @@ import { ref, computed } from 'vue';
 import MarkdownRenderer from './MarkdownRenderer.vue';
 import StockList from './StockList.vue';
 import MobileStockList from './MobileStockList.vue';
+import StockActionButtons from './StockActionButtons.vue';
+import { getStockActionConfig } from '../config/stockActionConfig';
 
 // 定义 props
 const props = defineProps({
@@ -390,6 +356,48 @@ const emit = defineEmits([
 
 // 本地状态
 const localActiveTab = ref('portfolio');
+
+// 聊天消息中的股票操作配置
+const getChatStockActions = (message) => {
+    if (message.isBuyMode) {
+        // 购买模式：优先显示购买按钮
+        return getStockActionConfig('chatCompact', {
+            isMobile: props.isMobileView,
+            maxButtons: 2
+        });
+    } else {
+        // 普通模式：显示完整操作
+        return getStockActionConfig('chatFull', {
+            isMobile: props.isMobileView,
+            maxButtons: props.isMobileView ? 3 : 4
+        });
+    }
+};
+
+// 聊天股票操作事件处理
+const handleChatStockAction = (event) => {
+    console.log('🚀 ChatMessage - 聊天股票操作:', event);
+
+    // 发送通用的股票操作事件
+    emit('stock-action-click', event);
+
+    // 发送具体的操作事件
+    switch (event.action) {
+        case 'addWatchlist':
+            emit('add-to-watchlist', event.stock);
+            break;
+        case 'removeWatchlist':
+            emit('remove-from-watchlist', event.stock.code);
+            break;
+        case 'buy':
+            emit('show-buy-dialog', event.stock);
+            break;
+        case 'aiTrading':
+        case 'quantAnalysis':
+            emit('show-quant-analysis-dialog', event.stock);
+            break;
+    }
+};
 
 // 计算属性
 const smartRecommendationConfig = computed(() => {

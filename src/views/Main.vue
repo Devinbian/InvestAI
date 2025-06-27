@@ -104,48 +104,11 @@
 
                         <!-- 单只股票操作按钮 -->
                         <div v-if="message.hasStockInfo && message.stockInfo" class="stock-actions">
-                            <!-- 购买按钮（购买模式时优先显示） -->
-                            <el-button v-if="message.isBuyMode" type="primary" size="small"
-                                @click="showBuyDialog(message.stockInfo)" class="buy-stock-btn">
-                                <svg width="14" height="14" viewBox="0 0 24 24" fill="none">
-                                    <path d="M12 2v20M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"
-                                        stroke="currentColor" stroke-width="2" />
-                                </svg>
-                                立即购买
-                            </el-button>
-
-                            <!-- 自选股按钮 -->
-                            <el-button v-if="!userStore.isInWatchlist(message.stockInfo.code)" type="primary"
-                                size="small" @click="addToWatchlist(message.stockInfo)" class="add-watchlist-btn">
-                                ⭐
-                                加入自选
-                            </el-button>
-                            <el-button v-else type="success" size="small"
-                                @click="removeFromWatchlist(message.stockInfo.code)" class="remove-watchlist-btn">
-                                ⭐
-                                已加自选
-                            </el-button>
-
-                            <!-- AI委托交易按钮（付费） -->
-                            <el-button v-if="!message.isBuyMode" size="small"
-                                @click="showQuantAnalysisDialog(message.stockInfo)" class="quant-analysis-btn">
-                                🤖
-                                AI委托交易
-                                <div class="price-tag-container">
-                                    <span class="price-tag original-price">3智点</span>
-                                    <span class="price-tag promo-price">1智点</span>
-                                </div>
-                            </el-button>
-
-                            <!-- 购买按钮（非购买模式时显示） -->
-                            <el-button v-if="!message.isBuyMode" size="small" @click="showBuyDialog(message.stockInfo)"
-                                class="buy-stock-btn-secondary">
-                                <svg width="14" height="14" viewBox="0 0 24 24" fill="none">
-                                    <path d="M12 2v20M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"
-                                        stroke="currentColor" stroke-width="2" />
-                                </svg>
-                                购买
-                            </el-button>
+                            <StockActionButtons :stock="message.stockInfo" :actions="getChatStockActions(message)"
+                                :is-mobile="isMobileView" :mode="message.isBuyMode ? 'minimal' : 'compact'"
+                                @action-click="handleChatStockAction" @add-watchlist="addToWatchlist"
+                                @remove-watchlist="(stock) => removeFromWatchlist(stock.code)"
+                                @show-buy-dialog="showBuyDialog" @show-ai-trading-dialog="showQuantAnalysisDialog" />
 
                             <!-- 设置提醒按钮（仅在量化分析消息中显示） -->
                             <el-button v-if="message.isQuantAnalysis" size="small"
@@ -554,7 +517,9 @@ import AIInputCard from '../components/AIInputCard.vue';
 import QuickExamples from '../components/QuickExamples.vue';
 import ShortcutsBar from '../components/ShortcutsBar.vue';
 import QuantReminderDialog from '../components/QuantReminderDialog.vue';
+import StockActionButtons from '../components/StockActionButtons.vue';
 import { getStockListConfig } from '../config/stockListConfig';
+import { getStockActionConfig } from '../config/stockActionConfig';
 import { recommendStock, api } from '@/api/api';
 import { riskOptions } from '@/config/userPortrait';
 import { authFetchEventSource } from '@/utils/request';
@@ -2761,74 +2726,20 @@ const performQuantAnalysis = async (stockInfo) => {
 
 
 // 自选股票操作按钮配置
-const watchlistActionButtons = [
-    {
-        key: 'removeWatchlist',
-        text: '移除自选',
-        type: 'default',
-        class: 'remove-watchlist-btn',
-        icon: '⭐'
-    },
-    {
-        key: 'analysis',
-        text: '量化分析',
-        type: 'default',
-        class: 'paid-analysis-btn',
-        icon: '🎯',
-        priceTag: { original: '3智点', promo: '1智点' }
-    },
-    {
-        key: 'aiTrading',
-        text: 'AI委托交易',
-        type: 'default',
-        class: 'quant-analysis-btn',
-        icon: '🤖',
-        priceTag: { original: '3智点', promo: '1智点' }
-    },
-    {
-        key: 'buy',
-        text: '买入',
-        type: 'default',
-        class: 'buy-stock-btn-secondary',
-        icon: 'M12 2v20M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6'
-    }
-];
+const watchlistActionButtons = computed(() => {
+    return getStockActionConfig('watchlist', {
+        isMobile: isMobileView.value,
+        maxButtons: isMobileView.value ? 3 : 4
+    });
+});
 
 // 持仓股票操作按钮配置
-const portfolioActionButtons = [
-    {
-        key: 'analysis',
-        text: '量化分析',
-        type: 'default',
-        class: 'paid-analysis-btn',
-        icon: '🎯',
-        priceTag: { original: '3智点', promo: '1智点' },
-        mobileText: '分析'
-    },
-    {
-        key: 'aiTrading',
-        text: 'AI委托交易',
-        type: 'default',
-        class: 'quant-analysis-btn',
-        icon: '🤖',
-        priceTag: { original: '3智点', promo: '1智点' },
-        mobileText: 'AI交易'
-    },
-    {
-        key: 'sell',
-        text: '卖出',
-        type: 'danger',
-        class: 'sell-stock-btn',
-        icon: 'M12 2v20M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6'
-    },
-    {
-        key: 'addPosition',
-        text: '加仓',
-        type: 'default',
-        class: 'buy-stock-btn-secondary',
-        icon: 'M12 2v20M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6'
-    }
-];
+const portfolioActionButtons = computed(() => {
+    return getStockActionConfig('portfolio', {
+        isMobile: isMobileView.value,
+        maxButtons: isMobileView.value ? 3 : 4
+    });
+});
 
 // 自选股票操作事件处理
 const handleWatchlistActionClick = ({ action, stock }) => {
@@ -2930,6 +2841,29 @@ const handleStockActionClick = ({ action, stock }) => {
         default:
             console.log('未知操作:', action);
     }
+};
+
+// 聊天消息中的股票操作配置
+const getChatStockActions = (message) => {
+    if (message.isBuyMode) {
+        // 购买模式：优先显示购买按钮
+        return getStockActionConfig('chatCompact', {
+            isMobile: isMobileView.value,
+            maxButtons: 2
+        });
+    } else {
+        // 普通模式：显示完整操作
+        return getStockActionConfig('chatFull', {
+            isMobile: isMobileView.value,
+            maxButtons: isMobileView.value ? 3 : 4
+        });
+    }
+};
+
+// 聊天股票操作事件处理
+const handleChatStockAction = (event) => {
+    console.log('🚀 Main.vue - 聊天股票操作:', event);
+    handleStockActionClick(event);
 };
 
 // 投资偏好组件事件处理

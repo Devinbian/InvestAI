@@ -41,6 +41,7 @@ import { ElMessage, ElMessageBox } from 'element-plus';
 import { useUserStore } from '../store/user';
 import StockList from './StockList.vue';
 import MobileStockList from './MobileStockList.vue';
+import { getStockActionConfig } from '../config/stockActionConfig';
 
 // 定义emit
 const emit = defineEmits(['send-to-chat', 'show-buy-dialog']);
@@ -55,52 +56,12 @@ const checkMobileView = () => {
 };
 
 // 推荐股票操作按钮配置
-const recommendationActions = [
-    {
-        key: "addWatchlist",
-        text: "加入自选",
-        type: "primary",
-        class: "add-watchlist-btn",
-        icon: "⭐",
-    },
-    {
-        key: "removeWatchlist",
-        text: "已加自选",
-        type: "success",
-        class: "remove-watchlist-btn",
-        icon: "⭐",
-        iconFill: "currentColor",
-    },
-    {
-        key: "analysis",
-        text: "量化分析",
-        type: "default",
-        class: "paid-analysis-btn",
-        icon: "🎯",
-        priceTag: {
-            original: "3智点",
-            promo: "1智点",
-        },
-    },
-    {
-        key: "aiTrading",
-        text: "AI委托交易",
-        type: "default",
-        class: "quant-analysis-btn",
-        icon: "🤖",
-        priceTag: {
-            original: "3智点",
-            promo: "1智点",
-        },
-    },
-    {
-        key: "buy",
-        text: "购买",
-        type: "default",
-        class: "buy-stock-btn-secondary",
-        icon: "M12 2v20M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6",
-    },
-];
+const recommendationActions = computed(() => {
+    return getStockActionConfig('recommendation', {
+        isMobile: isMobileView.value,
+        maxButtons: isMobileView.value ? 3 : 5
+    });
+});
 
 // 更新时间
 const updateTime = computed(() => {

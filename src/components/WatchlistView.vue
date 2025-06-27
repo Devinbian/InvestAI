@@ -31,13 +31,13 @@
             <!-- 自选股列表 -->
             <div v-else class="watchlist-list">
                 <!-- PC端使用StockList -->
-                <StockList v-if="!isMobileView" :stocks="watchlistStocks" v-bind="getStockListConfig('watchlist')"
+                <StockList v-if="!isMobileView" :stocks="watchlistStocks" :actions="watchlistActions"
+                    :show-watchlist-status="true" :show-basic-details="true" :clickable="true"
                     @stock-click="handleStockClick" @action-click="handleActionClick" />
 
                 <!-- 移动端使用MobileStockList -->
-                <MobileStockList v-else :stocks="watchlistStocks" :actions="getStockListConfig('watchlist').actions"
-                    :show-details="true" :clickable="true" @stock-click="handleStockClick"
-                    @action-click="handleActionClick" />
+                <MobileStockList v-else :stocks="watchlistStocks" :actions="watchlistActions" :show-details="true"
+                    :clickable="true" @stock-click="handleStockClick" @action-click="handleActionClick" />
             </div>
         </div>
 
@@ -56,6 +56,7 @@ import { ElMessage, ElMessageBox } from 'element-plus';
 import StockList from './StockList.vue';
 import MobileStockList from './MobileStockList.vue';
 import { getStockListConfig } from '../config/stockListConfig';
+import { getStockActionConfig } from '../config/stockActionConfig';
 
 // 定义emit
 const emit = defineEmits(['send-to-chat', 'show-buy-dialog']);
@@ -68,6 +69,14 @@ const isMobileView = ref(false);
 const checkMobileView = () => {
     isMobileView.value = window.innerWidth <= 768;
 };
+
+// 自选股操作按钮配置
+const watchlistActions = computed(() => {
+    return getStockActionConfig('watchlist', {
+        isMobile: isMobileView.value,
+        maxButtons: isMobileView.value ? 3 : 4
+    });
+});
 
 // 处理自选股数据，添加实时价格信息
 const watchlistStocks = computed(() => {

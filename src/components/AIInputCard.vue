@@ -528,11 +528,22 @@ export default {
     }
 
     .ai-input-row {
-        padding: 0 16px !important;
+        padding: 0 12px !important;
+        /* 减少左右padding */
     }
 
     .ai-buttons-row {
-        padding: 6px 16px !important;
+        padding: 6px 12px !important;
+        /* 减少左右padding */
+    }
+
+    /* 微信环境下进一步减少边距 */
+    :global(body.wechat-browser) .ai-input-row {
+        padding: 0 8px !important;
+    }
+
+    :global(body.wechat-browser) .ai-buttons-row {
+        padding: 6px 8px !important;
     }
 }
 </style>

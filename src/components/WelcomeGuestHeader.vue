@@ -55,18 +55,10 @@ onMounted(() => {
     if (isWechatEnv) {
         document.body.classList.add('wechat-browser');
 
-        // 微信环境下调整问候语间距
+        // 微信环境下的样式调整通过CSS处理，避免动态设置导致的布局问题
         nextTick(() => {
-            const welcomeGuestHeader = document.querySelector('.welcome-guest-header');
             const welcomeSection = document.querySelector('.welcome-section');
-
-            // 只调整问候语区域的上下间距，不改变外框大小
-            if (welcomeGuestHeader) {
-                welcomeGuestHeader.style.setProperty('margin-top', '60px', 'important');
-                welcomeGuestHeader.style.setProperty('margin-bottom', '40px', 'important');
-            }
-
-            // 调整快捷示例区域与问候语的间距
+            // 只调整快捷示例区域与问候语的间距，不调整问候语本身的margin
             if (welcomeSection) {
                 welcomeSection.style.setProperty('margin-top', '20px', 'important');
             }
@@ -215,11 +207,28 @@ onMounted(() => {
     }
 }
 
-/* 微信环境下的特殊样式 */
+/* 微信环境下的特殊样式 - 减少间距避免布局问题 */
 @media (max-width: 768px) {
-    :global(body.wechat-browser) .welcome-guest-header {
+
+    /* 增加选择器特异性，确保样式生效 */
+    :global(body.wechat-browser) :global(.welcome-guest-header) {
         margin-top: 60px !important;
-        margin-bottom: 40px !important;
+        /* 增加顶部间距，让欢迎语不要太靠上 */
+        margin-bottom: 60px !important;
+        /* 增加底部间距，使用更大的值确保生效 */
+        padding: 16px 20px !important;
+        /* 增加内边距，提供更好的视觉效果 */
+    }
+
+    /* 微信环境下进一步优化间距 */
+    :global(body.wechat-browser) :global(.welcome-guest-header) :global(.greeting-title) {
+        font-size: 1.2rem !important;
+        /* 稍微增大标题字体 */
+    }
+
+    :global(body.wechat-browser) :global(.welcome-guest-header) :global(.greeting-subtitle) {
+        font-size: 0.8rem !important;
+        /* 稍微增大副标题字体 */
     }
 }
 </style>

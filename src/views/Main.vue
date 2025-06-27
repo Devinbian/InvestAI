@@ -390,13 +390,13 @@
                                         <div class="asset-amount">
                                             <span class="amount-label">总资产</span>
                                             <span class="amount-value">¥{{ formatCurrency(message.assetData.totalAssets)
-                                            }}</span>
+                                                }}</span>
                                         </div>
                                         <div class="asset-change"
                                             :class="[message.assetData.totalProfitPercent >= 0 ? 'profit' : 'loss']">
                                             <span class="change-icon">{{ message.assetData.totalProfitPercent >= 0 ?
                                                 '📈' : '📉'
-                                            }}</span>
+                                                }}</span>
                                             <span class="change-label">今日盈亏：</span>
                                             <span class="change-text">
                                                 {{ message.assetData.totalProfitPercent >= 0 ? '+' : '' }}¥{{
@@ -422,7 +422,7 @@
                                         <div class="stat-info">
                                             <div class="stat-label">持仓市值</div>
                                             <div class="stat-value">¥{{ formatCurrency(message.assetData.portfolioValue)
-                                            }}
+                                                }}
                                             </div>
                                         </div>
                                     </div>
@@ -889,7 +889,7 @@
                 </div>
                 <div class="guide-actions">
                     <el-button type="primary" size="small" @click="handleGuideAction">{{ guideActionText
-                        }}</el-button>
+                    }}</el-button>
                     <el-button size="small" @click="dismissGuide">稍后</el-button>
                 </div>
             </div>
@@ -927,7 +927,7 @@
                         <div class="summary-item">
                             <span class="summary-label">买入信号</span>
                             <span class="summary-value signal-score">{{ currentQuantAnalysis.buySignalScore
-                            }}/100</span>
+                                }}/100</span>
                         </div>
                         <div class="summary-item">
                             <span class="summary-label">量化评级</span>
@@ -13662,32 +13662,55 @@ body {
 
 /* 提醒对话框样式 */
 :deep(.reminder-dialog) {
-    border-radius: 16px;
+    border-radius: 12px;
     overflow: hidden;
-    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.12);
-    border: 1px solid #e5e7eb;
+    box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
 }
 
 :deep(.reminder-dialog .el-dialog__header) {
-    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-    color: white;
-    padding: 16px 20px;
+    background: #fafafa;
+    color: #18181b;
+    padding: 20px;
     margin: 0;
+    border-bottom: 1px solid #f0f0f0;
 }
 
 :deep(.reminder-dialog .el-dialog__title) {
-    color: white;
+    color: #18181b;
     font-weight: 600;
-    font-size: 16px;
+    font-size: 1.2rem;
 }
 
 :deep(.reminder-dialog .el-dialog__headerbtn .el-dialog__close) {
-    color: white;
+    color: #6b7280;
     font-size: 18px;
+}
+
+:deep(.reminder-dialog .el-dialog__headerbtn .el-dialog__close:hover) {
+    color: #374151;
 }
 
 :deep(.reminder-dialog .el-dialog__body) {
     padding: 0;
+}
+
+:deep(.reminder-dialog .el-dialog__footer) {
+    padding: 20px;
+    border-top: 1px solid #f0f0f0;
+    background: #fafafa;
+}
+
+.reminder-dialog .dialog-footer {
+    display: flex;
+    gap: 12px;
+    justify-content: flex-end;
+}
+
+.reminder-dialog .dialog-footer .el-button {
+    padding: 10px 20px;
+    border-radius: 6px;
+    font-size: 0.9rem;
+    font-weight: 500;
 }
 
 .reminder-dialog-content {

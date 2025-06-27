@@ -55,20 +55,10 @@
                     @toggle-chat-history="toggleChatHistory" @voice-click="onVoiceClick"
                     @stop-generation="stopGeneration" @toggle-chat-shortcuts="toggleChatShortcuts" />
 
-                <div class="ai-suggestions" v-if="!isMobileView">
-                    <!-- 快捷操作按钮 -->
-                    <div class="suggestion-row">
-                        <el-button v-for="shortcut in activeShortcuts" :key="shortcut.id" class="ai-suggestion-btn"
-                            @click="handleShortcutClick(shortcut)">
-                            <span class="btn-icon">{{ shortcut.icon }}</span>
-                            {{ shortcut.title }}
-                        </el-button>
-                        <!-- 自定义按钮 - 低调样式 -->
-                        <button class="customize-btn-inline" @click="openCustomizeDialog" title="自定义快捷操作">
-                            <span class="customize-icon">⚙️</span>
-                        </button>
-                    </div>
-                </div>
+                <!-- 快捷操作栏组件 -->
+                <ShortcutsBar mode="initial" :show-shortcuts="!isMobileView" :is-mobile-view="isMobileView"
+                    :is-logged-in="userStore.isLoggedIn" @shortcut-click="handleShortcutClick"
+                    @customize-dialog-open="openCustomizeDialog" ref="shortcutsBarRef" />
             </div>
 
             <!-- 聊天历史区域 -->
@@ -252,13 +242,13 @@
                                         <div class="asset-amount">
                                             <span class="amount-label">总资产</span>
                                             <span class="amount-value">¥{{ formatCurrency(message.assetData.totalAssets)
-                                            }}</span>
+                                                }}</span>
                                         </div>
                                         <div class="asset-change"
                                             :class="[message.assetData.totalProfitPercent >= 0 ? 'profit' : 'loss']">
                                             <span class="change-icon">{{ message.assetData.totalProfitPercent >= 0 ?
                                                 '📈' : '📉'
-                                            }}</span>
+                                                }}</span>
                                             <span class="change-label">今日盈亏：</span>
                                             <span class="change-text">
                                                 {{ message.assetData.totalProfitPercent >= 0 ? '+' : '' }}¥{{
@@ -284,7 +274,7 @@
                                         <div class="stat-info">
                                             <div class="stat-label">持仓市值</div>
                                             <div class="stat-value">¥{{ formatCurrency(message.assetData.portfolioValue)
-                                            }}
+                                                }}
                                             </div>
                                         </div>
                                     </div>
@@ -433,24 +423,11 @@
                     </div>
                 </div>
 
-                <!-- PC端快捷操作栏（聊天模式下显示在输入框上方） -->
-                <div class="chat-shortcuts pc-shortcuts" v-if="showChatShortcuts && !isMobileView">
-                    <div class="shortcuts-grid">
-                        <el-button v-for="shortcut in activeShortcuts" :key="shortcut.id" class="chat-shortcut-btn"
-                            @click="handleShortcutClick(shortcut)">
-                            <span class="btn-icon">{{ shortcut.icon }}</span>
-                            <span class="btn-text">{{ shortcut.shortTitle || shortcut.title }}</span>
-                        </el-button>
-                        <el-button class="chat-shortcut-btn customize-btn-chat" @click="openCustomizeDialog">
-                            <span class="btn-icon">⚙️</span>
-                            <span class="btn-text">设置</span>
-                        </el-button>
-                        <el-button class="chat-shortcut-btn close-btn" @click="toggleChatShortcuts">
-                            <span class="btn-icon">✕</span>
-                            <span class="btn-text">收起</span>
-                        </el-button>
-                    </div>
-                </div>
+                <!-- 聊天模式快捷操作栏组件 -->
+                <ShortcutsBar mode="chat" :show-shortcuts="true" :show-chat-shortcuts="showChatShortcuts"
+                    :is-mobile-view="isMobileView" :is-logged-in="userStore.isLoggedIn"
+                    @shortcut-click="handleShortcutClick" @customize-dialog-open="openCustomizeDialog"
+                    @toggle-chat-shortcuts="toggleChatShortcuts" />
 
                 <AIInputCard v-model="inputMessage" :show-history-button="userStore.isLoggedIn && !showChatHistory"
                     :is-chat-mode="true" :is-mobile-view="isMobileView" :is-recording="isRecording"
@@ -466,29 +443,7 @@
         <Sidebar v-if="userStore.isLoggedIn" ref="sidebarRef" @send-to-chat="handleSidebarInteraction"
             @show-buy-dialog="showBuyDialog" @show-sell-dialog="handleShowSellDialog" />
 
-        <!-- 快捷操作栏（移动端独立显示） -->
-        <div class="mobile-shortcuts-overlay" v-if="showChatShortcuts && isMobileView" @click="toggleChatShortcuts">
-            <div class="mobile-shortcuts-container" @click.stop>
-                <!-- 快捷操作按钮 -->
-                <div class="shortcuts-main-grid">
-                    <el-button v-for="shortcut in activeShortcuts" :key="shortcut.id" class="shortcut-btn-mobile"
-                        @click="handleShortcutClick(shortcut)">
-                        {{ shortcut.shortTitle || shortcut.title }}
-                    </el-button>
-                </div>
 
-                <!-- 底部操作按钮 -->
-                <div class="shortcuts-bottom-actions">
-                    <el-button class="action-btn add-btn" @click="openCustomizeDialog">
-                        <span class="add-icon">+</span>
-                        添加
-                    </el-button>
-                    <el-button class="action-btn close-btn" @click="toggleChatShortcuts">
-                        收起
-                    </el-button>
-                </div>
-            </div>
-        </div>
 
         <!-- 移动端用户菜单弹窗 -->
         <MobileUserMenu :visible="showMobileMenu" :user-info="userStore.userInfo" @close="hideMobileUserMenu"
@@ -540,7 +495,7 @@
                 </div>
                 <div class="guide-actions">
                     <el-button type="primary" size="small" @click="handleGuideAction">{{ guideActionText
-                        }}</el-button>
+                    }}</el-button>
                     <el-button size="small" @click="dismissGuide">稍后</el-button>
                 </div>
             </div>
@@ -578,7 +533,7 @@
                         <div class="summary-item">
                             <span class="summary-label">买入信号</span>
                             <span class="summary-value signal-score">{{ currentQuantAnalysis.buySignalScore
-                            }}/100</span>
+                                }}/100</span>
                         </div>
                         <div class="summary-item">
                             <span class="summary-label">量化评级</span>
@@ -807,6 +762,7 @@ import WelcomeGuestHeader from '../components/WelcomeGuestHeader.vue';
 import TopNavbar from '../components/TopNavbar.vue';
 import AIInputCard from '../components/AIInputCard.vue';
 import QuickExamples from '../components/QuickExamples.vue';
+import ShortcutsBar from '../components/ShortcutsBar.vue';
 import { getStockListConfig } from '../config/stockListConfig';
 import { recommendStock, api } from '@/api/api';
 import { riskOptions } from '@/config/userPortrait';
@@ -914,104 +870,10 @@ const customizeDialogVisible = ref(false);
 
 
 
-// 快捷操作配置 - 改为响应式数据
-const defaultShortcuts = ref([
-    {
-        id: 'smart_review',
-        icon: '📊',
-        title: '智能复盘',
-        shortTitle: '复盘',
-        description: '智能分析市场表现和投资策略',
-        action: () => setSuggestionAndSend(`智能复盘：请帮我进行全面的智能投资复盘分析，包括：
-
-1. 市场整体走势分析（主要指数表现、板块轮动）
-2. 我的投资组合表现分析和风险评估
-3. 基于AI算法的策略优化建议
-4. 市场情绪和技术指标综合分析
-5. 个性化的下一步操作建议
-6. 风险预警和机会识别
-7. 智能资产配置优化方案
-
-请结合我的投资风格和市场大数据，给出专业的智能化复盘建议。`),
-        isDefault: true,
-        isActive: true
-    },
-    {
-        id: 'watchlist',
-        icon: '⭐',
-        title: '自选股',
-        shortTitle: '自选',
-        description: '查看和管理我的自选股票',
-        action: () => handleWatchlistView(),
-        isDefault: true,
-        isActive: true
-    },
-    {
-        id: 'smart_recommendation',
-        icon: '📈',
-        title: '智能荐股',
-        shortTitle: '荐股',
-        description: '基于AI算法推荐优质股票',
-        action: () => handleSmartRecommendation(),
-        isDefault: true,
-        isActive: true
-    },
-    {
-        id: 'news_update',
-        icon: '📄',
-        title: '资讯推送',
-        shortTitle: '资讯',
-        description: '获取最新市场资讯和重要公告',
-        action: () => handleNewsUpdate(),
-        isDefault: true,
-        isActive: true
-    },
-    {
-        id: 'asset_analysis',
-        icon: '💼',
-        title: '我的资产',
-        shortTitle: '资产',
-        description: '查看投资组合和账户分析',
-        action: () => handleAssetAnalysis(),
-        isDefault: true,
-        isActive: true
-    }
-]);
-
-// 当前激活的快捷操作
-const activeShortcuts = ref([]);
-
-// 初始化快捷操作
+// 初始化快捷操作（保留用于兼容性）
 const initializeShortcuts = () => {
-    const result = [];
-
-    // 加载默认快捷操作状态
-    const savedStates = localStorage.getItem('defaultShortcutStates');
-    const states = savedStates ? JSON.parse(savedStates) : {};
-
-    // 添加激活的默认快捷操作
-    const activeDefaultShortcuts = defaultShortcuts.value.filter(s => {
-        if (states.hasOwnProperty(s.id)) {
-            s.isActive = states[s.id];
-        }
-        return s.isActive;
-    });
-    result.push(...activeDefaultShortcuts);
-
-    // 添加激活的自定义快捷操作
-    const savedCustomShortcuts = localStorage.getItem('customShortcuts');
-    if (savedCustomShortcuts) {
-        const customShortcuts = JSON.parse(savedCustomShortcuts);
-        const activeCustomShortcuts = customShortcuts
-            .filter(s => s.isActive)
-            .map(shortcut => ({
-                ...shortcut,
-                action: () => setSuggestionAndSend(shortcut.prompt)
-            }));
-        result.push(...activeCustomShortcuts);
-    }
-
-    activeShortcuts.value = result;
+    // ShortcutsBar组件会自行处理快捷操作的初始化
+    // 这里保留空函数以确保不影响其他依赖此函数的代码
 };
 
 
@@ -4742,12 +4604,41 @@ const handleShortcutClick = (shortcut) => {
 
     try {
         if (shortcut.isDefault) {
-            // 默认快捷操作，直接调用action函数
-            if (typeof shortcut.action === 'function') {
-                shortcut.action();
-            } else {
-                console.error('默认快捷操作action不是函数:', shortcut);
-                ElMessage.error('快捷操作配置错误');
+            // 默认快捷操作，根据action类型执行相应操作
+            switch (shortcut.action) {
+                case 'smart_review':
+                    setSuggestionAndSend(`智能复盘：请帮我进行全面的智能投资复盘分析，包括：
+
+1. 市场整体走势分析（主要指数表现、板块轮动）
+2. 我的投资组合表现分析和风险评估
+3. 基于AI算法的策略优化建议
+4. 市场情绪和技术指标综合分析
+5. 个性化的下一步操作建议
+6. 风险预警和机会识别
+7. 智能资产配置优化方案
+
+请结合我的投资风格和市场大数据，给出专业的智能化复盘建议。`);
+                    break;
+                case 'watchlist':
+                    handleWatchlistView();
+                    break;
+                case 'smart_recommendation':
+                    handleSmartRecommendation();
+                    break;
+                case 'news_update':
+                    handleNewsUpdate();
+                    break;
+                case 'asset_analysis':
+                    handleAssetAnalysis();
+                    break;
+                default:
+                    // 兼容旧版本的函数类型action
+                    if (typeof shortcut.action === 'function') {
+                        shortcut.action();
+                    } else {
+                        console.error('未知的快捷操作类型:', shortcut.action);
+                        ElMessage.error('快捷操作配置错误');
+                    }
             }
         } else {
             // 自定义快捷操作，使用prompt
@@ -4769,10 +4660,17 @@ const openCustomizeDialog = () => {
     customizeDialogVisible.value = true;
 };
 
+// ShortcutsBar组件引用
+const shortcutsBarRef = ref(null);
+
 // 处理快捷操作更新事件
 const handleShortcutsUpdated = () => {
     // 重新初始化快捷操作
     initializeShortcuts();
+    // 通知ShortcutsBar组件更新
+    if (shortcutsBarRef.value) {
+        shortcutsBarRef.value.handleShortcutsUpdated();
+    }
 };
 
 // 组件挂载时初始化
@@ -7313,153 +7211,9 @@ body.onboarding-mode {
     color: #78350f;
 }
 
-/* 聊天模式快捷操作样式 */
-.chat-shortcuts {
-    width: 100%;
-    max-width: 900px;
-    margin-bottom: 12px;
-    animation: slideDown 0.3s ease-out;
-}
 
-.shortcuts-grid {
-    display: flex;
-    gap: 8px;
-    justify-content: center;
-    flex-wrap: wrap;
-}
 
-/* 移动端快捷操作网格优化 */
-@media (max-width: 768px) {
-    .shortcuts-grid {
-        gap: 6px;
-        padding: 0 8px;
-        justify-content: flex-start;
-        overflow-x: auto;
-        flex-wrap: nowrap;
-        -webkit-overflow-scrolling: touch;
-    }
-}
 
-@media (max-width: 480px) {
-    .shortcuts-grid {
-        gap: 4px;
-        padding: 0 6px;
-    }
-}
-
-/* Element Plus 快捷按钮样式覆盖 */
-:deep(.el-button.chat-shortcut-btn) {
-    display: flex !important;
-    flex-direction: column !important;
-    align-items: center !important;
-    gap: 2px !important;
-    padding: 8px 12px !important;
-    border-radius: 12px !important;
-    background: #ffffff !important;
-    border: 1px solid #e5e7eb !important;
-    color: #6b7280 !important;
-    font-weight: 500 !important;
-    transition: all 0.2s ease !important;
-    min-height: 50px !important;
-    min-width: 60px !important;
-    justify-content: center !important;
-    /* 统一简洁的白色背景设计 */
-}
-
-:deep(.el-button.chat-shortcut-btn:hover) {
-    background: #f9fafb !important;
-    border-color: #d1d5db !important;
-    color: #374151 !important;
-    /* 轻微的悬停效果 */
-}
-
-:deep(.el-button.chat-shortcut-btn:focus) {
-    background: #f9fafb !important;
-    border-color: #d1d5db !important;
-    color: #374151 !important;
-}
-
-/* 兼容性：保留原始类名选择器作为备用 */
-.chat-shortcut-btn {
-    display: flex !important;
-    flex-direction: column !important;
-    align-items: center !important;
-    gap: 2px !important;
-    padding: 8px 12px !important;
-    border-radius: 12px !important;
-    background: #ffffff !important;
-    border: 1px solid #e5e7eb !important;
-    color: #6b7280 !important;
-    font-weight: 500 !important;
-    transition: all 0.2s ease !important;
-    min-height: 50px !important;
-    min-width: 60px !important;
-    justify-content: center !important;
-    /* 统一简洁的白色背景设计 */
-}
-
-.chat-shortcut-btn:hover {
-    background: #f9fafb !important;
-    border-color: #d1d5db !important;
-    color: #374151 !important;
-    /* 轻微的悬停效果 */
-}
-
-.chat-shortcut-btn .btn-icon {
-    font-size: 1.1rem;
-    display: block;
-}
-
-.chat-shortcut-btn .btn-text {
-    font-size: 0.75rem;
-    line-height: 1;
-    text-align: center;
-    white-space: nowrap;
-}
-
-/* 收起按钮保持与其他按钮一致的样式 */
-.chat-shortcut-btn.close-btn {
-    background: #f8fafc !important;
-    border-color: #e2e8f0 !important;
-    color: #475569 !important;
-    border-radius: 12px !important;
-    width: auto !important;
-    height: auto !important;
-    min-height: 50px !important;
-    min-width: 60px !important;
-    padding: 8px 12px !important;
-    display: flex !important;
-    flex-direction: column !important;
-    align-items: center !important;
-    justify-content: center !important;
-    gap: 2px !important;
-}
-
-.chat-shortcut-btn.close-btn:hover {
-    background: #f1f5f9 !important;
-    border-color: #cbd5e1 !important;
-    color: #334155 !important;
-    /* 移除悬停阴影和位移效果 */
-}
-
-/* 确保收起按钮的图标和文字颜色正确 */
-.chat-shortcut-btn.close-btn .btn-icon {
-    color: #475569 !important;
-    font-size: 1.1rem;
-}
-
-.chat-shortcut-btn.close-btn .btn-text {
-    color: #475569 !important;
-    font-size: 0.75rem;
-}
-
-.chat-shortcut-btn.close-btn:hover .btn-icon {
-    color: #334155 !important;
-}
-
-.chat-shortcut-btn.close-btn:hover .btn-text {
-    color: #334155 !important;
-}
 
 /* 快捷操作切换按钮 */
 .shortcuts-toggle-btn {
@@ -7827,184 +7581,19 @@ body.onboarding-mode {
     }
 }
 
-.ai-suggestions {
-    display: flex;
-    flex-direction: column;
-    gap: 12px;
-    margin-top: 20px;
-    width: 100%;
-}
 
-.suggestion-row {
-    display: flex;
-    gap: 10px;
-    justify-content: center;
-    flex-wrap: wrap;
-}
 
 /* Element Plus 按钮样式覆盖 */
-:deep(.el-button.ai-suggestion-btn) {
-    border-radius: 12px !important;
-    background: #f8fafc !important;
-    color: #64748b !important;
-    font-weight: 400 !important;
-    border: 1px solid #e2e8f0 !important;
-    padding: 8px 14px !important;
-    transition: all 0.2s ease !important;
-    font-size: 0.8rem !important;
-    display: flex !important;
-    align-items: center !important;
-    gap: 4px !important;
-    min-width: 100px !important;
-    justify-content: center !important;
-}
 
-:deep(.el-button.ai-suggestion-btn:hover) {
-    background: #f1f5f9 !important;
-    border-color: #cbd5e1 !important;
-    color: #475569 !important;
-}
 
-:deep(.el-button.ai-suggestion-btn:focus) {
-    background: #f9fafb !important;
-    border-color: #d1d5db !important;
-    color: #374151 !important;
-    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1) !important;
-}
 
-:deep(.el-button.ai-suggestion-btn.hot) {
-    background: #f8fafc !important;
-    border-color: #e2e8f0 !important;
-    color: #64748b !important;
-}
-
-:deep(.el-button.ai-suggestion-btn.hot:hover) {
-    background: #f1f5f9 !important;
-    border-color: #cbd5e1 !important;
-    color: #475569 !important;
-}
-
-:deep(.el-button.ai-suggestion-btn.warning) {
-    background: #f8fafc !important;
-    border-color: #e2e8f0 !important;
-    color: #64748b !important;
-}
-
-:deep(.el-button.ai-suggestion-btn.warning:hover) {
-    background: #f1f5f9 !important;
-    border-color: #cbd5e1 !important;
-    color: #475569 !important;
-}
-
-:deep(.el-button.ai-suggestion-btn.quant) {
-    background: #f8fafc !important;
-    border-color: #e2e8f0 !important;
-    color: #64748b !important;
-}
-
-:deep(.el-button.ai-suggestion-btn.quant:hover) {
-    background: #f1f5f9 !important;
-    border-color: #cbd5e1 !important;
-    color: #475569 !important;
-}
-
-/* 兼容性：保留原始类名选择器作为备用 */
-.ai-suggestion-btn {
-    border-radius: 12px !important;
-    background: #f8fafc !important;
-    color: #64748b !important;
-    font-weight: 400 !important;
-    border: 1px solid #e2e8f0 !important;
-    padding: 8px 14px !important;
-    transition: all 0.2s ease !important;
-    font-size: 0.8rem !important;
-    display: flex !important;
-    align-items: center !important;
-    gap: 4px !important;
-    min-width: 100px !important;
-    justify-content: center !important;
-}
-
-.ai-suggestion-btn:hover {
-    background: #f1f5f9 !important;
-    border-color: #cbd5e1 !important;
-    color: #475569 !important;
-}
-
-.btn-icon {
-    font-size: 1rem;
-    display: inline-block;
-    filter: drop-shadow(0 1px 2px rgba(0, 0, 0, 0.1));
-}
-
-/* 简化的自定义按钮样式 */
-.customize-btn-inline {
-    border: none;
-    background: #f1f5f9;
-    border-radius: 50%;
-    width: 32px;
-    height: 32px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    cursor: pointer;
-    transition: all 0.2s ease;
-    margin-left: 6px;
-}
-
-.customize-btn-inline:hover {
-    background: #e2e8f0;
-}
-
-.customize-icon {
-    font-size: 14px;
-    color: #6b7280;
-    transition: color 0.2s ease;
-}
-
-.customize-btn-inline:hover .customize-icon {
-    color: #374151;
-}
-
-/* 聊天模式下的自定义按钮样式调整 */
-.chat-shortcut-btn.customize-btn-chat {
-    background: rgba(156, 163, 175, 0.1);
-    border-color: rgba(156, 163, 175, 0.3);
-    color: #6b7280;
-}
-
-.chat-shortcut-btn.customize-btn-chat:hover {
-    background: rgba(156, 163, 175, 0.2);
-    border-color: rgba(156, 163, 175, 0.5);
-    color: #374151;
-}
 
 
 
 /* 响应式设计 */
 @media (max-width: 768px) {
 
-    /* AI建议按钮移动端优化 */
-    .ai-suggestion-btn {
-        font-size: 0.75rem;
-        padding: 8px 12px;
-        min-width: 100px;
-        border-radius: 12px;
-        min-height: 36px;
-    }
 
-    .btn-icon {
-        font-size: 0.875rem;
-    }
-
-    .customize-btn-inline {
-        width: 32px;
-        height: 32px;
-    }
-
-    .customize-icon {
-        font-size: 12px;
-    }
 
     /* 防止移动端缩放和选择 */
     html,
@@ -8260,191 +7849,9 @@ body.onboarding-mode {
         display: none;
     }
 
-    /* PC端快捷操作样式（保持原有设计） */
-    .chat-shortcuts.pc-shortcuts {
-        width: 100%;
-        max-width: 900px;
-        margin-bottom: 12px;
-        animation: slideDown 0.3s ease-out;
-    }
 
-    .pc-shortcuts .shortcuts-grid {
-        display: flex;
-        gap: 8px;
-        justify-content: center;
-        flex-wrap: wrap;
-    }
 
-    .pc-shortcuts .chat-shortcut-btn {
-        display: flex;
-        flex-direction: column;
-        align-items: center;
-        gap: 2px;
-        padding: 8px 12px;
-        border-radius: 12px;
-        background: #f8fafc;
-        border: 1px solid #e5e7eb;
-        color: #374151;
-        font-weight: 500;
-        transition: all 0.2s ease;
-        min-height: 50px;
-        min-width: 60px;
-        justify-content: center;
-        box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
-    }
 
-    .pc-shortcuts .chat-shortcut-btn:hover {
-        background: #f1f5f9;
-        border-color: #cbd5e1;
-        color: #1f2937;
-        transform: translateY(-1px);
-        box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
-    }
-
-    .pc-shortcuts .chat-shortcut-btn .btn-icon {
-        font-size: 1.1rem;
-        display: block;
-    }
-
-    .pc-shortcuts .chat-shortcut-btn .btn-text {
-        font-size: 0.75rem;
-        line-height: 1;
-        text-align: center;
-        white-space: nowrap;
-    }
-
-    /* PC端收起按钮样式 */
-    .pc-shortcuts .chat-shortcut-btn.close-btn {
-        background: #f8fafc !important;
-        border-color: #e2e8f0 !important;
-        color: #475569 !important;
-    }
-
-    .pc-shortcuts .chat-shortcut-btn.close-btn:hover {
-        background: #f1f5f9 !important;
-        border-color: #cbd5e1 !important;
-        color: #334155 !important;
-    }
-
-    /* 移动端快捷操作优雅菜单设计 */
-    .mobile-shortcuts-overlay {
-        position: fixed !important;
-        top: 0 !important;
-        left: 0 !important;
-        right: 0 !important;
-        bottom: 0 !important;
-        background: rgba(0, 0, 0, 0.4) !important;
-        z-index: 10100 !important;
-        /* 提高z-index确保在移动端侧边栏上方显示 */
-        display: flex !important;
-        align-items: flex-end !important;
-        justify-content: center !important;
-        animation: fadeIn 0.2s ease-out !important;
-    }
-
-    .mobile-shortcuts-container {
-        width: 100% !important;
-        max-width: 400px !important;
-        background: #ffffff !important;
-        border-radius: 16px 16px 0 0 !important;
-        padding: 16px !important;
-        margin: 0 8px 0 8px !important;
-        box-shadow: 0 -4px 20px rgba(0, 0, 0, 0.15) !important;
-        animation: slideUpModal 0.3s ease-out !important;
-    }
-
-    /* 主要快捷操作网格 */
-    .shortcuts-main-grid {
-        display: flex !important;
-        flex-wrap: wrap !important;
-        gap: 8px !important;
-        margin-bottom: 16px !important;
-        justify-content: center !important;
-        align-items: center !important;
-    }
-
-    .shortcut-btn-mobile {
-        height: 36px !important;
-        min-height: 36px !important;
-        padding: 8px 16px !important;
-        border-radius: 8px !important;
-        background: #f8fafc !important;
-        border: 1px solid #e2e8f0 !important;
-        color: #374151 !important;
-        font-size: 0.75rem !important;
-        font-weight: 500 !important;
-        white-space: nowrap !important;
-        transition: all 0.2s ease !important;
-        flex-shrink: 0 !important;
-    }
-
-    .shortcut-btn-mobile:hover {
-        background: #f1f5f9 !important;
-        border-color: #cbd5e1 !important;
-        transform: translateY(-1px) !important;
-        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1) !important;
-    }
-
-    /* 底部操作按钮 */
-    .shortcuts-bottom-actions {
-        display: flex !important;
-        gap: 8px !important;
-        padding-top: 12px !important;
-        border-top: 1px solid #f1f5f9 !important;
-    }
-
-    .action-btn {
-        flex: 1 !important;
-        height: 40px !important;
-        border-radius: 8px !important;
-        font-size: 0.8rem !important;
-        font-weight: 500 !important;
-        transition: all 0.2s ease !important;
-        display: flex !important;
-        align-items: center !important;
-        justify-content: center !important;
-        gap: 4px !important;
-    }
-
-    /* 添加按钮样式 */
-    .add-btn {
-        background: #f0f9ff !important;
-        border: 1px solid #0ea5e9 !important;
-        color: #0ea5e9 !important;
-    }
-
-    .add-btn:hover {
-        background: #e0f2fe !important;
-        border-color: #0284c7 !important;
-        color: #0284c7 !important;
-    }
-
-    .add-icon {
-        font-size: 1rem !important;
-        font-weight: 300 !important;
-        line-height: 1 !important;
-    }
-
-    /* 收起按钮样式 */
-    .shortcuts-bottom-actions .close-btn {
-        background: #f8fafc !important;
-        border: 1px solid #e2e8f0 !important;
-        color: #374151 !important;
-        width: auto !important;
-        height: 40px !important;
-        border-radius: 8px !important;
-        display: flex !important;
-        align-items: center !important;
-        justify-content: center !important;
-    }
-
-    .shortcuts-bottom-actions .close-btn:hover {
-        background: #f1f5f9 !important;
-        border-color: #cbd5e1 !important;
-        color: #1f2937 !important;
-        transform: none !important;
-        box-shadow: none !important;
-    }
 
 
 
@@ -8530,33 +7937,7 @@ body.onboarding-mode {
         box-shadow: 0 4px 12px rgba(239, 68, 68, 0.3) !important;
     }
 
-    .mobile-shortcuts-container {
-        margin: 0 4px 0 4px !important;
-        padding: 12px !important;
-    }
 
-    .shortcuts-main-grid {
-        gap: 6px !important;
-        margin-bottom: 12px !important;
-    }
-
-    .shortcut-btn-mobile {
-        height: 32px !important;
-        min-height: 32px !important;
-        padding: 6px 12px !important;
-        font-size: 0.7rem !important;
-        border-radius: 6px !important;
-    }
-
-    .shortcuts-bottom-actions .action-btn {
-        height: 36px !important;
-        font-size: 0.75rem !important;
-        gap: 3px !important;
-    }
-
-    .add-icon {
-        font-size: 0.9rem !important;
-    }
 
     /* 超小屏幕聊天历史区域高度优化 */
     .chat-history-area {

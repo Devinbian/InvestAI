@@ -56,9 +56,10 @@
                     @stop-generation="stopGeneration" @toggle-chat-shortcuts="toggleChatShortcuts" />
 
                 <!-- 快捷操作栏组件 -->
-                <ShortcutsBar mode="initial" :show-shortcuts="!isMobileView" :is-mobile-view="isMobileView"
-                    :is-logged-in="userStore.isLoggedIn" @shortcut-click="handleShortcutClick"
-                    @customize-dialog-open="openCustomizeDialog" ref="shortcutsBarRef" />
+                <ShortcutsBar mode="initial" :show-shortcuts="true" :show-chat-shortcuts="showChatShortcuts"
+                    :is-mobile-view="isMobileView" :is-logged-in="userStore.isLoggedIn"
+                    @shortcut-click="handleShortcutClick" @customize-dialog-open="openCustomizeDialog"
+                    @toggle-chat-shortcuts="toggleChatShortcuts" ref="shortcutsBarRef" />
             </div>
 
             <!-- 聊天历史区域 -->
@@ -870,10 +871,29 @@ const customizeDialogVisible = ref(false);
 
 
 
-// 初始化快捷操作（保留用于兼容性）
+// 初始化快捷操作
 const initializeShortcuts = () => {
-    // ShortcutsBar组件会自行处理快捷操作的初始化
-    // 这里保留空函数以确保不影响其他依赖此函数的代码
+    console.log('🔄 Main.vue - 初始化快捷操作');
+
+    // 如果有ShortcutsBar组件引用，通知它更新
+    if (shortcutsBarRef.value) {
+        console.log('🔧 Main.vue - 通过ref调用ShortcutsBar初始化');
+        shortcutsBarRef.value.initializeShortcuts();
+    } else {
+        console.log('📱 Main.vue - shortcutsBarRef不存在，直接处理数据（适用于移动端）');
+
+        // 移动端或组件未加载时，直接处理快捷操作数据
+        // 这主要是为了确保移动端弹窗能获取到最新数据
+        const savedCustomShortcuts = localStorage.getItem('customShortcuts');
+        const savedStates = localStorage.getItem('defaultShortcutStates');
+
+        console.log('📊 Main.vue - localStorage数据检查:', {
+            customShortcuts: savedCustomShortcuts ? JSON.parse(savedCustomShortcuts).length : 0,
+            defaultStates: savedStates ? Object.keys(JSON.parse(savedStates)).length : 0
+        });
+    }
+
+    console.log('✅ Main.vue - 快捷操作初始化完成');
 };
 
 
@@ -4665,11 +4685,52 @@ const shortcutsBarRef = ref(null);
 
 // 处理快捷操作更新事件
 const handleShortcutsUpdated = () => {
-    // 重新初始化快捷操作
-    initializeShortcuts();
-    // 通知ShortcutsBar组件更新
+    console.log('🔄 Main.vue - 快捷操作更新事件触发');
+    console.log('🔍 Main.vue - shortcutsBarRef状态:', shortcutsBarRef.value ? '存在' : '不存在');
+    console.log('🔍 Main.vue - 当前环境:', {
+        isMobileView: isMobileView.value,
+        showChatShortcuts: showChatShortcuts.value
+    });
+
+    // PC端：通知ShortcutsBar组件更新
+    if (!isMobileView.value) {
+        if (shortcutsBarRef.value) {
+            shortcutsBarRef.value.handleShortcutsUpdated();
+            console.log('✅ Main.vue - 已通知PC端ShortcutsBar组件更新');
+        } else {
+            console.warn('⚠️ Main.vue - PC端shortcutsBarRef为空，无法通知更新');
+            initializeShortcuts();
+        }
+    }
+
+    // 移动端：直接更新数据并刷新弹窗
+    if (isMobileView.value) {
+        console.log('📱 Main.vue - 移动端环境，执行移动端更新逻辑');
+
+        // 直接初始化快捷操作数据（移动端不依赖ShortcutsBar的ref）
+        initializeShortcuts();
+        console.log('✅ Main.vue - 移动端快捷操作数据已更新');
+
+        // 如果移动端快捷操作弹窗正在显示，强制刷新显示
+        if (showChatShortcuts.value) {
+            console.log('🔄 Main.vue - 移动端快捷操作弹窗正在显示，准备刷新');
+            // 先关闭再打开，强制刷新
+            showChatShortcuts.value = false;
+            nextTick(() => {
+                showChatShortcuts.value = true;
+                console.log('🔄 Main.vue - 移动端快捷操作弹窗已刷新');
+            });
+        }
+    }
+
+    // 尝试通知ShortcutsBar组件更新（兼容性处理）
     if (shortcutsBarRef.value) {
-        shortcutsBarRef.value.handleShortcutsUpdated();
+        try {
+            shortcutsBarRef.value.handleShortcutsUpdated();
+            console.log('✅ Main.vue - 已通知ShortcutsBar组件更新');
+        } catch (error) {
+            console.warn('⚠️ Main.vue - 通知ShortcutsBar更新时出错:', error);
+        }
     }
 };
 

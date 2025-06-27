@@ -1,6 +1,6 @@
 <template>
     <div class="shortcuts-bar" v-if="showShortcuts">
-        <!-- PC端快捷操作栏（初始模式） -->
+        <!-- PC端快捷操作栏（初始模式） - 只在PC端显示 -->
         <div class="ai-suggestions" v-if="mode === 'initial' && !isMobileView">
             <div class="suggestion-row">
                 <el-button v-for="shortcut in activeShortcuts" :key="shortcut.id" class="ai-suggestion-btn"
@@ -13,6 +13,11 @@
                     <span class="customize-icon">⚙️</span>
                 </button>
             </div>
+        </div>
+
+        <!-- 移动端初始模式隐藏占位元素 - 确保组件始终被渲染 -->
+        <div v-if="mode === 'initial' && isMobileView" style="display: none;" class="mobile-placeholder">
+            <!-- 隐藏的占位元素，确保移动端组件能被正确渲染和引用 -->
         </div>
 
         <!-- PC端快捷操作栏（聊天模式下显示在输入框上方） -->
@@ -34,26 +39,36 @@
             </div>
         </div>
 
-        <!-- 移动端快捷操作栏（独立显示） -->
+        <!-- 移动端快捷操作栏（原生设计） -->
         <div class="mobile-shortcuts-overlay" v-if="showChatShortcuts && isMobileView" @click="toggleChatShortcuts">
             <div class="mobile-shortcuts-container" @click.stop>
-                <!-- 快捷操作按钮 -->
-                <div class="shortcuts-main-grid">
-                    <el-button v-for="shortcut in activeShortcuts" :key="shortcut.id" class="shortcut-btn-mobile"
-                        @click="handleShortcutClick(shortcut)">
-                        {{ shortcut.shortTitle || shortcut.title }}
-                    </el-button>
+                <!-- 顶部拖拽指示器 -->
+                <div class="drag-indicator"></div>
+
+                <!-- 标题区域 -->
+                <div class="shortcuts-header">
+                    <h3 class="shortcuts-title">快捷操作</h3>
+                    <button class="close-btn-header" @click="toggleChatShortcuts">
+                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none">
+                            <path d="M18 6L6 18M6 6l12 12" stroke="currentColor" stroke-width="2"
+                                stroke-linecap="round" />
+                        </svg>
+                    </button>
                 </div>
 
-                <!-- 底部操作按钮 -->
-                <div class="shortcuts-bottom-actions">
-                    <el-button class="action-btn add-btn" @click="openCustomizeDialog">
-                        <span class="add-icon">+</span>
-                        添加
-                    </el-button>
-                    <el-button class="action-btn close-btn" @click="toggleChatShortcuts">
-                        收起
-                    </el-button>
+                <!-- 快捷操作网格 -->
+                <div class="shortcuts-grid-mobile">
+                    <div v-for="shortcut in activeShortcuts" :key="shortcut.id" class="shortcut-item-mobile"
+                        @click="handleShortcutClick(shortcut)">
+                        <div class="shortcut-icon">{{ shortcut.icon }}</div>
+                        <div class="shortcut-text">{{ shortcut.shortTitle || shortcut.title }}</div>
+                    </div>
+
+                    <!-- 自定义按钮 -->
+                    <div class="shortcut-item-mobile add-shortcut" @click="openCustomizeDialog">
+                        <div class="shortcut-icon add-icon">+</div>
+                        <div class="shortcut-text">自定义</div>
+                    </div>
                 </div>
             </div>
         </div>
@@ -159,13 +174,23 @@ const defaultShortcuts = ref([
 // 当前激活的快捷操作
 const activeShortcuts = ref([]);
 
+// 监听activeShortcuts变化（用于调试）
+watch(activeShortcuts, (newShortcuts, oldShortcuts) => {
+    console.log('🔄 ShortcutsBar - activeShortcuts 数据变化');
+    console.log('旧数据长度:', oldShortcuts?.length || 0);
+    console.log('新数据长度:', newShortcuts?.length || 0);
+    console.log('新数据内容:', newShortcuts);
+}, { deep: true });
+
 // 初始化快捷操作
 const initializeShortcuts = () => {
+    console.log('🔄 ShortcutsBar - 开始初始化快捷操作');
     const result = [];
 
     // 加载默认快捷操作状态
     const savedStates = localStorage.getItem('defaultShortcutStates');
     const states = savedStates ? JSON.parse(savedStates) : {};
+    console.log('📊 ShortcutsBar - 默认快捷操作状态:', states);
 
     // 添加激活的默认快捷操作
     const activeDefaultShortcuts = defaultShortcuts.value.filter(s => {
@@ -175,11 +200,13 @@ const initializeShortcuts = () => {
         return s.isActive;
     });
     result.push(...activeDefaultShortcuts);
+    console.log('✅ ShortcutsBar - 激活的默认快捷操作:', activeDefaultShortcuts.length, activeDefaultShortcuts);
 
     // 添加激活的自定义快捷操作
     const savedCustomShortcuts = localStorage.getItem('customShortcuts');
     if (savedCustomShortcuts) {
         const customShortcuts = JSON.parse(savedCustomShortcuts);
+        console.log('💾 ShortcutsBar - 保存的自定义快捷操作:', customShortcuts);
         const activeCustomShortcuts = customShortcuts
             .filter(s => s.isActive)
             .map(shortcut => ({
@@ -187,9 +214,15 @@ const initializeShortcuts = () => {
                 action: 'custom'
             }));
         result.push(...activeCustomShortcuts);
+        console.log('✅ ShortcutsBar - 激活的自定义快捷操作:', activeCustomShortcuts.length, activeCustomShortcuts);
+    } else {
+        console.log('📝 ShortcutsBar - 没有保存的自定义快捷操作');
     }
 
+    console.log('🔍 ShortcutsBar - 更新前的activeShortcuts:', activeShortcuts.value.length);
     activeShortcuts.value = result;
+    console.log('🎯 ShortcutsBar - 最终激活的快捷操作总数:', result.length);
+    console.log('🎯 ShortcutsBar - 最终激活的快捷操作详情:', result);
 };
 
 // 快捷操作点击处理
@@ -217,8 +250,10 @@ const toggleChatShortcuts = () => {
 
 // 处理快捷操作更新
 const handleShortcutsUpdated = () => {
+    console.log('🔄 ShortcutsBar - 处理快捷操作更新事件');
     initializeShortcuts();
     emit('shortcuts-updated');
+    console.log('✅ ShortcutsBar - 快捷操作更新完成');
 };
 
 // 监听props变化，重新初始化快捷操作
@@ -226,9 +261,28 @@ watch(() => props.isLoggedIn, () => {
     initializeShortcuts();
 }, { immediate: false });
 
+// 监听移动端快捷操作弹窗显示状态，每次显示时重新加载数据
+watch(() => props.showChatShortcuts, (newVal, oldVal) => {
+    if (newVal && props.isMobileView && !oldVal) {
+        console.log('📱 ShortcutsBar - 移动端快捷操作弹窗打开，重新初始化数据');
+        initializeShortcuts();
+    }
+}, { immediate: false });
+
 // 组件挂载时初始化
 onMounted(() => {
+    console.log('🔧 ShortcutsBar - 组件已挂载', {
+        mode: props.mode,
+        showShortcuts: props.showShortcuts,
+        isMobileView: props.isMobileView,
+        isLoggedIn: props.isLoggedIn
+    });
     initializeShortcuts();
+});
+
+// 监听组件创建
+console.log('🔧 ShortcutsBar - 组件正在创建', {
+    timestamp: Date.now()
 });
 
 // 暴露方法给父组件
@@ -393,123 +447,175 @@ defineExpose({
     background: #fef2f2;
 }
 
-/* 移动端快捷操作样式 */
+/* 移动端快捷操作样式 - 原生设计 */
 .mobile-shortcuts-overlay {
     position: fixed;
     top: 0;
     left: 0;
     right: 0;
     bottom: 0;
-    background: rgba(0, 0, 0, 0.5);
-    backdrop-filter: blur(4px);
+    background: rgba(0, 0, 0, 0.4);
     z-index: 2000;
     display: flex;
     align-items: flex-end;
     justify-content: center;
     padding: 0;
+    animation: fadeIn 0.2s ease-out;
 }
 
 .mobile-shortcuts-container {
     width: 100%;
-    background: white;
-    border-radius: 20px 20px 0 0;
-    padding: 24px 20px 32px;
-    max-height: 70vh;
-    overflow-y: auto;
-    animation: slideUp 0.3s ease-out;
+    background: #f8f9fa;
+    border-radius: 16px 16px 0 0;
+    padding: 0 0 env(safe-area-inset-bottom, 20px) 0;
+    max-height: 60vh;
+    overflow: hidden;
+    animation: slideUp 0.3s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+    box-shadow: 0 -2px 20px rgba(0, 0, 0, 0.1);
 }
 
 @keyframes slideUp {
     from {
         transform: translateY(100%);
-        opacity: 0;
     }
 
     to {
         transform: translateY(0);
+    }
+}
+
+@keyframes fadeIn {
+    from {
+        opacity: 0;
+    }
+
+    to {
         opacity: 1;
     }
 }
 
-.shortcuts-main-grid {
-    display: grid;
-    grid-template-columns: repeat(2, 1fr);
-    gap: 12px;
-    margin-bottom: 24px;
+/* 拖拽指示器 */
+.drag-indicator {
+    width: 36px;
+    height: 4px;
+    background: #d1d5db;
+    border-radius: 2px;
+    margin: 8px auto 0;
 }
 
-.shortcut-btn-mobile {
-    height: 56px;
-    padding: 0 16px;
-    border-radius: 12px;
-    border: 1px solid #e5e7eb;
+/* 标题区域 */
+.shortcuts-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 16px 20px 12px;
+    border-bottom: 1px solid #e5e7eb;
     background: white;
-    color: #374151;
-    font-size: 14px;
-    font-weight: 500;
-    transition: all 0.2s ease;
+}
+
+.shortcuts-title {
+    font-size: 16px;
+    font-weight: 600;
+    color: #1f2937;
+    margin: 0;
+}
+
+.close-btn-header {
+    width: 32px;
+    height: 32px;
+    border: none;
+    background: #f3f4f6;
+    border-radius: 50%;
     display: flex;
     align-items: center;
     justify-content: center;
     cursor: pointer;
-    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
-}
-
-.shortcut-btn-mobile:hover {
-    border-color: #3b82f6;
-    color: #3b82f6;
-    background: #f8faff;
-    box-shadow: 0 2px 8px rgba(59, 130, 246, 0.15);
-}
-
-.shortcuts-bottom-actions {
-    display: flex;
-    gap: 12px;
-    padding-top: 16px;
-    border-top: 1px solid #f3f4f6;
-}
-
-.action-btn {
-    flex: 1;
-    height: 48px;
-    border-radius: 12px;
-    font-size: 14px;
-    font-weight: 500;
     transition: all 0.2s ease;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    gap: 8px;
-    cursor: pointer;
-}
-
-.add-btn {
-    border: 1px solid #3b82f6;
-    background: #3b82f6;
-    color: white;
-}
-
-.add-btn:hover {
-    background: #2563eb;
-    transform: translateY(-1px);
-    box-shadow: 0 4px 12px rgba(59, 130, 246, 0.3);
-}
-
-.close-btn {
-    border: 1px solid #e5e7eb;
-    background: white;
     color: #6b7280;
 }
 
-.close-btn:hover {
-    border-color: #9ca3af;
+.close-btn-header:hover {
+    background: #e5e7eb;
     color: #374151;
-    background: #f9fafb;
 }
 
-.add-icon {
-    font-size: 16px;
-    font-weight: bold;
+.close-btn-header:active {
+    transform: scale(0.95);
+    background: #d1d5db;
+}
+
+/* 快捷操作网格 */
+.shortcuts-grid-mobile {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 0;
+    padding: 20px 16px 16px;
+    background: white;
+}
+
+.shortcut-item-mobile {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    padding: 16px 8px;
+    cursor: pointer;
+    border-radius: 12px;
+    transition: all 0.2s ease;
+    min-height: 80px;
+    justify-content: center;
+}
+
+.shortcut-item-mobile:active {
+    transform: scale(0.95);
+    background: #f3f4f6;
+}
+
+.shortcut-icon {
+    width: 44px;
+    height: 44px;
+    border-radius: 12px;
+    background: #f8faff;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 20px;
+    margin-bottom: 8px;
+    transition: all 0.2s ease;
+}
+
+.shortcut-text {
+    font-size: 12px;
+    color: #374151;
+    text-align: center;
+    font-weight: 500;
+    line-height: 1.2;
+}
+
+/* 自定义按钮特殊样式 */
+.add-shortcut .shortcut-icon {
+    background: #f0f9ff;
+    color: #3b82f6;
+    border: 1px dashed #93c5fd;
+}
+
+.add-shortcut .shortcut-icon.add-icon {
+    font-size: 18px;
+    font-weight: 300;
+}
+
+.add-shortcut .shortcut-text {
+    color: #3b82f6;
+}
+
+/* 触摸反馈 */
+@media (hover: none) and (pointer: coarse) {
+    .shortcut-item-mobile:hover {
+        background: transparent;
+    }
+
+    .shortcut-item-mobile:active {
+        background: #f3f4f6;
+    }
 }
 
 /* 响应式设计 */
@@ -537,13 +643,49 @@ defineExpose({
 }
 
 @media (max-width: 480px) {
-    .shortcuts-main-grid {
-        grid-template-columns: 1fr;
-    }
-
     .ai-suggestion-btn {
         min-width: auto;
         flex: 1;
+    }
+
+    /* 超小屏幕优化移动端弹窗 */
+    .shortcuts-grid-mobile {
+        grid-template-columns: repeat(3, 1fr);
+        padding: 16px 12px 12px;
+    }
+
+    .shortcut-item-mobile {
+        padding: 12px 6px;
+        min-height: 72px;
+    }
+
+    .shortcut-icon {
+        width: 40px;
+        height: 40px;
+        font-size: 18px;
+        margin-bottom: 6px;
+    }
+
+    .shortcut-text {
+        font-size: 11px;
+    }
+
+    .shortcuts-header {
+        padding: 12px 16px 8px;
+    }
+
+    .shortcuts-title {
+        font-size: 15px;
+    }
+
+    .close-btn-header {
+        width: 28px;
+        height: 28px;
+    }
+
+    .close-btn-header svg {
+        width: 16px;
+        height: 16px;
     }
 }
 </style>

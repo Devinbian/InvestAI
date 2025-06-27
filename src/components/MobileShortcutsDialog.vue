@@ -242,26 +242,38 @@ const availableIcons = ref([
 
 // 初始化数据
 const initializeData = () => {
+    console.log('🔄 MobileShortcutsDialog - 开始初始化数据');
+
     // 加载自定义快捷操作
     const savedCustomShortcuts = localStorage.getItem('customShortcuts');
     if (savedCustomShortcuts) {
         customShortcuts.value = JSON.parse(savedCustomShortcuts);
+        console.log('💾 MobileShortcutsDialog - 已加载自定义快捷操作:', customShortcuts.value);
+    } else {
+        customShortcuts.value = [];
+        console.log('📝 MobileShortcutsDialog - 没有保存的自定义快捷操作');
     }
 
     // 加载默认快捷操作状态
     const savedStates = localStorage.getItem('defaultShortcutStates');
     if (savedStates) {
         const states = JSON.parse(savedStates);
+        console.log('📊 MobileShortcutsDialog - 已加载默认快捷操作状态:', states);
         defaultShortcuts.value.forEach(shortcut => {
             if (states.hasOwnProperty(shortcut.id)) {
                 shortcut.isActive = states[shortcut.id];
             }
         });
+    } else {
+        console.log('📝 MobileShortcutsDialog - 使用默认快捷操作状态');
     }
+
+    console.log('✅ MobileShortcutsDialog - 数据初始化完成');
 };
 
 // 保存自定义快捷操作
 const saveCustomShortcuts = () => {
+    console.log('💾 MobileShortcutsDialog - 保存自定义快捷操作:', customShortcuts.value);
     localStorage.setItem('customShortcuts', JSON.stringify(customShortcuts.value));
     emitShortcutsUpdate();
 };
@@ -278,10 +290,19 @@ const saveDefaultShortcutStates = () => {
 
 // 发送快捷操作更新事件
 const emitShortcutsUpdate = () => {
+    console.log('🔄 MobileShortcutsDialog - 发送快捷操作更新事件');
+    console.log('📊 MobileShortcutsDialog - 默认快捷操作:', defaultShortcuts.value);
+    console.log('💾 MobileShortcutsDialog - 自定义快捷操作:', customShortcuts.value);
+
+    // 检查localStorage中的数据
+    const savedCustomShortcuts = localStorage.getItem('customShortcuts');
+    console.log('🔍 MobileShortcutsDialog - localStorage中的自定义快捷操作:', savedCustomShortcuts);
+
     emit('shortcuts-updated', {
         defaultShortcuts: defaultShortcuts.value,
         customShortcuts: customShortcuts.value
     });
+    console.log('✅ MobileShortcutsDialog - 快捷操作更新事件已发送');
 };
 
 // 添加自定义快捷操作
@@ -391,6 +412,10 @@ const handleClose = () => {
 watch(() => props.modelValue, (newVal) => {
     if (!newVal) {
         showIconPicker.value = null;
+    } else {
+        // 对话框打开时重新初始化数据
+        console.log('🔄 MobileShortcutsDialog - 对话框打开，重新初始化数据');
+        initializeData();
     }
 });
 

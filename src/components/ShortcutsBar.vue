@@ -76,7 +76,7 @@
 </template>
 
 <script setup>
-import { ref, computed, onMounted, watch } from 'vue';
+import { ref, computed, onMounted, watch, nextTick } from 'vue';
 import { ElMessage } from 'element-plus';
 
 // Props定义
@@ -251,9 +251,21 @@ const toggleChatShortcuts = () => {
 // 处理快捷操作更新
 const handleShortcutsUpdated = () => {
     console.log('🔄 ShortcutsBar - 处理快捷操作更新事件');
-    initializeShortcuts();
-    emit('shortcuts-updated');
-    console.log('✅ ShortcutsBar - 快捷操作更新完成');
+    console.log('🔍 ShortcutsBar - 更新前的activeShortcuts数量:', activeShortcuts.value.length);
+
+    // 强制清空数组，确保响应式更新
+    activeShortcuts.value = [];
+
+    // 使用nextTick确保DOM更新后再重新加载数据
+    nextTick(() => {
+        initializeShortcuts();
+
+        console.log('🔍 ShortcutsBar - 更新后的activeShortcuts数量:', activeShortcuts.value.length);
+        console.log('🔍 ShortcutsBar - 更新后的activeShortcuts详情:', activeShortcuts.value);
+
+        emit('shortcuts-updated');
+        console.log('✅ ShortcutsBar - 快捷操作更新完成');
+    });
 };
 
 // 监听props变化，重新初始化快捷操作

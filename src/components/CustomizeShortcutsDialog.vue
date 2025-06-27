@@ -271,10 +271,19 @@ const saveDefaultShortcutStates = () => {
 
 // 发送快捷操作更新事件
 const emitShortcutsUpdate = () => {
+    console.log('🔄 CustomizeShortcutsDialog - 发送快捷操作更新事件');
+    console.log('📊 CustomizeShortcutsDialog - 默认快捷操作:', defaultShortcuts.value);
+    console.log('💾 CustomizeShortcutsDialog - 自定义快捷操作:', customShortcuts.value);
+
+    // 检查localStorage中的数据
+    const savedCustomShortcuts = localStorage.getItem('customShortcuts');
+    console.log('🔍 CustomizeShortcutsDialog - localStorage中的自定义快捷操作:', savedCustomShortcuts);
+
     emit('shortcuts-updated', {
         defaultShortcuts: defaultShortcuts.value,
         customShortcuts: customShortcuts.value
     });
+    console.log('✅ CustomizeShortcutsDialog - 快捷操作更新事件已发送');
 };
 
 // 添加自定义快捷操作

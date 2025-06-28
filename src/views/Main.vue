@@ -206,13 +206,13 @@
                                         <div class="asset-amount">
                                             <span class="amount-label">总资产</span>
                                             <span class="amount-value">¥{{ formatCurrency(message.assetData.totalAssets)
-                                            }}</span>
+                                                }}</span>
                                         </div>
                                         <div class="asset-change"
                                             :class="[message.assetData.totalProfitPercent >= 0 ? 'profit' : 'loss']">
                                             <span class="change-icon">{{ message.assetData.totalProfitPercent >= 0 ?
                                                 '📈' : '📉'
-                                            }}</span>
+                                                }}</span>
                                             <span class="change-label">今日盈亏：</span>
                                             <span class="change-text">
                                                 {{ message.assetData.totalProfitPercent >= 0 ? '+' : '' }}¥{{
@@ -238,7 +238,7 @@
                                         <div class="stat-info">
                                             <div class="stat-label">持仓市值</div>
                                             <div class="stat-value">¥{{ formatCurrency(message.assetData.portfolioValue)
-                                            }}
+                                                }}
                                             </div>
                                         </div>
                                     </div>
@@ -460,7 +460,7 @@
                 </div>
                 <div class="guide-actions">
                     <el-button type="primary" size="small" @click="handleGuideAction">{{ guideActionText
-                        }}</el-button>
+                    }}</el-button>
                     <el-button size="small" @click="dismissGuide">稍后</el-button>
                 </div>
             </div>
@@ -478,11 +478,7 @@
             @remove-reminder="removeReminder" />
 
         <!-- 版权信息 -->
-        <div class="copyright-footer" v-show="!isChatMode && !isMobileView">
-            <div class="copyright-content">
-                <p>&copy; 2024 上海九方云智能科技有限公司 版权所有</p>
-            </div>
-        </div>
+        <CopyrightFooter :is-chat-mode="isChatMode" :is-mobile-view="isMobileView" :is-wechat-env="isWechatEnv" />
     </div>
 </template>
 
@@ -518,6 +514,7 @@ import QuickExamples from '../components/QuickExamples.vue';
 import ShortcutsBar from '../components/ShortcutsBar.vue';
 import QuantReminderDialog from '../components/QuantReminderDialog.vue';
 import StockActionButtons from '../components/StockActionButtons.vue';
+import CopyrightFooter from '../components/CopyrightFooter.vue';
 import { getStockListConfig } from '../config/stockListConfig';
 import { getStockActionConfig } from '../config/stockActionConfig';
 import { recommendStock, api } from '@/api/api';
@@ -6586,16 +6583,7 @@ body.onboarding-mode {
 
 
 
-    /* Footer优化 */
-    .copyright-footer {
-        margin-top: 0;
-        padding: 8px 0;
-    }
 
-    .copyright-content p {
-        font-size: 10px;
-        color: #9ca3af;
-    }
 }
 
 /* 超小屏幕优化 */
@@ -6691,16 +6679,7 @@ body.onboarding-mode {
         /* 调整底部间距 */
     }
 
-    /* Footer进一步缩小 */
-    .copyright-footer {
-        margin-top: 16px;
-        padding: 6px 0;
-    }
 
-    .copyright-content p {
-        font-size: 9px;
-        color: #a1a1aa;
-    }
 }
 
 .chat-actions {
@@ -10034,27 +10013,7 @@ body {
     }
 }
 
-/* 版权信息样式 */
-.copyright-footer {
-    margin-top: 60px;
-    padding: 10px 0;
-    border-top: 1px solid #e5e7eb;
-    background: #f9fafb;
-}
 
-.copyright-content {
-    max-width: 1200px;
-    margin: 0 auto;
-    text-align: center;
-    padding: 0 20px;
-}
-
-.copyright-content p {
-    margin: 0;
-    font-size: 12px;
-    color: #6b7280;
-    line-height: 1.5;
-}
 
 @media (max-width: 768px) {
 
@@ -10073,14 +10032,7 @@ body {
         margin-bottom: 0;
     }
 
-    .copyright-footer {
-        margin-top: 40px;
-        padding: 16px 0;
-    }
 
-    .copyright-content p {
-        font-size: 12px;
-    }
 
     /* 微信环境下的底部间距优化 */
     body.wechat-browser .ai-card {
@@ -10155,16 +10107,7 @@ body {
         /* 微信环境下防止欢迎区域被压缩 */
     }
 
-    /* 微信环境下确保版权信息完全隐藏 */
-    body.wechat-browser .copyright-footer {
-        display: none !important;
-        margin-top: 0 !important;
-        margin-bottom: 0 !important;
-        padding: 0 !important;
-        height: 0 !important;
-        overflow: hidden !important;
-        /* 微信环境下完全隐藏版权信息 */
-    }
+
 
     /* 微信环境下确保center-container合理布局 */
     body.wechat-browser .center-container {

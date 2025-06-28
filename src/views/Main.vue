@@ -206,13 +206,13 @@
                                         <div class="asset-amount">
                                             <span class="amount-label">总资产</span>
                                             <span class="amount-value">¥{{ formatCurrency(message.assetData.totalAssets)
-                                            }}</span>
+                                                }}</span>
                                         </div>
                                         <div class="asset-change"
                                             :class="[message.assetData.totalProfitPercent >= 0 ? 'profit' : 'loss']">
                                             <span class="change-icon">{{ message.assetData.totalProfitPercent >= 0 ?
                                                 '📈' : '📉'
-                                            }}</span>
+                                                }}</span>
                                             <span class="change-label">今日盈亏：</span>
                                             <span class="change-text">
                                                 {{ message.assetData.totalProfitPercent >= 0 ? '+' : '' }}¥{{
@@ -238,7 +238,7 @@
                                         <div class="stat-info">
                                             <div class="stat-label">持仓市值</div>
                                             <div class="stat-value">¥{{ formatCurrency(message.assetData.portfolioValue)
-                                            }}
+                                                }}
                                             </div>
                                         </div>
                                     </div>
@@ -460,7 +460,7 @@
                 </div>
                 <div class="guide-actions">
                     <el-button type="primary" size="small" @click="handleGuideAction">{{ guideActionText
-                        }}</el-button>
+                    }}</el-button>
                     <el-button size="small" @click="dismissGuide">稍后</el-button>
                 </div>
             </div>
@@ -3816,19 +3816,18 @@ body.onboarding-mode {
         padding-right: 16px;
     }
 
-    .ai-card {
+    /* .ai-card {
         margin-top: 20px;
         margin-bottom: 20px;
-    }
+    } */
 
-    @media (max-width: 768px) {
+    /* @media (max-width: 768px) {
         .ai-card {
             margin: 0 !important;
             padding-top: 12px !important;
             padding-left: 0 !important;
             padding-right: 0 !important;
             padding-bottom: 20px !important;
-            /* 减少默认底部间距，让JavaScript的transform生效 */
             border-radius: 0 !important;
             width: 100% !important;
             box-sizing: border-box !important;
@@ -3841,7 +3840,7 @@ body.onboarding-mode {
         .ai-buttons-row {
             padding: 6px 16px !important;
         }
-    }
+    } */
 
 
 }
@@ -5962,114 +5961,6 @@ body.onboarding-mode {
     }
 }
 
-.ai-card {
-    width: 100%;
-    max-width: 900px;
-    margin: 0 auto;
-    background: #fff;
-    border-radius: 12px;
-    box-shadow: 0 2px 8px 0 rgba(0, 0, 0, 0.04);
-    padding: 16px 20px;
-    display: flex;
-    flex-direction: column;
-    align-items: stretch;
-    position: relative;
-    z-index: 2;
-}
-
-.ai-input-row {
-    background: #f8f9fa;
-    border-radius: 12px;
-    padding: 12px 16px;
-    display: flex;
-    flex-direction: column;
-    gap: 8px;
-}
-
-.ai-buttons-row {
-    display: flex;
-    justify-content: flex-end;
-    align-items: center;
-    margin-top: 8px;
-    /* 减少上边距 */
-}
-
-/* 非聊天模式 - 历史记录按钮左对齐布局 */
-.ai-buttons-row.with-history {
-    justify-content: space-between;
-}
-
-/* 历史记录按钮左对齐样式 */
-.history-left-btn {
-    margin-right: auto;
-}
-
-.ai-input {
-    flex: 1;
-    border: none !important;
-    box-shadow: none !important;
-    background: transparent !important;
-    font-size: 0.95rem;
-    resize: none;
-    line-height: 1.5;
-}
-
-.ai-input .el-textarea__inner {
-    font-size: 0.95rem !important;
-    line-height: 1.5 !important;
-    color: #374151 !important;
-}
-
-.ai-input .el-textarea__inner::placeholder {
-    color: #c1c7cd !important;
-    font-size: 0.85rem !important;
-    font-weight: 400 !important;
-    opacity: 0.8 !important;
-}
-
-.ai-buttons {
-    display: flex;
-    align-items: center;
-    gap: 8px;
-    align-self: flex-end;
-    /* 在垂直布局中右对齐 */
-}
-
-/* 移动端ai-buttons布局调整 - 支持左对齐的聊天历史按钮 */
-@media (max-width: 768px) {
-
-    /* 当有聊天历史按钮时的特殊布局 */
-    .ai-buttons.with-chat-history {
-        justify-content: space-between;
-        width: 100%;
-    }
-
-    /* 聊天历史按钮左对齐 */
-    .ai-buttons .chat-history-btn {
-        margin-right: auto;
-    }
-
-    /* 右侧按钮组容器 */
-    .ai-buttons.with-chat-history .right-buttons {
-        display: flex;
-        gap: 8px;
-        align-items: center;
-        padding-top: 10px;
-    }
-}
-
-/* 聊天历史按钮样式 */
-.chat-history-btn {
-    background: #f0f0f0 !important;
-    border: none !important;
-    color: #6b7280 !important;
-}
-
-.chat-history-btn:hover {
-    background: #e0e0e0 !important;
-    color: #374151 !important;
-}
-
 /* PC端聊天历史按钮左对齐 */
 .pc-chat-history {
     margin-right: auto;
@@ -6097,193 +5988,9 @@ body.onboarding-mode {
     gap: 12px;
 }
 
-/* 调整ai-input-row为flex布局以支持左侧按钮 */
-.ai-input-row {
-    display: flex;
-    align-items: flex-start;
-    gap: 0;
-}
-
-/* 当ai-buttons-row包含左侧按钮时，调整布局 */
-.ai-buttons-row.with-left-btn {
-    justify-content: space-between;
-}
-
-.ai-buttons-row.with-left-btn .ai-buttons {
-    flex: 1;
-    justify-content: flex-end;
-}
-
-/* 当ai-input-row包含左侧按钮时，调整布局 */
-.ai-input-row.with-left-btn {
-    justify-content: flex-start;
-}
-
-.ai-input-row.with-left-btn .input-and-buttons {
-    flex: 1;
-}
-
-.ai-func-btn {
-    border-radius: 50%;
-    width: 36px;
-    height: 36px;
-    min-width: 36px;
-    min-height: 36px;
-    /* 减小按钮尺寸 */
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    padding: 0;
-    box-shadow: none;
-    background: #f0f0f0;
-    border: none;
-    color: #6b7280;
-    transition: background 0.2s;
-}
-
-.ai-func-btn:hover {
-    background: #e0e0e0;
-}
-
-/* 语音按钮录音状态样式 */
-.voice-btn.recording {
-    background: #ffe5e5 !important;
-    border: 2px solid #ff4757 !important;
-    animation: voice-recording 1.5s infinite;
-}
-
-.voice-btn.recording:hover {
-    background: #ffdddd !important;
-}
-
-@keyframes voice-recording {
-
-    0%,
-    100% {
-        box-shadow: 0 0 0 0 rgba(255, 71, 87, 0.4);
-    }
-
-    50% {
-        box-shadow: 0 0 0 8px rgba(255, 71, 87, 0.1);
-    }
-}
-
-/* 语音按钮容器 */
-.voice-btn-container {
-    position: relative;
-    display: inline-block;
-}
-
-/* 录音计时器样式 */
-.recording-timer {
-    position: absolute;
-    top: -8px;
-    right: -8px;
-    background: #ff4757;
-    color: white;
-    font-size: 10px;
-    font-weight: bold;
-    padding: 2px 6px;
-    border-radius: 10px;
-    min-width: 20px;
-    text-align: center;
-    box-shadow: 0 2px 4px rgba(255, 71, 87, 0.3);
-    animation: timer-pulse 1s ease-in-out infinite alternate;
-    z-index: 10;
-    line-height: 1;
-}
-
-@keyframes timer-pulse {
-    0% {
-        transform: scale(1);
-        opacity: 0.9;
-    }
-
-    100% {
-        transform: scale(1.1);
-        opacity: 1;
-    }
-}
-
-
-
-.ai-send-btn {
-    border-radius: 50%;
-    width: 36px;
-    height: 36px;
-    min-width: 36px;
-    min-height: 36px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    padding: 0;
-    box-shadow: none;
-    background: #3b82f6 !important;
-    border: none !important;
-    transition: all 0.2s ease;
-}
-
-.ai-send-btn:hover {
-    background: #2563eb !important;
-    transform: scale(1.05);
-    box-shadow: 0 4px 12px rgba(59, 130, 246, 0.3) !important;
-}
-
-.ai-send-btn:active {
-    transform: scale(0.95);
-}
-
-.ai-send-btn:disabled {
-    background: #e5e7eb !important;
-    color: #9ca3af !important;
-    transform: none !important;
-    box-shadow: none !important;
-    cursor: not-allowed;
-}
-
-.ai-send-btn svg {
-    display: block;
-    color: white;
-}
-
-/* 生成状态样式 */
-.ai-send-btn.generating {
-    background: #ef4444 !important;
-    animation: pulse-generating 1.5s ease-in-out infinite;
-}
-
-.ai-send-btn.generating:hover {
-    background: #dc2626 !important;
-    box-shadow: 0 4px 12px rgba(239, 68, 68, 0.3) !important;
-}
-
-@keyframes pulse-generating {
-    0% {
-        box-shadow: 0 0 0 0 rgba(239, 68, 68, 0.4);
-    }
-
-    70% {
-        box-shadow: 0 0 0 6px rgba(239, 68, 68, 0);
-    }
-
-    100% {
-        box-shadow: 0 0 0 0 rgba(239, 68, 68, 0);
-    }
-}
-
-
-
-/* Element Plus 按钮样式覆盖 */
-
-
-
-
-
 
 /* 响应式设计 */
 @media (max-width: 768px) {
-
-
 
     /* 防止移动端缩放和选择 */
     html,
@@ -6439,126 +6146,6 @@ body.onboarding-mode {
         }
     }
 
-    /* 聊天模式下的AI卡片样式 - 保持原有外观 */
-    .input-area .ai-card {
-        position: relative !important;
-        margin: 0 !important;
-        width: 100% !important;
-        border-radius: 0 !important;
-        border-top: 1px solid #e5e7eb !important;
-        box-shadow: 0 -4px 20px rgba(0, 0, 0, 0.1) !important;
-        background: white !important;
-        padding: 12px 0 calc(12px + env(safe-area-inset-bottom, 0)) 0 !important;
-        /* 底部padding考虑安全区域 */
-        /* 确保显示和性能优化 */
-        z-index: auto !important;
-        visibility: visible !important;
-        opacity: 1 !important;
-        transform: translateZ(0) !important;
-        -webkit-transform: translateZ(0) !important;
-        box-sizing: border-box !important;
-    }
-
-
-
-    /* 聊天模式下的输入行样式 - 恢复原有样式 */
-    .input-area .ai-input-row {
-        padding: 0 16px !important;
-        border-radius: 0 !important;
-        background: #f8f9fa !important;
-        /* 添加左右内边距，确保内容不贴边 */
-    }
-
-    /* 聊天模式下的按钮行样式 - 恢复原有样式 */
-    .input-area .ai-buttons-row {
-        margin-top: 8px !important;
-        padding: 0 16px !important;
-        background: transparent !important;
-        justify-content: flex-end !important;
-        /* 添加左右内边距，与输入行保持一致 */
-    }
-
-    /* 缩小按钮尺寸 */
-    .ai-func-btn {
-        width: 36px;
-        height: 36px;
-        min-width: 36px;
-        min-height: 36px;
-    }
-
-    .ai-func-btn svg {
-        width: 16px;
-        height: 16px;
-    }
-
-    .ai-send-btn {
-        width: 36px;
-        height: 36px;
-        min-width: 36px;
-        min-height: 36px;
-        background: #3b82f6 !important;
-        border: none !important;
-    }
-
-    .ai-send-btn:hover {
-        background: #2563eb !important;
-        transform: scale(1.05);
-        box-shadow: 0 4px 12px rgba(59, 130, 246, 0.3) !important;
-    }
-
-    /* 移动端发送按钮禁用状态 */
-    .ai-send-btn:disabled {
-        background: #e5e7eb !important;
-        color: #9ca3af !important;
-        transform: none !important;
-        box-shadow: none !important;
-        cursor: not-allowed !important;
-        opacity: 0.6 !important;
-    }
-
-    .ai-send-btn:disabled:hover {
-        background: #e5e7eb !important;
-        transform: none !important;
-        box-shadow: none !important;
-    }
-
-    .ai-send-btn svg {
-        width: 16px;
-        height: 16px;
-        color: white;
-    }
-
-    /* 禁用状态下的SVG图标 */
-    .ai-send-btn:disabled svg {
-        color: #9ca3af !important;
-    }
-
-    /* 移动端生成状态样式 */
-    .ai-send-btn.generating {
-        background: #ef4444 !important;
-        animation: pulse-generating 1.5s ease-in-out infinite;
-    }
-
-    .ai-send-btn.generating:hover {
-        background: #dc2626 !important;
-        box-shadow: 0 4px 12px rgba(239, 68, 68, 0.3) !important;
-    }
-
-
-
-    /* 隐藏顶部快捷指令区域 */
-    .ai-suggestions {
-        display: none;
-    }
-
-
-
-
-
-
-
-
-
 
 }
 
@@ -6566,70 +6153,7 @@ body.onboarding-mode {
 @media (max-width: 480px) {
     .chat-area {
         padding-top: 30px;
-        /* 超小屏幕也增加顶部间距 */
     }
-
-    .ai-card {
-        padding: 10px 12px;
-    }
-
-    .ai-input-row {
-        padding: 10px 14px;
-        border-radius: 14px;
-    }
-
-    .ai-buttons-row {
-        margin-top: 6px;
-        justify-content: flex-end;
-        padding-right: 2px;
-        /* 超小屏幕更小的右侧间距 */
-    }
-
-    /* 进一步缩小按钮 */
-    .ai-func-btn {
-        width: 32px;
-        height: 32px;
-        min-width: 32px;
-        min-height: 32px;
-    }
-
-    .ai-func-btn svg {
-        width: 14px;
-        height: 14px;
-    }
-
-    .ai-send-btn {
-        width: 32px;
-        height: 32px;
-        min-width: 32px;
-        min-height: 32px;
-        background: #3b82f6 !important;
-        border: none !important;
-    }
-
-    .ai-send-btn:hover {
-        background: #2563eb !important;
-        transform: scale(1.05);
-        box-shadow: 0 4px 12px rgba(59, 130, 246, 0.3) !important;
-    }
-
-    .ai-send-btn svg {
-        width: 14px;
-        height: 14px;
-        color: white;
-    }
-
-    /* 超小屏幕生成状态样式 */
-    .ai-send-btn.generating {
-        background: #ef4444 !important;
-        animation: pulse-generating 1.5s ease-in-out infinite;
-    }
-
-    .ai-send-btn.generating:hover {
-        background: #dc2626 !important;
-        box-shadow: 0 4px 12px rgba(239, 68, 68, 0.3) !important;
-    }
-
 
 
     /* 超小屏幕聊天历史区域高度优化 */
@@ -9921,11 +9445,10 @@ body {
         /* 增加欢迎区域上方间距 */
     }
 
-    /* 超小屏幕AI卡片间距优化 */
-    .ai-card {
+    /* .ai-card {
         margin-top: 20px;
         margin-bottom: 20px;
-    }
+    } */
 
     /* 超小屏幕滚动条进一步优化 */
     .chat-history-area::-webkit-scrollbar {
@@ -10006,18 +9529,15 @@ body {
 
 
     /* 微信环境下的底部间距优化 */
-    body.wechat-browser .ai-card {
+    /* body.wechat-browser .ai-card {
         padding-top: 12px !important;
         padding-left: 0 !important;
         padding-right: 0 !important;
         padding-bottom: 16px !important;
-        /* 微信环境下给底部较小间距 */
         width: 100% !important;
         border-radius: 0 !important;
-        /* 微信环境下移除圆角确保占满全屏 */
         margin-bottom: 0 !important;
-        /* 确保没有底部margin */
-    }
+    } */
 
 
 
@@ -10027,10 +9547,9 @@ body {
         /* 微信环境下给输入行添加底部间距 */
     }
 
-    body.wechat-browser .ai-buttons-row {
+    /* body.wechat-browser .ai-buttons-row {
         padding-bottom: 12px !important;
-        /* 微信环境下给按钮行添加更多底部间距，确保不贴底边 */
-    }
+    } */
 
     /* 微信环境下AI卡片整体上移，为快捷示例留出空间 */
     body.wechat-browser .modern-content:not(.chatting) .ai-card {
@@ -10248,10 +9767,9 @@ body {
     }
 
     /* iOS Chrome特殊处理 */
-    body.ios-chrome .modern-content:not(.chatting) .ai-card {
+    /* body.ios-chrome .modern-content:not(.chatting) .ai-card {
         bottom: 120px !important;
-        /* iOS Chrome与聊天模式输入框保持一致的偏移 */
-    }
+    } */
 
     /* iOS Safari特殊处理 */
     body.ios-safari .modern-content:not(.chatting) .ai-card {
@@ -10268,18 +9786,11 @@ body {
     /* 微信环境下特殊处理 - 贴底显示，避免触发底部导航栏 */
     body.wechat-browser .modern-content:not(.chatting) .ai-card {
         bottom: 0 !important;
-        /* 微信环境下贴底显示，不上移 */
         border-radius: 0 !important;
-        /* 微信环境下完全无圆角 */
         box-shadow: none !important;
-        /* 微信环境下移除阴影 */
         z-index: 100 !important;
-        /* 微信环境下降低z-index */
         padding: 12px 0 calc(12px + env(safe-area-inset-bottom, 0)) 0 !important;
-        /* 微信环境下增加padding，考虑安全区域 */
     }
-
-    /* 聊天模式下的输入区域浏览器适配已移至@media查询内部 */
 
     /* 聊天模式下的AI卡片保持原有样式（在input-area内） */
     .modern-content.chatting .input-area .ai-card {
@@ -10292,49 +9803,34 @@ body {
         box-shadow: 0 2px 8px 0 rgba(0, 0, 0, 0.04) !important;
     }
 
-    /* 移动端AI输入行 - flex布局优化 */
-    .ai-input-row {
+    /* .ai-input-row {
         padding: 12px 12px !important;
-        /* 减少左右padding */
         margin: 0 !important;
         background: #f8f9fa !important;
         border-radius: 0 !important;
-        /* 微信端移除圆角 */
         flex-shrink: 0 !important;
-        /* 防止被压缩 */
-    }
+    } */
 
-    /* 移动端AI按钮行 - flex布局优化 */
-    .ai-buttons-row {
+    /* .ai-buttons-row {
         margin: 0 !important;
         padding: 8px 12px 12px 12px !important;
-        /* 减少左右padding */
         background: #f8f9fa !important;
         border-radius: 0 !important;
-        /* 微信端移除圆角 */
         flex-shrink: 0 !important;
-        /* 防止被压缩 */
         border-top: 1px solid #e5e7eb !important;
-        /* 添加分隔线 */
-    }
+    } */
 
-    /* 微信环境下进一步优化边距 */
     body.wechat-browser .ai-input-row {
         padding: 10px 8px !important;
         background: #fff !important;
-        /* 微信环境下使用白色背景 */
     }
 
-    body.wechat-browser .ai-buttons-row {
+    /* body.wechat-browser .ai-buttons-row {
         padding: 8px 8px 14px 8px !important;
-        /* 增加底部padding，确保按钮完整显示 */
         background: #fff !important;
-        /* 微信环境下使用白色背景 */
         border-top: none !important;
-        /* 微信环境下移除分隔线 */
-    }
+    } */
 
-    /* 移动端AI功能按钮优化 */
     .ai-func-btn {
         width: 32px;
         height: 32px;
@@ -10347,7 +9843,6 @@ body {
         height: 16px;
     }
 
-    /* 移动端快捷操作按钮优化 */
     .chat-shortcut-btn {
         padding: 6px 10px;
         min-height: 40px;
@@ -10483,10 +9978,9 @@ body {
     }
 
     /* 超小屏幕AI按钮行间距优化 */
-    .ai-buttons-row {
+    /* .ai-buttons-row {
         padding: 6px 12px !important;
-        /* 超小屏幕添加左右padding，确保按钮不贴边 */
-    }
+    } */
 
     /* 超小屏幕AI功能按钮进一步优化 */
     .ai-func-btn {

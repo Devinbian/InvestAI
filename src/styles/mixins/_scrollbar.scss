@@ -1,0 +1,41 @@
+// 滚动条相关 Mixins
+
+// 自定义滚动条样式
+@mixin custom-scrollbar($width: 4px, $track-bg: transparent, $thumb-bg: #d1d5db, $thumb-hover-bg: #9ca3af, $border-radius: 2px) {
+  &::-webkit-scrollbar {
+    width: $width;
+  }
+
+  &::-webkit-scrollbar-track {
+    background: $track-bg;
+  }
+
+  &::-webkit-scrollbar-thumb {
+    background: $thumb-bg;
+    border-radius: $border-radius;
+  }
+
+  &::-webkit-scrollbar-thumb:hover {
+    background: $thumb-hover-bg;
+  }
+}
+
+// 隐藏滚动条但保持滚动功能
+@mixin hide-scrollbar {
+  -ms-overflow-style: none;  /* IE and Edge */
+  scrollbar-width: none;  /* Firefox */
+  
+  &::-webkit-scrollbar {
+    display: none;  /* Chrome, Safari and Opera */
+  }
+}
+
+// 细滚动条样式
+@mixin thin-scrollbar($thumb-bg: #d1d5db, $thumb-hover-bg: #9ca3af) {
+  @include custom-scrollbar(4px, transparent, $thumb-bg, $thumb-hover-bg, 2px);
+}
+
+// 厚滚动条样式
+@mixin thick-scrollbar($thumb-bg: #d1d5db, $thumb-hover-bg: #9ca3af) {
+  @include custom-scrollbar(8px, #f3f4f6, $thumb-bg, $thumb-hover-bg, 4px);
+} 

@@ -48,9 +48,9 @@
                         </div>
                         <div v-for="chat in todayChats" :key="chat.id"
                             :class="['history-item', { 'active': chat.id === currentChatId }]">
-                            <div class="chat-info" @click="handleClick(chat)"
-                                @touchstart="handleTouchStart(chat, $event)" @touchmove="handleTouchMove($event)"
-                                @touchend="handleTouchEnd($event)">
+                            <div class="chat-info" @click="handleChatItemClick(chat)"
+                                @touchstart="handleChatItemTouchStart(chat, $event)"
+                                @touchmove="handleChatItemTouchMove($event)" @touchend="handleChatItemTouchEnd($event)">
                                 <div class="chat-title">{{ chat.title }}</div>
                                 <div class="chat-time">{{ formatTime(chat.lastMessage) }}</div>
                             </div>
@@ -83,9 +83,9 @@
                         </div>
                         <div v-for="chat in yesterdayChats" :key="chat.id"
                             :class="['history-item', { 'active': chat.id === currentChatId }]">
-                            <div class="chat-info" @click="handleClick(chat)"
-                                @touchstart="handleTouchStart(chat, $event)" @touchmove="handleTouchMove($event)"
-                                @touchend="handleTouchEnd($event)">
+                            <div class="chat-info" @click="handleChatItemClick(chat)"
+                                @touchstart="handleChatItemTouchStart(chat, $event)"
+                                @touchmove="handleChatItemTouchMove($event)" @touchend="handleChatItemTouchEnd($event)">
                                 <div class="chat-title">{{ chat.title }}</div>
                                 <div class="chat-time">{{ formatTime(chat.lastMessage) }}</div>
                             </div>
@@ -118,9 +118,9 @@
                         </div>
                         <div v-for="chat in thisWeekChats" :key="chat.id"
                             :class="['history-item', { 'active': chat.id === currentChatId }]">
-                            <div class="chat-info" @click="handleClick(chat)"
-                                @touchstart="handleTouchStart(chat, $event)" @touchmove="handleTouchMove($event)"
-                                @touchend="handleTouchEnd($event)">
+                            <div class="chat-info" @click="handleChatItemClick(chat)"
+                                @touchstart="handleChatItemTouchStart(chat, $event)"
+                                @touchmove="handleChatItemTouchMove($event)" @touchend="handleChatItemTouchEnd($event)">
                                 <div class="chat-title">{{ chat.title }}</div>
                                 <div class="chat-time">{{ formatTime(chat.lastMessage) }}</div>
                             </div>
@@ -153,9 +153,9 @@
                         </div>
                         <div v-for="chat in olderChats" :key="chat.id"
                             :class="['history-item', { 'active': chat.id === currentChatId }]">
-                            <div class="chat-info" @click="handleClick(chat)"
-                                @touchstart="handleTouchStart(chat, $event)" @touchmove="handleTouchMove($event)"
-                                @touchend="handleTouchEnd($event)">
+                            <div class="chat-info" @click="handleChatItemClick(chat)"
+                                @touchstart="handleChatItemTouchStart(chat, $event)"
+                                @touchmove="handleChatItemTouchMove($event)" @touchend="handleChatItemTouchEnd($event)">
                                 <div class="chat-title">{{ chat.title }}</div>
                                 <div class="chat-time">{{ formatDate(chat.lastMessage) }}</div>
                             </div>
@@ -211,6 +211,7 @@
 <script setup>
 import { ref, computed, watch } from 'vue';
 import { ElMessage, ElMessageBox } from 'element-plus';
+import { useTouchHandler } from '@/composables/useTouchHandler';
 
 // 定义props和emits
 const props = defineProps({
@@ -224,6 +225,15 @@ const props = defineProps({
 
 const emit = defineEmits(['toggle-history', 'load-chat', 'create-new-chat', 'rename-chat', 'delete-chat', 'close-panel']);
 
+// 使用触摸处理 composable
+const {
+    handleTouchStart: touchStart,
+    handleTouchMove: touchMove,
+    handleTouchEnd: touchEnd,
+    handleClick: clickHandler,
+    isMobile
+} = useTouchHandler();
+
 // 响应式数据
 const isCollapsed = computed(() => !props.visible);
 const searchKeyword = ref('');
@@ -234,15 +244,6 @@ const isSearchFocused = ref(false);
 
 // 从localStorage获取聊天历史
 const chatHistoryList = ref(JSON.parse(localStorage.getItem('chatHistoryList') || '[]'));
-
-// 触摸事件状态管理
-const touchState = ref({
-    startX: 0,
-    startY: 0,
-    startTime: 0,
-    isDragging: false,
-    currentChat: null
-});
 
 
 
@@ -330,9 +331,9 @@ const loadChat = (chat, forceLoad = false) => {
     emit('load-chat', chat);
 
     // 移动端需要判断是否为真正的点击操作
-    if (window.innerWidth <= 768) {
-        // 如果是强制加载或者不是拖拽状态，则关闭面板
-        if (forceLoad || !touchState.value.isDragging) {
+    if (isMobile()) {
+        // 如果是强制加载，则关闭面板
+        if (forceLoad) {
             // 立即关闭面板，不需要延迟
             emit('close-panel');
             console.log('移动端点击历史记录，触发关闭面板');
@@ -340,61 +341,27 @@ const loadChat = (chat, forceLoad = false) => {
     }
 };
 
-// 处理移动端触摸开始事件
-const handleTouchStart = (chat, event) => {
-    if (window.innerWidth <= 768) {
-        const touch = event.touches[0];
-        touchState.value = {
-            startX: touch.clientX,
-            startY: touch.clientY,
-            startTime: Date.now(),
-            isDragging: false,
-            currentChat: chat
-        };
-    }
+// 处理聊天项点击（使用 composable 的触摸处理）
+const handleChatItemTouchStart = (chat, event) => {
+    touchStart(chat, event);
 };
 
-// 处理移动端触摸移动事件
-const handleTouchMove = (event) => {
-    if (window.innerWidth <= 768 && touchState.value.currentChat) {
-        const touch = event.touches[0];
-        const deltaX = Math.abs(touch.clientX - touchState.value.startX);
-        const deltaY = Math.abs(touch.clientY - touchState.value.startY);
-
-        // 如果移动距离超过阈值，则认为是拖拽操作
-        if (deltaX > 10 || deltaY > 10) {
-            touchState.value.isDragging = true;
-        }
-    }
+const handleChatItemTouchMove = (event) => {
+    touchMove(event);
 };
 
-// 处理移动端触摸结束事件
-const handleTouchEnd = (event) => {
-    if (window.innerWidth <= 768 && touchState.value.currentChat) {
-        const currentTime = Date.now();
-        const timeDiff = currentTime - touchState.value.startTime;
-
-        // 如果是短时间的触摸且没有拖拽，则认为是点击
-        if (timeDiff < 300 && !touchState.value.isDragging) {
-            loadChat(touchState.value.currentChat, true);
-        }
-
-        // 重置触摸状态
-        touchState.value = {
-            startX: 0,
-            startY: 0,
-            startTime: 0,
-            isDragging: false,
-            currentChat: null
-        };
-    }
+const handleChatItemTouchEnd = (event) => {
+    touchEnd(event, (chat) => {
+        // 点击回调：加载聊天并关闭面板
+        loadChat(chat, true);
+    });
 };
 
 // 处理鼠标点击事件（PC端）
-const handleClick = (chat) => {
-    if (window.innerWidth > 768) {
+const handleChatItemClick = (chat) => {
+    clickHandler(chat, (chat) => {
         loadChat(chat);
-    }
+    });
 };
 
 const handleChatAction = (command, chat) => {
@@ -468,19 +435,15 @@ const updateChatHistoryList = () => {
 setInterval(updateChatHistoryList, 1000);
 </script>
 
-<style scoped>
+<style scoped lang="scss">
+@import '@/styles/mixins/index';
+
 .chat-history-container {
-    width: 320px;
-    height: calc(100vh - 56px);
-    background: linear-gradient(145deg, #ffffff 0%, #f8fafc 100%);
+    @include fixed-panel(56px, 0, 320px, calc(100vh - 56px), 50);
+    @include gradient-background(#ffffff, #f8fafc, 145deg);
+    @include card-shadow(4px 0 20px rgba(0, 0, 0, 0.08));
+    @include smooth-transition(width);
     border-right: 1px solid #e5e7eb;
-    position: fixed;
-    top: 56px;
-    left: 0;
-    z-index: 50;
-    overflow: hidden;
-    box-shadow: 4px 0 20px rgba(0, 0, 0, 0.08);
-    transition: width 0.3s ease;
 }
 
 .chat-history-container.collapsed {
@@ -497,7 +460,7 @@ setInterval(updateChatHistoryList, 1000);
 
 
 .header-actions {
-    display: flex;
+    @include flex-center-vertical;
     margin-left: auto;
     flex-shrink: 0;
     gap: 0;
@@ -505,112 +468,23 @@ setInterval(updateChatHistoryList, 1000);
 
 .new-chat-btn,
 .close-btn {
-    padding: 4px;
-    border: 1px solid #e5e7eb;
-    border-radius: 4px;
-    background: transparent;
-    color: #6b7280;
-    transition: all 0.2s ease;
-    width: 28px;
-    height: 28px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    font-size: 0;
-    margin: 0;
+    @include icon-button(28px, 12px, 24px, 10px, 22px, 9px);
+    @include button-group-spacing(2px);
 }
 
-.new-chat-btn+.close-btn {
-    margin-left: 2px;
+.close-btn {
+    @include danger-button-hover;
 }
 
-.new-chat-btn svg,
-.close-btn svg {
-    width: 12px;
-    height: 12px;
-}
-
-.new-chat-btn:hover,
-.close-btn:hover {
-    background: #f8fafc;
-    color: #374151;
-    border-color: #d1d5db;
-}
-
-.close-btn:hover {
-    background: #fef2f2;
-    color: #dc2626;
-    border-color: #fecaca;
-}
-
-/* 移动端按钮优化 */
-@media (max-width: 768px) {
-    .search-container {
-        padding: 12px;
-        gap: 8px;
-    }
-
-    .header-actions {
-        gap: 0;
-    }
-
-    .new-chat-btn,
-    .close-btn {
-        padding: 3px;
-        width: 24px;
-        height: 24px;
-        border-radius: 3px;
-        border-width: 1px;
-        margin: 0;
-    }
-
-    .new-chat-btn+.close-btn {
-        margin-left: 1px;
-    }
-
-    .new-chat-btn svg,
-    .close-btn svg {
-        width: 10px;
-        height: 10px;
-    }
-}
-
-/* 超小屏幕进一步优化 */
-@media (max-width: 480px) {
-    .search-container {
-        padding: 10px;
-        gap: 6px;
-    }
-
-    .header-actions {
-        gap: 0;
-    }
-
-    .new-chat-btn,
-    .close-btn {
-        padding: 2px;
-        width: 22px;
-        height: 22px;
-        border-radius: 2px;
-        margin: 0;
-    }
-
-    .new-chat-btn+.close-btn {
-        margin-left: 1px;
-    }
-
-    .new-chat-btn svg,
-    .close-btn svg {
-        width: 9px;
-        height: 9px;
-    }
+/* 移动端优化已在 mixins 中处理 */
+.search-container {
+    @include mobile-container-spacing(12px, 10px);
 }
 
 .search-container {
+    @include flex-center-vertical;
     padding: 16px;
     flex-shrink: 0;
-    display: flex;
-    align-items: center;
     gap: 12px;
 }
 
@@ -622,48 +496,20 @@ setInterval(updateChatHistoryList, 1000);
     flex: 1;
 }
 
-.focus-border-input :deep(.el-input__wrapper) {
-    border-radius: 12px;
-    border: 2px solid #e5e7eb;
-    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
-    transition: all 0.3s ease;
-    background: #f8fafc !important;
-}
-
-.focus-border-input:focus-within :deep(.el-input__wrapper) {
-    border-color: #3b82f6;
-    box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1), 0 4px 12px rgba(59, 130, 246, 0.15);
-    transform: translateY(-1px);
-}
-
-.focus-border-input :deep(.el-input__inner) {
-    color: #1f2937;
-    font-weight: 500;
-}
-
-.focus-border-input :deep(.el-input__inner::placeholder) {
-    color: #9ca3af !important;
-    font-size: 14px !important;
-    font-weight: 400 !important;
+.focus-border-input {
+    @include focus-input;
 }
 
 .section-divider {
-    margin: 0 16px;
-    padding: 0 0 8px 0;
-    border-bottom: 1px solid #f3f4f6;
-    position: relative;
+    @include section-divider;
 }
 
 .divider-text {
+    @include gradient-text(#6b7280, #9ca3af, 135deg);
     font-size: 13px;
     font-weight: 600;
-    color: #6b7280;
     text-transform: uppercase;
     letter-spacing: 0.8px;
-    background: linear-gradient(135deg, #6b7280 0%, #9ca3af 100%);
-    -webkit-background-clip: text;
-    -webkit-text-fill-color: transparent;
-    background-clip: text;
 }
 
 .history-list-container {
@@ -674,26 +520,10 @@ setInterval(updateChatHistoryList, 1000);
 }
 
 .history-list {
+    @include thin-scrollbar;
     flex: 1;
     overflow-y: auto;
     padding: 0 8px;
-}
-
-.history-list::-webkit-scrollbar {
-    width: 4px;
-}
-
-.history-list::-webkit-scrollbar-track {
-    background: transparent;
-}
-
-.history-list::-webkit-scrollbar-thumb {
-    background: #d1d5db;
-    border-radius: 2px;
-}
-
-.history-list::-webkit-scrollbar-thumb:hover {
-    background: #9ca3af;
 }
 
 .history-group {
@@ -701,12 +531,11 @@ setInterval(updateChatHistoryList, 1000);
 }
 
 .group-title {
+    @include flex-center-vertical;
     font-size: 13px;
     color: #4b5563;
     font-weight: 600;
     padding: 12px 12px 8px;
-    display: flex;
-    align-items: center;
     gap: 8px;
     text-transform: none;
     letter-spacing: 0.3px;
@@ -728,13 +557,11 @@ setInterval(updateChatHistoryList, 1000);
 }
 
 .history-item {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
+    @include flex-between;
+    @include smooth-transition(all, 0.2s);
     padding: 12px;
     margin: 2px 0;
     border-radius: 8px;
-    transition: all 0.2s ease;
     position: relative;
 }
 
@@ -743,17 +570,16 @@ setInterval(updateChatHistoryList, 1000);
 }
 
 .history-item.active {
-    background: rgba(59, 130, 246, 0.1);
-    border-left: 3px solid #3b82f6;
+    @include active-state;
 }
 
 .chat-info {
+    @include smooth-transition(all, 0.2s);
     flex: 1;
     min-width: 0;
     cursor: pointer;
     padding: 0;
     border-radius: 6px;
-    transition: all 0.2s ease;
 }
 
 .history-item:not(:hover) .chat-info:hover {
@@ -761,13 +587,11 @@ setInterval(updateChatHistoryList, 1000);
 }
 
 .chat-title {
+    @include text-ellipsis;
     font-size: 14px;
     color: #1f2937;
     font-weight: 500;
     margin-bottom: 2px;
-    overflow: hidden;
-    text-overflow: ellipsis;
-    white-space: nowrap;
 }
 
 .chat-time {
@@ -776,8 +600,8 @@ setInterval(updateChatHistoryList, 1000);
 }
 
 .chat-actions {
+    @include smooth-transition(opacity, 0.2s);
     opacity: 0;
-    transition: opacity 0.2s ease;
     margin-left: 8px;
 }
 
@@ -786,15 +610,13 @@ setInterval(updateChatHistoryList, 1000);
 }
 
 .action-trigger {
-    display: flex;
-    align-items: center;
-    justify-content: center;
+    @include flex-center;
+    @include smooth-transition(all, 0.2s);
     width: 24px;
     height: 24px;
     border-radius: 4px;
     cursor: pointer;
     color: #6b7280;
-    transition: all 0.2s ease;
 }
 
 .action-trigger:hover {
@@ -803,36 +625,7 @@ setInterval(updateChatHistoryList, 1000);
 }
 
 .empty-state {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    justify-content: center;
-    padding: 40px 20px;
-    text-align: center;
-    color: #6b7280;
-}
-
-.empty-icon {
-    margin-bottom: 16px;
-    opacity: 0.6;
-}
-
-.empty-text {
-    font-size: 16px;
-    font-weight: 500;
-    color: #4b5563;
-    margin: 0 0 8px 0;
-}
-
-.empty-subtext {
-    font-size: 14px;
-    color: #9ca3af;
-    margin: 0;
-}
-
-.empty-state p {
-    margin-top: 16px;
-    font-size: 14px;
+    @include empty-state;
 }
 
 /* 对话框样式 */
@@ -851,62 +644,42 @@ setInterval(updateChatHistoryList, 1000);
 }
 
 /* 响应式设计 */
-@media (max-width: 768px) {
-    .chat-history-container {
-        width: 280px;
-        height: 100vh;
-        height: 100dvh;
-        height: calc(var(--vh, 1vh) * 100);
-        /* 使用动态视口高度，CSS变量作为备选方案 */
-    }
+.chat-history-container {
+    @include mobile-responsive(280px);
+}
 
-    .chat-history-container.collapsed {
-        width: 0;
+.history-panel {
+    @media (max-width: 768px) {
+        @include dynamic-viewport-height;
+        @include safe-area-bottom(0px);
     }
+}
 
-    .history-panel {
-        height: 100vh;
-        height: 100dvh;
-        height: calc(var(--vh, 1vh) * 100);
-        /* 使用动态视口高度，CSS变量作为备选方案 */
-        padding-bottom: env(safe-area-inset-bottom, 0px);
-        /* 底部安全区域 */
+.history-list-container {
+    @media (max-width: 768px) {
+        @include safe-area-bottom(20px);
     }
+}
 
-    .history-list-container {
-        padding-bottom: calc(20px + env(safe-area-inset-bottom, 0px));
-        /* 底部安全区域 */
+.history-list {
+    @media (max-width: 768px) {
+        @include mobile-scroll-optimization;
+        @include safe-area-bottom(0px);
     }
+}
 
-    .history-list {
-        /* 改善滚动体验 */
-        -webkit-overflow-scrolling: touch;
-        overscroll-behavior: contain;
-        padding-bottom: env(safe-area-inset-bottom, 0px);
-        /* 底部安全区域 */
-    }
-
-    /* 移动端触摸优化 */
-    .chat-info {
-        -webkit-tap-highlight-color: rgba(59, 130, 246, 0.2);
-        -webkit-touch-callout: none;
-        -webkit-user-select: none;
-        -moz-user-select: none;
-        -ms-user-select: none;
-        user-select: none;
-        touch-action: pan-y;
-        /* 允许垂直滑动，但限制其他手势 */
-        min-height: 44px;
-        /* 增加触摸目标的最小高度 */
+.chat-info {
+    @media (max-width: 768px) {
+        @include mobile-touch-optimization;
         display: flex;
         flex-direction: column;
         justify-content: center;
     }
+}
 
-    .history-item {
-        -webkit-tap-highlight-color: transparent;
-        min-height: 56px;
-        /* 确保足够的点击区域 */
+.history-item {
+    @media (max-width: 768px) {
+        @include mobile-clickable-area(56px);
     }
 }
 </style>

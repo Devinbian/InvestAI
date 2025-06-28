@@ -26,8 +26,9 @@
             </div>
 
             <div v-for="(stock, index) in stocks" :key="stock.code || index" class="mobile-stock-card"
-                :class="{ 'clickable': clickable }" @click="handleStockClick(stock)" @touchstart="handleTouchStart"
-                @touchend="handleTouchEnd">
+                :class="{ 'clickable': clickable }" @click="handleStockItemClick(stock)"
+                @touchstart="handleStockItemTouchStart(stock, $event)" @touchmove="handleStockItemTouchMove($event)"
+                @touchend="handleStockItemTouchEnd($event)">
 
                 <!-- 股票主要信息 -->
                 <div class="stock-main-info">
@@ -238,6 +239,7 @@
 <script setup>
 import { computed, ref, onMounted, onUnmounted, nextTick, watch } from 'vue';
 import { useUserStore } from '../store/user';
+import { useTouchHandler } from '@/composables/useTouchHandler';
 
 // Props
 const props = defineProps({
@@ -318,6 +320,15 @@ const emit = defineEmits([
 
 // Store
 const userStore = useUserStore();
+
+// 使用触摸处理 composable
+const {
+    handleTouchStart: touchStart,
+    handleTouchMove: touchMove,
+    handleTouchEnd: touchEnd,
+    handleClick: clickHandler,
+    isMobile
+} = useTouchHandler();
 
 // 展开的操作菜单
 const expandedActions = ref(null);
@@ -643,15 +654,38 @@ const handleAction = (actionKey, stock) => {
     emit(actionKey.replace(/([A-Z])/g, '-$1').toLowerCase(), stock);
 };
 
-const handleTouchStart = (e) => {
-    e.currentTarget.style.transform = 'scale(0.98)';
-    e.currentTarget.style.transition = 'transform 0.1s ease';
+// 处理股票项触摸事件（使用 composable）
+const handleStockItemTouchStart = (stock, event) => {
+    // 添加视觉反馈
+    event.currentTarget.style.transform = 'scale(0.98)';
+    event.currentTarget.style.transition = 'transform 0.1s ease';
+
+    // 使用 composable 处理触摸开始
+    touchStart(stock, event);
 };
 
-const handleTouchEnd = (e) => {
+const handleStockItemTouchMove = (event) => {
+    touchMove(event);
+};
+
+const handleStockItemTouchEnd = (event) => {
+    // 恢复视觉效果
     setTimeout(() => {
-        e.currentTarget.style.transform = 'scale(1)';
+        event.currentTarget.style.transform = 'scale(1)';
     }, 100);
+
+    // 使用 composable 处理触摸结束
+    touchEnd(event, (stock) => {
+        // 点击回调：触发股票点击事件
+        handleStockClick(stock);
+    });
+};
+
+// 处理股票项点击（PC端）
+const handleStockItemClick = (stock) => {
+    clickHandler(stock, (stock) => {
+        handleStockClick(stock);
+    });
 };
 
 // 切换推荐理由展开状态

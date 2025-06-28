@@ -43,6 +43,7 @@
 
 <script setup>
 import { computed } from 'vue';
+import { formatProfit, formatPercent } from '@/utils/formatters';
 
 // Props
 const props = defineProps({
@@ -142,18 +143,7 @@ const totalProfitClass = computed(() => {
     return profit > 0 ? 'profit' : profit < 0 ? 'loss' : 'neutral';
 });
 
-// 格式化方法
-const formatProfit = (value) => {
-    if (value === 0) return '¥0.00';
-    const prefix = value > 0 ? '+' : '';
-    return `${prefix}¥${Math.abs(value).toFixed(2)}`;
-};
-
-const formatPercent = (value) => {
-    if (value === 0) return '0.00%';
-    const prefix = value > 0 ? '+' : '';
-    return `${prefix}${value.toFixed(2)}%`;
-};
+// 格式化方法已移至 @/utils/formatters.js
 </script>
 
 <style scoped>

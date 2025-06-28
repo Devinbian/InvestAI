@@ -521,6 +521,7 @@ import { recommendStock, api } from '@/api/api';
 import { riskOptions } from '@/config/userPortrait';
 import { authFetchEventSource } from '@/utils/request';
 import { useMobileAdaptation } from '../composables/useMobileAdaptation';
+import { formatCurrency } from '@/utils/formatters';
 
 const router = useRouter();
 const userStore = useUserStore();
@@ -2039,14 +2040,7 @@ const formatAddedTime = (addedAt) => {
 
 
 
-// 格式化货币显示
-const formatCurrency = (amount) => {
-    const num = parseFloat(amount);
-    if (num >= 10000) {
-        return (num / 10000).toFixed(2) + '万';
-    }
-    return num.toFixed(2);
-};
+// 格式化货币显示函数已移至 @/utils/formatters.js
 
 
 

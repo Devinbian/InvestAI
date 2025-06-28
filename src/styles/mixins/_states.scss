@@ -1,0 +1,103 @@
+// 状态相关 Mixins
+
+// 空状态样式
+@mixin empty-state($icon-opacity: 0.6, $text-color: #4b5563, $subtext-color: #9ca3af) {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 40px 20px;
+  text-align: center;
+  color: #6b7280;
+
+  .empty-icon {
+    margin-bottom: 16px;
+    opacity: $icon-opacity;
+  }
+
+  .empty-text {
+    font-size: 16px;
+    font-weight: 500;
+    color: $text-color;
+    margin: 0 0 8px 0;
+  }
+
+  .empty-subtext {
+    font-size: 14px;
+    color: $subtext-color;
+    margin: 0;
+  }
+
+  p {
+    margin-top: 16px;
+    font-size: 14px;
+  }
+}
+
+// 焦点输入框样式
+@mixin focus-input($border-color: #3b82f6, $shadow-color: rgba(59, 130, 246, 0.1), $hover-shadow-color: rgba(59, 130, 246, 0.15)) {
+  :deep(.el-input__wrapper) {
+    border-radius: 12px;
+    border: 2px solid #e5e7eb;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
+    transition: all 0.3s ease;
+    background: #f8fafc !important;
+  }
+
+  &:focus-within :deep(.el-input__wrapper) {
+    border-color: $border-color;
+    box-shadow: 0 0 0 3px $shadow-color, 0 4px 12px $hover-shadow-color;
+    transform: translateY(-1px);
+  }
+
+  :deep(.el-input__inner) {
+    color: #1f2937;
+    font-weight: 500;
+
+    &::placeholder {
+      color: #9ca3af !important;
+      font-size: 14px !important;
+      font-weight: 400 !important;
+    }
+  }
+}
+
+// 渐变文字效果
+@mixin gradient-text($start-color: #6b7280, $end-color: #9ca3af, $direction: 135deg) {
+  background: linear-gradient($direction, $start-color 0%, $end-color 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+// 悬停效果
+@mixin hover-lift($translate-y: -1px, $shadow: 0 4px 12px rgba(0, 0, 0, 0.15)) {
+  transition: all 0.2s ease;
+  
+  &:hover {
+    transform: translateY($translate-y);
+    box-shadow: $shadow;
+  }
+}
+
+// 激活状态
+@mixin active-state($bg-color: rgba(59, 130, 246, 0.1), $border-color: #3b82f6, $border-width: 3px, $border-side: left) {
+  background: $bg-color;
+  
+  @if $border-side == left {
+    border-left: $border-width solid $border-color;
+  } @else if $border-side == right {
+    border-right: $border-width solid $border-color;
+  } @else if $border-side == top {
+    border-top: $border-width solid $border-color;
+  } @else if $border-side == bottom {
+    border-bottom: $border-width solid $border-color;
+  }
+}
+
+// 加载状态
+@mixin loading-state {
+  opacity: 0.6;
+  pointer-events: none;
+  cursor: not-allowed;
+} 

@@ -1,0 +1,58 @@
+// 移动端相关 Mixins
+
+// 移动端触摸优化
+@mixin mobile-touch-optimization {
+  -webkit-tap-highlight-color: rgba(59, 130, 246, 0.2);
+  -webkit-touch-callout: none;
+  -webkit-user-select: none;
+  -moz-user-select: none;
+  -ms-user-select: none;
+  user-select: none;
+  touch-action: pan-y; /* 允许垂直滑动，但限制其他手势 */
+  min-height: 44px; /* 增加触摸目标的最小高度 */
+}
+
+// 移动端点击区域优化
+@mixin mobile-clickable-area($min-height: 56px) {
+  -webkit-tap-highlight-color: transparent;
+  min-height: $min-height; /* 确保足够的点击区域 */
+}
+
+// 移动端滚动优化
+@mixin mobile-scroll-optimization {
+  -webkit-overflow-scrolling: touch;
+  overscroll-behavior: contain;
+}
+
+// 安全区域底部间距
+@mixin safe-area-bottom($padding: 0px) {
+  padding-bottom: calc(#{$padding} + env(safe-area-inset-bottom, 0px));
+}
+
+// 动态视口高度
+@mixin dynamic-viewport-height {
+  height: 100vh;
+  height: 100dvh;
+  height: calc(var(--vh, 1vh) * 100); /* 使用动态视口高度，CSS变量作为备选方案 */
+}
+
+// 移动端容器间距优化
+@mixin mobile-container-spacing($mobile-padding: 12px, $small-mobile-padding: 10px) {
+  @media (max-width: 768px) {
+    padding: $mobile-padding;
+    gap: 8px;
+  }
+
+  @media (max-width: 480px) {
+    padding: $small-mobile-padding;
+    gap: 6px;
+  }
+}
+
+// 移动端响应式设计基础
+@mixin mobile-responsive($mobile-width: 280px) {
+  @media (max-width: 768px) {
+    width: $mobile-width;
+    @include dynamic-viewport-height;
+  }
+} 

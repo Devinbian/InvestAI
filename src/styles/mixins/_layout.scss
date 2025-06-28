@@ -1,0 +1,76 @@
+// 布局相关 Mixins
+
+// Flexbox 居中
+@mixin flex-center {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+// Flexbox 垂直居中
+@mixin flex-center-vertical {
+  display: flex;
+  align-items: center;
+}
+
+// Flexbox 水平居中
+@mixin flex-center-horizontal {
+  display: flex;
+  justify-content: center;
+}
+
+// Flexbox 空间分布
+@mixin flex-between {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+// 文字省略
+@mixin text-ellipsis($lines: 1) {
+  @if $lines == 1 {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  } @else {
+    display: -webkit-box;
+    -webkit-line-clamp: $lines;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+}
+
+// 固定定位面板
+@mixin fixed-panel($top: 0, $left: 0, $width: 320px, $height: 100vh, $z-index: 50) {
+  position: fixed;
+  top: $top;
+  left: $left;
+  width: $width;
+  height: $height;
+  z-index: $z-index;
+  overflow: hidden;
+}
+
+// 容器渐变背景
+@mixin gradient-background($start-color: #ffffff, $end-color: #f8fafc, $direction: 145deg) {
+  background: linear-gradient($direction, $start-color 0%, $end-color 100%);
+}
+
+// 分割线样式
+@mixin section-divider($margin: 0 16px, $padding: 0 0 8px 0, $border-color: #f3f4f6) {
+  margin: $margin;
+  padding: $padding;
+  border-bottom: 1px solid $border-color;
+  position: relative;
+}
+
+// 卡片阴影
+@mixin card-shadow($shadow: 4px 0 20px rgba(0, 0, 0, 0.08)) {
+  box-shadow: $shadow;
+}
+
+// 过渡动画
+@mixin smooth-transition($property: all, $duration: 0.3s, $timing: ease) {
+  transition: $property $duration $timing;
+} 

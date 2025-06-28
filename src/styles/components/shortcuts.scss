@@ -1,0 +1,337 @@
+// 快捷操作栏共享样式
+.shortcuts-bar {
+    width: 100%;
+}
+
+// PC端快捷操作基础样式
+.shortcuts-btn-base {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    border: 1px solid #e5e7eb;
+    background: white;
+    color: #374151;
+    font-weight: 500;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+
+    &:hover {
+        border-color: #3b82f6;
+        color: #3b82f6;
+        background: #f8faff;
+        transform: translateY(-1px);
+        box-shadow: 0 4px 12px rgba(59, 130, 246, 0.15);
+    }
+
+    .btn-icon {
+        font-size: 16px;
+    }
+}
+
+// PC端初始模式快捷操作
+.ai-suggestions {
+    margin-top: 24px;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+
+    .suggestion-row {
+        display: flex;
+        gap: 12px;
+        align-items: center;
+        flex-wrap: wrap;
+        justify-content: center;
+    }
+
+    .ai-suggestion-btn {
+        @extend .shortcuts-btn-base;
+        height: 44px;
+        padding: 0 20px;
+        border-radius: 22px;
+        font-size: 14px;
+    }
+
+    .customize-btn-inline {
+        width: 44px;
+        height: 44px;
+        border-radius: 50%;
+        border: 1px solid #e5e7eb;
+        background: white;
+        color: #9ca3af;
+        cursor: pointer;
+        transition: all 0.2s ease;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+
+        &:hover {
+            border-color: #6b7280;
+            color: #374151;
+            background: #f9fafb;
+            transform: translateY(-1px);
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+        }
+
+        .customize-icon {
+            font-size: 16px;
+        }
+    }
+}
+
+// PC端聊天模式快捷操作
+.chat-shortcuts.pc-shortcuts {
+    margin-bottom: 16px;
+    padding: 16px;
+    background: rgba(255, 255, 255, 0.95);
+    backdrop-filter: blur(10px);
+    border-radius: 16px;
+    border: 1px solid rgba(0, 0, 0, 0.06);
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
+
+    .shortcuts-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
+        gap: 12px;
+        max-width: 100%;
+    }
+
+    .chat-shortcut-btn {
+        @extend .shortcuts-btn-base;
+        height: 48px;
+        padding: 0 16px;
+        border-radius: 12px;
+        font-size: 13px;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        gap: 4px;
+        min-width: 120px;
+
+        .btn-text {
+            font-size: 12px;
+            font-weight: 500;
+        }
+
+        // 特殊按钮样式
+        &.customize-btn-chat {
+            border-color: #d1d5db;
+            color: #6b7280;
+
+            &:hover {
+                border-color: #9ca3af;
+                color: #374151;
+                background: #f9fafb;
+            }
+        }
+
+        &.close-btn {
+            border-color: #f87171;
+            color: #dc2626;
+
+            &:hover {
+                border-color: #dc2626;
+                background: #fef2f2;
+            }
+        }
+    }
+}
+
+// 移动端快捷操作样式 - 原生设计
+.mobile-shortcuts-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: rgba(0, 0, 0, 0.4);
+    z-index: 2000;
+    display: flex;
+    align-items: flex-end;
+    justify-content: center;
+    padding: 0;
+    animation: fadeIn 0.2s ease-out;
+
+    .mobile-shortcuts-container {
+        width: 100%;
+        background: #f8f9fa;
+        border-radius: 16px 16px 0 0;
+        padding: 0 0 env(safe-area-inset-bottom, 20px) 0;
+        max-height: 60vh;
+        overflow: hidden;
+        animation: slideUp 0.3s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+        box-shadow: 0 -2px 20px rgba(0, 0, 0, 0.1);
+    }
+
+    .drag-indicator {
+        width: 36px;
+        height: 4px;
+        background: #d1d5db;
+        border-radius: 2px;
+        margin: 8px auto 0;
+    }
+
+    .shortcuts-header {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        padding: 16px 20px 12px;
+        border-bottom: 1px solid #e5e7eb;
+        background: white;
+
+        .shortcuts-title {
+            font-size: 16px;
+            font-weight: 600;
+            color: #1f2937;
+            margin: 0;
+        }
+
+        .close-btn-header {
+            width: 32px;
+            height: 32px;
+            border: none;
+            background: #f3f4f6;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            color: #6b7280;
+
+            &:hover {
+                background: #e5e7eb;
+                color: #374151;
+            }
+
+            &:active {
+                transform: scale(0.95);
+                background: #d1d5db;
+            }
+        }
+    }
+
+    .shortcuts-grid-mobile {
+        display: grid;
+        grid-template-columns: repeat(4, 1fr);
+        gap: 0;
+        padding: 20px 16px 16px;
+        background: white;
+    }
+
+    .shortcut-item-mobile {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        padding: 16px 8px;
+        cursor: pointer;
+        border-radius: 12px;
+        transition: all 0.2s ease;
+        min-height: 80px;
+        justify-content: center;
+
+        &:active {
+            transform: scale(0.95);
+            background: #f3f4f6;
+        }
+
+        .shortcut-icon {
+            width: 44px;
+            height: 44px;
+            border-radius: 12px;
+            background: #f8faff;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 20px;
+            margin-bottom: 8px;
+            transition: all 0.2s ease;
+        }
+
+        .shortcut-text {
+            font-size: 12px;
+            color: #374151;
+            text-align: center;
+            font-weight: 500;
+            line-height: 1.2;
+        }
+
+        // 自定义按钮特殊样式
+        &.add-shortcut {
+            .shortcut-icon {
+                background: #f0f9ff;
+                color: #3b82f6;
+                border: 1px dashed #93c5fd;
+
+                &.add-icon {
+                    font-size: 18px;
+                    font-weight: 300;
+                }
+            }
+
+            .shortcut-text {
+                color: #3b82f6;
+            }
+        }
+    }
+}
+
+// 动画定义
+@keyframes slideUp {
+    from {
+        transform: translateY(100%);
+    }
+    to {
+        transform: translateY(0);
+    }
+}
+
+@keyframes fadeIn {
+    from {
+        opacity: 0;
+    }
+    to {
+        opacity: 1;
+    }
+}
+
+// 响应式设计
+@media (max-width: 768px) {
+    .ai-suggestions {
+        margin-top: 16px;
+        padding: 0 16px;
+
+        .suggestion-row {
+            gap: 8px;
+        }
+
+        .ai-suggestion-btn {
+            height: 40px;
+            padding: 0 16px;
+            font-size: 13px;
+            border-radius: 20px;
+        }
+
+        .customize-btn-inline {
+            width: 40px;
+            height: 40px;
+
+            .customize-icon {
+                font-size: 14px;
+            }
+        }
+    }
+
+    // 触摸反馈
+    @media (hover: none) and (pointer: coarse) {
+        .shortcut-item-mobile:hover {
+            background: transparent;
+        }
+
+        .shortcut-item-mobile:active {
+            background: #f3f4f6;
+        }
+    }
+} 

@@ -5,4 +5,7 @@
 @import 'mobile';
 @import 'scrollbar';
 @import 'states';
-@import 'layout'; 
+@import 'layout';
+
+// 导入组件样式
+@import '../components/shortcuts'; 

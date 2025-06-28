@@ -206,13 +206,13 @@
                                         <div class="asset-amount">
                                             <span class="amount-label">总资产</span>
                                             <span class="amount-value">¥{{ formatCurrency(message.assetData.totalAssets)
-                                                }}</span>
+                                            }}</span>
                                         </div>
                                         <div class="asset-change"
                                             :class="[message.assetData.totalProfitPercent >= 0 ? 'profit' : 'loss']">
                                             <span class="change-icon">{{ message.assetData.totalProfitPercent >= 0 ?
                                                 '📈' : '📉'
-                                                }}</span>
+                                            }}</span>
                                             <span class="change-label">今日盈亏：</span>
                                             <span class="change-text">
                                                 {{ message.assetData.totalProfitPercent >= 0 ? '+' : '' }}¥{{
@@ -238,7 +238,7 @@
                                         <div class="stat-info">
                                             <div class="stat-label">持仓市值</div>
                                             <div class="stat-value">¥{{ formatCurrency(message.assetData.portfolioValue)
-                                                }}
+                                            }}
                                             </div>
                                         </div>
                                     </div>
@@ -460,7 +460,7 @@
                 </div>
                 <div class="guide-actions">
                     <el-button type="primary" size="small" @click="handleGuideAction">{{ guideActionText
-                    }}</el-button>
+                        }}</el-button>
                     <el-button size="small" @click="dismissGuide">稍后</el-button>
                 </div>
             </div>
@@ -563,38 +563,17 @@ const customizeDialogVisible = ref(false);
 
 
 
-// 初始化快捷操作
+// 初始化快捷操作 - 简化版本，只负责通知组件
 const initializeShortcuts = () => {
     console.log('🔄 Main.vue - 初始化快捷操作');
 
-    let initialized = false;
-
-    // 如果有ShortcutsBar组件引用，通知它们更新
-    if (shortcutsBarRef.value) {
-        console.log('🔧 Main.vue - 通过ref调用初始模式ShortcutsBar初始化');
-        shortcutsBarRef.value.initializeShortcuts();
-        initialized = true;
-    }
-
-    if (chatShortcutsBarRef.value) {
-        console.log('🔧 Main.vue - 通过ref调用聊天模式ShortcutsBar初始化');
-        chatShortcutsBarRef.value.initializeShortcuts();
-        initialized = true;
-    }
-
-    if (!initialized) {
-        console.log('📱 Main.vue - ShortcutsBar组件ref不存在，直接处理数据（适用于移动端）');
-
-        // 移动端或组件未加载时，直接处理快捷操作数据
-        // 这主要是为了确保移动端弹窗能获取到最新数据
-        const savedCustomShortcuts = localStorage.getItem('customShortcuts');
-        const savedStates = localStorage.getItem('defaultShortcutStates');
-
-        console.log('📊 Main.vue - localStorage数据检查:', {
-            customShortcuts: savedCustomShortcuts ? JSON.parse(savedCustomShortcuts).length : 0,
-            defaultStates: savedStates ? Object.keys(JSON.parse(savedStates)).length : 0
-        });
-    }
+    // 通知ShortcutsBar组件更新
+    [shortcutsBarRef.value, chatShortcutsBarRef.value].forEach((ref, index) => {
+        if (ref) {
+            ref.initializeShortcuts();
+            console.log(`✅ Main.vue - 已通知${index === 0 ? '初始模式' : '聊天模式'}ShortcutsBar组件初始化`);
+        }
+    });
 
     console.log('✅ Main.vue - 快捷操作初始化完成');
 };
@@ -3314,71 +3293,30 @@ const openCustomizeDialog = () => {
 const shortcutsBarRef = ref(null);
 const chatShortcutsBarRef = ref(null);
 
-// 处理快捷操作更新事件
+// 处理快捷操作更新事件 - 简化版本
 const handleShortcutsUpdated = () => {
     console.log('🔄 Main.vue - 快捷操作更新事件触发');
-    console.log('🔍 Main.vue - shortcutsBarRef状态:', shortcutsBarRef.value ? '存在' : '不存在');
-    console.log('🔍 Main.vue - chatShortcutsBarRef状态:', chatShortcutsBarRef.value ? '存在' : '不存在');
-    console.log('🔍 Main.vue - 当前环境:', {
-        isMobileView: isMobileView.value,
-        showChatShortcuts: showChatShortcuts.value
-    });
 
-    // PC端：通知ShortcutsBar组件更新
-    if (!isMobileView.value) {
-        let updated = false;
-
-        // 更新初始模式的ShortcutsBar
-        if (shortcutsBarRef.value) {
-            shortcutsBarRef.value.handleShortcutsUpdated();
-            console.log('✅ Main.vue - 已通知PC端初始模式ShortcutsBar组件更新');
-            updated = true;
-        }
-
-        // 更新聊天模式的ShortcutsBar
-        if (chatShortcutsBarRef.value) {
-            chatShortcutsBarRef.value.handleShortcutsUpdated();
-            console.log('✅ Main.vue - 已通知PC端聊天模式ShortcutsBar组件更新');
-            updated = true;
-        }
-
-        if (!updated) {
-            console.warn('⚠️ Main.vue - PC端ShortcutsBar组件ref为空，无法通知更新');
-            initializeShortcuts();
-        }
-    }
-
-    // 移动端：直接更新数据并刷新弹窗
-    if (isMobileView.value) {
-        console.log('📱 Main.vue - 移动端环境，执行移动端更新逻辑');
-
-        // 直接初始化快捷操作数据（移动端不依赖ShortcutsBar的ref）
-        initializeShortcuts();
-        console.log('✅ Main.vue - 移动端快捷操作数据已更新');
-
-        // 如果移动端快捷操作弹窗正在显示，强制刷新显示
-        if (showChatShortcuts.value) {
-            console.log('🔄 Main.vue - 移动端快捷操作弹窗正在显示，准备刷新');
-            // 先关闭再打开，强制刷新
-            showChatShortcuts.value = false;
-            nextTick(() => {
-                showChatShortcuts.value = true;
-                console.log('🔄 Main.vue - 移动端快捷操作弹窗已刷新');
-            });
-        }
-    }
-
-    // 尝试通知ShortcutsBar组件更新（兼容性处理）
+    // 通知所有ShortcutsBar组件更新
     [shortcutsBarRef.value, chatShortcutsBarRef.value].forEach((ref, index) => {
         if (ref) {
             try {
                 ref.handleShortcutsUpdated();
-                console.log(`✅ Main.vue - 已通知ShortcutsBar组件更新 (${index === 0 ? '初始模式' : '聊天模式'})`);
+                console.log(`✅ Main.vue - 已通知${index === 0 ? '初始模式' : '聊天模式'}ShortcutsBar组件更新`);
             } catch (error) {
-                console.warn(`⚠️ Main.vue - 通知ShortcutsBar更新时出错 (${index === 0 ? '初始模式' : '聊天模式'}):`, error);
+                console.warn(`⚠️ Main.vue - 通知ShortcutsBar更新时出错:`, error);
             }
         }
     });
+
+    // 移动端特殊处理：如果快捷操作弹窗正在显示，强制刷新
+    if (isMobileView.value && showChatShortcuts.value) {
+        console.log('📱 Main.vue - 移动端快捷操作弹窗刷新');
+        showChatShortcuts.value = false;
+        nextTick(() => {
+            showChatShortcuts.value = true;
+        });
+    }
 };
 
 // 组件挂载时初始化

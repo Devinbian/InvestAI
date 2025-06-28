@@ -206,13 +206,13 @@
                                         <div class="asset-amount">
                                             <span class="amount-label">总资产</span>
                                             <span class="amount-value">¥{{ formatCurrency(message.assetData.totalAssets)
-                                                }}</span>
+                                            }}</span>
                                         </div>
                                         <div class="asset-change"
                                             :class="[message.assetData.totalProfitPercent >= 0 ? 'profit' : 'loss']">
                                             <span class="change-icon">{{ message.assetData.totalProfitPercent >= 0 ?
                                                 '📈' : '📉'
-                                                }}</span>
+                                            }}</span>
                                             <span class="change-label">今日盈亏：</span>
                                             <span class="change-text">
                                                 {{ message.assetData.totalProfitPercent >= 0 ? '+' : '' }}¥{{
@@ -238,7 +238,7 @@
                                         <div class="stat-info">
                                             <div class="stat-label">持仓市值</div>
                                             <div class="stat-value">¥{{ formatCurrency(message.assetData.portfolioValue)
-                                                }}
+                                            }}
                                             </div>
                                         </div>
                                     </div>
@@ -460,7 +460,7 @@
                 </div>
                 <div class="guide-actions">
                     <el-button type="primary" size="small" @click="handleGuideAction">{{ guideActionText
-                    }}</el-button>
+                        }}</el-button>
                     <el-button size="small" @click="dismissGuide">稍后</el-button>
                 </div>
             </div>
@@ -3700,24 +3700,6 @@ body.onboarding-mode {
     .modern-subtitle {
         font-size: 0.85rem;
         text-align: center;
-    }
-
-    .examples-content {
-        gap: 4px;
-    }
-
-    .example-tag {
-        font-size: 0.75rem;
-        padding: 4px 8px;
-    }
-
-    .examples-indicator {
-        font-size: 0.7rem;
-    }
-
-    .refresh-examples-btn {
-        width: 24px;
-        height: 24px;
     }
 
     /* 移动端聊天消息字体优化 */
@@ -9968,11 +9950,6 @@ body {
 
     .stock-code {
         font-size: 0.7rem;
-    }
-
-    .example-tag {
-        font-size: 0.75rem;
-        padding: 4px 8px;
     }
 
     /* 超小屏幕空状态进一步优化 */

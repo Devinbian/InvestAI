@@ -537,13 +537,52 @@ export default {
         /* 减少左右padding */
     }
 
+    /* 移动端按钮尺寸优化 */
+    .ai-func-btn {
+        width: 32px;
+        height: 32px;
+        min-width: 32px;
+        min-height: 32px;
+    }
+
+    .ai-func-btn svg {
+        width: 16px;
+        height: 16px;
+    }
+
     /* 微信环境下进一步减少边距 */
     :global(body.wechat-browser) .ai-input-row {
         padding: 0 8px !important;
+        background: #fff !important;
     }
 
     :global(body.wechat-browser) .ai-buttons-row {
         padding: 6px 8px !important;
+    }
+}
+
+/* 超小屏幕优化 */
+@media (max-width: 480px) {
+    .ai-card {
+        padding: 12px 0 calc(env(safe-area-inset-bottom) + 12px) 0 !important;
+        width: 100% !important;
+        border-radius: 0 !important;
+    }
+
+    .ai-input-row {
+        padding: 10px 16px !important;
+    }
+
+    .ai-func-btn {
+        width: 30px;
+        height: 30px;
+        min-width: 30px;
+        min-height: 30px;
+    }
+
+    .ai-func-btn svg {
+        width: 14px;
+        height: 14px;
     }
 }
 </style>

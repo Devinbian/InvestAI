@@ -9747,7 +9747,6 @@ body {
         right: 0 !important;
         margin: 0 !important;
         padding: 10px 0 calc(10px + env(safe-area-inset-bottom, 0)) 0 !important;
-        /* 移除左右padding，避免输入框左右有边距 */
         width: 100% !important;
         border-radius: 0 !important;
         /* 微信端移除圆角，避免显示底部导航栏 */
@@ -9820,28 +9819,7 @@ body {
         border-top: 1px solid #e5e7eb !important;
     } */
 
-    body.wechat-browser .ai-input-row {
-        padding: 10px 8px !important;
-        background: #fff !important;
-    }
-
-    /* body.wechat-browser .ai-buttons-row {
-        padding: 8px 8px 14px 8px !important;
-        background: #fff !important;
-        border-top: none !important;
-    } */
-
-    .ai-func-btn {
-        width: 32px;
-        height: 32px;
-        min-width: 32px;
-        min-height: 32px;
-    }
-
-    .ai-func-btn svg {
-        width: 16px;
-        height: 16px;
-    }
+    /* AI 输入组件相关样式已移至 AIInputCard 组件内部管理 */
 
     .chat-shortcut-btn {
         padding: 6px 10px;
@@ -9956,20 +9934,7 @@ body {
 
     /* 超小屏幕输入区域继承@media (max-width: 768px)中的样式 */
 
-    /* 超小屏幕AI卡片进一步优化 */
-    .ai-card {
-        padding: 12px 0 calc(env(safe-area-inset-bottom) + 12px) 0 !important;
-        /* 超小屏幕左右padding为0确保占满全屏，底部padding考虑安全区域 */
-        width: 100% !important;
-        border-radius: 0 !important;
-        /* 移除圆角确保占满全屏 */
-    }
-
-    /* 超小屏幕AI输入行进一步优化 */
-    .ai-input-row {
-        padding: 10px 16px !important;
-        /* 超小屏幕增加输入行的左右padding，确保内容不贴边 */
-    }
+    /* 超小屏幕 AI 组件样式已移至 AIInputCard 组件内部管理 */
 
     /* 超小屏幕新聊天按钮区域 */
     .new-chat-section {
@@ -9982,18 +9947,7 @@ body {
         padding: 6px 12px !important;
     } */
 
-    /* 超小屏幕AI功能按钮进一步优化 */
-    .ai-func-btn {
-        width: 30px;
-        height: 30px;
-        min-width: 30px;
-        min-height: 30px;
-    }
-
-    .ai-func-btn svg {
-        width: 14px;
-        height: 14px;
-    }
+    /* 超小屏幕 AI 功能按钮样式已移至 AIInputCard 组件内部管理 */
 
     /* 超小屏幕快捷操作按钮进一步优化 */
     .chat-shortcut-btn {

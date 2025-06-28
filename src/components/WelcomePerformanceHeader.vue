@@ -336,9 +336,11 @@ const formatPercent = (value) => {
     margin-bottom: 16px;
 }
 
-/* 微信浏览器环境下适当减少底部间距 */
+/* 微信浏览器环境下的间距调整 */
 @media (max-width: 768px) {
     body.wechat-browser .welcome-performance-header {
+        margin-top: 0px !important;
+        /* 不需要额外的顶部间距，主页内容已有padding-top */
         margin-bottom: 4px !important;
         /* 进一步减少微信端底部间距 */
     }

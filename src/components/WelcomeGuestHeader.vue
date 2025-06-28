@@ -212,8 +212,8 @@ onMounted(() => {
 
     /* 增加选择器特异性，确保样式生效 */
     :global(body.wechat-browser) :global(.welcome-guest-header) {
-        margin-top: 60px !important;
-        /* 增加顶部间距，让欢迎语不要太靠上 */
+        margin-top: 0px !important;
+        /* 不需要额外的顶部间距，主页内容已有padding-top */
         margin-bottom: 60px !important;
         /* 增加底部间距，使用更大的值确保生效 */
         padding: 16px 20px !important;

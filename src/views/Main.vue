@@ -478,7 +478,7 @@
             @remove-reminder="removeReminder" />
 
         <!-- 版权信息 -->
-        <div class="copyright-footer" v-show="!isChatMode && (!isMobileView || !isWechatEnv)">
+        <div class="copyright-footer" v-show="!isChatMode && !isMobileView">
             <div class="copyright-content">
                 <p>&copy; 2024 上海九方云智能科技有限公司 版权所有</p>
             </div>
@@ -6436,21 +6436,33 @@ body.onboarding-mode {
         body.android-chrome .input-area[style],
         body.android-chrome .input-area[class],
         body.android-chrome .input-area[class][style] {
-            bottom: 60px !important;
+            bottom: 75px !important;
+            /* Android Chrome增加底部偏移，避免被工具栏遮挡 */
         }
 
         body.ios-chrome .input-area,
         body.ios-chrome .input-area[style],
         body.ios-chrome .input-area[class],
         body.ios-chrome .input-area[class][style] {
-            bottom: 105px !important;
+            bottom: 120px !important;
+            /* iOS Chrome增加底部偏移，避免被工具栏遮挡 */
         }
 
         body.ios-safari .input-area,
         body.ios-safari .input-area[style],
         body.ios-safari .input-area[class],
         body.ios-safari .input-area[class][style] {
+            bottom: 95px !important;
+            /* iOS Safari增加底部偏移，避免被工具栏遮挡 */
+        }
+
+        /* 其他移动端浏览器的通用处理 */
+        body:not(.wechat-browser):not(.ios-safari):not(.ios-chrome):not(.android-chrome) .input-area,
+        body:not(.wechat-browser):not(.ios-safari):not(.ios-chrome):not(.android-chrome) .input-area[style],
+        body:not(.wechat-browser):not(.ios-safari):not(.ios-chrome):not(.android-chrome) .input-area[class],
+        body:not(.wechat-browser):not(.ios-safari):not(.ios-chrome):not(.android-chrome) .input-area[class][style] {
             bottom: 80px !important;
+            /* 其他移动端浏览器的通用底部偏移 */
         }
     }
 
@@ -10149,7 +10161,9 @@ body {
         margin-top: 0 !important;
         margin-bottom: 0 !important;
         padding: 0 !important;
-        /* 微信环境下移除所有margin和padding */
+        height: 0 !important;
+        overflow: hidden !important;
+        /* 微信环境下完全隐藏版权信息 */
     }
 
     /* 微信环境下确保center-container合理布局 */
@@ -10178,6 +10192,29 @@ body {
         padding: 0 !important;
         overflow: hidden !important;
     }
+
+    /* 微信环境下防止触发前后导航工具栏 */
+    body.wechat-browser {
+        overscroll-behavior: none !important;
+        -webkit-overflow-scrolling: auto !important;
+        overflow-x: hidden !important;
+        position: relative !important;
+    }
+
+    /* 微信环境下主容器优化 */
+    body.wechat-browser .main-modern {
+        height: 100vh !important;
+        overflow: hidden !important;
+        position: relative !important;
+    }
+
+    /* 微信环境下主内容区域优化 */
+    body.wechat-browser .modern-content {
+        height: 100vh !important;
+        overflow-y: auto !important;
+        -webkit-overflow-scrolling: touch !important;
+        position: relative !important;
+    }
 }
 
 /* 移除旧的聊天历史面板布局适配，使用transform方式 */
@@ -10188,8 +10225,8 @@ body {
     /* 微信环境下的问候语间距调整已移至 WelcomeGuestHeader 组件 */
 
     body.wechat-browser .welcome-section {
-        margin-top: 20px !important;
-        /* 微信环境下调整快捷示例与问候语的间距 */
+        margin-top: 0px !important;
+        /* 微信环境下不需要额外的顶部间距，主页内容已有padding-top */
     }
 
     /* 微信环境下确保 WelcomeGuestHeader 的 margin-bottom 生效 */
@@ -10263,10 +10300,10 @@ body {
 
     /* 微信环境下主页内容区域特殊处理 */
     body.wechat-browser .modern-content:not(.chatting) {
-        padding-bottom: 120px !important;
-        /* 微信环境下减少底部预留空间，因为输入框已上移 */
-        padding-top: 10px !important;
-        /* 微信环境下减少顶部间距，因为欢迎语已有60px margin-top */
+        padding-bottom: 140px !important;
+        /* 微信环境下为贴底AI卡片预留足够空间 */
+        padding-top: 80px !important;
+        /* 微信环境下增加顶部间距，避免欢迎语溢出 */
     }
 
     /* 移动端AI卡片 - 主页模式贴底显示 */
@@ -10292,34 +10329,40 @@ body {
 
     /* Android Chrome浏览器特殊处理 - 上移避免被底部工具栏遮挡 */
     body.android-chrome .modern-content:not(.chatting) .ai-card {
-        bottom: 8px !important;
-        /* Android Chrome上移8px，最大化贴近底部 */
+        bottom: 75px !important;
+        /* Android Chrome与聊天模式输入框保持一致的偏移 */
     }
 
     /* iOS Chrome特殊处理 */
     body.ios-chrome .modern-content:not(.chatting) .ai-card {
-        bottom: 12px !important;
-        /* iOS Chrome上移12px */
+        bottom: 120px !important;
+        /* iOS Chrome与聊天模式输入框保持一致的偏移 */
     }
 
-    /* iOS Safari保持贴底 */
+    /* iOS Safari特殊处理 */
     body.ios-safari .modern-content:not(.chatting) .ai-card {
-        bottom: 0px !important;
-        /* iOS Safari贴底显示 */
+        bottom: 95px !important;
+        /* iOS Safari与聊天模式输入框保持一致的偏移 */
     }
 
-    /* 微信环境下特殊处理 - 避免触发底部导航栏 */
+    /* 其他移动端浏览器的通用处理 */
+    body:not(.wechat-browser):not(.ios-safari):not(.ios-chrome):not(.android-chrome) .modern-content:not(.chatting) .ai-card {
+        bottom: 80px !important;
+        /* 其他移动端浏览器与聊天模式输入框保持一致的偏移 */
+    }
+
+    /* 微信环境下特殊处理 - 贴底显示，避免触发底部导航栏 */
     body.wechat-browser .modern-content:not(.chatting) .ai-card {
-        bottom: 50px !important;
-        /* 微信环境下上移50px，为欢迎语的增加间距腾出空间 */
+        bottom: 0 !important;
+        /* 微信环境下贴底显示，不上移 */
         border-radius: 0 !important;
         /* 微信环境下完全无圆角 */
         box-shadow: none !important;
         /* 微信环境下移除阴影 */
         z-index: 100 !important;
         /* 微信环境下降低z-index */
-        padding: 12px 0 16px 0 !important;
-        /* 微信环境下增加padding，确保按钮完整显示 */
+        padding: 12px 0 calc(12px + env(safe-area-inset-bottom, 0)) 0 !important;
+        /* 微信环境下增加padding，考虑安全区域 */
     }
 
     /* 聊天模式下的输入区域浏览器适配已移至@media查询内部 */

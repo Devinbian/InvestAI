@@ -130,8 +130,8 @@ const visibleActions = computed(() => {
         const coreActions = ['addWatchlist', 'removeWatchlist', 'buy', 'sell'];
         actions = actions.filter(action => coreActions.includes(action.key));
     } else if (props.mode === 'compact') {
-        // 紧凑模式优先显示常用操作
-        const priorityActions = ['addWatchlist', 'removeWatchlist', 'buy', 'sell', 'analysis', 'aiTrading'];
+        // 紧凑模式优先显示常用操作 - 量化分析和AI委托交易排在最前面
+        const priorityActions = ['analysis', 'paidAnalysis', 'aiTrading', 'quantAnalysis', 'addWatchlist', 'removeWatchlist', 'buy', 'sell'];
         actions = actions.sort((a, b) => {
             const aIndex = priorityActions.indexOf(a.key);
             const bIndex = priorityActions.indexOf(b.key);

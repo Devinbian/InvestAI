@@ -15,59 +15,7 @@ export const STOCK_ACTION_ICONS = {
 
 // 基础操作按钮配置
 export const BASE_STOCK_ACTIONS = {
-  // 自选股相关
-  addWatchlist: {
-    key: "addWatchlist",
-    text: "加入自选",
-    mobileText: "加自选",
-    type: "primary",
-    class: "add-watchlist-btn",
-    icon: STOCK_ACTION_ICONS.star,
-    priority: 1,
-  },
-
-  removeWatchlist: {
-    key: "removeWatchlist",
-    text: "移除自选",
-    mobileText: "移除",
-    type: "success",
-    class: "remove-watchlist-btn",
-    icon: STOCK_ACTION_ICONS.star,
-    priority: 1,
-  },
-
-  // 交易相关
-  buy: {
-    key: "buy",
-    text: "买入",
-    mobileText: "买入",
-    type: "default",
-    class: "buy-stock-btn-secondary",
-    icon: STOCK_ACTION_ICONS.buy,
-    priority: 2,
-  },
-
-  sell: {
-    key: "sell",
-    text: "卖出",
-    mobileText: "卖出",
-    type: "danger",
-    class: "sell-stock-btn",
-    icon: STOCK_ACTION_ICONS.sell,
-    priority: 2,
-  },
-
-  addPosition: {
-    key: "addPosition",
-    text: "加仓",
-    mobileText: "加仓",
-    type: "default",
-    class: "buy-stock-btn-secondary",
-    icon: STOCK_ACTION_ICONS.buy,
-    priority: 3,
-  },
-
-  // 分析相关
+  // 分析相关 - 设置为最高优先级
   analysis: {
     key: "analysis",
     text: "量化分析",
@@ -79,7 +27,7 @@ export const BASE_STOCK_ACTIONS = {
       original: "3智点",
       promo: "1智点",
     },
-    priority: 4,
+    priority: 1, // 最高优先级
   },
 
   paidAnalysis: {
@@ -93,7 +41,7 @@ export const BASE_STOCK_ACTIONS = {
       original: "3智点",
       promo: "1智点",
     },
-    priority: 4,
+    priority: 1, // 最高优先级
   },
 
   aiTrading: {
@@ -107,7 +55,7 @@ export const BASE_STOCK_ACTIONS = {
       original: "3智点",
       promo: "1智点",
     },
-    priority: 5,
+    priority: 2, // 第二优先级
   },
 
   quantAnalysis: {
@@ -121,58 +69,112 @@ export const BASE_STOCK_ACTIONS = {
       original: "3智点",
       promo: "1智点",
     },
+    priority: 2, // 第二优先级
+  },
+
+  // 自选股相关
+  addWatchlist: {
+    key: "addWatchlist",
+    text: "加入自选",
+    mobileText: "加自选",
+    type: "primary",
+    class: "add-watchlist-btn",
+    icon: STOCK_ACTION_ICONS.star,
+    priority: 3,
+  },
+
+  removeWatchlist: {
+    key: "removeWatchlist",
+    text: "移除自选",
+    mobileText: "移除",
+    type: "success",
+    class: "remove-watchlist-btn",
+    icon: STOCK_ACTION_ICONS.star,
+    priority: 3,
+  },
+
+  // 交易相关
+  buy: {
+    key: "buy",
+    text: "买入",
+    mobileText: "买入",
+    type: "default",
+    class: "buy-stock-btn-secondary",
+    icon: STOCK_ACTION_ICONS.buy,
+    priority: 4,
+  },
+
+  sell: {
+    key: "sell",
+    text: "卖出",
+    mobileText: "卖出",
+    type: "danger",
+    class: "sell-stock-btn",
+    icon: STOCK_ACTION_ICONS.sell,
+    priority: 4,
+  },
+
+  addPosition: {
+    key: "addPosition",
+    text: "加仓",
+    mobileText: "加仓",
+    type: "default",
+    class: "buy-stock-btn-secondary",
+    icon: STOCK_ACTION_ICONS.buy,
     priority: 5,
   },
 };
 
 // 预设的操作按钮组合
 export const STOCK_ACTION_PRESETS = {
-  // 推荐股票场景
+  // 推荐股票场景 - 量化分析和AI委托交易排在前面
   recommendation: [
+    BASE_STOCK_ACTIONS.analysis,
+    BASE_STOCK_ACTIONS.aiTrading,
     BASE_STOCK_ACTIONS.addWatchlist,
     BASE_STOCK_ACTIONS.removeWatchlist,
-    BASE_STOCK_ACTIONS.analysis,
-    BASE_STOCK_ACTIONS.aiTrading,
     BASE_STOCK_ACTIONS.buy,
   ],
 
-  // 自选股场景
+  // 自选股场景 - 量化分析和AI委托交易排在前面
   watchlist: [
-    BASE_STOCK_ACTIONS.removeWatchlist,
     BASE_STOCK_ACTIONS.analysis,
     BASE_STOCK_ACTIONS.aiTrading,
+    BASE_STOCK_ACTIONS.removeWatchlist,
     BASE_STOCK_ACTIONS.buy,
   ],
 
-  // 持仓股票场景
+  // 持仓股票场景 - 量化分析和AI委托交易排在前面
   portfolio: [
+    BASE_STOCK_ACTIONS.analysis,
+    BASE_STOCK_ACTIONS.aiTrading,
     BASE_STOCK_ACTIONS.sell,
     BASE_STOCK_ACTIONS.addPosition,
+  ],
+
+  // 聊天消息中的股票操作（完整版）- 量化分析和AI委托交易排在前面
+  chatFull: [
     BASE_STOCK_ACTIONS.analysis,
     BASE_STOCK_ACTIONS.aiTrading,
-  ],
-
-  // 聊天消息中的股票操作（完整版）
-  chatFull: [
     BASE_STOCK_ACTIONS.addWatchlist,
     BASE_STOCK_ACTIONS.removeWatchlist,
-    BASE_STOCK_ACTIONS.aiTrading,
     BASE_STOCK_ACTIONS.buy,
   ],
 
-  // 聊天消息中的股票操作（紧凑版）
+  // 聊天消息中的股票操作（紧凑版）- 量化分析和AI委托交易排在前面
   chatCompact: [
+    BASE_STOCK_ACTIONS.analysis,
+    BASE_STOCK_ACTIONS.aiTrading,
     BASE_STOCK_ACTIONS.addWatchlist,
     BASE_STOCK_ACTIONS.removeWatchlist,
-    BASE_STOCK_ACTIONS.buy,
   ],
 
-  // 移动端优化版本
+  // 移动端优化版本 - 量化分析和AI委托交易排在前面
   mobile: [
+    BASE_STOCK_ACTIONS.analysis,
+    BASE_STOCK_ACTIONS.aiTrading,
     BASE_STOCK_ACTIONS.addWatchlist,
     BASE_STOCK_ACTIONS.removeWatchlist,
-    BASE_STOCK_ACTIONS.aiTrading,
-    BASE_STOCK_ACTIONS.buy,
   ],
 };
 

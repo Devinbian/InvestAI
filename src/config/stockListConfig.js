@@ -19,22 +19,8 @@ export const RECOMMENDATION_CONFIG = {
   showReason: true,
   clickable: true,
 
-  // 操作按钮配置
+  // 操作按钮配置 - 量化分析和AI委托交易排在前面
   actions: [
-    {
-      key: "addWatchlist",
-      text: "加入自选",
-      type: "primary",
-      class: "add-watchlist-btn",
-      icon: ICONS.star,
-    },
-    {
-      key: "removeWatchlist",
-      text: "已加自选",
-      type: "success",
-      class: "remove-watchlist-btn",
-      icon: ICONS.star,
-    },
     {
       key: "analysis",
       text: "量化分析",
@@ -56,6 +42,20 @@ export const RECOMMENDATION_CONFIG = {
         original: "3智点",
         promo: "1智点",
       },
+    },
+    {
+      key: "addWatchlist",
+      text: "加入自选",
+      type: "primary",
+      class: "add-watchlist-btn",
+      icon: ICONS.star,
+    },
+    {
+      key: "removeWatchlist",
+      text: "已加自选",
+      type: "success",
+      class: "remove-watchlist-btn",
+      icon: ICONS.star,
     },
     {
       key: "buy",
@@ -75,15 +75,8 @@ export const WATCHLIST_CONFIG = {
   showWatchlistDetails: false,
   clickable: true,
 
-  // 操作按钮配置
+  // 操作按钮配置 - 量化分析和AI委托交易排在前面
   actions: [
-    {
-      key: "removeWatchlist",
-      text: "移除自选",
-      type: "default",
-      class: "remove-watchlist-btn",
-      icon: ICONS.star,
-    },
     {
       key: "analysis",
       text: "量化分析",
@@ -105,6 +98,13 @@ export const WATCHLIST_CONFIG = {
         original: "3智点",
         promo: "1智点",
       },
+    },
+    {
+      key: "removeWatchlist",
+      text: "移除自选",
+      type: "default",
+      class: "remove-watchlist-btn",
+      icon: ICONS.star,
     },
     {
       key: "buy",
@@ -123,22 +123,8 @@ export const PORTFOLIO_CONFIG = {
   showPositionDetails: true,
   clickable: true,
 
-  // 操作按钮配置
+  // 操作按钮配置 - 量化分析和AI委托交易排在前面
   actions: [
-    {
-      key: "sell",
-      text: "卖出",
-      type: "danger",
-      class: "sell-stock-btn",
-      icon: ICONS.sell,
-    },
-    {
-      key: "buy",
-      text: "加仓",
-      type: "default",
-      class: "buy-stock-btn-secondary",
-      icon: ICONS.buy,
-    },
     {
       key: "analysis",
       text: "量化分析",
@@ -160,6 +146,20 @@ export const PORTFOLIO_CONFIG = {
         original: "3智点",
         promo: "1智点",
       },
+    },
+    {
+      key: "sell",
+      text: "卖出",
+      type: "danger",
+      class: "sell-stock-btn",
+      icon: ICONS.sell,
+    },
+    {
+      key: "buy",
+      text: "加仓",
+      type: "default",
+      class: "buy-stock-btn-secondary",
+      icon: ICONS.buy,
     },
   ],
 };
@@ -176,22 +176,8 @@ export const SMART_RECOMMENDATION_CONFIG = {
   clickable: true,
   listClass: "persistent-stock-list",
 
-  // 操作按钮配置
+  // 操作按钮配置 - 量化分析和AI委托交易排在前面
   actions: [
-    {
-      key: "addWatchlist",
-      text: "加入自选",
-      type: "primary",
-      class: "add-watchlist-btn",
-      icon: ICONS.star,
-    },
-    {
-      key: "removeWatchlist",
-      text: "已加自选",
-      type: "success",
-      class: "remove-watchlist-btn",
-      icon: ICONS.star,
-    },
     {
       key: "analysis",
       text: "量化分析",
@@ -213,6 +199,20 @@ export const SMART_RECOMMENDATION_CONFIG = {
         original: "3智点",
         promo: "1智点",
       },
+    },
+    {
+      key: "addWatchlist",
+      text: "加入自选",
+      type: "primary",
+      class: "add-watchlist-btn",
+      icon: ICONS.star,
+    },
+    {
+      key: "removeWatchlist",
+      text: "已加自选",
+      type: "success",
+      class: "remove-watchlist-btn",
+      icon: ICONS.star,
     },
     {
       key: "buy",

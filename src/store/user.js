@@ -25,6 +25,12 @@ export const useUserStore = defineStore("user", {
 
     // 委托单管理
     pendingOrders: JSON.parse(localStorage.getItem("pendingOrders") || "[]"), // 待成交委托单
+
+    // 引导流程状态管理
+    onboardingStatus: JSON.parse(
+      localStorage.getItem("onboardingStatus") ||
+        '{"completed": false, "currentStep": 0, "preferences": null}',
+    ), // 引导流程状态
   }),
 
   actions: {
@@ -54,7 +60,7 @@ export const useUserStore = defineStore("user", {
       }
     },
 
-    logout() {
+    logout(clearOnboarding = true) {
       this.token = "";
       this.userInfo = {};
       this.isLoggedIn = false;
@@ -75,6 +81,18 @@ export const useUserStore = defineStore("user", {
       localStorage.removeItem("smartPointsTransactions");
       localStorage.removeItem("aiTradingRecords");
       localStorage.removeItem("pendingOrders");
+
+      // 只有在明确退出登录且用户未完成引导时才清空引导状态
+      if (clearOnboarding && !this.onboardingStatus.completed) {
+        localStorage.removeItem("onboardingStatus");
+        // 重置引导状态
+        this.onboardingStatus = {
+          completed: false,
+          currentStep: 0,
+          preferences: null,
+        };
+      }
+      // 如果用户已完成引导，即使主动退出也保留引导状态，避免重复引导
     },
 
     // 自选股管理
@@ -571,6 +589,51 @@ export const useUserStore = defineStore("user", {
         return true;
       }
       return false;
+    },
+
+    // 引导流程状态管理
+    updateOnboardingProgress(stepIndex, preferences = null) {
+      this.onboardingStatus = {
+        ...this.onboardingStatus,
+        currentStep: stepIndex,
+        preferences: preferences || this.onboardingStatus.preferences,
+      };
+      localStorage.setItem(
+        "onboardingStatus",
+        JSON.stringify(this.onboardingStatus),
+      );
+    },
+
+    completeOnboarding(preferences) {
+      this.onboardingStatus = {
+        completed: true,
+        currentStep: -1, // -1 表示已完成
+        preferences: preferences,
+      };
+      localStorage.setItem(
+        "onboardingStatus",
+        JSON.stringify(this.onboardingStatus),
+      );
+      // 同时保存到用户信息中
+      this.setUserInfo({
+        ...this.userInfo,
+        preferences: preferences,
+      });
+      // 保留旧的标记以兼容现有代码
+      localStorage.setItem("onboardingCompleted", "true");
+    },
+
+    isOnboardingCompleted() {
+      return this.onboardingStatus.completed;
+    },
+
+    getOnboardingProgress() {
+      return this.onboardingStatus;
+    },
+
+    shouldShowOnboarding() {
+      // 只有登录用户且未完成引导才显示引导流程
+      return this.isLoggedIn && !this.onboardingStatus.completed;
     },
   },
 });

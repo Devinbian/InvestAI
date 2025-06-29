@@ -62,12 +62,22 @@ export function useAuthentication() {
         "注册成功！已为您准备了100万资金和10智点用于体验交易功能",
       );
     } else {
-      // 老用户登录成功，直接进入主界面，不进入引导流程
-      if (onDismissGuide) {
-        onDismissGuide();
+      // 老用户登录成功，检查是否需要继续引导流程
+      if (userStore.shouldShowOnboarding()) {
+        // 用户之前没有完成引导流程，继续显示引导
+        setTimeout(() => {
+          if (onShowOnboarding) {
+            onShowOnboarding();
+          }
+        }, 500);
+        ElMessage.success("欢迎回来！让我们继续完成您的投资偏好设置");
+      } else {
+        // 用户已完成引导流程，直接进入主界面
+        if (onDismissGuide) {
+          onDismissGuide();
+        }
+        ElMessage.success("欢迎回来！");
       }
-      // 如果没有偏好设置，可以通过菜单中的"偏好设置"手动设置
-      ElMessage.success("欢迎回来！");
     }
   };
 

@@ -109,6 +109,18 @@ const userStore = useUserStore();
 const STEPS = ['welcome', 'form-step-0', 'form-step-1', 'form-step-2', 'form-step-3', 'complete'];
 const currentStepIndex = ref(0);
 
+// 从用户store恢复引导进度
+const initializeOnboardingProgress = () => {
+    const progress = userStore.getOnboardingProgress();
+    if (progress && progress.currentStep >= 0 && progress.currentStep < STEPS.length) {
+        currentStepIndex.value = progress.currentStep;
+        // 恢复已保存的偏好设置
+        if (progress.preferences) {
+            Object.assign(preferences, progress.preferences);
+        }
+    }
+};
+
 // --- Computed Properties ---
 const currentStepName = computed(() => STEPS[currentStepIndex.value]);
 const isAssessmentStep = computed(() => currentStepName.value.startsWith('form-step'));
@@ -160,19 +172,27 @@ const isStepValid = computed(() => {
 // --- Navigation Functions ---
 function startAssessment() {
     currentStepIndex.value = 1;
+    // 保存进度
+    userStore.updateOnboardingProgress(1);
 }
 
 function goToNextStep() {
     if (currentStepIndex.value < STEPS.length - 1) {
         currentStepIndex.value++;
+        // 保存进度和当前偏好设置
+        userStore.updateOnboardingProgress(currentStepIndex.value, toRaw(preferences));
     }
 }
 
 function goToPreviousStep() {
     if (currentStepIndex.value > 1) {
         currentStepIndex.value--;
+        // 保存进度
+        userStore.updateOnboardingProgress(currentStepIndex.value, toRaw(preferences));
     } else if (currentStepName.value === 'form-step-0') {
         currentStepIndex.value = 0;
+        // 保存进度
+        userStore.updateOnboardingProgress(0);
     }
 }
 
@@ -198,6 +218,8 @@ const summaryData = computed(() => {
 });
 
 const finishOnboarding = () => {
+    // 标记引导完成
+    userStore.completeOnboarding(toRaw(preferences));
     emit('complete', summaryData.value);
 };
 
@@ -252,6 +274,9 @@ const detectDeviceInfo = () => {
 onMounted(() => {
     detectDeviceInfo();
     applyThemeToDocument();
+
+    // 恢复引导进度
+    initializeOnboardingProgress();
 
     // 监听屏幕变化
     window.addEventListener('resize', detectDeviceInfo);

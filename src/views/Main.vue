@@ -218,13 +218,13 @@
                                         <div class="asset-amount">
                                             <span class="amount-label">总资产</span>
                                             <span class="amount-value">¥{{ formatCurrency(message.assetData.totalAssets)
-                                                }}</span>
+                                            }}</span>
                                         </div>
                                         <div class="asset-change"
                                             :class="[message.assetData.totalProfitPercent >= 0 ? 'profit' : 'loss']">
                                             <span class="change-icon">{{ message.assetData.totalProfitPercent >= 0 ?
                                                 '📈' : '📉'
-                                                }}</span>
+                                            }}</span>
                                             <span class="change-label">今日盈亏：</span>
                                             <span class="change-text">
                                                 {{ message.assetData.totalProfitPercent >= 0 ? '+' : '' }}¥{{
@@ -250,7 +250,7 @@
                                         <div class="stat-info">
                                             <div class="stat-label">持仓市值</div>
                                             <div class="stat-value">¥{{ formatCurrency(message.assetData.portfolioValue)
-                                                }}
+                                            }}
                                             </div>
                                         </div>
                                     </div>
@@ -473,7 +473,7 @@
                 </div>
                 <div class="guide-actions">
                     <el-button type="primary" size="small" @click="handleGuideAction">{{ guideActionText
-                    }}</el-button>
+                        }}</el-button>
                     <el-button size="small" @click="dismissGuide">稍后</el-button>
                 </div>
             </div>
@@ -530,8 +530,7 @@ import StockActionButtons from '../components/StockActionButtons.vue';
 import CopyrightFooter from '../components/CopyrightFooter.vue';
 import { getStockListConfig } from '../config/stockListConfig';
 import { getStockActionConfig } from '../config/stockActionConfig';
-import { recommendStock, api } from '@/api/api';
-import { riskOptions } from '@/config/userPortrait';
+import { api } from '@/api/api';
 import { authFetchEventSource } from '@/utils/request';
 import { useMobileAdaptation } from '../composables/useMobileAdaptation';
 import { useChatManager } from '../composables/useChatManager';
@@ -540,7 +539,6 @@ import { useStockOperations } from '../composables/useStockOperations';
 import { useAuthentication } from '../composables/useAuthentication';
 import { formatCurrency } from '@/utils/formatters';
 
-const router = useRouter();
 const userStore = useUserStore();
 const chatHistoryStore = useChatHistoryStore();
 
@@ -639,15 +637,7 @@ const {
     showPaidAnalysisDialog,
 } = stockOperations;
 
-// 创建包装函数来调用股票操作，传递所需参数
-const handleAITradingConfirmed = (data) => {
-    stockHandleAITradingConfirmed(data, chatHistory, isChatMode, scrollToBottom);
-};
-
-// 创建包装函数来调用付费分析，传递所需参数
-const showPaidAnalysisDialogWrapper = (stock) => {
-    showPaidAnalysisDialog(stock, userStore, continueAnalysis);
-};
+// 简化：直接使用stockHandleAITradingConfirmed，无需包装函数
 
 
 
@@ -660,19 +650,25 @@ const customizeDialogVisible = ref(false);
 
 
 
-// 初始化快捷操作 - 简化版本，只负责通知组件
-const initializeShortcuts = () => {
-    console.log('🔄 Main.vue - 初始化快捷操作');
-
-    // 通知ShortcutsBar组件更新
+// 简化的ShortcutsBar组件操作函数
+const notifyShortcutsBarComponents = (method) => {
     [shortcutsBarRef.value, chatShortcutsBarRef.value].forEach((ref, index) => {
-        if (ref) {
-            ref.initializeShortcuts();
-            console.log(`✅ Main.vue - 已通知${index === 0 ? '初始模式' : '聊天模式'}ShortcutsBar组件初始化`);
+        if (ref && typeof ref[method] === 'function') {
+            try {
+                ref[method]();
+                console.log(`✅ 已通知${index === 0 ? '初始模式' : '聊天模式'}ShortcutsBar组件执行${method}`);
+            } catch (error) {
+                console.warn(`⚠️ 通知ShortcutsBar执行${method}时出错:`, error);
+            }
         }
     });
+};
 
-    console.log('✅ Main.vue - 快捷操作初始化完成');
+// 初始化快捷操作
+const initializeShortcuts = () => {
+    console.log('🔄 初始化快捷操作');
+    notifyShortcutsBarComponents('initializeShortcuts');
+    console.log('✅ 快捷操作初始化完成');
 };
 
 
@@ -727,58 +723,6 @@ const showOnboarding = ref(false); // 是否显示引导流程
 
 // 投资偏好设置
 const preferencesDialogVisible = ref(false);
-const preferencesFormRef = ref(null);
-const preferencesLoading = ref(false);
-
-// 聊天发送状态管理（已移至useChatManager）
-// const isGenerating = ref(false); // 已从useChatManager获取
-// const currentAbortController = ref(null); // 已从useChatManager获取
-
-// 步骤配置
-const preferenceSteps = [
-    {
-        title: '投资经验',
-        desc: '告诉我们您的投资经验，帮助我们推荐合适的投资方案'
-    },
-    {
-        title: '选择投资风格',
-        desc: '您希望投资收益高一些，还是稳一些？选择最适合您的投资方式'
-    },
-    {
-        title: '用户特征',
-        desc: '帮助我们了解您的投资偏好，为您量身定制投资方案'
-    },
-    {
-        title: '关注板块',
-        desc: '请选择您关注的投资板块（可多选）'
-    }
-];
-
-// 引导提示
-const showGuideTip = ref(false);
-const guideTitle = ref('');
-const guideMessage = ref('');
-const guideActionText = ref('');
-const guideType = ref(''); // 'login' | 'register' | 'preferences'
-
-// 购买股票相关
-// 股票交易相关状态已移至 useStockOperations
-const buyLoading = ref(false);
-const buyFormRef = ref(null);
-const activeTab = ref('portfolio');
-const buyForm = reactive({
-    quantity: 100,
-    price: 0,
-    orderType: 'limit' // limit: 限价, market: 市价
-});
-
-
-
-
-
-// 认证相关函数已移至 useAuthentication composable
-
-
 
 const handleCommand = async (command) => {
     await handleUserCommand(command, {
@@ -808,8 +752,6 @@ const handleShowRecords = () => {
     showRecordsCenter.value = true;
 };
 
-// 移动端用户菜单相关方法 - 已移至 useMobileAdaptation composable
-
 // 发送消息 - 使用组合式函数
 const sendMessage = async () => {
     // 检查用户登录状态
@@ -819,7 +761,6 @@ const sendMessage = async () => {
     await chatSendMessage(userStore, isMobileView, mobileAdaptation, scrollToBottom);
 };
 
-// 聊天相关函数已移至 useChatManager
 // 创建新聊天 - 使用组合式函数
 const createNewChat = () => {
     chatCreateNewChat(isMobileView, mobileAdaptation, scrollToTop);
@@ -890,10 +831,6 @@ watch(isChatMode, (newVal) => {
     }
 });
 
-// 语音输入相关状态已移至 useVoiceInput
-
-
-// 语音相关函数已移至 useVoiceInput
 
 // 语音点击处理 - 使用组合式函数
 const onVoiceClick = () => {
@@ -916,7 +853,6 @@ const toggleChatShortcuts = () => {
     }
 };
 
-// 更新聊天历史区域高度函数已移至 useChatManager
 // 移动端侧边栏状态管理
 const sidebarRef = ref(null);
 
@@ -1030,6 +966,24 @@ const handleSmartRecommendation = async () => {
     await stockHandleSmartRecommendation(userStore, chatHistoryStore, chatHistory, isChatMode, scrollToBottom, showChatShortcuts, showGuide);
 };
 
+// 监听用户登录状态变化
+watch(
+    () => userStore.isLoggedIn,
+    (newVal) => {
+        if (newVal) {
+            // 用户登录后，检查是否需要显示引导流程（用于页面刷新后的状态恢复）
+            nextTick(() => {
+                if (userStore.shouldShowOnboarding()) {
+                    showOnboarding.value = true;
+                }
+            });
+        } else {
+            // 用户退出登录，隐藏引导流程
+            showOnboarding.value = false;
+        }
+    }
+);
+
 // 资讯推送功能 - 使用组合式函数
 const handleNewsUpdate = async () => {
     if (!checkAuthStatus('获取资讯推送')) {
@@ -1134,31 +1088,6 @@ const handleWatchlistView = async () => {
         setTimeout(() => {
             showChatShortcuts.value = false;
         }, 300);
-    }
-};
-
-// 股票价格获取函数已移至 useStockOperations
-
-// 自选股数据生成函数已移至 useStockOperations
-
-// 格式化添加时间
-const formatAddedTime = (addedAt) => {
-    const date = new Date(addedAt);
-    const now = new Date();
-    const diffTime = now - date;
-    const diffDays = Math.floor(diffTime / (1000 * 60 * 60 * 24));
-
-    if (diffDays === 0) {
-        return '今天添加';
-    } else if (diffDays === 1) {
-        return '昨天添加';
-    } else if (diffDays < 7) {
-        return `${diffDays}天前添加`;
-    } else {
-        return date.toLocaleDateString('zh-CN', {
-            month: 'short',
-            day: 'numeric'
-        });
     }
 };
 
@@ -1402,30 +1331,6 @@ const continueAnalysis = async (stockInfo, isPaid = false) => {
     }
 };
 
-// AI委托交易方法
-const performQuantAnalysis = async (stockInfo) => {
-    const message = `【付费AI委托交易】请对${stockInfo.name}(${stockInfo.code})进行专业AI委托交易分析，包括：
-1. 技术指标分析（MACD、RSI、布林带、KDJ等）
-2. 量化选股因子评分（价值因子、成长因子、质量因子）
-3. 风险评估模型（波动率、最大回撤、夏普比率）
-4. 量化交易信号（买入卖出信号、信号强度）
-5. 回测数据分析（历史表现、胜率统计）
-6. AI委托交易策略建议（策略类型、参数设置、风控措施）`;
-
-    const res = await mockApi.sendMessage(message);
-    chatHistory.value.push(
-        { role: 'user', content: `AI委托交易 ${stockInfo.name}(${stockInfo.code})` },
-        {
-            ...res.data,
-            hasStockInfo: true,
-            stockInfo: stockInfo
-        }
-    );
-
-    await nextTick();
-    scrollToBottom();
-};
-
 // 自选股票操作按钮配置
 const watchlistActionButtons = computed(() => {
     return getStockActionConfig('watchlist', {
@@ -1442,49 +1347,37 @@ const portfolioActionButtons = computed(() => {
     });
 });
 
-// 自选股票操作事件处理
-const handleWatchlistActionClick = ({ action, stock }) => {
-    console.log('执行自选股票操作:', action, stock);
+// 统一的股票操作事件处理
+const handleStockAction = ({ action, stock }) => {
+    console.log('执行股票操作:', action, stock);
 
-    switch (action) {
-        case 'removeWatchlist':
-            removeFromWatchlist(stock.code);
-            break;
-        case 'analysis':
-            showPaidAnalysisDialogWrapper(stock);
-            break;
-        case 'aiTrading':
-            showQuantAnalysisDialog(stock);
-            break;
-        case 'buy':
-            showBuyDialog(stock);
-            break;
-        default:
-            console.log('未知操作:', action);
+    const actionMap = {
+        addWatchlist: () => addToWatchlist(stock),
+        removeWatchlist: () => removeFromWatchlist(stock.code),
+        analysis: () => showPaidAnalysisDialog(stock, userStore, continueAnalysis),
+        aiTrading: () => showQuantAnalysisDialog(stock),
+        buy: () => showBuyDialog(stock, 'buy'),
+        addPosition: () => showBuyDialog(stock, 'buy'),
+        sell: () => showBuyDialog(stock, 'sell')
+    };
+
+    const handler = actionMap[action];
+    if (handler) {
+        handler();
+    } else if (typeof action === 'function') {
+        // 兼容旧版本的函数类型action
+        action();
+    } else {
+        console.error('未知的股票操作类型:', action);
+        ElMessage.error('股票操作配置错误');
     }
 };
 
-// 持仓股票操作事件处理
-const handlePortfolioActionClick = ({ action, stock }) => {
-    console.log('执行持仓股票操作:', action, stock);
-
-    switch (action) {
-        case 'sell':
-            showBuyDialog(stock, 'sell');
-            break;
-        case 'addPosition':
-            showBuyDialog(stock, 'buy');
-            break;
-        case 'analysis':
-            showPaidAnalysisDialogWrapper(stock);
-            break;
-        case 'aiTrading':
-            showQuantAnalysisDialog(stock);
-            break;
-        default:
-            console.log('未知操作:', action);
-    }
-};
+// 为了保持向后兼容性，创建别名
+const handleStockActionClick = handleStockAction;
+const handleWatchlistActionClick = handleStockAction;
+const handlePortfolioActionClick = handleStockAction;
+const handleChatStockAction = handleStockAction;
 
 // 获取智能荐股配置
 const getSmartRecommendationConfig = (message) => {
@@ -1501,31 +1394,6 @@ const getSmartRecommendationConfig = (message) => {
 const handleStockClick = (stock) => {
     console.log('点击了股票:', stock);
     // 可以在这里添加股票点击的处理逻辑，比如跳转到股票详情页
-};
-
-// 股票操作按钮点击事件处理
-const handleStockActionClick = ({ action, stock }) => {
-    console.log('执行操作:', action, stock);
-
-    switch (action) {
-        case 'addWatchlist':
-            addToWatchlist(stock);
-            break;
-        case 'removeWatchlist':
-            removeFromWatchlist(stock.code);
-            break;
-        case 'analysis':
-            showPaidAnalysisDialogWrapper(stock);
-            break;
-        case 'aiTrading':
-            showQuantAnalysisDialog(stock);
-            break;
-        case 'buy':
-            showBuyDialog(stock);
-            break;
-        default:
-            console.log('未知操作:', action);
-    }
 };
 
 // 聊天消息中的股票操作配置
@@ -1545,11 +1413,7 @@ const getChatStockActions = (message) => {
     }
 };
 
-// 聊天股票操作事件处理
-const handleChatStockAction = (event) => {
-    console.log('🚀 Main.vue - 聊天股票操作:', event);
-    handleStockActionClick(event);
-};
+
 
 // 投资偏好组件事件处理
 const handlePreferencesCompleted = (preferences) => {
@@ -1565,58 +1429,9 @@ const handlePreferencesCompleted = (preferences) => {
     }, 500);
 };
 
-const handlePreferencesSkipped = () => {
-    // 跳过时的处理逻辑
-    console.log('用户跳过了投资偏好设置');
-};
-
-// 股票交易组件事件处理
-const handleTradeCompleted = (tradeData) => {
-    console.log('交易完成:', tradeData);
-    // 可以在这里添加交易完成后的逻辑，如更新界面、发送通知等
-};
-
-const handleWatchlistChanged = (data) => {
-    console.log('自选股变化:', data);
-    // 自选股变化时的处理逻辑
-};
-
-// 用户信息格式化函数已移至 useStockOperations
-
-// 获取策略文本
-const getStrategyText = (strategy) => {
-    const strategyMap = {
-        'conservative': '保守策略',
-        'balanced': '平衡策略',
-        'aggressive': '激进策略'
-    };
-    return strategyMap[strategy] || '平衡策略';
-};
-
-// 引导提示相关方法
+// 引导提示相关方法 - 简化版本，直接调用登录
 const showGuide = (type) => {
-    guideType.value = type;
-
     switch (type) {
-        case 'login':
-            guideTitle.value = '欢迎回来！';
-            guideMessage.value = '请先登录您的账号，继续使用智投小助的服务';
-            guideActionText.value = '立即登录';
-            break;
-        case 'register':
-            guideTitle.value = '欢迎使用智投小助！';
-            guideMessage.value = '看起来您是新用户，请先注册账号开始您的投资之旅';
-            guideActionText.value = '立即注册';
-            break;
-    }
-
-    showGuideTip.value = true;
-};
-
-const handleGuideAction = () => {
-    dismissGuide();
-
-    switch (guideType.value) {
         case 'login':
             showLogin(false);
             break;
@@ -1626,30 +1441,7 @@ const handleGuideAction = () => {
     }
 };
 
-const dismissGuide = () => {
-    showGuideTip.value = false;
-};
 
-// 检查聊天历史中是否有荐股列表
-const hasRecommendationInHistory = computed(() => {
-    return chatHistory.value.some(message =>
-        message.hasStockInfo &&
-        message.stockList &&
-        message.isPersistent
-    );
-});
-
-// 购买相关方法已移至 useStockOperations
-
-// 检查用户状态并显示相应引导
-const checkUserStatus = () => {
-    // 只有在登录且没有偏好设置时才显示引导
-    if (userStore.isLoggedIn && (!userStore.userInfo.preferences || !userStore.userInfo.preferences.riskLevel)) {
-        setTimeout(() => {
-            showOnboarding.value = true;
-        }, 1000);
-    }
-};
 
 // 窗口大小变化处理函数 - 简化处理
 const handleResize = () => {
@@ -1666,7 +1458,11 @@ const handleResize = () => {
 
 onMounted(() => {
     scrollToBottom();
-    // 移除自动检查用户状态，避免老用户登录后进入引导流程
+
+    // 检查是否需要显示引导流程（页面刷新时恢复状态）
+    if (userStore.isLoggedIn && userStore.shouldShowOnboarding()) {
+        showOnboarding.value = true;
+    }
 
     // 初始化移动端浏览器检测和防止页面缩放
     mobileAdaptation.initializeMobileBrowserDetection();
@@ -1750,12 +1546,6 @@ onUnmounted(() => {
     if (chatHistoryRef.value) {
         chatHistoryRef.value.removeEventListener('scroll', handleScroll);
     }
-    if (scrollTimer) {
-        clearTimeout(scrollTimer);
-    }
-    if (countdownTimer) {
-        clearInterval(countdownTimer);
-    }
     // 清理语音识别资源
     cleanupVoice();
     // 清理窗口大小监听
@@ -1775,45 +1565,6 @@ const closeUserProfile = () => {
 
 const closeRecordsCenter = () => {
     showRecordsCenter.value = false;
-};
-
-// 滚动到最新的荐股列表
-const scrollToRecommendation = () => {
-    nextTick(() => {
-        const recommendationElements = document.querySelectorAll('.persistent-stock-list');
-        if (recommendationElements.length > 0) {
-            // 滚动到最后一个荐股列表
-            const lastRecommendation = recommendationElements[recommendationElements.length - 1];
-            lastRecommendation.scrollIntoView({
-                behavior: 'smooth',
-                block: 'center'
-            });
-
-            // 添加高亮效果
-            lastRecommendation.classList.add('highlight-recommendation');
-            setTimeout(() => {
-                lastRecommendation.classList.remove('highlight-recommendation');
-            }, 2000);
-        }
-    });
-};
-
-// 格式化荐股时间函数已移至 useStockOperations
-
-// 刷新荐股列表函数已移至 useStockOperations
-
-// 量化分析相关函数已移至 useStockOperations
-
-
-
-// 删除提醒
-const removeReminder = (reminderId) => {
-    const index = activeReminders.value.findIndex(r => r.id === reminderId);
-    if (index !== -1) {
-        const reminder = activeReminders.value[index];
-        activeReminders.value.splice(index, 1);
-        ElMessage.success(`已删除 ${reminder.stockName} 的提醒`);
-    }
 };
 
 
@@ -1959,101 +1710,17 @@ ${message.interactionData.newsItems.map(news => `- ${news.title}: ${news.summary
     }
 };
 
-const getReminderDescription = (reminder) => {
-    let conditionText = '';
-
-    if (reminder.isQuantAnalysis) {
-        // 量化分析提醒描述
-        switch (reminder.type) {
-            case 'overall_score':
-                if (reminder.condition === 'score_above') {
-                    conditionText = `综合评分上升至 ${reminder.value}分`;
-                } else if (reminder.condition === 'score_below') {
-                    conditionText = `综合评分下降至 ${reminder.value}分`;
-                } else if (reminder.condition === 'score_change') {
-                    conditionText = `综合评分变化超过 ${reminder.value}分`;
-                }
-                break;
-            case 'buy_signal':
-                if (reminder.condition === 'signal_above') {
-                    conditionText = `买入信号强度达到 ${reminder.value}分`;
-                } else if (reminder.condition === 'signal_below') {
-                    conditionText = `买入信号强度低于 ${reminder.value}分`;
-                } else if (reminder.condition === 'buy_signal_trigger') {
-                    conditionText = `出现买入信号`;
-                } else if (reminder.condition === 'sell_signal_trigger') {
-                    conditionText = `出现卖出信号`;
-                }
-                break;
-            case 'technical':
-                const technicalMap = {
-                    'macd_golden': 'MACD出现金叉',
-                    'macd_death': 'MACD出现死叉',
-                    'rsi_overbought': 'RSI进入超买区域',
-                    'rsi_oversold': 'RSI进入超卖区域',
-                    'boll_break': '价格突破布林带'
-                };
-                conditionText = technicalMap[reminder.condition] || '技术指标变化';
-                break;
-            case 'rating_change':
-                if (reminder.condition === 'rating_upgrade') {
-                    conditionText = `量化评级上调`;
-                } else if (reminder.condition === 'rating_downgrade') {
-                    conditionText = `量化评级下调`;
-                } else if (reminder.condition === 'rating_reach') {
-                    conditionText = `量化评级达到 ${reminder.value}`;
-                }
-                break;
-            case 'risk_alert':
-                const riskMap = {
-                    'risk_abnormal': '风险指标异常',
-                    'volatility_high': '波动率超标',
-                    'drawdown_large': '回撤过大',
-                    'sharpe_abnormal': '夏普比率异常'
-                };
-                conditionText = riskMap[reminder.condition] || '风险指标异常';
-                break;
-            default:
-                conditionText = '量化指标变化';
-        }
-    } else {
-        // 传统价格提醒描述（保持兼容性）
-        if (reminder.type === 'price') {
-            conditionText = `价格${reminder.condition === 'above' ? '突破' : '跌破'} ¥${reminder.value}`;
-        } else if (reminder.type === 'change') {
-            conditionText = `${reminder.condition === 'increase' ? '涨幅' : '跌幅'}超过 ${reminder.value}%`;
-        } else if (reminder.type === 'volume') {
-            conditionText = `成交量${reminder.condition === 'above' ? '超过' : '低于'} ${reminder.value}万手`;
-        }
-    }
-
-    return conditionText;
-};
-
-
-
 // 个性化引导完成处理
 const onOnboardingComplete = (data) => {
     showOnboarding.value = false;
 
-    if (data && data.preferences) {
-        // 保存用户偏好到store
-        userStore.setUserInfo({
-            ...userStore.userInfo,
-            preferences: data.preferences
-        });
-
-        // 标记引导已完成
-        localStorage.setItem('onboardingCompleted', 'true');
-
-        // 根据用户偏好显示欢迎消息
+    // 根据用户偏好显示欢迎消息
+    if (data && data.profile) {
         setTimeout(() => {
-            if (data.profile) {
-                chatHistory.value.push({
-                    role: 'assistant',
-                    content: `🎉 欢迎使用智投小助！根据您的投资风格（${data.profile.riskLabel}），我将为您提供个性化的投资建议。\n\n您可以随时问我关于投资的任何问题，我会基于您的偏好为您量身定制答案。`
-                });
-            }
+            chatHistory.value.push({
+                role: 'assistant',
+                content: `🎉 欢迎使用智投小助！根据您的投资风格（${data.profile.riskLabel}），我将为您提供个性化的投资建议。\n\n您可以随时问我关于投资的任何问题，我会基于您的偏好为您量身定制答案。`
+            });
         }, 500);
     }
 };
@@ -2103,44 +1770,24 @@ const handleShortcutClick = (shortcut) => {
 
     try {
         if (shortcut.isDefault) {
-            // 默认快捷操作，根据action类型执行相应操作
-            switch (shortcut.action) {
-                case 'smart_review':
-                    setSuggestionAndSend(`智能复盘：请帮我进行全面的智能投资复盘分析，包括：
+            const actionMap = {
+                'smart_review': () => setSuggestionAndSend(`智能复盘：请帮我进行全面的智能投资复盘分析，包括：\n\n1. 市场整体走势分析（主要指数表现、板块轮动）\n2. 我的投资组合表现分析和风险评估\n3. 基于AI算法的策略优化建议\n4. 市场情绪和技术指标综合分析\n5. 个性化的下一步操作建议\n6. 风险预警和机会识别\n7. 智能资产配置优化方案\n\n请结合我的投资风格和市场大数据，给出专业的智能化复盘建议。`),
+                'watchlist': handleWatchlistView,
+                'smart_recommendation': handleSmartRecommendation,
+                'news_update': handleNewsUpdate,
+                'asset_analysis': handleAssetAnalysis
+            };
 
-1. 市场整体走势分析（主要指数表现、板块轮动）
-2. 我的投资组合表现分析和风险评估
-3. 基于AI算法的策略优化建议
-4. 市场情绪和技术指标综合分析
-5. 个性化的下一步操作建议
-6. 风险预警和机会识别
-7. 智能资产配置优化方案
-
-请结合我的投资风格和市场大数据，给出专业的智能化复盘建议。`);
-                    break;
-                case 'watchlist':
-                    handleWatchlistView();
-                    break;
-                case 'smart_recommendation':
-                    handleSmartRecommendation();
-                    break;
-                case 'news_update':
-                    handleNewsUpdate();
-                    break;
-                case 'asset_analysis':
-                    handleAssetAnalysis();
-                    break;
-                default:
-                    // 兼容旧版本的函数类型action
-                    if (typeof shortcut.action === 'function') {
-                        shortcut.action();
-                    } else {
-                        console.error('未知的快捷操作类型:', shortcut.action);
-                        ElMessage.error('快捷操作配置错误');
-                    }
+            const handler = actionMap[shortcut.action];
+            if (handler) {
+                handler();
+            } else if (typeof shortcut.action === 'function') {
+                shortcut.action();
+            } else {
+                console.error('未知的快捷操作类型:', shortcut.action);
+                ElMessage.error('快捷操作配置错误');
             }
         } else {
-            // 自定义快捷操作，使用prompt
             if (shortcut.prompt) {
                 setSuggestionAndSend(shortcut.prompt);
             } else {
@@ -2163,25 +1810,14 @@ const openCustomizeDialog = () => {
 const shortcutsBarRef = ref(null);
 const chatShortcutsBarRef = ref(null);
 
-// 处理快捷操作更新事件 - 简化版本
+// 处理快捷操作更新事件
 const handleShortcutsUpdated = () => {
-    console.log('🔄 Main.vue - 快捷操作更新事件触发');
-
-    // 通知所有ShortcutsBar组件更新
-    [shortcutsBarRef.value, chatShortcutsBarRef.value].forEach((ref, index) => {
-        if (ref) {
-            try {
-                ref.handleShortcutsUpdated();
-                console.log(`✅ Main.vue - 已通知${index === 0 ? '初始模式' : '聊天模式'}ShortcutsBar组件更新`);
-            } catch (error) {
-                console.warn(`⚠️ Main.vue - 通知ShortcutsBar更新时出错:`, error);
-            }
-        }
-    });
+    console.log('🔄 快捷操作更新事件触发');
+    notifyShortcutsBarComponents('handleShortcutsUpdated');
 
     // 移动端特殊处理：如果快捷操作弹窗正在显示，强制刷新
     if (isMobileView.value && showChatShortcuts.value) {
-        console.log('📱 Main.vue - 移动端快捷操作弹窗刷新');
+        console.log('📱 移动端快捷操作弹窗刷新');
         showChatShortcuts.value = false;
         nextTick(() => {
             showChatShortcuts.value = true;

@@ -30,7 +30,7 @@
                 transform: 'translateX(0)',
                 transition: 'transform 0.25s cubic-bezier(0.4, 0, 0.2, 1)',
                 willChange: 'auto'
-            }">
+            }" @click="handleMainContentClick">
             <!-- 个性化引导流程 -->
             <OnboardingFlow v-if="showOnboarding" @complete="onOnboardingComplete" @analyze-stock="handleAnalyzeStock"
                 @execute-action="handleOnboardingAction" />
@@ -206,13 +206,13 @@
                                         <div class="asset-amount">
                                             <span class="amount-label">总资产</span>
                                             <span class="amount-value">¥{{ formatCurrency(message.assetData.totalAssets)
-                                                }}</span>
+                                            }}</span>
                                         </div>
                                         <div class="asset-change"
                                             :class="[message.assetData.totalProfitPercent >= 0 ? 'profit' : 'loss']">
                                             <span class="change-icon">{{ message.assetData.totalProfitPercent >= 0 ?
                                                 '📈' : '📉'
-                                                }}</span>
+                                            }}</span>
                                             <span class="change-label">今日盈亏：</span>
                                             <span class="change-text">
                                                 {{ message.assetData.totalProfitPercent >= 0 ? '+' : '' }}¥{{
@@ -238,7 +238,7 @@
                                         <div class="stat-info">
                                             <div class="stat-label">持仓市值</div>
                                             <div class="stat-value">¥{{ formatCurrency(message.assetData.portfolioValue)
-                                                }}
+                                            }}
                                             </div>
                                         </div>
                                     </div>
@@ -460,7 +460,7 @@
                 </div>
                 <div class="guide-actions">
                     <el-button type="primary" size="small" @click="handleGuideAction">{{ guideActionText
-                    }}</el-button>
+                        }}</el-button>
                     <el-button size="small" @click="dismissGuide">稍后</el-button>
                 </div>
             </div>
@@ -1536,6 +1536,45 @@ const toggleChatHistory = () => {
 
 const closeChatHistory = () => {
     showChatHistory.value = false;
+};
+
+// 处理主体内容点击事件 - 点击主页区域时自动收起聊天历史面板
+const handleMainContentClick = (event) => {
+    // 只有在聊天历史面板显示时才处理
+    if (!showChatHistory.value) {
+        return;
+    }
+
+    // 检查点击的目标是否是聊天历史面板内的元素
+    const chatHistoryPanel = document.querySelector('.chat-history-container');
+    if (chatHistoryPanel && chatHistoryPanel.contains(event.target)) {
+        return; // 点击的是聊天历史面板内部，不关闭
+    }
+
+    // 检查点击的目标是否是聊天历史按钮
+    const chatHistoryButton = event.target.closest('.chat-history-btn');
+    if (chatHistoryButton) {
+        return; // 点击的是聊天历史按钮，不关闭（让按钮自己处理）
+    }
+
+    // 检查点击的目标是否是其他可交互元素（按钮、输入框、链接等）
+    const interactiveElements = ['button', 'input', 'textarea', 'select', 'a'];
+    const clickedElement = event.target.tagName.toLowerCase();
+    const isInteractiveElement = interactiveElements.includes(clickedElement) ||
+        event.target.closest('button, input, textarea, select, a, .el-button, .el-input');
+
+    // 如果点击的是交互元素，不自动关闭面板
+    if (isInteractiveElement) {
+        return;
+    }
+
+    // 点击的是主页区域的非交互部分，关闭聊天历史面板
+    showChatHistory.value = false;
+
+    // 移动端给用户一个反馈
+    if (isMobileView.value) {
+        console.log('移动端点击主页区域，聊天历史面板已关闭');
+    }
 };
 
 const handleLoadChat = (chat) => {

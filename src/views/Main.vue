@@ -22,15 +22,7 @@
         <!-- 主体内容 -->
         <main class="modern-content main-container"
             :class="{ 'chatting': isChatMode, 'with-sidebar': userStore.isLoggedIn, 'with-chat-history': showChatHistory }"
-            :style="showChatHistory ? {
-                transform: `translateX(${isMobileView ? '280px' : '320px'})`,
-                transition: 'transform 0.25s cubic-bezier(0.4, 0, 0.2, 1)',
-                willChange: 'transform'
-            } : {
-                transform: 'translateX(0)',
-                transition: 'transform 0.25s cubic-bezier(0.4, 0, 0.2, 1)',
-                willChange: 'auto'
-            }" @click="handleMainContentClick">
+            @click="handleMainContentClick">
             <!-- 个性化引导流程 -->
             <OnboardingFlow v-if="showOnboarding" @complete="onOnboardingComplete" @analyze-stock="handleAnalyzeStock"
                 @execute-action="handleOnboardingAction" />
@@ -3461,9 +3453,24 @@ body.onboarding-mode {
     margin: 0 auto;
     width: 100vw;
     box-sizing: border-box;
-    transition: justify-content 0.3s;
+    transition: justify-content 0.3s, transform 0.25s cubic-bezier(0.4, 0, 0.2, 1);
     overflow-y: hidden;
     min-height: 0;
+    transform: translateX(0);
+    will-change: auto;
+}
+
+/* 当显示聊天历史面板时，主容器右移 */
+.modern-content.with-chat-history {
+    transform: translateX(320px);
+    will-change: transform;
+}
+
+/* 移动端聊天历史面板显示时的位移 */
+@media (max-width: 768px) {
+    .modern-content.with-chat-history {
+        transform: translateX(280px);
+    }
 }
 
 /* 引导模式下的特殊样式 */

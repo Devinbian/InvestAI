@@ -25,11 +25,6 @@ export function useChatManager() {
     const message = inputMessage.value.trim();
     if (!message || isGenerating.value) return;
 
-    if (!userStore.isLoggedIn) {
-      ElMessage.warning("请先登录后再开始对话");
-      return;
-    }
-
     // 添加用户消息到聊天历史
     chatHistory.value.push({
       role: "user",

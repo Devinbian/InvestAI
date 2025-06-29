@@ -119,12 +119,7 @@ export function useStockOperations() {
     showChatShortcuts,
     showGuide,
   ) => {
-    // 检查用户是否已登录
-    if (!userStore.isLoggedIn) {
-      ElMessage.warning("请先登录后再开始对话");
-      showGuide("login");
-      return;
-    }
+    // 登录检查已在调用处完成
 
     // 切换到聊天模式
     isChatMode.value = true;
@@ -243,12 +238,7 @@ export function useStockOperations() {
     showChatShortcuts,
     showGuide,
   ) => {
-    // 检查用户是否已登录
-    if (!userStore.isLoggedIn) {
-      ElMessage.warning("请先登录后再开始对话");
-      showGuide("login");
-      return;
-    }
+    // 登录检查已在调用处完成
 
     // 切换到聊天模式
     isChatMode.value = true;
@@ -330,12 +320,7 @@ export function useStockOperations() {
     showChatShortcuts,
     showGuide,
   ) => {
-    // 检查用户是否已登录
-    if (!userStore.isLoggedIn) {
-      ElMessage.warning("请先登录后再开始对话");
-      showGuide("login");
-      return;
-    }
+    // 登录检查已在调用处完成
 
     // 切换到聊天模式
     isChatMode.value = true;

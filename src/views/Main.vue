@@ -218,13 +218,13 @@
                                         <div class="asset-amount">
                                             <span class="amount-label">总资产</span>
                                             <span class="amount-value">¥{{ formatCurrency(message.assetData.totalAssets)
-                                                }}</span>
+                                            }}</span>
                                         </div>
                                         <div class="asset-change"
                                             :class="[message.assetData.totalProfitPercent >= 0 ? 'profit' : 'loss']">
                                             <span class="change-icon">{{ message.assetData.totalProfitPercent >= 0 ?
                                                 '📈' : '📉'
-                                                }}</span>
+                                            }}</span>
                                             <span class="change-label">今日盈亏：</span>
                                             <span class="change-text">
                                                 {{ message.assetData.totalProfitPercent >= 0 ? '+' : '' }}¥{{
@@ -250,7 +250,7 @@
                                         <div class="stat-info">
                                             <div class="stat-label">持仓市值</div>
                                             <div class="stat-value">¥{{ formatCurrency(message.assetData.portfolioValue)
-                                                }}
+                                            }}
                                             </div>
                                         </div>
                                     </div>
@@ -427,7 +427,8 @@
             @command="(command) => handleMobileCommand(command, handleCommand)" />
 
         <!-- 登录对话框组件 -->
-        <LoginDialog v-model="loginDialogVisible" :register-mode="isRegisterMode" @login-success="handleLoginSuccess"
+        <LoginDialog v-model="loginDialogVisible" :register-mode="isRegisterMode"
+            @login-success="(data) => handleLoginSuccess(data, () => { showOnboarding = true; }, dismissGuide)"
             @show-recovery="showPasswordRecovery" />
 
         <!-- 找回密码对话框组件 -->
@@ -472,7 +473,7 @@
                 </div>
                 <div class="guide-actions">
                     <el-button type="primary" size="small" @click="handleGuideAction">{{ guideActionText
-                    }}</el-button>
+                        }}</el-button>
                     <el-button size="small" @click="dismissGuide">稍后</el-button>
                 </div>
             </div>
@@ -536,11 +537,28 @@ import { useMobileAdaptation } from '../composables/useMobileAdaptation';
 import { useChatManager } from '../composables/useChatManager';
 import { useVoiceInput } from '../composables/useVoiceInput';
 import { useStockOperations } from '../composables/useStockOperations';
+import { useAuthentication } from '../composables/useAuthentication';
 import { formatCurrency } from '@/utils/formatters';
 
 const router = useRouter();
 const userStore = useUserStore();
 const chatHistoryStore = useChatHistoryStore();
+
+// 使用用户认证组合式函数
+const authentication = useAuthentication();
+const {
+    loginDialogVisible,
+    isRegisterMode,
+    recoveryDialogVisible,
+    showLogin,
+    handleLoginSuccess,
+    showPasswordRecovery,
+    backToLogin,
+    handleRecoverySuccess,
+    handleUserCommand,
+    checkRouteParams,
+    checkAuthStatus
+} = authentication;
 
 // 使用聊天管理组合式函数
 const chatManager = useChatManager();
@@ -703,13 +721,6 @@ const userPerformanceData = computed(() => {
 // 个性化引导流程控制
 const showOnboarding = ref(false); // 是否显示引导流程
 
-// 登录相关
-const loginDialogVisible = ref(false);
-const isRegisterMode = ref(false);
-
-// 账号找回相关
-const recoveryDialogVisible = ref(false);
-
 // 投资偏好设置
 const preferencesDialogVisible = ref(false);
 const preferencesFormRef = ref(null);
@@ -761,117 +772,23 @@ const buyForm = reactive({
 
 
 
-const showLogin = (isRegister) => {
-    isRegisterMode.value = isRegister;
-    loginDialogVisible.value = true;
-};
-
-// 处理登录成功事件
-const handleLoginSuccess = ({ isNewUser, userInfo }) => {
-    // 为用户设置初始余额和智点（如果没有的话）
-    if (userStore.balance <= 0) {
-        // 设置初始资金余额：100万元用于股票交易
-        userStore.addBalance(1000000);
-        console.log('已为用户设置初始资金余额：100万元');
-    }
-
-    if (userStore.smartPointsBalance <= 0) {
-        // 设置初始智点余额：10智点用于AI功能
-        userStore.addSmartPoints(10);
-        console.log('已为用户设置初始智点余额：10智点');
-    }
-
-    // 生成一些模拟数据（测试数据）
-    userStore.generateMockRecords();
-
-    if (isNewUser) {
-        // 新用户注册成功，显示引导流程
-        setTimeout(() => {
-            showOnboarding.value = true;
-        }, 500);
-        ElMessage.success('注册成功！已为您准备了100万资金和10智点用于体验交易功能');
-    } else {
-        // 老用户登录成功，直接进入主界面，不进入引导流程
-        dismissGuide();
-        // 如果没有偏好设置，可以通过菜单中的"偏好设置"手动设置
-        ElMessage.success('欢迎回来！');
-    }
-};
-
-// 显示找回密码对话框
-const showPasswordRecovery = () => {
-    recoveryDialogVisible.value = true;
-};
-
-// 从找回密码返回登录
-const backToLogin = () => {
-    recoveryDialogVisible.value = false;
-    loginDialogVisible.value = true;
-};
-
-// 处理找回密码成功
-const handleRecoverySuccess = () => {
-    loginDialogVisible.value = true;
-};
+// 认证相关函数已移至 useAuthentication composable
 
 
 
 const handleCommand = async (command) => {
-    console.log('Menu command clicked:', command); // 添加调试日志
-    switch (command) {
-        case 'profile':
-            showUserProfile.value = true;
-            break;
-        case 'settings':
-            console.log('Setting preferencesDialogVisible to true'); // 添加调试日志
-            console.log('preferencesDialogVisible before:', preferencesDialogVisible.value); // 查看之前的值
-            preferencesDialogVisible.value = true;
-            console.log('preferencesDialogVisible after:', preferencesDialogVisible.value); // 查看之后的值
-            break;
-        case 'records':
-            showRecordsCenter.value = true;
-            break;
-        case 'logout':
-            try {
-                // 显示确认对话框
-                await ElMessageBox.confirm(
-                    '确定要退出登录吗？退出后将清除所有本地数据。',
-                    '退出登录',
-                    {
-                        confirmButtonText: '确定退出',
-                        cancelButtonText: '取消',
-                        type: 'warning',
-                        center: true
-                    }
-                );
-
-                // 用户确认退出，执行退出操作
-                userStore.logout();
-
-                // 重置页面状态
-                chatHistory.value = [];
-                inputMessage.value = '';
-                isChatMode.value = false;
-                showUserProfile.value = false;
-                showRecordsCenter.value = false;
-
-                // 显示退出成功提示
-                ElMessage.success('已成功退出登录');
-
-                // 跳转到主页面（初始状态）
-                await router.push('/');
-
-                // 页面刷新，确保完全重置状态
-                setTimeout(() => {
-                    window.location.reload();
-                }, 500);
-
-            } catch (error) {
-                // 用户取消退出，不执行任何操作
-                console.log('用户取消退出登录');
-            }
-            break;
-    }
+    await handleUserCommand(command, {
+        onShowProfile: () => { showUserProfile.value = true; },
+        onShowPreferences: () => { preferencesDialogVisible.value = true; },
+        onShowRecords: () => { showRecordsCenter.value = true; },
+        onResetPageState: () => {
+            chatHistory.value = [];
+            inputMessage.value = '';
+            isChatMode.value = false;
+            showUserProfile.value = false;
+            showRecordsCenter.value = false;
+        }
+    });
 };
 
 // TopNavbar 组件的事件处理方法
@@ -891,6 +808,10 @@ const handleShowRecords = () => {
 
 // 发送消息 - 使用组合式函数
 const sendMessage = async () => {
+    // 检查用户登录状态
+    if (!checkAuthStatus('开始对话')) {
+        return;
+    }
     await chatSendMessage(userStore, isMobileView, mobileAdaptation, scrollToBottom);
 };
 
@@ -1099,25 +1020,32 @@ const handleMainContentClick = (event) => {
 
 // 智能荐股功能 - 使用组合式函数
 const handleSmartRecommendation = async () => {
+    if (!checkAuthStatus('使用智能荐股功能')) {
+        return;
+    }
     await stockHandleSmartRecommendation(userStore, chatHistoryStore, chatHistory, isChatMode, scrollToBottom, showChatShortcuts, showGuide);
 };
 
 // 资讯推送功能 - 使用组合式函数
 const handleNewsUpdate = async () => {
+    if (!checkAuthStatus('获取资讯推送')) {
+        return;
+    }
     await stockHandleNewsUpdate(userStore, chatHistory, isChatMode, scrollToBottom, showChatShortcuts, showGuide);
 };
 
 // 我的资产分析功能 - 使用组合式函数
 const handleAssetAnalysis = async () => {
+    if (!checkAuthStatus('进行资产分析')) {
+        return;
+    }
     await stockHandleAssetAnalysis(userStore, chatHistory, isChatMode, scrollToBottom, showChatShortcuts, showGuide);
 };
 
 // 自选股查看功能
 const handleWatchlistView = async () => {
     // 检查用户是否已登录
-    if (!userStore.isLoggedIn) {
-        ElMessage.warning('请先登录后再开始对话');
-        showGuide('login');
+    if (!checkAuthStatus('查看自选股')) {
         return;
     }
 
@@ -1741,10 +1669,7 @@ onMounted(() => {
     mobileAdaptation.preventZoom();
 
     // 检查是否需要显示登录弹窗
-    const route = useRoute();
-    if (route.query.showLogin === 'true' && !userStore.isLoggedIn) {
-        loginDialogVisible.value = true;
-    }
+    checkRouteParams();
 
     // 检测移动端视图
     mobileAdaptation.checkMobileView();

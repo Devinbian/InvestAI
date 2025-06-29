@@ -8157,7 +8157,7 @@ body {
 
     /* 微信环境下确保整个页面容器贴底 */
     body.wechat-browser .app-container {
-        height: 100vh !important;
+        height: calc(var(--vh, 1vh) * 100) !important;
         margin: 0 !important;
         padding: 0 !important;
         overflow: hidden !important;
@@ -8170,8 +8170,8 @@ body {
         overflow-x: hidden !important;
         position: fixed !important;
         /* 强制隐藏微信底部工具栏 */
-        height: 100vh !important;
-        max-height: 100vh !important;
+        height: calc(var(--vh, 1vh) * 100) !important;
+        max-height: calc(var(--vh, 1vh) * 100) !important;
         overflow: hidden !important;
         width: 100vw !important;
         max-width: 100vw !important;
@@ -8185,22 +8185,22 @@ body {
 
     /* 微信环境下主容器优化 */
     body.wechat-browser .main-modern {
-        height: 100vh !important;
+        height: calc(var(--vh, 1vh) * 100) !important;
         overflow: hidden !important;
         position: fixed !important;
         /* 微信环境下占满全宽，消除两边空白 */
         width: 100vw !important;
         max-width: 100vw !important;
+        top: 0 !important;
+        left: 0 !important;
         margin: 0 !important;
         padding: 0 !important;
-        left: 0 !important;
-        top: 0 !important;
-        z-index: 1 !important;
+        box-sizing: border-box !important;
     }
 
     /* 微信环境下主内容区域优化 */
     body.wechat-browser .modern-content {
-        height: 100vh !important;
+        height: calc(var(--vh, 1vh) * 100) !important;
         overflow-y: auto !important;
         -webkit-overflow-scrolling: touch !important;
         position: relative !important;
@@ -8211,6 +8211,90 @@ body {
         margin: 0 !important;
         left: 0 !important;
         right: 0 !important;
+        box-sizing: border-box !important;
+        /* 添加滚动边界控制 */
+        overscroll-behavior: contain !important;
+    }
+
+    /* 微信环境下键盘弹起时的布局调整 */
+    body.wechat-browser.keyboard-open .app-container {
+        height: calc(var(--keyboard-vh, 1vh) * 100) !important;
+    }
+
+    body.wechat-browser.keyboard-open .main-modern {
+        height: calc(var(--keyboard-vh, 1vh) * 100) !important;
+    }
+
+    body.wechat-browser.keyboard-open .modern-content {
+        height: calc(var(--keyboard-vh, 1vh) * 100) !important;
+    }
+
+    /* 微信环境下键盘弹起时欢迎区域上移 */
+    body.wechat-browser.keyboard-open .welcome-section {
+        transform: translateY(-20px) !important;
+        transition: transform 0.3s ease !important;
+    }
+
+    /* 微信环境下键盘弹起时中心容器调整 */
+    body.wechat-browser.keyboard-open .center-container {
+        padding-bottom: 10px !important;
+        transition: padding 0.3s ease !important;
+    }
+
+    body.wechat-browser .main-modern,
+    body.wechat-browser .modern-content,
+    body.wechat-browser .center-container,
+    body.wechat-browser .welcome-section {
+        width: 100vw !important;
+        max-width: 100vw !important;
+        margin: 0 !important;
+        padding-left: 0 !important;
+        padding-right: 0 !important;
+        box-sizing: border-box !important;
+    }
+
+    /* WelcomeGuestHeader在微信环境下保持组件内部的宽度控制 */
+    body.wechat-browser .welcome-guest-header {
+        width: auto !important;
+        max-width: none !important;
+        margin: 0 8px 20px 8px !important;
+        /* 与微信环境下的内边距保持一致 */
+    }
+
+    /* 微信环境下主页内容区域设置适当内边距 */
+    body.wechat-browser .modern-content:not(.chatting) {
+        padding: 0 8px;
+        /* 微信环境下增加底部空间 */
+    }
+
+    /* 微信环境下聊天模式无内边距，占满全宽 */
+    body.wechat-browser .modern-content.chatting {
+        padding-left: 0;
+        padding-right: 0;
+    }
+
+    body.wechat-browser .modern-content:not(.chatting) .ai-card {
+        bottom: 0;
+        /* 微信环境下贴底显示 */
+    }
+
+    /* 微信环境下聊天模式新建聊天按钮区域间隔优化 */
+    body.wechat-browser .new-chat-section {
+        margin-bottom: 12px;
+    }
+
+    /* 微信环境下输入框强制贴底全宽 */
+    body.wechat-browser .input-area,
+    body.wechat-browser .home-input-area {
+        position: fixed !important;
+        left: 0 !important;
+        right: 0 !important;
+        bottom: 0 !important;
+        width: 100vw !important;
+        max-width: 100vw !important;
+        margin: 0 !important;
+        padding: 0 !important;
+        z-index: 1000 !important;
         box-sizing: border-box !important;
     }
 }
@@ -8263,9 +8347,8 @@ body {
     .modern-content.chatting {
         width: 100%;
         max-width: 100%;
-        height: 100vh;
-        height: 100dvh;
-        /* 动态视口高度 */
+        height: calc(var(--vh, 1vh) * 100);
+        /* 使用自定义视口高度变量 */
         padding: 76px 0 0 0;
         overflow: hidden;
     }
@@ -8310,8 +8393,7 @@ body {
 
     /* 7. 聊天历史区域 */
     .chat-history-area {
-        height: calc(100vh - 76px - 160px);
-        height: calc(100dvh - 76px - 160px);
+        height: calc(var(--vh, 1vh) * 100 - 76px - 160px);
         padding: 16px 8px 60px 8px;
         margin: 0;
         width: 100%;
@@ -8385,9 +8467,6 @@ body {
 
     /* 微信环境下主页内容区域设置适当内边距 */
     body.wechat-browser .modern-content:not(.chatting) {
-        // padding-left: 8px;
-        // padding-right: 8px;
-        // padding-bottom: 0;
         padding: 0 8px;
         /* 微信环境下增加底部空间 */
     }

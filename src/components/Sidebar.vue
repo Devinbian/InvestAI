@@ -19,16 +19,15 @@
 
 
 
-        <!-- 移动端关闭按钮 - 与侧边栏融合 -->
-        <button v-if="isMobileView && isMobileExpanded" class="mobile-close-btn" @click="closeMobileSidebar"
-            title="关闭面板">
-            <svg width="16" height="16" viewBox="0 0 24 24" fill="none">
-                <path d="M21 12H3m9-9l-9 9 9 9" stroke="currentColor" stroke-width="2" stroke-linecap="round"
-                    stroke-linejoin="round" />
-            </svg>
-        </button>
-
         <div class="sidebar-content" v-show="(isMobileView && isMobileExpanded) || (!isMobileView && !isCollapsed)">
+            <!-- 移动端关闭按钮 - 放在内容区域内 -->
+            <button v-if="isMobileView && isMobileExpanded" class="mobile-close-btn" @click="closeMobileSidebar"
+                title="关闭面板">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none">
+                    <path d="M18 6L6 18M6 6l12 12" stroke="currentColor" stroke-width="2" stroke-linecap="round"
+                        stroke-linejoin="round" />
+                </svg>
+            </button>
             <!-- Tab导航 -->
             <div class="tab-nav" :class="{ 'mobile-nav': isMobileView }">
                 <!-- 1. 大盘指数 -->
@@ -166,11 +165,29 @@ const toggleSidebar = () => {
         isMobileExpanded.value = !isMobileExpanded.value;
         console.log('移动端模式，isMobileExpanded设为:', isMobileExpanded.value);
 
-        // 防止背景滚动
+        // 调试关闭按钮显示状态
+        setTimeout(() => {
+            const closeBtn = document.querySelector('.mobile-close-btn');
+            console.log('关闭按钮状态:', {
+                exists: !!closeBtn,
+                visible: closeBtn ? getComputedStyle(closeBtn).visibility : 'not found',
+                display: closeBtn ? getComputedStyle(closeBtn).display : 'not found',
+                zIndex: closeBtn ? getComputedStyle(closeBtn).zIndex : 'not found',
+                position: closeBtn ? closeBtn.getBoundingClientRect() : 'not found'
+            });
+        }, 100);
+
+        // 防止背景滚动，但不影响侧边栏内部滚动
         if (isMobileExpanded.value) {
             document.body.style.overflow = 'hidden';
+            document.body.style.position = 'fixed';
+            document.body.style.width = '100%';
+            document.body.style.top = '0';
         } else {
             document.body.style.overflow = '';
+            document.body.style.position = '';
+            document.body.style.width = '';
+            document.body.style.top = '';
         }
     } else {
         // PC端：原有逻辑
@@ -184,6 +201,9 @@ const closeMobileSidebar = () => {
     if (isMobileView.value && isMobileExpanded.value) {
         isMobileExpanded.value = false;
         document.body.style.overflow = '';
+        document.body.style.position = '';
+        document.body.style.width = '';
+        document.body.style.top = '';
     }
 };
 
@@ -221,6 +241,9 @@ onUnmounted(() => {
     document.removeEventListener('keydown', handleKeyDown);
     // 清理样式
     document.body.style.overflow = '';
+    document.body.style.position = '';
+    document.body.style.width = '';
+    document.body.style.top = '';
 });
 
 // 处理子组件发送到聊天的事件
@@ -242,6 +265,17 @@ const handleShowSellDialog = (stockInfo) => {
 const handleWheel = (event) => {
     // 直接阻止事件冒泡，让Sidebar内部处理滚动
     event.stopPropagation();
+
+    // 调试信息
+    if (isMobileView.value && isMobileExpanded.value) {
+        console.log('移动端侧边栏滚动事件:', {
+            deltaY: event.deltaY,
+            target: event.target.className,
+            scrollTop: event.target.scrollTop,
+            scrollHeight: event.target.scrollHeight,
+            clientHeight: event.target.clientHeight
+        });
+    }
 };
 
 // 暴露方法给父组件调用
@@ -533,6 +567,8 @@ defineExpose({
         flex-direction: column !important;
         will-change: transform !important;
         contain: layout style !important;
+        overflow: hidden !important;
+        /* 确保容器本身不滚动，由内部tab-content处理滚动 */
     }
 
     /* 移动端展开状态 */
@@ -540,44 +576,47 @@ defineExpose({
         transform: translateX(0) !important;
     }
 
-    /* 移动端关闭按钮 - 与侧边栏融合设计 */
+    /* 移动端关闭按钮 - 内部浮动设计 */
     .mobile-close-btn {
         position: absolute !important;
-        top: 12px !important;
-        left: -32px !important;
-        /* 调整位置，完全贴合侧边栏 */
+        top: 8px !important;
+        right: 8px !important;
+        /* 放在侧边栏内部右上角 */
         width: 32px !important;
         height: 32px !important;
-        background: white !important;
+        background: rgba(255, 255, 255, 0.95) !important;
         border: 1px solid #e5e7eb !important;
-        border-radius: 8px 0 0 8px !important;
-        /* 只有左侧圆角，与侧边栏融合 */
+        border-radius: 50% !important;
+        /* 圆形按钮 */
         display: flex !important;
         align-items: center !important;
         justify-content: center !important;
         cursor: pointer !important;
         /* 优化：简化动画，只对必要属性进行过渡 */
-        transition: background-color 0.15s ease, color 0.15s ease, transform 0.15s ease !important;
-        z-index: 9001 !important;
-        /* 调整关闭按钮z-index与侧边栏保持一致 */
-        box-shadow: -2px 0 8px rgba(0, 0, 0, 0.1) !important;
+        transition: background-color 0.15s ease, color 0.15s ease, transform 0.15s ease, box-shadow 0.15s ease !important;
+        z-index: 9999 !important;
+        /* 提高z-index确保按钮显示在最上层 */
+        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1) !important;
         color: #6b7280 !important;
-        border-right: none !important;
-        /* 移除右边框，与侧边栏无缝连接 */
-        margin-right: 0 !important;
         will-change: transform !important;
+        /* 确保按钮可见 */
+        visibility: visible !important;
+        opacity: 1 !important;
+        backdrop-filter: blur(10px) !important;
     }
 
     .mobile-close-btn:hover {
-        background: #f9fafb !important;
+        background: rgba(249, 250, 251, 0.98) !important;
         color: #374151 !important;
-        transform: translateX(-2px) !important;
-        /* 轻微向左移动 */
+        transform: scale(1.05) !important;
+        /* 轻微放大 */
+        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15) !important;
     }
 
     .mobile-close-btn:active {
-        transform: translateX(0) !important;
-        background: #f3f4f6 !important;
+        transform: scale(0.95) !important;
+        background: rgba(243, 244, 246, 0.98) !important;
+        box-shadow: 0 1px 4px rgba(0, 0, 0, 0.1) !important;
     }
 
     /* 移动端侧边栏内容 */
@@ -591,6 +630,8 @@ defineExpose({
         overflow: hidden !important;
         display: flex !important;
         flex-direction: column !important;
+        position: relative !important;
+        /* 确保关闭按钮的定位基准 */
     }
 
 
@@ -706,7 +747,30 @@ defineExpose({
         padding: 6px !important;
         flex: 1 !important;
         overflow-y: auto !important;
+        overflow-x: hidden !important;
         background: #f8fafc !important;
+        /* 确保滚动可用 */
+        -webkit-overflow-scrolling: touch !important;
+        overscroll-behavior: contain !important;
+        scrollbar-width: thin !important;
+    }
+
+    /* 移动端滚动条样式 */
+    .sidebar-container.mobile-expanded .tab-content::-webkit-scrollbar {
+        width: 3px !important;
+    }
+
+    .sidebar-container.mobile-expanded .tab-content::-webkit-scrollbar-track {
+        background: transparent !important;
+    }
+
+    .sidebar-container.mobile-expanded .tab-content::-webkit-scrollbar-thumb {
+        background: rgba(0, 0, 0, 0.2) !important;
+        border-radius: 2px !important;
+    }
+
+    .sidebar-container.mobile-expanded .tab-content::-webkit-scrollbar-thumb:hover {
+        background: rgba(0, 0, 0, 0.3) !important;
     }
 
     /* PC端tab-panel保持原样 */
@@ -728,6 +792,9 @@ defineExpose({
         border-radius: 0 !important;
         box-shadow: none !important;
         overflow: visible !important;
+        height: auto !important;
+        min-height: 0 !important;
+        flex: none !important;
     }
 
     /* 移动端移除组件外层容器的样式 */
@@ -1231,7 +1298,7 @@ defineExpose({
         scrollbar-gutter: auto !important;
     }
 
-    /* 移动端特定容器移除滚动，使用外部tab容器的滚动 */
+    /* 移动端特定容器移除固定高度限制，但保持正常的内容流 */
     .sidebar-container.mobile-expanded .tab-panel .portfolio-view,
     .sidebar-container.mobile-expanded .tab-panel .recommendations-container,
     .sidebar-container.mobile-expanded .tab-panel .watchlist-container,
@@ -1249,6 +1316,8 @@ defineExpose({
     .sidebar-container.mobile-expanded .tab-panel .notifications-content {
         max-height: none !important;
         overflow: visible !important;
+        height: auto !important;
+        min-height: auto !important;
     }
 
     /* 移动端其他可能的滚动容器 */

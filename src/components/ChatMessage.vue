@@ -15,7 +15,7 @@
             </div>
 
             <!-- 正常消息内容 -->
-            <div v-else-if="message.content" class="message-text">
+            <div v-else-if="message.content" class="message-text" :class="getMessageStatusClass(message.content)">
                 <MarkdownRenderer :content="message.content" />
             </div>
 
@@ -141,7 +141,7 @@
                             <div class="asset-change"
                                 :class="[message.assetData.totalProfitPercent >= 0 ? 'profit' : 'loss']">
                                 <span class="change-icon">{{ message.assetData.totalProfitPercent >= 0 ? '📈' : '📉'
-                                }}</span>
+                                    }}</span>
                                 <span class="change-label">今日盈亏：</span>
                                 <span class="change-text">
                                     {{ message.assetData.totalProfitPercent >= 0 ? '+' : '' }}¥{{
@@ -356,6 +356,23 @@ const emit = defineEmits([
 
 // 本地状态
 const localActiveTab = ref('portfolio');
+
+// 获取消息状态类
+const getMessageStatusClass = (content) => {
+    if (!content) return '';
+
+    const contentStr = String(content).toLowerCase();
+
+    if (contentStr.includes('[已停止生成]')) {
+        return 'message-stopped';
+    } else if (contentStr.includes('[连接中断]')) {
+        return 'message-interrupted';
+    } else if (contentStr.includes('[请求失败]')) {
+        return 'message-failed';
+    }
+
+    return '';
+};
 
 // 聊天消息中的股票操作配置
 const getChatStockActions = (message) => {
@@ -655,6 +672,55 @@ const mobileSmartRecommendationConfig = computed(() => {
     margin-bottom: 0 !important;
 }
 
+/* 消息状态样式 */
+.message-text.message-stopped {
+    position: relative;
+}
+
+.message-text.message-stopped :deep(p:last-child) {
+    border-left: 3px solid #f59e0b;
+    padding-left: 12px;
+    margin-left: -15px;
+    background: rgba(245, 158, 11, 0.1);
+    border-radius: 0 6px 6px 0;
+    padding-top: 8px;
+    padding-bottom: 8px;
+    color: #92400e;
+    font-weight: 500;
+}
+
+.message-text.message-interrupted {
+    position: relative;
+}
+
+.message-text.message-interrupted :deep(p:last-child) {
+    border-left: 3px solid #ef4444;
+    padding-left: 12px;
+    margin-left: -15px;
+    background: rgba(239, 68, 68, 0.1);
+    border-radius: 0 6px 6px 0;
+    padding-top: 8px;
+    padding-bottom: 8px;
+    color: #dc2626;
+    font-weight: 500;
+}
+
+.message-text.message-failed {
+    position: relative;
+}
+
+.message-text.message-failed :deep(p:last-child) {
+    border-left: 3px solid #ef4444;
+    padding-left: 12px;
+    margin-left: -15px;
+    background: rgba(239, 68, 68, 0.1);
+    border-radius: 0 6px 6px 0;
+    padding-top: 8px;
+    padding-bottom: 8px;
+    color: #dc2626;
+    font-weight: 500;
+}
+
 /* 移动端聊天消息样式优化 */
 @media (max-width: 768px) {
     .chat-message {
@@ -676,6 +742,15 @@ const mobileSmartRecommendationConfig = computed(() => {
         font-size: 0.9rem;
         padding: 12px 16px;
         max-width: 100%;
+    }
+
+    /* 移动端状态消息样式调整 */
+    .message-text.message-stopped :deep(p:last-child),
+    .message-text.message-interrupted :deep(p:last-child),
+    .message-text.message-failed :deep(p:last-child) {
+        margin-left: -12px;
+        padding-left: 10px;
+        font-size: 0.85rem;
     }
 }
 

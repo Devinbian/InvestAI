@@ -98,6 +98,24 @@ export function useChatManager() {
             console.error("流式连接错误:", err);
             isGenerating.value = false;
             currentAbortController.value = null;
+
+            // 更新最后一条AI消息，添加错误标识
+            if (
+              chatHistory.value.length > 0 &&
+              chatHistory.value[chatHistory.value.length - 1].role ===
+                "assistant"
+            ) {
+              const lastMessage =
+                chatHistory.value[chatHistory.value.length - 1];
+              if (lastMessage.content) {
+                lastMessage.content += "\n\n[连接中断]";
+              } else {
+                lastMessage.content = "[连接中断]";
+              }
+              // 触发响应式更新
+              chatHistory.value = [...chatHistory.value];
+            }
+
             ElMessage.error("连接中断，请重试");
           },
         },
@@ -107,13 +125,22 @@ export function useChatManager() {
       isGenerating.value = false;
       currentAbortController.value = null;
 
-      // 移除失败的消息
+      // 更新最后一条AI消息，添加错误标识
       if (
         chatHistory.value.length > 0 &&
         chatHistory.value[chatHistory.value.length - 1].role === "assistant"
       ) {
-        chatHistory.value.pop();
+        const lastMessage = chatHistory.value[chatHistory.value.length - 1];
+        if (lastMessage.content) {
+          lastMessage.content += "\n\n[请求失败]";
+        } else {
+          lastMessage.content = "[请求失败]";
+        }
+        // 触发响应式更新
+        chatHistory.value = [...chatHistory.value];
       }
+
+      ElMessage.error("发送消息失败，请重试");
     }
 
     // 移动端处理
@@ -130,19 +157,26 @@ export function useChatManager() {
       currentAbortController.value.abort();
       isGenerating.value = false;
       currentAbortController.value = null;
-    }
 
-    if (
-      chatHistory.value.length > 0 &&
-      chatHistory.value[chatHistory.value.length - 1].role === "assistant"
-    ) {
-      const lastMessage = chatHistory.value[chatHistory.value.length - 1];
-      if (lastMessage.content) {
-        // 保留已生成的内容
-      } else {
-        // 移除空消息
-        chatHistory.value.pop();
+      // 更新最后一条AI消息，添加停止标识
+      if (
+        chatHistory.value.length > 0 &&
+        chatHistory.value[chatHistory.value.length - 1].role === "assistant"
+      ) {
+        const lastMessage = chatHistory.value[chatHistory.value.length - 1];
+        if (lastMessage.content) {
+          // 如果已有内容，添加停止标识
+          lastMessage.content += "\n\n[已停止生成]";
+        } else {
+          // 如果没有内容，设置停止标识
+          lastMessage.content = "[已停止生成]";
+        }
+        // 触发响应式更新
+        chatHistory.value = [...chatHistory.value];
       }
+
+      // 显示停止提示
+      ElMessage.info("已停止生成");
     }
   };
 

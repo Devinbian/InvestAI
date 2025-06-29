@@ -570,16 +570,32 @@ export default {
         max-width: 100vw !important;
         margin: 0 !important;
         padding: 8px 0 calc(8px + env(safe-area-inset-bottom, 0)) 0 !important;
-
-        /* 微信环境下键盘弹出时的特殊处理 */
-        &:focus-within {
-            padding: 4px 0 4px 0 !important;
-        }
-
         border-radius: 0 !important;
         background: #fff !important;
         box-shadow: none !important;
         border-top: none !important;
+        /* 微信环境下防止触发底部工具栏 */
+        position: fixed !important;
+        bottom: 0 !important;
+        left: 0 !important;
+        right: 0 !important;
+        z-index: 999 !important;
+        /* 强制贴底显示，防止工具栏出现 */
+        transform: translateZ(0) !important;
+        -webkit-transform: translateZ(0) !important;
+        /* 触发硬件加速 */
+        -webkit-backface-visibility: hidden !important;
+        backface-visibility: hidden !important;
+        /* 添加过渡效果 */
+        transition: padding 0.3s ease !important;
+    }
+
+    /* 微信环境下键盘弹起时的特殊处理 */
+    :global(body.wechat-browser.keyboard-open) .ai-card {
+        padding: 4px 0 4px 0 !important;
+        /* 键盘弹起时确保输入框紧贴键盘顶部 */
+        bottom: 0 !important;
+        position: fixed !important;
     }
 
     :global(body.wechat-browser) .ai-input-row {
@@ -672,11 +688,11 @@ export default {
         width: 100vw !important;
         max-width: 100vw !important;
         padding: 6px 0 calc(env(safe-area-inset-bottom) + 6px) 0 !important;
+    }
 
-        /* 微信超小屏幕键盘弹出时的处理 */
-        &:focus-within {
-            padding: 3px 0 3px 0 !important;
-        }
+    /* 微信环境下超小屏幕键盘弹起时的处理 */
+    :global(body.wechat-browser.keyboard-open) .ai-card {
+        padding: 3px 0 3px 0 !important;
     }
 
     :global(body.wechat-browser .modern-content.chatting) .ai-card {

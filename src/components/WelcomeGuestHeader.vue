@@ -67,68 +67,91 @@ onMounted(() => {
 });
 </script>
 
-<style scoped>
+<style lang="scss" scoped>
+@import '../styles/mixins/responsive';
+
 /* 未登录用户的统一样式头部 */
 .welcome-guest-header {
     position: relative;
     background: linear-gradient(135deg, #eff6ff 0%, #dbeafe 100%);
     border: 1px solid #3b82f6;
     border-radius: 16px;
-    padding: 20px 0;
-    /* 桌面端：上下20px，左右0px - 消除左右间隔 */
+    padding: 20px;
     color: #1e40af;
     overflow: hidden;
     margin-bottom: 24px;
     transition: all 0.3s ease;
     box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+
+    // 移动端样式调整
+    @include mobile-and-tablet {
+        padding: 16px;
+        border-radius: 12px;
+        margin-bottom: 20px;
+    }
 }
 
-/* 桌面端内容区域的内边距 */
-.welcome-guest-header .header-content {
+.header-content {
     position: relative;
     z-index: 2;
     display: flex;
     justify-content: center;
     align-items: center;
-    padding: 0 20px;
-    /* 只有内容区域有左右内边距 */
 }
 
-
-
-.welcome-guest-header .greeting-section {
+.greeting-section {
     display: flex;
     align-items: center;
     gap: 12px;
+
+    // 移动端调整间距
+    @include mobile-and-tablet {
+        gap: 10px;
+    }
 }
 
-.welcome-guest-header .greeting-icon {
+.greeting-icon {
     font-size: 2rem;
     animation: gentle-bounce 3s ease-in-out infinite;
+
+    // 移动端调整图标大小
+    @include mobile-and-tablet {
+        font-size: 1.5rem;
+    }
 }
 
-.welcome-guest-header .greeting-text {
+.greeting-text {
     text-align: left;
 }
 
-.welcome-guest-header .greeting-title {
+.greeting-title {
     font-size: 1.5rem;
     font-weight: 600;
     margin: 0 0 4px 0;
     line-height: 1.3;
     color: inherit;
+
+    // 移动端调整字体大小
+    @include mobile-and-tablet {
+        font-size: 1.25rem;
+    }
 }
 
-.welcome-guest-header .greeting-subtitle {
+.greeting-subtitle {
     font-size: 0.9rem;
     opacity: 0.8;
     margin: 0;
     line-height: 1.4;
     font-weight: 400;
     color: inherit;
+
+    // 移动端调整字体大小
+    @include mobile-and-tablet {
+        font-size: 0.8rem;
+    }
 }
 
-.welcome-guest-header .header-decoration {
+.header-decoration {
     position: absolute;
     top: 0;
     left: 0;
@@ -138,27 +161,27 @@ onMounted(() => {
     overflow: hidden;
 }
 
-.welcome-guest-header .decoration-circle {
+.decoration-circle {
     position: absolute;
     border-radius: 50%;
     background: rgba(255, 255, 255, 0.3);
     animation: float 8s ease-in-out infinite;
-}
 
-.welcome-guest-header .circle-1 {
-    width: 80px;
-    height: 80px;
-    top: -40px;
-    right: -40px;
-    animation-delay: 0s;
-}
+    &.circle-1 {
+        width: 80px;
+        height: 80px;
+        top: -40px;
+        right: -40px;
+        animation-delay: 0s;
+    }
 
-.welcome-guest-header .circle-2 {
-    width: 60px;
-    height: 60px;
-    bottom: -30px;
-    left: -30px;
-    animation-delay: 4s;
+    &.circle-2 {
+        width: 60px;
+        height: 60px;
+        bottom: -30px;
+        left: -30px;
+        animation-delay: 4s;
+    }
 }
 
 /* 动画定义 */
@@ -188,66 +211,23 @@ onMounted(() => {
     }
 }
 
-/* 移动端适配 */
-@media (max-width: 768px) {
-    .welcome-guest-header {
-        padding: 16px 0;
-        /* 上下16px，左右0px - 消除左右间隔 */
-        border-radius: 12px;
-        margin-bottom: 20px;
-    }
+/* 微信环境特殊处理 */
+@include mobile-and-tablet {
 
-    /* 内容区域的内边距 */
-    .welcome-guest-header .header-content {
-        padding: 0 16px;
-        /* 只有内容区域有左右内边距 */
-    }
-
-    .welcome-guest-header .greeting-section {
-        gap: 10px;
-    }
-
-    .welcome-guest-header .greeting-icon {
-        font-size: 1.5rem;
-    }
-
-    .welcome-guest-header .greeting-title {
-        font-size: 1.25rem;
-    }
-
-    .welcome-guest-header .greeting-subtitle {
-        font-size: 0.8rem;
-    }
-}
-
-/* 微信环境下的特殊样式 - 减少间距避免布局问题 */
-@media (max-width: 768px) {
-
-    /* 增加选择器特异性，确保样式生效 */
-    :global(body.wechat-browser) :global(.welcome-guest-header) {
+    // 微信环境下的特殊样式
+    :global(body.wechat-browser) .welcome-guest-header {
         margin-top: 0px !important;
-        /* 不需要额外的顶部间距，主页内容已有padding-top */
         margin-bottom: 60px !important;
-        /* 增加底部间距，使用更大的值确保生效 */
-        padding: 16px 0 !important;
-        /* 上下16px，左右0px - 消除左右间隔 */
+        padding: 16px !important;
     }
 
-    /* 微信环境下内容区域的内边距 - 完全由Main容器控制 */
-    :global(body.wechat-browser) :global(.welcome-guest-header) :global(.header-content) {
-        padding: 0 0 !important;
-        /* 微信环境下完全清除左右内边距，间隔由Main容器控制 */
-    }
-
-    /* 微信环境下进一步优化间距 */
-    :global(body.wechat-browser) :global(.welcome-guest-header) :global(.greeting-title) {
+    // 微信环境下进一步优化间距
+    :global(body.wechat-browser) .greeting-title {
         font-size: 1.2rem !important;
-        /* 稍微增大标题字体 */
     }
 
-    :global(body.wechat-browser) :global(.welcome-guest-header) :global(.greeting-subtitle) {
+    :global(body.wechat-browser) .greeting-subtitle {
         font-size: 0.8rem !important;
-        /* 稍微增大副标题字体 */
     }
 }
 </style>

@@ -116,7 +116,9 @@ const showMobileUserMenu = () => {
 };
 </script>
 
-<style scoped>
+<style lang="scss" scoped>
+@import '../styles/mixins/responsive';
+
 .modern-navbar {
     width: 100%;
     max-width: 100vw;
@@ -134,6 +136,11 @@ const showMobileUserMenu = () => {
     z-index: 100;
     box-sizing: border-box;
     overflow: hidden;
+
+    // 移动端样式调整
+    @include mobile-and-tablet {
+        padding: 0 16px;
+    }
 }
 
 .navbar-left {
@@ -173,10 +180,10 @@ const showMobileUserMenu = () => {
     box-shadow: none;
     padding: 6px 20px;
     transition: background 0.2s;
-}
 
-.modern-btn:hover {
-    background: #f5f7fa;
+    &:hover {
+        background: #f5f7fa;
+    }
 }
 
 .modern-user {
@@ -186,51 +193,46 @@ const showMobileUserMenu = () => {
     cursor: pointer;
     outline: none !important;
     border: none !important;
-}
 
-.modern-user:focus {
-    outline: none !important;
-    border: none !important;
-    box-shadow: none !important;
+    &:focus {
+        outline: none !important;
+        border: none !important;
+        box-shadow: none !important;
+    }
 }
 
 /* 移除Element Plus dropdown的focus样式 */
 :deep(.el-dropdown) {
     outline: none !important;
-}
 
-:deep(.el-dropdown:focus) {
-    outline: none !important;
-    border: none !important;
-    box-shadow: none !important;
-}
+    &:focus {
+        outline: none !important;
+        border: none !important;
+        box-shadow: none !important;
+    }
 
-:deep(.el-dropdown .modern-user:focus) {
-    outline: none !important;
-    border: none !important;
-    box-shadow: none !important;
+    .modern-user:focus {
+        outline: none !important;
+        border: none !important;
+        box-shadow: none !important;
+    }
 }
 
 /* PC端显示下拉菜单，隐藏移动端头像 */
 .pc-user-menu {
     display: flex;
+
+    // 移动端隐藏PC端菜单
+    @include mobile-and-tablet {
+        display: none !important;
+    }
 }
 
 .mobile-user-avatar {
     display: none;
-}
 
-/* 移动端样式 */
-@media (max-width: 768px) {
-    .modern-navbar {
-        padding: 0 16px;
-    }
-
-    .pc-user-menu {
-        display: none !important;
-    }
-
-    .mobile-user-avatar {
+    // 移动端显示头像按钮
+    @include mobile-and-tablet {
         display: flex !important;
         width: 32px !important;
         height: 32px !important;
@@ -246,15 +248,22 @@ const showMobileUserMenu = () => {
         user-select: none !important;
         -webkit-tap-highlight-color: transparent !important;
         touch-action: manipulation !important;
+
+        &:active {
+            transform: scale(0.95) !important;
+            background: #374151 !important;
+        }
+
+        &:hover {
+            background: #374151 !important;
+        }
     }
 
-    .mobile-user-avatar:active {
-        transform: scale(0.95) !important;
-        background: #374151 !important;
-    }
-
-    .mobile-user-avatar:hover {
-        background: #374151 !important;
+    // 触摸设备优化
+    @include touch-device {
+        &:hover {
+            background: #18181b !important;
+        }
     }
 }
 </style>

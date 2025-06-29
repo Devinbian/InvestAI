@@ -2776,22 +2776,6 @@ const refreshRecommendation = async (message) => {
     }
 };
 
-// 获取推荐等级样式类
-const getRecommendLevelClass = (level) => {
-    switch (level) {
-        case '强烈推荐':
-            return 'strong-recommend';
-        case '推荐':
-            return 'recommend';
-        case '中性':
-            return 'neutral';
-        case '谨慎':
-            return 'caution';
-        default:
-            return 'recommend';
-    }
-};
-
 // 付费量化分析
 const showPaidAnalysisDialog = (stock) => {
     ElMessageBox.confirm(
@@ -9163,6 +9147,51 @@ body {
     line-height: 1.5;
 }
 
+
+/* 设置提醒按钮样式（与其他股票操作按钮保持一致） */
+.reminder-btn-small {
+    display: flex;
+    align-items: center;
+    gap: 2px;
+    font-size: 0.7rem;
+    border-radius: 10px;
+    padding: 3px 6px;
+    transition: all 0.2s ease;
+    position: relative;
+    white-space: nowrap;
+    flex-shrink: 0;
+    background: #e0e7ff;
+    border-color: #a5b4fc;
+    color: #3730a3;
+}
+
+.reminder-btn-small:hover {
+    background: #c7d2fe;
+    border-color: #8b5cf6;
+    color: #312e81;
+    transform: translateY(-1px);
+}
+
+.reminder-count-badge-small {
+    position: absolute;
+    top: -6px;
+    right: -6px;
+    background: #ef4444;
+    color: white;
+    font-size: 10px;
+    font-weight: 600;
+    padding: 2px 5px;
+    border-radius: 10px;
+    min-width: 16px;
+    height: 16px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    line-height: 1;
+    border: 2px solid white;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+}
+
 /* 响应式设计 */
 @include mobile {
     .account-header {
@@ -9682,11 +9711,8 @@ body {
     }
 
     .welcome-guest-header {
-        width: 100%;
-        max-width: 100%;
         margin: 0 0 20px 0;
-        padding: 0;
-        /* 移动端也消除左右间隔，让组件内部控制 */
+        /* 移动端让组件内部控制宽度和内边距，与WelcomePerformanceHeader保持一致 */
         box-sizing: border-box;
     }
 
@@ -9778,29 +9804,6 @@ body {
     }
 }
 
-/* ========== 超小屏幕优化 ========== */
-@include mobile-sm {
-
-    /* 新聊天按钮区域紧凑化 */
-    .new-chat-section {
-        margin-bottom: 16px;
-    }
-
-    /* 快捷按钮进一步紧凑 */
-    .chat-shortcut-btn {
-        padding: 5px 8px;
-        min-height: 36px;
-        min-width: 45px;
-        font-size: 10px;
-        gap: 1px;
-    }
-
-    /* 聊天消息宽度优化 */
-    .chat-message.user .chat-message-content {
-        max-width: 80%;
-    }
-}
-
 /* ========== 微信环境特殊处理 ========== */
 @include mobile {
 
@@ -9827,6 +9830,14 @@ body {
         padding-left: 0 !important;
         padding-right: 0 !important;
         box-sizing: border-box !important;
+    }
+
+    /* WelcomeGuestHeader在微信环境下保持组件内部的宽度控制 */
+    body.wechat-browser .welcome-guest-header {
+        width: auto !important;
+        max-width: none !important;
+        margin: 0 8px 20px 8px !important;
+        /* 与微信环境下的内边距保持一致 */
     }
 
     /* 微信环境下主页内容区域设置适当内边距 */
@@ -9868,50 +9879,6 @@ body {
         z-index: 1000 !important;
         box-sizing: border-box !important;
     }
-}
-
-/* 设置提醒按钮样式（与其他股票操作按钮保持一致） */
-.reminder-btn-small {
-    display: flex;
-    align-items: center;
-    gap: 2px;
-    font-size: 0.7rem;
-    border-radius: 10px;
-    padding: 3px 6px;
-    transition: all 0.2s ease;
-    position: relative;
-    white-space: nowrap;
-    flex-shrink: 0;
-    background: #e0e7ff;
-    border-color: #a5b4fc;
-    color: #3730a3;
-}
-
-.reminder-btn-small:hover {
-    background: #c7d2fe;
-    border-color: #8b5cf6;
-    color: #312e81;
-    transform: translateY(-1px);
-}
-
-.reminder-count-badge-small {
-    position: absolute;
-    top: -6px;
-    right: -6px;
-    background: #ef4444;
-    color: white;
-    font-size: 10px;
-    font-weight: 600;
-    padding: 2px 5px;
-    border-radius: 10px;
-    min-width: 16px;
-    height: 16px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    line-height: 1;
-    border: 2px solid white;
-    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
 }
 
 /* 移动端提醒徽章优化 */
@@ -9973,6 +9940,29 @@ body {
         font-size: 8px;
         padding: 1px 3px;
         border-radius: 2px;
+    }
+}
+
+/* ========== 超小屏幕优化 ========== */
+@include mobile-sm {
+
+    /* 新聊天按钮区域紧凑化 */
+    .new-chat-section {
+        margin-bottom: 16px;
+    }
+
+    /* 快捷按钮进一步紧凑 */
+    .chat-shortcut-btn {
+        padding: 5px 8px;
+        min-height: 36px;
+        min-width: 45px;
+        font-size: 10px;
+        gap: 1px;
+    }
+
+    /* 聊天消息宽度优化 */
+    .chat-message.user .chat-message-content {
+        max-width: 80%;
     }
 }
 

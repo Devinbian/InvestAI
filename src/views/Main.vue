@@ -533,15 +533,34 @@ import { recommendStock, api } from '@/api/api';
 import { riskOptions } from '@/config/userPortrait';
 import { authFetchEventSource } from '@/utils/request';
 import { useMobileAdaptation } from '../composables/useMobileAdaptation';
+import { useChatManager } from '../composables/useChatManager';
+import { useVoiceInput } from '../composables/useVoiceInput';
 import { formatCurrency } from '@/utils/formatters';
 
 const router = useRouter();
 const userStore = useUserStore();
 const chatHistoryStore = useChatHistoryStore();
-const inputMessage = ref('');
-const chatHistory = ref([]);
-const chatHistoryRef = ref(null);
-const isChatMode = ref(false); // 控制是否进入聊天模式
+
+// 使用聊天管理组合式函数
+const chatManager = useChatManager();
+const {
+    chatHistory,
+    chatHistoryRef,
+    isChatMode,
+    isGenerating,
+    inputMessage,
+    sendMessage: chatSendMessage,
+    stopGeneration,
+    createNewChat: chatCreateNewChat,
+    scrollToBottom,
+    scrollToTop,
+    handleScroll,
+    updateChatHistoryHeight,
+    handleLoadChat,
+    handleCreateNewChat,
+    handleRenameChat,
+    handleDeleteChat
+} = chatManager;
 
 const showUserProfile = ref(false); // 控制是否显示个人中心
 const showRecordsCenter = ref(false); // 控制是否显示记录中心
@@ -560,6 +579,17 @@ const {
     handleMobileCommand,
     getMobileSmartRecommendationConfig
 } = mobileAdaptation;
+
+// 使用语音输入组合式函数
+const voiceInput = useVoiceInput();
+const {
+    isRecording,
+    recordingDuration,
+    isWechatEnv,
+    onVoiceClick: voiceOnClick,
+    initVoice,
+    cleanupVoice
+} = voiceInput;
 
 
 
@@ -649,9 +679,9 @@ const preferencesDialogVisible = ref(false);
 const preferencesFormRef = ref(null);
 const preferencesLoading = ref(false);
 
-// 聊天发送状态管理
-const isGenerating = ref(false);
-const currentAbortController = ref(null);
+// 聊天发送状态管理（已移至useChatManager）
+// const isGenerating = ref(false); // 已从useChatManager获取
+// const currentAbortController = ref(null); // 已从useChatManager获取
 
 // 步骤配置
 const preferenceSteps = [
@@ -829,227 +859,15 @@ const handleShowRecords = () => {
 
 // 移动端用户菜单相关方法 - 已移至 useMobileAdaptation composable
 
+// 发送消息 - 使用组合式函数
 const sendMessage = async () => {
-    if (!inputMessage.value.trim() || isGenerating.value) return;
-
-    // 检查用户是否已登录
-    if (!userStore.isLoggedIn) {
-        ElMessage.warning('请先登录后再开始对话');
-        showGuide('login');
-        return;
-    }
-
-    const message = inputMessage.value;
-    inputMessage.value = '';
-
-    // 设置生成状态
-    isGenerating.value = true;
-
-    // 发送消息后切换到聊天模式
-    isChatMode.value = true;
-
-    // 如果是新聊天，创建聊天记录
-    if (!chatHistoryStore.currentChatId) {
-        await chatHistoryStore.createNewChat();
-    }
-
-    const conversationId = chatHistoryStore.currentChatId;
-    console.log('当前聊天ID:', conversationId);
-
-    // 添加用户消息
-    const userMessage = { role: 'user', content: message };
-    chatHistory.value.push(userMessage);
-    chatHistoryStore.addMessageToCurrentChat(userMessage);
-
-    // 先插入一个空的AI回复
-    const aiMessage = { role: 'assistant', content: '正在思考，请等待片刻......' };
-    chatHistory.value.push(aiMessage);
-    chatHistoryStore.addMessageToCurrentChat(aiMessage);
-
-    await nextTick();
-    scrollToBottom();
-
-    try {
-        let aiContent = '';
-        const abortController = new AbortController(); // 用于取消请求
-        currentAbortController.value = abortController; // 保存到全局状态
-        authFetchEventSource(`${api.devPrefix}${api.chatStreamApi}?conversationId=${conversationId}&userInput=${encodeURIComponent(message)}`, {
-            method: 'GET', // GET 是默认方法，可省略
-            signal: abortController.signal, // 绑定取消信号
-
-            // 添加重试配置
-            retryInterval: 0,       // 不重试
-            backoffMultiplier: 0,    // 退避系数
-
-            onopen: async (response) => {
-                // 连接建立时触发
-                console.log('连接成功');
-            },
-
-            onmessage: (event) => {
-                // 处理每条消息
-                try {
-                    console.log('通用聊天：收到数据:', event.data);
-                    let data = event.data;
-                    // 如果 data 是空格，则新增一个空格（SSE 协议规范：data: 后的第一个空格是固定分隔符，一定会被丢弃）
-                    if (data.trim().length === 0) {
-                        data += ' ';
-                    }
-                    aiContent += data;
-                    aiMessage.content = aiContent;
-
-                    chatHistory.value[chatHistory.value.length - 1].content = aiContent;
-                    // 这里强制替换数组，确保响应式
-                    chatHistory.value = [...chatHistory.value];
-                    // 使用 requestAnimationFrame 优化滚动
-                    requestAnimationFrame(() => {
-                        scrollToBottom();
-                    });
-                } catch (err) {
-                    console.error('解析错误:', err);
-                }
-            },
-            onclose: () => {
-                console.log('连接关闭');
-                // 重置生成状态
-                isGenerating.value = false;
-                currentAbortController.value = null;
-            },
-            onerror: (err) => {
-                // 错误处理（网络错误、解析异常等）
-                abortController.abort(); // 取消请求
-                aiMessage.content += `\n\n[${err.message || '请求中断'}]`;
-                // 重置生成状态
-                isGenerating.value = false;
-                currentAbortController.value = null;
-                throw err; // 重新抛出以终止流
-            }
-        });
-    } catch (err) {
-        aiMessage.content += `\n\n[${err.message || '请求中断'}]`;
-        chatHistory.value = [...chatHistory.value];
-        // 重置生成状态
-        isGenerating.value = false;
-        currentAbortController.value = null;
-    }
-    if (isMobileView.value) {
-        console.log('准备调用fixMobileChatBox - sendMessage');
-        setTimeout(() => {
-            mobileAdaptation.fixMobileChatBox(isChatMode.value); // 确保输入框不被遮挡
-            scrollToBottom();
-        }, 100);
-    }
+    await chatSendMessage(userStore, isMobileView, mobileAdaptation, scrollToBottom);
 };
 
-// 停止生成函数
-const stopGeneration = () => {
-    if (currentAbortController.value) {
-        currentAbortController.value.abort();
-        currentAbortController.value = null;
-        isGenerating.value = false;
-
-        // 更新最后一条AI消息，添加停止标识
-        if (chatHistory.value.length > 0 && chatHistory.value[chatHistory.value.length - 1].role === 'assistant') {
-            const lastMessage = chatHistory.value[chatHistory.value.length - 1];
-            if (lastMessage.content) {
-                lastMessage.content += '\n\n[已停止生成]';
-            } else {
-                lastMessage.content = '[已停止生成]';
-            }
-            chatHistory.value = [...chatHistory.value];
-        }
-
-        ElMessage.info('已停止生成');
-    }
-};
-
-const scrollToBottom = () => {
-    if (chatHistoryRef.value) {
-        // 移动端特殊处理：确保滚动到真正的底部
-        const isMobile = window.innerWidth <= 768;
-        let scrollTarget = chatHistoryRef.value.scrollHeight;
-
-        if (isMobile) {
-            // 移动端需要额外的偏移量来确保内容不被输入框遮挡
-            const extraOffset = window.innerWidth <= 480 ? 50 : 60; // 减少额外偏移
-            scrollTarget = chatHistoryRef.value.scrollHeight + extraOffset;
-        }
-
-        // 使用平滑滚动，提升用户体验
-        chatHistoryRef.value.scrollTo({
-            top: scrollTarget,
-            behavior: 'smooth'
-        });
-
-        // 备用方案：如果smooth不支持，使用直接设置
-        setTimeout(() => {
-            if (chatHistoryRef.value) {
-                chatHistoryRef.value.scrollTop = scrollTarget;
-            }
-        }, 100);
-
-        // 额外的确保方案：再次检查并调整
-        setTimeout(() => {
-            if (chatHistoryRef.value && isMobile) {
-                const currentScrollTop = chatHistoryRef.value.scrollTop;
-                const maxScrollTop = chatHistoryRef.value.scrollHeight - chatHistoryRef.value.clientHeight;
-                if (currentScrollTop < maxScrollTop) {
-                    chatHistoryRef.value.scrollTop = maxScrollTop;
-                }
-            }
-        }, 300);
-    }
-};
-
-// 滚动到顶部的函数
-const scrollToTop = () => {
-    if (chatHistoryRef.value) {
-        chatHistoryRef.value.scrollTo({
-            top: 0,
-            behavior: 'smooth'
-        });
-
-        console.log('聊天区域已滚动到顶部');
-    }
-};
-
-// 滚动条显示控制
-let scrollTimer = null;
-const handleScroll = () => {
-    if (chatHistoryRef.value) {
-        // 添加滚动中的类名
-        chatHistoryRef.value.classList.add('scrolling');
-
-        // 清除之前的定时器
-        if (scrollTimer) {
-            clearTimeout(scrollTimer);
-        }
-
-        // 设置定时器，滚动停止后1.5秒隐藏滚动条
-        scrollTimer = setTimeout(() => {
-            if (chatHistoryRef.value) {
-                chatHistoryRef.value.classList.remove('scrolling');
-            }
-        }, 1500);
-    }
-};
-
+// 聊天相关函数已移至 useChatManager
+// 创建新聊天 - 使用组合式函数
 const createNewChat = () => {
-    chatHistory.value = [];
-    inputMessage.value = '';
-    isChatMode.value = false; // 退出聊天模式，回到初始状态
-    chatHistoryStore.clearCurrentChat(); // 清空聊天历史store中的当前聊天
-
-    // 确保移动端布局重置
-    if (isMobileView.value) {
-        nextTick(() => {
-            setTimeout(() => {
-                mobileAdaptation.resetMobileLayout(isChatMode.value, scrollToTop);
-            }, 100);
-        });
-    }
-
-    ElMessage.success('已创建新聊天');
+    chatCreateNewChat(isMobileView, mobileAdaptation, scrollToTop);
 };
 
 watch(chatHistory, () => {
@@ -1117,297 +935,14 @@ watch(isChatMode, (newVal) => {
     }
 });
 
-// 语音输入相关状态
-const isRecording = ref(false);
-const recognition = ref(null);
-const voiceTimer = ref(null);
-const recordingDuration = ref(0);
-
-// 检测是否为微信内置浏览器
-const isWechatBrowser = () => {
-    const ua = navigator.userAgent.toLowerCase();
-    return ua.includes('micromessenger');
-};
-
-// 微信语音识别相关
-const wxVoiceLocalId = ref('');
-const isWxVoiceSupported = ref(false);
-const isWechatEnv = ref(false); // 微信环境检测
+// 语音输入相关状态已移至 useVoiceInput
 
 
+// 语音相关函数已移至 useVoiceInput
 
-// 初始化微信JS-SDK语音功能
-const initWechatVoice = () => {
-    if (isWechatBrowser() && typeof wx !== 'undefined') {
-        try {
-            // 检查微信JS-SDK是否可用
-            wx.checkJsApi({
-                jsApiList: ['startRecord', 'stopRecord', 'translateVoice'],
-                success: function (res) {
-                    if (res.checkResult.startRecord && res.checkResult.stopRecord && res.checkResult.translateVoice) {
-                        isWxVoiceSupported.value = true;
-                        console.log('微信语音识别功能可用');
-                    }
-                }
-            });
-        } catch (error) {
-            console.log('微信JS-SDK未配置或不可用');
-        }
-    }
-};
-
-// 微信开始录音
-const startWechatVoiceRecord = () => {
-    if (!isWxVoiceSupported.value) {
-        ElMessage.error('微信语音功能不可用，请确保在微信中打开并配置了JS-SDK');
-        return;
-    }
-
-    wx.startRecord({
-        success: function () {
-            isRecording.value = true;
-            startRecordingTimer();
-            ElMessage.success('🎤 开始微信语音输入，请说话...');
-        },
-        cancel: function () {
-            ElMessage.info('用户取消录音');
-            stopRecording();
-        }
-    });
-};
-
-// 微信停止录音并识别
-const stopWechatVoiceRecord = () => {
-    if (!isWxVoiceSupported.value) return;
-
-    wx.stopRecord({
-        success: function (res) {
-            wxVoiceLocalId.value = res.localId;
-
-            // 识别语音
-            wx.translateVoice({
-                localId: wxVoiceLocalId.value,
-                isShowProgressTips: 1,
-                success: function (res) {
-                    const result = res.translateResult;
-                    if (result && result.trim()) {
-                        // 更新输入框内容
-                        const currentValue = inputMessage.value.trim();
-                        if (currentValue) {
-                            inputMessage.value = currentValue + ' ' + result.trim();
-                        } else {
-                            inputMessage.value = result.trim();
-                        }
-                        ElMessage.success(`语音识别完成: "${result.substring(0, 20)}${result.length > 20 ? '...' : ''}"`);
-                    } else {
-                        ElMessage.warning('未识别到语音内容，请重试');
-                    }
-                    stopRecording();
-                },
-                fail: function (res) {
-                    ElMessage.error('语音识别失败，请重试');
-                    stopRecording();
-                }
-            });
-        },
-        fail: function (res) {
-            ElMessage.error('录音失败，请重试');
-            stopRecording();
-        }
-    });
-};
-
-// 初始化语音识别
-const initSpeechRecognition = () => {
-    // 微信内置浏览器不支持语音识别
-    if (isWechatBrowser()) {
-        console.log('微信内置浏览器不支持语音识别');
-        return false;
-    }
-
-    if ('webkitSpeechRecognition' in window || 'SpeechRecognition' in window) {
-        try {
-            const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
-            recognition.value = new SpeechRecognition();
-
-            // 配置语音识别参数
-            recognition.value.continuous = true;
-            recognition.value.interimResults = true;
-            recognition.value.lang = 'zh-CN';
-            recognition.value.maxAlternatives = 1;
-
-            // 识别结果处理
-            recognition.value.onresult = (event) => {
-                let finalTranscript = '';
-
-                for (let i = event.resultIndex; i < event.results.length; i++) {
-                    const transcript = event.results[i][0].transcript;
-                    if (event.results[i].isFinal) {
-                        finalTranscript += transcript;
-                    }
-                }
-
-                // 更新输入框内容
-                if (finalTranscript) {
-                    const cleanedText = finalTranscript.trim();
-                    const currentValue = inputMessage.value.trim();
-                    if (currentValue) {
-                        inputMessage.value = currentValue + ' ' + cleanedText;
-                    } else {
-                        inputMessage.value = cleanedText;
-                    }
-                }
-            };
-
-            // 识别开始
-            recognition.value.onstart = () => {
-                console.log('语音识别开始');
-                startRecordingTimer();
-            };
-
-            // 识别结束
-            recognition.value.onend = () => {
-                console.log('语音识别结束');
-                stopRecording();
-            };
-
-            // 识别错误处理
-            recognition.value.onerror = (event) => {
-                console.error('语音识别错误:', event.error);
-                let errorMessage = '语音识别失败';
-
-                switch (event.error) {
-                    case 'no-speech':
-                        errorMessage = '未检测到语音，请重新尝试';
-                        break;
-                    case 'audio-capture':
-                        errorMessage = '无法访问麦克风，请检查权限设置';
-                        break;
-                    case 'not-allowed':
-                        errorMessage = '麦克风权限被拒绝，请在浏览器设置中允许麦克风访问';
-                        break;
-                    case 'network':
-                        errorMessage = '网络连接异常，请检查网络后重试';
-                        break;
-                    case 'language-not-supported':
-                        errorMessage = '不支持中文语音识别';
-                        break;
-                }
-
-                ElMessage.error(errorMessage);
-                stopRecording();
-            };
-
-            return true;
-        } catch (error) {
-            console.error('初始化语音识别失败:', error);
-            return false;
-        }
-    }
-    return false;
-};
-
-// 开始录音计时
-const startRecordingTimer = () => {
-    recordingDuration.value = 0;
-    voiceTimer.value = setInterval(() => {
-        recordingDuration.value++;
-
-        // 15秒时提示用户
-        if (recordingDuration.value === 15) {
-            ElMessage.info('💡 继续说话，或点击麦克风按钮结束录音');
-        }
-
-        // 45秒时警告用户即将停止
-        if (recordingDuration.value === 45) {
-            ElMessage.warning('⏰ 录音即将结束，还有15秒');
-        }
-
-        // 最长录音60秒
-        if (recordingDuration.value >= 60) {
-            ElMessage.info('⏱️ 录音时间已达上限，自动停止');
-            stopVoiceRecording();
-        }
-    }, 1000);
-};
-
-// 停止录音
-const stopRecording = () => {
-    isRecording.value = false;
-    if (voiceTimer.value) {
-        clearInterval(voiceTimer.value);
-        voiceTimer.value = null;
-    }
-    recordingDuration.value = 0;
-};
-
-// 开始语音录音
-const startVoiceRecording = () => {
-    // 微信浏览器优先使用微信语音功能
-    if (isWechatBrowser()) {
-        if (isWxVoiceSupported.value) {
-            startWechatVoiceRecord();
-        } else {
-            // 微信环境下的提示已在onVoiceClick中处理
-            console.log('微信环境：语音功能需要JS-SDK配置');
-        }
-        return;
-    }
-
-    if (!recognition.value) {
-        ElMessage.error('您的浏览器不支持语音识别功能，建议使用Chrome浏览器');
-        return;
-    }
-
-    try {
-        isRecording.value = true;
-        recognition.value.start();
-        ElMessage.success('🎤 开始语音输入，请说话...');
-    } catch (error) {
-        console.error('启动语音识别失败:', error);
-        ElMessage.error('启动语音识别失败，请重试');
-        stopRecording();
-    }
-};
-
-// 停止语音录音
-const stopVoiceRecording = () => {
-    // 微信浏览器使用微信语音功能
-    if (isWechatBrowser() && isWxVoiceSupported.value) {
-        stopWechatVoiceRecord();
-        return;
-    }
-
-    if (recognition.value && isRecording.value) {
-        recognition.value.stop();
-    }
-    stopRecording();
-};
-
+// 语音点击处理 - 使用组合式函数
 const onVoiceClick = () => {
-    // 基本日志记录
-    console.log('语音按钮点击');
-
-    // 微信环境特殊处理
-    if (isWechatBrowser()) {
-        // 显示语音功能提示
-        ElMessage({
-            message: '💬 微信语音功能需要JS-SDK配置，当前暂不可用',
-            type: 'warning',
-            duration: 4000,
-            showClose: true,
-            dangerouslyUseHTMLString: false
-        });
-
-        return; // 微信环境下直接返回，不执行后续逻辑
-    }
-
-    if (isRecording.value) {
-        stopVoiceRecording();
-        ElMessage.info('🛑 语音输入已停止');
-    } else {
-        startVoiceRecording();
-    }
+    voiceOnClick(inputMessage);
 };
 
 // 切换聊天快捷操作显示
@@ -1426,66 +961,7 @@ const toggleChatShortcuts = () => {
     }
 };
 
-// 更新聊天历史区域高度
-const updateChatHistoryHeight = () => {
-    let baseInputHeight = 200; // 基础输入区域高度
-    const shortcutsHeight = 80; // 快捷操作区域高度
-    const newChatButtonHeight = 60; // 新建聊天按钮区域高度（28px + 12px margin + 20px安全边距）
-
-    // 移动端浏览器需要额外考虑底部偏移量和新建聊天按钮
-    if (isMobileView.value && isChatMode.value) {
-        const userAgent = navigator.userAgent.toLowerCase();
-        const isWechat = userAgent.includes('micromessenger');
-
-        // 为新建聊天按钮预留空间（所有环境都需要）
-        baseInputHeight += newChatButtonHeight;
-
-        if (!isWechat) {
-            // 非微信环境，需要为底部工具栏偏移留出空间
-            const isIOS = userAgent.includes('iphone') || userAgent.includes('ipad');
-            const isSafari = userAgent.includes('safari') && !userAgent.includes('chrome') && !userAgent.includes('crios');
-            const isChrome = userAgent.includes('chrome') || userAgent.includes('crios');
-
-            let bottomOffset = 0;
-            if (isIOS) {
-                if (isSafari) {
-                    bottomOffset = 80; // iOS Safari偏移量
-                } else if (isChrome) {
-                    bottomOffset = 110; // iOS Chrome偏移量
-                } else {
-                    bottomOffset = 110; // 其他iOS浏览器
-                }
-            } else if (isChrome) {
-                bottomOffset = 110; // Android Chrome偏移量
-            } else {
-                bottomOffset = 80; // 其他浏览器
-            }
-
-            // 基础高度加上底部偏移量
-            baseInputHeight += bottomOffset;
-
-            console.log(`[聊天历史高度] 移动端浏览器，底部偏移: ${bottomOffset}px，新建聊天按钮: ${newChatButtonHeight}px，总输入区域高度: ${baseInputHeight}px`);
-        } else {
-            console.log(`[聊天历史高度] 微信环境，新建聊天按钮: ${newChatButtonHeight}px，总输入区域高度: ${baseInputHeight}px`);
-        }
-    }
-
-    const totalInputHeight = showChatShortcuts.value
-        ? baseInputHeight + shortcutsHeight
-        : baseInputHeight;
-
-    // 设置CSS变量
-    document.documentElement.style.setProperty('--input-area-height', `${totalInputHeight}px`);
-
-    console.log(`[聊天历史高度] 最终设置高度: ${totalInputHeight}px (基础: ${baseInputHeight}px, 快捷操作: ${showChatShortcuts.value ? shortcutsHeight : 0}px)`);
-};
-
-// 防抖函数 - 已移至 useMobileAdaptation composable
-
-// 设置动态视口高度CSS变量 - 已移至 useMobileAdaptation composable
-
-// 检测移动端视图 - 已移至 useMobileAdaptation composable
-
+// 更新聊天历史区域高度函数已移至 useChatManager
 // 移动端侧边栏状态管理
 const sidebarRef = ref(null);
 
@@ -1589,43 +1065,7 @@ const handleMainContentClick = (event) => {
     }
 };
 
-const handleLoadChat = (chat) => {
-    // 加载选中的聊天记录
-    chatHistory.value = [...chat.messages];
-    chatHistoryStore.loadChat(chat.id);
-    isChatMode.value = chatHistory.value.length > 0;
-
-    nextTick(() => {
-        scrollToBottom();
-    });
-
-    ElMessage.success('聊天记录已加载');
-};
-
-const handleCreateNewChat = async () => {
-    // 如果当前有聊天内容，先保存到历史记录
-    if (chatHistory.value.length > 0 && !chatHistoryStore.currentChatId) {
-        const chatId = await chatHistoryStore.createNewChat(chatHistory.value);
-        ElMessage.success('当前聊天已保存到历史记录');
-    }
-
-    // 创建新聊天
-    createNewChat();
-};
-
-const handleRenameChat = (chatId, newTitle) => {
-    chatHistoryStore.renameChat(chatId, newTitle);
-};
-
-const handleDeleteChat = (chatId) => {
-    chatHistoryStore.deleteChat(chatId);
-
-    // 如果删除的是当前聊天，清空界面
-    if (chatHistoryStore.currentChatId === chatId) {
-        chatHistory.value = [];
-        isChatMode.value = false;
-    }
-};
+// 聊天历史处理函数已移至 useChatManager
 
 // 智能荐股功能
 const handleSmartRecommendation = async () => {
@@ -2590,14 +2030,10 @@ onMounted(() => {
     // 初始化快捷操作
     initializeShortcuts();
 
-    // 初始化语音识别
-    initSpeechRecognition();
-
-    // 初始化微信语音功能
-    initWechatVoice();
+    // 初始化语音功能
+    initVoice(inputMessage);
 
     // 检测微信环境并设置相关状态
-    isWechatEnv.value = isWechatBrowser();
     if (isWechatEnv.value) {
         document.body.classList.add('wechat-browser');
     }
@@ -2664,12 +2100,7 @@ onUnmounted(() => {
         clearInterval(countdownTimer);
     }
     // 清理语音识别资源
-    if (recognition.value && isRecording.value) {
-        recognition.value.stop();
-    }
-    if (voiceTimer.value) {
-        clearInterval(voiceTimer.value);
-    }
+    cleanupVoice();
     // 清理窗口大小监听
     window.removeEventListener('resize', handleResize);
 

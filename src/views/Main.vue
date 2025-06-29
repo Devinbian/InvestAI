@@ -883,14 +883,44 @@ const handleMobileSidebarToggle = () => {
 };
 
 
-const setSuggestionAndSend = (suggestion) => {
+const setSuggestionAndSend = async (suggestion) => {
+    console.log('🚀 setSuggestionAndSend 被调用:', suggestion);
+
+    // 设置输入框内容
     inputMessage.value = suggestion;
-    sendMessage();
-    // 使用快捷操作后自动收起
+
+    // 切换到聊天模式（如果还不是）
+    if (!isChatMode.value) {
+        isChatMode.value = true;
+    }
+
+    // 使用快捷操作后自动收起快捷操作面板
     if (showChatShortcuts.value) {
-        setTimeout(() => {
-            showChatShortcuts.value = false;
-        }, 300);
+        showChatShortcuts.value = false;
+    }
+
+    // 立即设置生成状态，让发送按钮进入"生成中"状态
+    console.log('🔄 设置 isGenerating = true');
+    isGenerating.value = true;
+
+    try {
+        // 延迟发送，让用户看到发送按钮状态变化
+        await nextTick();
+        await new Promise(resolve => setTimeout(resolve, 500));
+
+        // 检查是否被用户中断
+        if (!isGenerating.value) {
+            console.log('🔄 智能复盘 - 操作被用户中断');
+            return;
+        }
+
+        console.log('🔄 准备发送消息，重置 isGenerating = false');
+        // 先重置生成状态，然后调用正常的发送流程
+        isGenerating.value = false;
+        sendMessage();
+    } catch (error) {
+        console.error('🔄 setSuggestionAndSend 执行出错:', error);
+        isGenerating.value = false;
     }
 };
 
@@ -963,7 +993,37 @@ const handleSmartRecommendation = async () => {
     if (!checkAuthStatus('使用智能荐股功能')) {
         return;
     }
-    await stockHandleSmartRecommendation(userStore, chatHistoryStore, chatHistory, isChatMode, scrollToBottom, showChatShortcuts, showGuide);
+    console.log('🚀 智能荐股 - 设置生成状态');
+
+    // 设置生成状态，让发送按钮进入"生成中"状态
+    isGenerating.value = true;
+
+    try {
+        // 添加一个短暂延迟，让用户能看到生成状态
+        await new Promise(resolve => setTimeout(resolve, 800));
+
+        // 检查是否被用户中断
+        if (!isGenerating.value) {
+            console.log('🚀 智能荐股 - 操作被用户中断');
+            return;
+        }
+
+        // 执行业务逻辑，传递中断检查函数
+        await stockHandleSmartRecommendation(
+            userStore,
+            chatHistoryStore,
+            chatHistory,
+            isChatMode,
+            scrollToBottom,
+            showChatShortcuts,
+            showGuide,
+            () => isGenerating.value // 传递中断检查函数
+        );
+    } finally {
+        // 完成后重置生成状态
+        console.log('🚀 智能荐股 - 重置生成状态');
+        isGenerating.value = false;
+    }
 };
 
 // 监听用户登录状态变化
@@ -989,7 +1049,36 @@ const handleNewsUpdate = async () => {
     if (!checkAuthStatus('获取资讯推送')) {
         return;
     }
-    await stockHandleNewsUpdate(userStore, chatHistory, isChatMode, scrollToBottom, showChatShortcuts, showGuide);
+    console.log('🚀 资讯推送 - 设置生成状态');
+
+    // 设置生成状态，让发送按钮进入"生成中"状态
+    isGenerating.value = true;
+
+    try {
+        // 添加一个短暂延迟，让用户能看到生成状态
+        await new Promise(resolve => setTimeout(resolve, 800));
+
+        // 检查是否被用户中断
+        if (!isGenerating.value) {
+            console.log('🚀 资讯推送 - 操作被用户中断');
+            return;
+        }
+
+        // 执行业务逻辑，传递中断检查函数
+        await stockHandleNewsUpdate(
+            userStore,
+            chatHistory,
+            isChatMode,
+            scrollToBottom,
+            showChatShortcuts,
+            showGuide,
+            () => isGenerating.value // 传递中断检查函数
+        );
+    } finally {
+        // 完成后重置生成状态
+        console.log('🚀 资讯推送 - 重置生成状态');
+        isGenerating.value = false;
+    }
 };
 
 // 我的资产分析功能 - 使用组合式函数
@@ -997,7 +1086,36 @@ const handleAssetAnalysis = async () => {
     if (!checkAuthStatus('进行资产分析')) {
         return;
     }
-    await stockHandleAssetAnalysis(userStore, chatHistory, isChatMode, scrollToBottom, showChatShortcuts, showGuide);
+    console.log('🚀 资产分析 - 设置生成状态');
+
+    // 设置生成状态，让发送按钮进入"生成中"状态
+    isGenerating.value = true;
+
+    try {
+        // 添加一个短暂延迟，让用户能看到生成状态
+        await new Promise(resolve => setTimeout(resolve, 800));
+
+        // 检查是否被用户中断
+        if (!isGenerating.value) {
+            console.log('🚀 资产分析 - 操作被用户中断');
+            return;
+        }
+
+        // 执行业务逻辑，传递中断检查函数
+        await stockHandleAssetAnalysis(
+            userStore,
+            chatHistory,
+            isChatMode,
+            scrollToBottom,
+            showChatShortcuts,
+            showGuide,
+            () => isGenerating.value // 传递中断检查函数
+        );
+    } finally {
+        // 完成后重置生成状态
+        console.log('🚀 资产分析 - 重置生成状态');
+        isGenerating.value = false;
+    }
 };
 
 // 自选股查看功能
@@ -1007,43 +1125,67 @@ const handleWatchlistView = async () => {
         return;
     }
 
-    // 切换到聊天模式
-    isChatMode.value = true;
+    console.log('🚀 自选股查看 - 设置生成状态');
 
-    // 如果用户没有自选股，添加一些示例数据用于演示
-    if (userStore.watchlist.length === 0) {
-        const sampleWatchlist = [
-            { code: '600519', name: '贵州茅台', industry: '食品饮料', addedAt: '2024-01-15T09:30:00.000Z', price: '1680.50', change: '+28.50', changePercent: '+1.72%' },
-            { code: '000001', name: '平安银行', industry: '银行', addedAt: '2024-01-14T10:15:00.000Z', price: '12.68', change: '-0.15', changePercent: '-1.17%' },
-            { code: '300750', name: '宁德时代', industry: '新能源', addedAt: '2024-01-13T14:20:00.000Z', price: '485.20', change: '+12.30', changePercent: '+2.60%' },
-            { code: '000858', name: '五粮液', industry: '食品饮料', addedAt: '2024-01-12T11:45:00.000Z', price: '52.30', change: '-1.20', changePercent: '-2.24%' },
-            { code: '002415', name: '海康威视', industry: '电子', addedAt: '2024-01-11T13:30:00.000Z', price: '28.90', change: '+0.45', changePercent: '+1.58%' }
-        ];
+    // 设置生成状态，让发送按钮进入"生成中"状态
+    isGenerating.value = true;
 
-        userStore.watchlist.push(...sampleWatchlist);
-        localStorage.setItem('watchlist', JSON.stringify(userStore.watchlist));
-        ElMessage.info('已为您添加示例自选股数据');
-    }
+    try {
+        // 添加一个短暂延迟，让用户能看到生成状态
+        await new Promise(resolve => setTimeout(resolve, 800));
 
-    // 获取自选股数据，使用辅助函数生成完整的股票详情
-    const watchlistData = userStore.watchlist.map(stock => generateWatchlistStockData(stock));
+        // 检查是否被用户中断
+        if (!isGenerating.value) {
+            console.log('🚀 自选股查看 - 操作被用户中断');
+            return;
+        }
 
-    // 直接显示自选股列表，使用卡片形式
-    const userMessage = '查看我的自选股列表';
-    const assistantMessage = `📋 **我的自选股列表**
+        // 切换到聊天模式
+        isChatMode.value = true;
+
+        // 添加用户消息和处理中消息
+        chatHistory.value.push(
+            { role: 'user', content: '查看我的自选股列表' },
+            { role: 'assistant', content: '正在获取您的自选股数据...' }
+        );
+
+        // 再次检查是否被中断
+        if (!isGenerating.value) {
+            console.log('🚀 自选股查看 - 在数据处理前被中断');
+            return;
+        }
+
+        // 如果用户没有自选股，添加一些示例数据用于演示
+        if (userStore.watchlist.length === 0) {
+            const sampleWatchlist = [
+                { code: '600519', name: '贵州茅台', industry: '食品饮料', addedAt: '2024-01-15T09:30:00.000Z', price: '1680.50', change: '+28.50', changePercent: '+1.72%' },
+                { code: '000001', name: '平安银行', industry: '银行', addedAt: '2024-01-14T10:15:00.000Z', price: '12.68', change: '-0.15', changePercent: '-1.17%' },
+                { code: '300750', name: '宁德时代', industry: '新能源', addedAt: '2024-01-13T14:20:00.000Z', price: '485.20', change: '+12.30', changePercent: '+2.60%' },
+                { code: '000858', name: '五粮液', industry: '食品饮料', addedAt: '2024-01-12T11:45:00.000Z', price: '52.30', change: '-1.20', changePercent: '-2.24%' },
+                { code: '002415', name: '海康威视', industry: '电子', addedAt: '2024-01-11T13:30:00.000Z', price: '28.90', change: '+0.45', changePercent: '+1.58%' }
+            ];
+
+            userStore.watchlist.push(...sampleWatchlist);
+            localStorage.setItem('watchlist', JSON.stringify(userStore.watchlist));
+            ElMessage.info('已为您添加示例自选股数据');
+        }
+
+        // 获取自选股数据，使用辅助函数生成完整的股票详情
+        const watchlistData = userStore.watchlist.map(stock => generateWatchlistStockData(stock));
+
+        // 更新最后一条AI消息为自选股列表
+        const assistantMessage = `📋 **我的自选股列表**
 
 您当前关注 **${userStore.watchlist.length}** 只股票，详细信息如下：`;
 
-    chatHistory.value.push(
-        { role: 'user', content: userMessage },
-        {
-            role: 'assistant',
-            content: assistantMessage,
-            hasWatchlistInfo: true,
-            watchlistData: watchlistData,
-            isWatchlistDisplay: true,
-            hasInteractionButtons: true,
-            interactionData: {
+        const lastMessage = chatHistory.value[chatHistory.value.length - 1];
+        if (lastMessage && lastMessage.role === 'assistant') {
+            lastMessage.content = assistantMessage;
+            lastMessage.hasWatchlistInfo = true;
+            lastMessage.watchlistData = watchlistData;
+            lastMessage.isWatchlistDisplay = true;
+            lastMessage.hasInteractionButtons = true;
+            lastMessage.interactionData = {
                 recommendActions: [
                     {
                         id: 'analyze_overall',
@@ -1067,27 +1209,32 @@ const handleWatchlistView = async () => {
                         prompt: '推荐与我自选股相关的热门股票'
                     }
                 ]
-            },
-            watchlistStats: {
+            };
+            lastMessage.watchlistStats = {
                 total: userStore.watchlist.length,
                 upCount: watchlistData.filter(s => s.changePct >= 0).length,
                 downCount: watchlistData.filter(s => s.changePct < 0).length,
                 bestPerformer: watchlistData.sort((a, b) => b.changePct - a.changePct)[0],
                 worstPerformer: watchlistData.sort((a, b) => a.changePct - b.changePct)[0],
                 updateTime: new Date().toLocaleString('zh-CN')
-            }
+            };
+            chatHistory.value = [...chatHistory.value]; // 触发响应式更新
         }
-    );
 
-    await nextTick();
-    scrollToBottom();
-    ElMessage.success('已显示您的自选股列表');
+        await nextTick();
+        scrollToBottom();
+        ElMessage.success('已显示您的自选股列表');
 
-    // 使用快捷操作后自动收起
-    if (showChatShortcuts.value) {
-        setTimeout(() => {
-            showChatShortcuts.value = false;
-        }, 300);
+        // 使用快捷操作后自动收起
+        if (showChatShortcuts.value) {
+            setTimeout(() => {
+                showChatShortcuts.value = false;
+            }, 300);
+        }
+    } finally {
+        // 完成后重置生成状态
+        console.log('🚀 自选股查看 - 重置生成状态');
+        isGenerating.value = false;
     }
 };
 

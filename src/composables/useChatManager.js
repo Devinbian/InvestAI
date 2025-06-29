@@ -155,8 +155,13 @@ export function useChatManager() {
   const stopGeneration = () => {
     if (currentAbortController.value) {
       currentAbortController.value.abort();
-      isGenerating.value = false;
       currentAbortController.value = null;
+    }
+
+    // 无论是否有AbortController，只要isGenerating为true就可以停止
+    if (isGenerating.value) {
+      // 重置生成状态
+      isGenerating.value = false;
 
       // 更新最后一条AI消息，添加停止标识
       if (
@@ -164,7 +169,7 @@ export function useChatManager() {
         chatHistory.value[chatHistory.value.length - 1].role === "assistant"
       ) {
         const lastMessage = chatHistory.value[chatHistory.value.length - 1];
-        if (lastMessage.content) {
+        if (lastMessage.content && lastMessage.content.trim() !== "") {
           // 如果已有内容，添加停止标识
           lastMessage.content += "\n\n[已停止生成]";
         } else {
@@ -175,8 +180,9 @@ export function useChatManager() {
         chatHistory.value = [...chatHistory.value];
       }
 
-      // 显示停止提示
-      ElMessage.info("已停止生成");
+      console.log("🛑 生成已停止");
+    } else {
+      console.log("🛑 当前没有正在进行的生成任务");
     }
   };
 

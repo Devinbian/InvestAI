@@ -118,6 +118,7 @@ export function useStockOperations() {
     scrollToBottom,
     showChatShortcuts,
     showGuide,
+    isStillGenerating, // 新增：中断检查函数
   ) => {
     // 登录检查已在调用处完成
 
@@ -146,6 +147,12 @@ export function useStockOperations() {
     };
     chatHistory.value.push(processingMessage, processingMessage1);
 
+    // 检查是否被中断
+    if (isStillGenerating && !isStillGenerating()) {
+      console.log("🚀 智能荐股 - 在API调用前被中断");
+      return;
+    }
+
     // 如果是新聊天，创建聊天记录
     if (!chatHistoryStore.currentChatId) {
       await chatHistoryStore.createNewChat();
@@ -155,12 +162,25 @@ export function useStockOperations() {
 
     const mockRes = await mockApi.sendMessage(message);
 
+    // 在API调用后再次检查是否被中断
+    if (isStillGenerating && !isStillGenerating()) {
+      console.log("🚀 智能荐股 - 在API调用后被中断");
+      return;
+    }
+
     try {
       let response = await recommendStock({
         pageNo: 1,
         pageSize: 3,
         conversationId: conversationId,
       });
+
+      // 在获取数据后再次检查是否被中断
+      if (isStillGenerating && !isStillGenerating()) {
+        console.log("🚀 智能荐股 - 在数据处理前被中断");
+        return;
+      }
+
       if (response && response.data && response.data.success) {
         let stockList = [];
         let data = response.data.data || [];
@@ -237,16 +257,43 @@ export function useStockOperations() {
     scrollToBottom,
     showChatShortcuts,
     showGuide,
+    isStillGenerating, // 新增：中断检查函数
   ) => {
     // 登录检查已在调用处完成
 
     // 切换到聊天模式
     isChatMode.value = true;
 
-    const message = "资讯推送：今日重要财经新闻和市场动态";
-    const res = await mockApi.sendMessage(message);
+    const userMessage = "资讯推送";
+    const processingMessage = "正在获取最新财经资讯，请稍候...";
 
-    chatHistory.value.push({ role: "user", content: message }, res.data);
+    // 添加用户消息和处理中的AI消息
+    chatHistory.value.push(
+      { role: "user", content: userMessage },
+      { role: "assistant", content: processingMessage },
+    );
+
+    // 检查是否被中断
+    if (isStillGenerating && !isStillGenerating()) {
+      console.log("🚀 资讯推送 - 被中断");
+      return;
+    }
+
+    const fullMessage = "资讯推送：今日重要财经新闻和市场动态";
+    const res = await mockApi.sendMessage(fullMessage);
+
+    // 在API调用后再次检查是否被中断
+    if (isStillGenerating && !isStillGenerating()) {
+      console.log("🚀 资讯推送 - API调用后被中断");
+      return;
+    }
+
+    // 更新最后一条AI消息
+    const lastMessage = chatHistory.value[chatHistory.value.length - 1];
+    if (lastMessage && lastMessage.role === "assistant") {
+      lastMessage.content = res.data.content;
+      chatHistory.value = [...chatHistory.value];
+    }
 
     await nextTick();
     scrollToBottom();
@@ -319,11 +366,27 @@ export function useStockOperations() {
     scrollToBottom,
     showChatShortcuts,
     showGuide,
+    isStillGenerating, // 新增：中断检查函数
   ) => {
     // 登录检查已在调用处完成
 
     // 切换到聊天模式
     isChatMode.value = true;
+
+    // 添加用户消息和处理中的AI消息
+    const userMessage = "我的资产分析";
+    const processingMessage = "正在分析您的投资组合，请稍候...";
+
+    chatHistory.value.push(
+      { role: "user", content: userMessage },
+      { role: "assistant", content: processingMessage },
+    );
+
+    // 检查是否被中断
+    if (isStillGenerating && !isStillGenerating()) {
+      console.log("🚀 资产分析 - 被中断");
+      return;
+    }
 
     // 如果用户没有持仓，添加一些示例数据用于演示
     if (userStore.portfolio.length === 0) {
@@ -425,11 +488,18 @@ export function useStockOperations() {
 
     const res = await mockApi.sendMessage(message);
 
-    // 创建包含资产数据的消息对象
-    const assetMessage = {
-      ...res.data,
-      hasAssetInfo: true,
-      assetData: {
+    // 在API调用后再次检查是否被中断
+    if (isStillGenerating && !isStillGenerating()) {
+      console.log("🚀 资产分析 - API调用后被中断");
+      return;
+    }
+
+    // 更新最后一条AI消息
+    const lastMessage = chatHistory.value[chatHistory.value.length - 1];
+    if (lastMessage && lastMessage.role === "assistant") {
+      lastMessage.content = res.data.content;
+      lastMessage.hasAssetInfo = true;
+      lastMessage.assetData = {
         totalAssets,
         portfolioCount,
         watchlistCount,
@@ -445,10 +515,9 @@ export function useStockOperations() {
         totalProfit,
         totalProfitPercent: parseFloat(totalProfitPercent),
         portfolioValue,
-      },
-    };
-
-    chatHistory.value.push({ role: "user", content: message }, assetMessage);
+      };
+      chatHistory.value = [...chatHistory.value]; // 触发响应式更新
+    }
 
     await nextTick();
     scrollToBottom();

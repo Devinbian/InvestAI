@@ -16,6 +16,8 @@ $breakpoints: (
   'tablet-lg': 1200px,    // 大平板 (iPad Pro)
   
   // 桌面设备
+  'desktop-sm': 1200px,   // 小桌面
+  'desktop-md': 1300px,   // 中等桌面
   'desktop': 1400px,      // 标准桌面
   'desktop-lg': 1600px,   // 大屏桌面
   'desktop-xl': 1920px    // 超大屏桌面
@@ -29,6 +31,8 @@ $mobile-lg: map-get($breakpoints, 'mobile-lg');
 $tablet-sm: map-get($breakpoints, 'tablet-sm');
 $tablet: map-get($breakpoints, 'tablet');
 $tablet-lg: map-get($breakpoints, 'tablet-lg');
+$desktop-sm: map-get($breakpoints, 'desktop-sm');
+$desktop-md: map-get($breakpoints, 'desktop-md');
 $desktop: map-get($breakpoints, 'desktop');
 $desktop-lg: map-get($breakpoints, 'desktop-lg');
 $desktop-xl: map-get($breakpoints, 'desktop-xl');

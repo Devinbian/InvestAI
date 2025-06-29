@@ -170,7 +170,7 @@ export default {
 };
 </script>
 
-<style scoped>
+<style scoped lang="scss">
 @import "@/styles/mixins/_index.scss";
 
 .ai-card {
@@ -463,11 +463,11 @@ export default {
 }
 
 /* 移动端样式适配 */
-@include mobile-tablet {
+@include mobile {
     .ai-card {
-        /* 移动端基础样式 */
+        /* 移动端基础样式 - 确保完全占满屏幕宽度 */
         width: 100% !important;
-        max-width: 100% !important;
+        max-width: none !important;
         box-sizing: border-box !important;
 
         /* 主页模式样式 - 贴底显示时的内部样式 */
@@ -492,6 +492,7 @@ export default {
         padding: 0 16px !important;
         width: 100% !important;
         box-sizing: border-box !important;
+        margin: 0 !important;
     }
 
     .ai-buttons-row {
@@ -501,6 +502,7 @@ export default {
         display: flex !important;
         align-items: center !important;
         justify-content: flex-end !important;
+        margin: 0 !important;
     }
 
     /* 移动端有历史记录按钮时，强制左右分离布局 */
@@ -593,7 +595,7 @@ export default {
 }
 
 /* 超小屏幕优化 */
-@include mobile-phone {
+@include mobile-sm {
     .ai-card {
         /* 超小屏幕内部样式 */
         padding: 10px 0 calc(env(safe-area-inset-bottom) + 10px) 0 !important;
@@ -611,12 +613,14 @@ export default {
         padding: 8px 12px !important;
         width: 100% !important;
         box-sizing: border-box !important;
+        margin: 0 !important;
     }
 
     .ai-buttons-row {
         padding: 6px 12px !important;
         width: 100% !important;
         box-sizing: border-box !important;
+        margin: 0 !important;
     }
 
     .ai-func-btn {

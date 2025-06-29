@@ -218,13 +218,13 @@
                                         <div class="asset-amount">
                                             <span class="amount-label">总资产</span>
                                             <span class="amount-value">¥{{ formatCurrency(message.assetData.totalAssets)
-                                            }}</span>
+                                                }}</span>
                                         </div>
                                         <div class="asset-change"
                                             :class="[message.assetData.totalProfitPercent >= 0 ? 'profit' : 'loss']">
                                             <span class="change-icon">{{ message.assetData.totalProfitPercent >= 0 ?
                                                 '📈' : '📉'
-                                            }}</span>
+                                                }}</span>
                                             <span class="change-label">今日盈亏：</span>
                                             <span class="change-text">
                                                 {{ message.assetData.totalProfitPercent >= 0 ? '+' : '' }}¥{{
@@ -250,7 +250,7 @@
                                         <div class="stat-info">
                                             <div class="stat-label">持仓市值</div>
                                             <div class="stat-value">¥{{ formatCurrency(message.assetData.portfolioValue)
-                                            }}
+                                                }}
                                             </div>
                                         </div>
                                     </div>
@@ -473,7 +473,7 @@
                 </div>
                 <div class="guide-actions">
                     <el-button type="primary" size="small" @click="handleGuideAction">{{ guideActionText
-                        }}</el-button>
+                    }}</el-button>
                     <el-button size="small" @click="dismissGuide">稍后</el-button>
                 </div>
             </div>
@@ -586,7 +586,7 @@ const showRecordsCenter = ref(false); // 控制是否显示记录中心
 // 量化分析提醒相关状态已移至 useStockOperations
 const showChatShortcuts = ref(false); // 控制聊天模式下的快捷操作显示
 
-// 使用移动端适配composable
+// 使用移动端适配composable（重构版）
 const mobileAdaptation = useMobileAdaptation();
 const {
     isMobileView,
@@ -594,7 +594,11 @@ const {
     showMobileUserMenu,
     hideMobileUserMenu,
     handleMobileCommand,
-    getMobileSmartRecommendationConfig
+    getMobileSmartRecommendationConfig,
+    // 新增：可以直接访问底层composables
+    breakpoints,
+    layout,
+    menu
 } = mobileAdaptation;
 
 // 使用语音输入组合式函数

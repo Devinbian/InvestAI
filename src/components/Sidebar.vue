@@ -101,8 +101,9 @@
 </template>
 
 <script setup>
-import { ref, computed, onMounted, onUnmounted } from 'vue';
+import { ref, computed, onMounted, onUnmounted, watch } from 'vue';
 import { useUserStore } from '../store/user';
+import { useMobileDetection } from '../composables/useResponsiveBreakpoints';
 import MarketIndex from './MarketIndex.vue';
 import StockRecommendations from './StockRecommendations.vue';
 import MessageNotifications from './MessageNotifications.vue';
@@ -115,12 +116,14 @@ const emit = defineEmits(['send-to-chat', 'show-buy-dialog', 'show-sell-dialog']
 
 const userStore = useUserStore();
 
+// 使用新的响应式断点系统
+const { isMobileView, deviceType } = useMobileDetection();
+
 const isCollapsed = ref(true);
 const activeTab = ref('market'); // 默认显示大盘指数
 const unreadCount = ref(2); // 未读消息数量，这里可以从消息组件获取
 
 // 移动端状态管理
-const isMobileView = ref(false);
 const isMobileExpanded = ref(false);
 
 // 自选股数量
@@ -129,25 +132,24 @@ const watchlistCount = computed(() => userStore.watchlist.length);
 // 持仓数量
 const portfolioCount = computed(() => userStore.portfolio.length);
 
-// 检测移动端
-const checkMobileView = () => {
-    const newIsMobileView = window.innerWidth <= 768;
-    console.log('Sidebar移动端检测:', {
-        windowWidth: window.innerWidth,
-        oldIsMobileView: isMobileView.value,
-        newIsMobileView: newIsMobileView,
-        shouldShowButton: !newIsMobileView
-    });
+// 监听设备类型变化，自动关闭移动端侧边栏
+watch(deviceType, (newType, oldType) => {
+    console.log('Sidebar设备类型变化:', { oldType, newType });
 
-    // 如果从移动端切换到PC端，重置移动端状态
-    if (isMobileView.value && !newIsMobileView && isMobileExpanded.value) {
+    // 如果从移动端切换到桌面端，自动关闭移动端侧边栏
+    if (oldType === 'mobile' && newType !== 'mobile' && isMobileExpanded.value) {
         isMobileExpanded.value = false;
         document.body.style.overflow = '';
     }
+});
 
-    isMobileView.value = newIsMobileView;
-
-
+// 保持向后兼容的检测方法
+const checkMobileView = () => {
+    console.log('Sidebar移动端检测:', {
+        deviceType: deviceType.value,
+        isMobileView: isMobileView.value,
+        shouldShowButton: !isMobileView.value
+    });
 };
 
 // 切换侧边栏
@@ -187,15 +189,11 @@ const closeMobileSidebar = () => {
 
 
 
-// 监听窗口大小变化
+// 监听窗口大小变化（简化版，主要功能已由响应式断点系统处理）
 const handleResize = () => {
+    // 响应式断点系统会自动处理设备类型变化
+    // 这里保留是为了向后兼容
     checkMobileView();
-
-    // 如果从移动端切换到PC端，重置移动端状态
-    if (!isMobileView.value && isMobileExpanded.value) {
-        isMobileExpanded.value = false;
-        document.body.style.overflow = '';
-    }
 };
 
 // 监听ESC键关闭移动端侧边栏

@@ -10,18 +10,48 @@
   user-select: none;
   touch-action: pan-y; /* 允许垂直滑动，但限制其他手势 */
   min-height: 44px; /* 增加触摸目标的最小高度 */
+  // 优化：添加GPU加速
+  transform: translateZ(0);
+  will-change: transform;
 }
 
 // 移动端点击区域优化
 @mixin mobile-clickable-area($min-height: 56px) {
   -webkit-tap-highlight-color: transparent;
   min-height: $min-height; /* 确保足够的点击区域 */
+  // 优化：添加触摸反馈优化
+  cursor: pointer;
+  transform: translateZ(0);
 }
 
 // 移动端滚动优化
 @mixin mobile-scroll-optimization {
   -webkit-overflow-scrolling: touch;
   overscroll-behavior: contain;
+  // 优化：添加滚动性能优化
+  contain: layout;
+  will-change: scroll-position;
+}
+
+// GPU加速优化
+@mixin gpu-acceleration {
+  transform: translateZ(0);
+  will-change: transform;
+  backface-visibility: hidden;
+  perspective: 1000px;
+}
+
+// 高性能动画
+@mixin performance-animation($property: transform, $duration: 0.25s, $timing: cubic-bezier(0.4, 0, 0.2, 1)) {
+  transition: $property $duration $timing;
+  will-change: $property;
+  @include gpu-acceleration;
+}
+
+// 减少重绘重排
+@mixin reduce-reflow {
+  contain: layout style;
+  isolation: isolate;
 }
 
 // 安全区域底部间距
@@ -54,5 +84,6 @@
   @media (max-width: 768px) {
     width: $mobile-width;
     @include dynamic-viewport-height;
+    @include reduce-reflow;
   }
 } 

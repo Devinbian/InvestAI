@@ -24,10 +24,12 @@
             :class="{ 'chatting': isChatMode, 'with-sidebar': userStore.isLoggedIn, 'with-chat-history': showChatHistory }"
             :style="showChatHistory ? {
                 transform: `translateX(${isMobileView ? '280px' : '320px'})`,
-                transition: 'transform 0.3s ease'
+                transition: 'transform 0.25s cubic-bezier(0.4, 0, 0.2, 1)',
+                willChange: 'transform'
             } : {
                 transform: 'translateX(0)',
-                transition: 'transform 0.3s ease'
+                transition: 'transform 0.25s cubic-bezier(0.4, 0, 0.2, 1)',
+                willChange: 'auto'
             }">
             <!-- 个性化引导流程 -->
             <OnboardingFlow v-if="showOnboarding" @complete="onOnboardingComplete" @analyze-stock="handleAnalyzeStock"
@@ -126,8 +128,6 @@
                             </el-button>
                         </div>
 
-
-
                         <!-- 自选股列表展示 -->
                         <div v-if="message.isWatchlistDisplay && message.watchlistData"
                             class="watchlist-display-container">
@@ -206,13 +206,13 @@
                                         <div class="asset-amount">
                                             <span class="amount-label">总资产</span>
                                             <span class="amount-value">¥{{ formatCurrency(message.assetData.totalAssets)
-                                                }}</span>
+                                            }}</span>
                                         </div>
                                         <div class="asset-change"
                                             :class="[message.assetData.totalProfitPercent >= 0 ? 'profit' : 'loss']">
                                             <span class="change-icon">{{ message.assetData.totalProfitPercent >= 0 ?
                                                 '📈' : '📉'
-                                                }}</span>
+                                            }}</span>
                                             <span class="change-label">今日盈亏：</span>
                                             <span class="change-text">
                                                 {{ message.assetData.totalProfitPercent >= 0 ? '+' : '' }}¥{{
@@ -238,7 +238,7 @@
                                         <div class="stat-info">
                                             <div class="stat-label">持仓市值</div>
                                             <div class="stat-value">¥{{ formatCurrency(message.assetData.portfolioValue)
-                                                }}
+                                            }}
                                             </div>
                                         </div>
                                     </div>
@@ -460,7 +460,7 @@
                 </div>
                 <div class="guide-actions">
                     <el-button type="primary" size="small" @click="handleGuideAction">{{ guideActionText
-                    }}</el-button>
+                        }}</el-button>
                     <el-button size="small" @click="dismissGuide">稍后</el-button>
                 </div>
             </div>
@@ -1506,39 +1506,6 @@ const handleMobileSidebarToggle = () => {
     }
 };
 
-// toggleMobileSidebar 函数已移至 useMobileAdaptation composable
-
-
-
-
-
-
-
-// 调整内容位置和重置内容位置函数 - 已移至 useMobileAdaptation composable
-
-
-
-// 确保移动端修复正确应用 - 已移至 useMobileAdaptation composable
-
-// 移动端聊天框修复 - 已移至 useMobileAdaptation composable
-
-// 处理下拉菜单命令
-const handleDropdownCommand = (command) => {
-    switch (command) {
-        case 'yesterday-review':
-            setSuggestionAndSend('昨日复盘：请帮我进行全面的交易复盘分析，包括：\n\n1. 昨日大盘走势分析（上证指数、深证成指、创业板指等主要指数表现）\n2. 热点板块轮动情况和资金流向分析\n3. 我的持仓股票昨日表现回顾和盈亏分析\n4. 昨日交易决策的得失总结（如有买卖操作）\n5. 市场情绪和技术面变化分析\n6. 今日操作建议和风险提示\n7. 需要关注的重要事件和数据发布\n\n请结合我的投资风格和持仓情况，给出专业的复盘建议。');
-            break;
-        case 'smart-recommendation':
-            handleSmartRecommendation();
-            break;
-        case 'news-update':
-            handleNewsUpdate();
-            break;
-        case 'asset-analysis':
-            handleAssetAnalysis();
-            break;
-    }
-};
 
 const setSuggestionAndSend = (suggestion) => {
     inputMessage.value = suggestion;
@@ -2017,16 +1984,6 @@ const formatAddedTime = (addedAt) => {
     }
 };
 
-
-
-// 格式化货币显示函数已移至 @/utils/formatters.js
-
-
-
-
-
-
-
 // 处理来自侧边栏的交互
 const handleSidebarInteraction = async (data) => {
     const { type, content, title } = data;
@@ -2291,12 +2248,6 @@ const performQuantAnalysis = async (stockInfo) => {
     scrollToBottom();
 };
 
-
-
-
-
-
-
 // 自选股票操作按钮配置
 const watchlistActionButtons = computed(() => {
     return getStockActionConfig('watchlist', {
@@ -2367,8 +2318,6 @@ const getSmartRecommendationConfig = (message) => {
         showToolbar: message.isPersistent
     };
 };
-
-// getMobileSmartRecommendationConfig 函数已移至 useMobileAdaptation composable
 
 // 股票点击事件处理
 const handleStockClick = (stock) => {
@@ -2523,8 +2472,6 @@ const dismissGuide = () => {
     showGuideTip.value = false;
 };
 
-
-
 // 检查聊天历史中是否有荐股列表
 const hasRecommendationInHistory = computed(() => {
     return chatHistory.value.some(message =>
@@ -2546,8 +2493,6 @@ const handleShowSellDialog = (stockInfo) => {
     showBuyDialog(stockInfo, 'sell');
 };
 
-
-
 // 检查用户状态并显示相应引导
 const checkUserStatus = () => {
     // 只有在登录且没有偏好设置时才显示引导
@@ -2557,10 +2502,6 @@ const checkUserStatus = () => {
         }, 1000);
     }
 };
-
-// resetMobileLayout 函数已移至 useMobileAdaptation composable
-
-
 
 // 窗口大小变化处理函数 - 简化处理
 const handleResize = () => {
@@ -2574,8 +2515,6 @@ const handleResize = () => {
         }, 100);
     }
 };
-
-// 简化的移动端虚拟键盘处理 - 已移至 useMobileAdaptation composable
 
 onMounted(() => {
     scrollToBottom();
@@ -2613,16 +2552,11 @@ onMounted(() => {
     isWechatEnv.value = isWechatBrowser();
     if (isWechatEnv.value) {
         document.body.classList.add('wechat-browser');
-
-        // 微信环境下的样式调整已移至 WelcomeGuestHeader 组件内部处理
     }
 
     // 初始化移动端浏览器检测和防止页面缩放
     mobileAdaptation.initializeMobileBrowserDetection();
     mobileAdaptation.preventZoom();
-
-    // 初始状态不调用修复函数，让CSS自然生效
-
 
 
     // 如果有当前聊天ID，恢复聊天记录
@@ -2633,8 +2567,6 @@ onMounted(() => {
             isChatMode.value = chatHistory.value.length > 0;
         }
     }
-
-    // 移除测试数据生成逻辑，现在用户从空白状态开始
 
     // 添加窗口大小变化监听
     window.addEventListener('resize', handleResize);
@@ -2944,7 +2876,6 @@ const removeReminder = (reminderId) => {
         ElMessage.success(`已删除 ${reminder.stockName} 的提醒`);
     }
 };
-
 
 
 // 处理交互操作按钮点击
@@ -3319,6 +3250,8 @@ const handleShortcutsUpdated = () => {
     }
 };
 
+
+
 // 组件挂载时初始化
 onMounted(() => {
     initializeShortcuts();
@@ -3532,9 +3465,6 @@ body.onboarding-mode {
     margin-bottom: 32px;
 }
 
-
-
-/* WelcomeGuestHeader 组件样式已移至独立组件文件 */
 
 /* 移动端增加welcome-section和AI卡片之间的间距 */
 @media (max-width: 768px) {
@@ -5928,6 +5858,10 @@ body.onboarding-mode {
         padding-bottom: 0 !important;
         position: relative !important;
         width: 100% !important;
+        /* 性能优化：启用GPU加速和减少重绘 */
+        transform: translateZ(0);
+        contain: layout style;
+        isolation: isolate;
     }
 
     .chat-area {

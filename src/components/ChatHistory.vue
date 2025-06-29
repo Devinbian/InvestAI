@@ -442,12 +442,18 @@ setInterval(updateChatHistoryList, 1000);
     @include fixed-panel(56px, 0, 320px, calc(100vh - 56px), 50);
     @include gradient-background(#ffffff, #f8fafc, 145deg);
     @include card-shadow(4px 0 20px rgba(0, 0, 0, 0.08));
-    @include smooth-transition(width);
     border-right: 1px solid #e5e7eb;
+    transform: translateX(-100%);
+    transition: transform 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+    will-change: transform;
+}
+
+.chat-history-container:not(.collapsed) {
+    transform: translateX(0);
 }
 
 .chat-history-container.collapsed {
-    width: 0;
+    transform: translateX(-100%);
 }
 
 .history-panel {
@@ -455,9 +461,8 @@ setInterval(updateChatHistoryList, 1000);
     display: flex;
     flex-direction: column;
     overflow: hidden;
+    contain: layout style;
 }
-
-
 
 .header-actions {
     @include flex-center-vertical;
@@ -477,10 +482,6 @@ setInterval(updateChatHistoryList, 1000);
 }
 
 /* 移动端优化已在 mixins 中处理 */
-.search-container {
-    @include mobile-container-spacing(12px, 10px);
-}
-
 .search-container {
     @include flex-center-vertical;
     padding: 16px;
@@ -524,6 +525,9 @@ setInterval(updateChatHistoryList, 1000);
     flex: 1;
     overflow-y: auto;
     padding: 0 8px;
+    -webkit-overflow-scrolling: touch;
+    overscroll-behavior: contain;
+    contain: layout;
 }
 
 .history-group {
@@ -558,11 +562,13 @@ setInterval(updateChatHistoryList, 1000);
 
 .history-item {
     @include flex-between;
-    @include smooth-transition(all, 0.2s);
     padding: 12px;
     margin: 2px 0;
     border-radius: 8px;
     position: relative;
+    transition: background-color 0.15s ease;
+    cursor: pointer;
+    contain: layout;
 }
 
 .history-item:hover {
@@ -574,7 +580,6 @@ setInterval(updateChatHistoryList, 1000);
 }
 
 .chat-info {
-    @include smooth-transition(all, 0.2s);
     flex: 1;
     min-width: 0;
     cursor: pointer;
@@ -600,7 +605,7 @@ setInterval(updateChatHistoryList, 1000);
 }
 
 .chat-actions {
-    @include smooth-transition(opacity, 0.2s);
+    transition: opacity 0.15s ease;
     opacity: 0;
     margin-left: 8px;
 }
@@ -611,12 +616,12 @@ setInterval(updateChatHistoryList, 1000);
 
 .action-trigger {
     @include flex-center;
-    @include smooth-transition(all, 0.2s);
     width: 24px;
     height: 24px;
     border-radius: 4px;
     cursor: pointer;
     color: #6b7280;
+    transition: background-color 0.15s ease, color 0.15s ease;
 }
 
 .action-trigger:hover {

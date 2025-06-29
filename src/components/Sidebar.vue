@@ -4,15 +4,20 @@
 
 
 
+    <!-- 收起/展开按钮 - 移到容器外面，PC端显示 -->
+    <button v-if="!isMobileView" class="sidebar-toggle" :class="{ 'expanded': !isCollapsed }" @click="toggleSidebar">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" :class="{ 'rotated': isCollapsed }">
+            <path d="M15 18l-6-6 6-6" stroke="currentColor" stroke-width="2" stroke-linecap="round"
+                stroke-linejoin="round" />
+        </svg>
+    </button>
+
     <div class="sidebar-container" :class="{ 'collapsed': isCollapsed, 'mobile-expanded': isMobileExpanded }"
         @wheel.stop>
-        <!-- 收起/展开按钮 - PC端显示 -->
-        <button v-if="!isMobileView" class="sidebar-toggle" @click="toggleSidebar">
-            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" :class="{ 'rotated': isCollapsed }">
-                <path d="M15 18l-6-6 6-6" stroke="currentColor" stroke-width="2" stroke-linecap="round"
-                    stroke-linejoin="round" />
-            </svg>
-        </button>
+
+
+
+
 
         <!-- 移动端关闭按钮 - 与侧边栏融合 -->
         <button v-if="isMobileView && isMobileExpanded" class="mobile-close-btn" @click="closeMobileSidebar"
@@ -130,7 +135,8 @@ const checkMobileView = () => {
     console.log('Sidebar移动端检测:', {
         windowWidth: window.innerWidth,
         oldIsMobileView: isMobileView.value,
-        newIsMobileView: newIsMobileView
+        newIsMobileView: newIsMobileView,
+        shouldShowButton: !newIsMobileView
     });
 
     // 如果从移动端切换到PC端，重置移动端状态
@@ -140,6 +146,8 @@ const checkMobileView = () => {
     }
 
     isMobileView.value = newIsMobileView;
+
+
 };
 
 // 切换侧边栏
@@ -206,6 +214,8 @@ onMounted(() => {
     }
     window.addEventListener('resize', handleResize);
     document.addEventListener('keydown', handleKeyDown);
+
+
 });
 
 onUnmounted(() => {
@@ -255,7 +265,11 @@ defineExpose({
     z-index: 100;
     overflow: visible;
     box-shadow: -4px 0 20px rgba(0, 0, 0, 0.1);
-    transition: width 0.3s ease;
+    /* 优化：默认收起状态，移到右侧视口外 */
+    transform: translateX(100%);
+    transition: transform 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+    will-change: transform;
+    contain: layout style;
 }
 
 .sidebar-content {
@@ -264,6 +278,7 @@ defineExpose({
     padding: 10px 0 0 0;
     display: flex;
     flex-direction: column;
+    contain: layout;
 }
 
 /* Tab导航样式 */
@@ -285,7 +300,7 @@ defineExpose({
     font-weight: 500;
     color: #6b7280;
     cursor: pointer;
-    transition: all 0.2s ease;
+    transition: color 0.15s ease, background-color 0.15s ease, border-bottom-color 0.15s ease;
     border-bottom: 2px solid transparent;
     position: relative;
     min-width: 0;
@@ -360,6 +375,9 @@ defineExpose({
     /* 56px(顶部) + 50px(tab导航) */
     /* 添加滚动条稳定性 */
     scrollbar-gutter: stable;
+    -webkit-overflow-scrolling: touch;
+    overscroll-behavior: contain;
+    contain: layout;
 }
 
 .tab-panel {
@@ -373,6 +391,7 @@ defineExpose({
     min-height: 0;
     padding-bottom: 20px;
     /* 移除固定的最小高度，让内容自然流动 */
+    contain: layout;
 }
 
 /* 移动端底部安全区域处理 */
@@ -414,46 +433,47 @@ defineExpose({
 
 /* 收起/展开功能样式 */
 .sidebar-container.collapsed {
-    width: 0px;
-    /* PC端收藏时完全隐藏 */
-    background: transparent;
-    border: none;
-    box-shadow: none;
-    overflow: visible;
-    /* 改为visible，确保按钮可见 */
+    transform: translateX(100%);
+}
+
+.sidebar-container:not(.collapsed) {
+    transform: translateX(0);
 }
 
 .sidebar-toggle {
     position: fixed;
-    /* 改为fixed定位 */
-    top: 16px;
-    /* 调整位置 */
-    right: 8px;
-    /* 始终在右侧边缘 */
+    top: 72px;
+    right: 16px;
     width: 32px;
     height: 32px;
     background: rgba(255, 255, 255, 0.95);
-    /* 增加背景透明度 */
     border: 1px solid #e5e7eb;
     border-radius: 8px;
     display: flex;
     align-items: center;
     justify-content: center;
     cursor: pointer;
-    transition: all 0.3s ease;
-    z-index: 9999;
-    /* 大幅提高z-index确保可见 */
+    transition: transform 0.25s cubic-bezier(0.4, 0, 0.2, 1), background-color 0.2s ease, border-color 0.2s ease;
+    z-index: 1000;
     box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+    will-change: transform;
 }
 
 .sidebar-toggle:hover {
     background: #f3f4f6;
     border-color: #d1d5db;
-    transform: scale(1.05);
+}
+
+.sidebar-toggle:not(.expanded):hover {
+    transform: translateX(0) scale(1.05);
+}
+
+.sidebar-toggle.expanded:hover {
+    transform: translateX(-520px) scale(1.05);
 }
 
 .sidebar-toggle svg {
-    transition: transform 0.3s ease;
+    transition: transform 0.2s ease;
     color: #6b7280;
 }
 
@@ -461,31 +481,35 @@ defineExpose({
     transform: rotate(180deg);
 }
 
-/* 展开状态下的按钮位置调整 */
-.sidebar-container:not(.collapsed) .sidebar-toggle {
-    right: 528px;
-    /* 展开时按钮在侧边栏左侧 */
+/* 展开状态下的按钮位置调整 - 使用transform移动 */
+.sidebar-toggle.expanded {
+    transform: translateX(-520px);
+    /* 向左移动520px (536px - 16px = 520px) */
 }
 
-/* 收藏状态下按钮的特殊样式 */
-.sidebar-container.collapsed .sidebar-toggle {
-    background: rgba(255, 255, 255, 0.95);
-    border: 1px solid #d1d5db;
-    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
-    /* 收藏状态下更明显的阴影 */
+/* 收起状态下按钮的默认位置 */
+.sidebar-toggle:not(.expanded) {
+    transform: translateX(0);
 }
 
-.sidebar-container.collapsed .sidebar-toggle:hover {
+.sidebar-toggle:not(.expanded):hover {
     background: #ffffff;
     border-color: #3b82f6;
-    transform: scale(1.1);
+    transform: translateX(0) scale(1.1);
     box-shadow: 0 6px 16px rgba(59, 130, 246, 0.2);
 }
+
+
+
+
 
 /* 移动端响应式处理 */
 @media (max-width: 768px) {
 
-
+    /* 移动端隐藏PC端的侧边栏切换按钮 */
+    .sidebar-toggle {
+        display: none !important;
+    }
 
     .sidebar-container {
         /* 移动端改为抽屉式侧边栏 */
@@ -496,11 +520,11 @@ defineExpose({
         height: calc(var(--vh, 1vh) * 100) !important;
         /* 使用动态视口高度，CSS变量作为备选方案 */
         top: 0 !important;
-        right: -100% !important;
-        /* 默认隐藏在右侧 */
+        right: 0 !important;
         position: fixed !important;
-        transform: translateX(0) !important;
-        transition: right 0.3s cubic-bezier(0.25, 0.46, 0.45, 0.94) !important;
+        /* 优化：使用GPU加速的transform替代right属性动画 */
+        transform: translateX(100%) !important;
+        transition: transform 0.25s cubic-bezier(0.4, 0, 0.2, 1) !important;
         z-index: 9000 !important;
         /* 降低侧边栏z-index，确保弹窗能在其上方显示 */
         background: white !important;
@@ -509,11 +533,13 @@ defineExpose({
         display: flex !important;
         /* 覆盖之前的隐藏样式 */
         flex-direction: column !important;
+        will-change: transform !important;
+        contain: layout style !important;
     }
 
     /* 移动端展开状态 */
     .sidebar-container.mobile-expanded {
-        right: 0 !important;
+        transform: translateX(0) !important;
     }
 
     /* 移动端关闭按钮 - 与侧边栏融合设计 */
@@ -532,7 +558,8 @@ defineExpose({
         align-items: center !important;
         justify-content: center !important;
         cursor: pointer !important;
-        transition: all 0.2s ease !important;
+        /* 优化：简化动画，只对必要属性进行过渡 */
+        transition: background-color 0.15s ease, color 0.15s ease, transform 0.15s ease !important;
         z-index: 9001 !important;
         /* 调整关闭按钮z-index与侧边栏保持一致 */
         box-shadow: -2px 0 8px rgba(0, 0, 0, 0.1) !important;
@@ -540,6 +567,7 @@ defineExpose({
         border-right: none !important;
         /* 移除右边框，与侧边栏无缝连接 */
         margin-right: 0 !important;
+        will-change: transform !important;
     }
 
     .mobile-close-btn:hover {
@@ -547,7 +575,6 @@ defineExpose({
         color: #374151 !important;
         transform: translateX(-2px) !important;
         /* 轻微向左移动 */
-        box-shadow: -4px 0 12px rgba(0, 0, 0, 0.15) !important;
     }
 
     .mobile-close-btn:active {
@@ -605,7 +632,8 @@ defineExpose({
         gap: 4px !important;
         border-radius: 8px !important;
         margin: 0 2px !important;
-        transition: all 0.2s ease !important;
+        /* 优化：简化移动端Tab动画 */
+        transition: background-color 0.15s ease, color 0.15s ease !important;
     }
 
     .mobile-nav .tab-item:hover {

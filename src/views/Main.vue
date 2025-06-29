@@ -206,13 +206,13 @@
                                         <div class="asset-amount">
                                             <span class="amount-label">总资产</span>
                                             <span class="amount-value">¥{{ formatCurrency(message.assetData.totalAssets)
-                                            }}</span>
+                                                }}</span>
                                         </div>
                                         <div class="asset-change"
                                             :class="[message.assetData.totalProfitPercent >= 0 ? 'profit' : 'loss']">
                                             <span class="change-icon">{{ message.assetData.totalProfitPercent >= 0 ?
                                                 '📈' : '📉'
-                                            }}</span>
+                                                }}</span>
                                             <span class="change-label">今日盈亏：</span>
                                             <span class="change-text">
                                                 {{ message.assetData.totalProfitPercent >= 0 ? '+' : '' }}¥{{
@@ -238,7 +238,7 @@
                                         <div class="stat-info">
                                             <div class="stat-label">持仓市值</div>
                                             <div class="stat-value">¥{{ formatCurrency(message.assetData.portfolioValue)
-                                            }}
+                                                }}
                                             </div>
                                         </div>
                                     </div>
@@ -460,7 +460,7 @@
                 </div>
                 <div class="guide-actions">
                     <el-button type="primary" size="small" @click="handleGuideAction">{{ guideActionText
-                        }}</el-button>
+                    }}</el-button>
                     <el-button size="small" @click="dismissGuide">稍后</el-button>
                 </div>
             </div>
@@ -542,14 +542,11 @@ const showChatShortcuts = ref(false); // 控制聊天模式下的快捷操作显
 const mobileAdaptation = useMobileAdaptation();
 const {
     isMobileView,
-    currentOffset,
-    isManualDebug,
     showMobileMenu,
     showMobileUserMenu,
     hideMobileUserMenu,
     handleMobileCommand,
-    getMobileSmartRecommendationConfig,
-    debounce
+    getMobileSmartRecommendationConfig
 } = mobileAdaptation;
 
 
@@ -3676,12 +3673,10 @@ body.onboarding-mode {
         padding: 0 16px;
     }
 
-    /* 移动端欢迎区域间距优化 */
+    /* 移动端欢迎区域 - 简化样式 */
     .welcome-section {
-        margin-bottom: 24px;
-        padding-top: 16px;
-        padding-left: 16px;
-        padding-right: 16px;
+        margin-bottom: 20px;
+        padding: 16px 0 0 0;
     }
 
 
@@ -9291,11 +9286,6 @@ body {
         /* 增加欢迎区域上方间距 */
     }
 
-    /* .ai-card {
-        margin-top: 20px;
-        margin-bottom: 20px;
-    } */
-
     /* 超小屏幕滚动条进一步优化 */
     .chat-history-area::-webkit-scrollbar {
         width: 3px;
@@ -9374,39 +9364,6 @@ body {
 
 
 
-    /* 微信环境下的底部间距优化 */
-    /* body.wechat-browser .ai-card {
-        padding-top: 12px !important;
-        padding-left: 0 !important;
-        padding-right: 0 !important;
-        padding-bottom: 16px !important;
-        width: 100% !important;
-        border-radius: 0 !important;
-        margin-bottom: 0 !important;
-    } */
-
-
-
-    /* 微信环境下AI输入行和按钮行的底部间距 */
-    body.wechat-browser .ai-input-row {
-        padding-bottom: 8px !important;
-        /* 微信环境下给输入行添加底部间距 */
-    }
-
-    /* body.wechat-browser .ai-buttons-row {
-        padding-bottom: 12px !important;
-    } */
-
-    /* 微信环境下AI卡片整体上移，为快捷示例留出空间 */
-    body.wechat-browser .modern-content:not(.chatting) .ai-card {
-        bottom: 10px !important;
-        /* 微信环境下AI卡片稍微上移，避免遮挡快捷示例 */
-    }
-
-    /* 非微信环境下的底部安全间距 - 已移除，由JavaScript动态控制 */
-
-
-
     /* 移动端浏览器环境下欢迎区域优化 - 仅在主界面模式下整体上移避免与输入框重叠 */
     body:not(.wechat-browser) .modern-content:not(.chatting) .welcome-section {
         transform: translateY(-40px) !important;
@@ -9478,6 +9435,10 @@ body {
         -webkit-overflow-scrolling: auto !important;
         overflow-x: hidden !important;
         position: relative !important;
+        /* 强制隐藏微信底部工具栏 */
+        height: 100vh !important;
+        max-height: 100vh !important;
+        overflow: hidden !important;
     }
 
     /* 微信环境下主容器优化 */
@@ -9485,6 +9446,11 @@ body {
         height: 100vh !important;
         overflow: hidden !important;
         position: relative !important;
+        /* 微信环境下占满全宽，消除两边空白 */
+        width: 100% !important;
+        max-width: 100% !important;
+        margin: 0 !important;
+        padding: 0 !important;
     }
 
     /* 微信环境下主内容区域优化 */
@@ -9493,309 +9459,156 @@ body {
         overflow-y: auto !important;
         -webkit-overflow-scrolling: touch !important;
         position: relative !important;
+        max-width: 100% !important;
+        /* 微信环境下占满全宽，消除两边空白 */
+        width: 100% !important;
+        padding-left: 0 !important;
+        padding-right: 0 !important;
     }
 }
 
-/* 移除旧的聊天历史面板布局适配，使用transform方式 */
-
-/* 移动端聊天布局最终修复 - 确保最高优先级 */
+/* ========== 移动端布局样式重构 ========== */
 @media (max-width: 768px) {
 
-    /* 微信环境下的问候语间距调整已移至 WelcomeGuestHeader 组件 */
-
-    body.wechat-browser .welcome-section {
-        margin-top: 0px !important;
-        /* 微信环境下不需要额外的顶部间距，主页内容已有padding-top */
+    /* 1. 基础容器 - 全宽无边距 */
+    .main-modern {
+        width: 100%;
+        max-width: 100%;
+        margin: 0;
+        padding: 0;
     }
 
-    /* 微信环境下确保 WelcomeGuestHeader 的 margin-bottom 生效 */
-    body.wechat-browser .welcome-guest-header {
-        margin-bottom: 60px !important;
-        /* 强制设置欢迎语底部间距，覆盖其他样式 */
+    .modern-content {
+        width: 100%;
+        max-width: 100%;
+        margin: 0;
+        padding: 76px 0 0 0;
+        /* 顶部导航栏高度 */
     }
 
-    /* 问题1: 聊天内容顶部遮挡 - 聊天模式下从导航栏底部开始，增加间距 */
+    .center-container {
+        width: 100%;
+        max-width: 100%;
+        margin: 0;
+        padding: 0;
+    }
+
+    /* 2. 欢迎区域 - 内容有内边距，容器无边距 */
+    .welcome-section {
+        width: 100%;
+        max-width: 100%;
+        margin: 0 0 20px 0;
+        padding: 0;
+    }
+
+    .welcome-guest-header {
+        width: 100%;
+        max-width: 100%;
+        margin: 0 0 20px 0;
+        padding: 0;
+        /* 移动端也消除左右间隔，让组件内部控制 */
+        box-sizing: border-box;
+    }
+
+    /* 3. 聊天模式布局 */
     .modern-content.chatting {
-        padding-top: 76px !important;
-        padding-left: 0 !important;
-        padding-right: 0 !important;
-        height: 100vh !important;
-        /* 兼容性回退 */
-        height: 100dvh !important;
-        /* 使用动态视口高度 */
-        overflow: hidden !important;
+        width: 100%;
+        max-width: 100%;
+        height: 100vh;
+        height: 100dvh;
+        /* 动态视口高度 */
+        padding: 76px 0 0 0;
+        overflow: hidden;
     }
 
-    /* 移动端输入区域现在负责定位，在CSS中已在@media (max-width: 768px)中定义 */
+    /* 4. 主页模式布局 - 为AI卡片预留底部空间 */
+    .modern-content:not(.chatting) {
+        padding-bottom: 120px;
+        /* AI卡片预留空间 */
+    }
 
-    /* 移动端新聊天按钮区域优化 */
+    /* 5. 新聊天按钮区域 */
     .new-chat-section {
-        margin-bottom: 120px !important;
-        /* 大幅增加底部间距，防止被遮挡 */
-        padding: 0 16px !important;
-        /* 添加左右间距，与其他内容保持一致 */
+        margin-bottom: 20px;
+        padding: 0 16px;
     }
 
-    /* 移动端按钮布局优化 - 确保一行显示 */
     .chat-actions {
-        flex-wrap: nowrap !important;
-        /* 移动端强制一行显示 */
-        gap: 4px !important;
-        /* 移动端进一步减少间距 */
-        justify-content: center !important;
-        overflow-x: auto !important;
-        /* 允许水平滚动以防按钮过多 */
-        padding: 0 4px !important;
-        /* 添加少量内边距 */
+        display: flex;
+        flex-wrap: nowrap;
+        gap: 8px;
+        justify-content: center;
+        overflow-x: auto;
     }
 
     .new-chat-btn,
     .goto-recommendation-btn {
-        font-size: 0.75rem !important;
-        /* 移动端字体更小 */
-        padding: 5px 10px !important;
-        /* 移动端按钮更紧凑 */
-        height: 28px !important;
-        /* 移动端按钮高度更小 */
-        white-space: nowrap !important;
-        /* 防止文字换行 */
-        flex-shrink: 0 !important;
-        /* 防止按钮被压缩 */
-        border-radius: 8px !important;
-        /* 减少圆角 */
+        font-size: 0.75rem;
+        padding: 6px 12px;
+        height: 32px;
+        white-space: nowrap;
+        flex-shrink: 0;
+        border-radius: 8px;
     }
 
-    .new-chat-btn svg,
-    .goto-recommendation-btn svg {
-        width: 12px;
-        height: 12px;
-    }
-
-    /* 移动端主页内容区域 - 为贴底AI卡片预留空间 */
-    .modern-content:not(.chatting) {
-        padding-bottom: 120px !important;
-        /* 为贴底AI卡片预留空间 */
-    }
-
-    /* 微信环境下主页内容区域特殊处理 */
-    body.wechat-browser .modern-content:not(.chatting) {
-        padding-bottom: 140px !important;
-        /* 微信环境下为贴底AI卡片预留足够空间 */
-        padding-top: 80px !important;
-        /* 微信环境下增加顶部间距，避免欢迎语溢出 */
-    }
-
-    /* 移动端AI卡片 - 主页模式贴底显示 */
+    /* 6. AI卡片定位 - 主页模式贴底 */
     .modern-content:not(.chatting) .ai-card {
-        position: fixed !important;
-        bottom: 0 !important;
-        left: 0 !important;
-        right: 0 !important;
-        margin: 0 !important;
-        padding: 10px 0 calc(10px + env(safe-area-inset-bottom, 0)) 0 !important;
-        width: 100% !important;
-        border-radius: 0 !important;
-        /* 微信端移除圆角，避免显示底部导航栏 */
-        background: #fff !important;
-        box-shadow: 0 -1px 3px 0 rgba(0, 0, 0, 0.05) !important;
-        /* 减少阴影，避免触发浏览器UI */
-        z-index: 999 !important;
-        /* 降低z-index，避免干扰浏览器UI */
-        border-top: 1px solid #e5e7eb !important;
-        /* 添加顶部边框 */
+        position: fixed;
+        bottom: 0;
+        left: 0;
+        right: 0;
+        width: 100%;
+        z-index: 999;
     }
 
-    /* Android Chrome浏览器特殊处理 - 上移避免被底部工具栏遮挡 */
-    body.android-chrome .modern-content:not(.chatting) .ai-card {
-        bottom: 75px !important;
-        /* Android Chrome与聊天模式输入框保持一致的偏移 */
+    /* 7. 聊天历史区域 */
+    .chat-history-area {
+        height: calc(100vh - 76px - 160px);
+        height: calc(100dvh - 76px - 160px);
+        padding: 16px 8px 60px 8px;
+        margin: 0;
+        width: 100%;
+        box-sizing: border-box;
+        overflow-y: auto;
+        -webkit-overflow-scrolling: touch;
     }
 
-    /* iOS Chrome特殊处理 */
-    /* body.ios-chrome .modern-content:not(.chatting) .ai-card {
-        bottom: 120px !important;
-    } */
-
-    /* iOS Safari特殊处理 */
-    body.ios-safari .modern-content:not(.chatting) .ai-card {
-        bottom: 95px !important;
-        /* iOS Safari与聊天模式输入框保持一致的偏移 */
+    /* 8. 聊天消息样式 */
+    .chat-message {
+        padding: 0 8px 16px 0;
     }
 
-    /* 其他移动端浏览器的通用处理 */
-    body:not(.wechat-browser):not(.ios-safari):not(.ios-chrome):not(.android-chrome) .modern-content:not(.chatting) .ai-card {
-        bottom: 80px !important;
-        /* 其他移动端浏览器与聊天模式输入框保持一致的偏移 */
+    .chat-message.user .chat-message-content {
+        max-width: 85%;
     }
 
-    /* 微信环境下特殊处理 - 贴底显示，避免触发底部导航栏 */
-    body.wechat-browser .modern-content:not(.chatting) .ai-card {
-        bottom: 0 !important;
-        border-radius: 0 !important;
-        box-shadow: none !important;
-        z-index: 100 !important;
-        padding: 12px 0 calc(12px + env(safe-area-inset-bottom, 0)) 0 !important;
+    .chat-message.assistant .chat-message-content {
+        max-width: 100%;
     }
 
-    /* 聊天模式下的AI卡片保持原有样式（在input-area内） */
-    .modern-content.chatting .input-area .ai-card {
-        position: relative !important;
-        margin: 0 !important;
-        padding: 10px 12px !important;
-        width: 100% !important;
-        border-radius: 12px !important;
-        background: #fff !important;
-        box-shadow: 0 2px 8px 0 rgba(0, 0, 0, 0.04) !important;
+    .chat-message:last-child {
+        margin-bottom: 40px;
     }
 
-    /* .ai-input-row {
-        padding: 12px 12px !important;
-        margin: 0 !important;
-        background: #f8f9fa !important;
-        border-radius: 0 !important;
-        flex-shrink: 0 !important;
-    } */
-
-    /* .ai-buttons-row {
-        margin: 0 !important;
-        padding: 8px 12px 12px 12px !important;
-        background: #f8f9fa !important;
-        border-radius: 0 !important;
-        flex-shrink: 0 !important;
-        border-top: 1px solid #e5e7eb !important;
-    } */
-
-    /* AI 输入组件相关样式已移至 AIInputCard 组件内部管理 */
-
+    /* 9. 快捷按钮样式 */
     .chat-shortcut-btn {
         padding: 6px 10px;
         min-height: 40px;
         min-width: 50px;
         font-size: 11px;
-        gap: 1px;
-    }
-
-    .chat-shortcut-btn .btn-icon {
-        font-size: 14px;
-    }
-
-    .chat-shortcut-btn .btn-text {
-        font-size: 10px;
-    }
-
-    /* 问题2&3: 滚动条位置和底部内容展示 - 默认适应非微信浏览器 */
-    .chat-history-area {
-        height: calc(100vh - 76px - 180px) !important;
-        /* 兼容性回退，增加预留空间给非微信浏览器的输入框偏移 */
-        height: calc(100dvh - 76px - 180px) !important;
-        /* 使用动态视口高度，预留180px给输入区域和工具栏偏移 */
-        padding: 20px 8px 80px 8px !important;
-        /* 顶部20px，底部80px，适度增加底部间距适应非微信浏览器 */
-        margin: 0 !important;
-        width: 100% !important;
-        max-width: none !important;
-        box-sizing: border-box !important;
-        overflow-y: auto !important;
-        -webkit-overflow-scrolling: touch !important;
-        /* iOS滚动优化 */
-    }
-
-    /* 消息右侧间距，避免贴滚动条 */
-    .chat-message {
-        padding: 0 4px 16px 0 !important;
-        /* 最小化左右padding，让消息内容占满更多宽度 */
-    }
-
-    /* 移动端聊天消息宽度优化 */
-    .chat-message.user .chat-message-content {
-        max-width: 85% !important;
-        /* 用户消息保持合理宽度，不占满全屏 */
-    }
-
-    .chat-message.assistant .chat-message-content {
-        max-width: 100% !important;
-        /* 助手消息占满全屏宽度 */
-    }
-
-    /* 移动端强制清除消息内容间距 */
-    .chat-message-content .message-text {
-        margin: 0 !important;
-        padding: 0 !important;
-    }
-
-    .chat-message-content .message-text>* {
-        margin-bottom: 0 !important;
-        padding-bottom: 0 !important;
-    }
-
-    /* 移动端消息气泡padding调整 */
-    .chat-message.user .chat-message-content {
-        padding: 14px 16px 14px 16px !important;
-        /* 移动端用户消息：顶部14px，底部10px，补偿字体基线对齐造成的视觉不平衡 */
-    }
-
-    .chat-message.assistant .chat-message-content {
-        padding: 12px 16px 12px 16px !important;
-    }
-
-    /* 最后一条消息额外增加底部间距 - 优化移动端体验 */
-    .chat-message:last-child {
-        margin-bottom: 60px !important;
-        /* 减少底部间距，优化移动端空间利用 */
-    }
-
-    /* 使用伪元素在聊天历史区域底部创建额外空间 - 优化移动端体验 */
-    .chat-history-area::after {
-        content: '';
-        display: block;
-        height: 80px !important;
-        /* 减少额外底部空间，优化移动端体验 */
-        width: 100%;
-        flex-shrink: 0;
-    }
-
-    /* 微信环境下聊天历史区域优化 - 恢复紧凑布局，覆盖上面的默认样式 */
-    body.wechat-browser .chat-history-area {
-        height: calc(100vh - 76px - 120px) !important;
-        /* 微信环境下恢复原有的120px预留空间 */
-        height: calc(100dvh - 76px - 120px) !important;
-        padding: 20px 8px 60px 8px !important;
-        /* 微信环境下恢复原有的60px底部间距 */
-    }
-
-    /* 微信环境下最后一条消息间距 - 覆盖上面的默认样式 */
-    body.wechat-browser .chat-message:last-child {
-        margin-bottom: 60px !important;
-        /* 微信环境下恢复原有的60px底部间距 */
-    }
-
-    /* 微信环境下伪元素底部空间 - 覆盖上面的默认样式 */
-    body.wechat-browser .chat-history-area::after {
-        height: 100px !important;
-        /* 微信环境下恢复原有的100px额外空间 */
+        gap: 2px;
     }
 }
 
+/* ========== 超小屏幕优化 ========== */
 @media (max-width: 480px) {
 
-    /* 超小屏幕输入区域继承@media (max-width: 768px)中的样式 */
-
-    /* 超小屏幕 AI 组件样式已移至 AIInputCard 组件内部管理 */
-
-    /* 超小屏幕新聊天按钮区域 */
+    /* 新聊天按钮区域紧凑化 */
     .new-chat-section {
-        margin-bottom: 6px !important;
-        /* 超小屏幕最小化间距 */
+        margin-bottom: 16px;
     }
 
-    /* 超小屏幕AI按钮行间距优化 */
-    /* .ai-buttons-row {
-        padding: 6px 12px !important;
-    } */
-
-    /* 超小屏幕 AI 功能按钮样式已移至 AIInputCard 组件内部管理 */
-
-    /* 超小屏幕快捷操作按钮进一步优化 */
+    /* 快捷按钮进一步紧凑 */
     .chat-shortcut-btn {
         padding: 5px 8px;
         min-height: 36px;
@@ -9804,51 +9617,55 @@ body {
         gap: 1px;
     }
 
-    .chat-shortcut-btn .btn-icon {
-        font-size: 13px;
-    }
-
-    .chat-shortcut-btn .btn-text {
-        font-size: 9px;
-    }
-
-    /* 超小屏幕AI建议按钮进一步优化 */
-    .ai-suggestion-btn {
-        font-size: 0.7rem;
-        padding: 6px 10px;
-        min-width: 90px;
-        border-radius: 10px;
-        min-height: 32px;
-    }
-
-    .btn-icon {
-        font-size: 0.8rem;
-    }
-
-    .customize-btn-inline {
-        width: 28px;
-        height: 28px;
-    }
-
-    .customize-icon {
-        font-size: 11px;
-    }
-
-    .modern-content.chatting {
-        padding-top: 76px !important;
-        padding-left: 0 !important;
-        padding-right: 0 !important;
-    }
-
-    /* 超小屏幕聊天消息宽度进一步优化 */
+    /* 聊天消息宽度优化 */
     .chat-message.user .chat-message-content {
-        max-width: 80% !important;
-        /* 超小屏幕用户消息保持合理宽度，稍微紧凑一些 */
+        max-width: 80%;
+    }
+}
+
+/* ========== 微信环境特殊处理 ========== */
+@media (max-width: 768px) {
+
+    /* 微信环境下的全宽处理 */
+    body.wechat-browser {
+        width: 100vw;
+        max-width: 100vw;
+        overflow-x: hidden;
     }
 
-    .chat-message.assistant .chat-message-content {
-        max-width: 100% !important;
-        /* 超小屏幕助手消息占满全屏宽度 */
+    body.wechat-browser .main-modern,
+    body.wechat-browser .modern-content,
+    body.wechat-browser .center-container,
+    body.wechat-browser .welcome-section {
+        width: 100vw;
+        max-width: 100vw;
+    }
+
+    /* 微信环境下主页内容区域设置适当内边距 */
+    body.wechat-browser .modern-content:not(.chatting) {
+        padding-left: 8px;
+        padding-right: 8px;
+    }
+
+    /* 微信环境下聊天模式无内边距，占满全宽 */
+    body.wechat-browser .modern-content.chatting {
+        padding-left: 0;
+        padding-right: 0;
+    }
+
+    body.wechat-browser .modern-content:not(.chatting) {
+        padding-bottom: 140px;
+        /* 微信环境下增加底部空间 */
+    }
+
+    body.wechat-browser .modern-content:not(.chatting) .ai-card {
+        bottom: 0;
+        /* 微信环境下贴底显示 */
+    }
+
+    /* 微信环境下聊天模式新建聊天按钮区域间隔优化 */
+    body.wechat-browser .new-chat-section {
+        margin-bottom: 12px;
     }
 }
 

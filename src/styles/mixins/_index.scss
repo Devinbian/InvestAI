@@ -1,6 +1,13 @@
 // Mixins 主入口文件
 // 导入所有 mixins 以便统一使用
 
+// 首先导入变量
+@import '../variables/breakpoints';
+
+// 然后导入响应式混入
+@import 'responsive';
+
+// 导入其他混入
 @import 'buttons';
 @import 'mobile';
 @import 'scrollbar';

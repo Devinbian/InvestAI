@@ -1,0 +1,227 @@
+// ========================================
+// 响应式设计混入 (Responsive Mixins)
+// ========================================
+
+@import '../variables/breakpoints';
+
+// 基础响应式混入 - 使用断点名称
+@mixin respond-to($breakpoint) {
+  @if map-has-key($breakpoints, $breakpoint) {
+    @media (max-width: #{map-get($breakpoints, $breakpoint)}) {
+      @content;
+    }
+  } @else {
+    @warn "断点 `#{$breakpoint}` 未定义在 $breakpoints 中";
+  }
+}
+
+// 最小宽度响应式混入
+@mixin respond-from($breakpoint) {
+  @if map-has-key($breakpoints, $breakpoint) {
+    @media (min-width: #{map-get($breakpoints, $breakpoint)}) {
+      @content;
+    }
+  } @else {
+    @warn "断点 `#{$breakpoint}` 未定义在 $breakpoints 中";
+  }
+}
+
+// 范围响应式混入
+@mixin respond-between($min-breakpoint, $max-breakpoint) {
+  @if map-has-key($breakpoints, $min-breakpoint) and map-has-key($breakpoints, $max-breakpoint) {
+    @media (min-width: #{map-get($breakpoints, $min-breakpoint)}) and (max-width: #{map-get($breakpoints, $max-breakpoint) - 1px}) {
+      @content;
+    }
+  } @else {
+    @warn "断点 `#{$min-breakpoint}` 或 `#{$max-breakpoint}` 未定义在 $breakpoints 中";
+  }
+}
+
+// 自定义媒体查询混入
+@mixin media($query) {
+  @media #{$query} {
+    @content;
+  }
+}
+
+// 常用设备类型混入
+@mixin mobile-only {
+  @media #{$is-mobile} {
+    @content;
+  }
+}
+
+@mixin tablet-only {
+  @media #{$is-tablet} {
+    @content;
+  }
+}
+
+@mixin desktop-only {
+  @media #{$is-desktop} {
+    @content;
+  }
+}
+
+@mixin mobile-and-tablet {
+  @media (max-width: #{$desktop - 1px}) {
+    @content;
+  }
+}
+
+@mixin tablet-and-desktop {
+  @media (min-width: #{$tablet-sm}) {
+    @content;
+  }
+}
+
+// 触摸设备混入
+@mixin touch-device {
+  @media #{$touch-device} {
+    @content;
+  }
+}
+
+@mixin non-touch-device {
+  @media #{$non-touch-device} {
+    @content;
+  }
+}
+
+// 高分辨率屏幕混入
+@mixin high-dpi {
+  @media #{$high-dpi} {
+    @content;
+  }
+}
+
+// 屏幕方向混入
+@mixin portrait {
+  @media #{$portrait} {
+    @content;
+  }
+}
+
+@mixin landscape {
+  @media #{$landscape} {
+    @content;
+  }
+}
+
+// 特殊环境混入
+@mixin reduced-motion {
+  @media #{$reduced-motion} {
+    @content;
+  }
+}
+
+@mixin dark-mode {
+  @media #{$dark-mode} {
+    @content;
+  }
+}
+
+@mixin high-contrast {
+  @media #{$high-contrast} {
+    @content;
+  }
+}
+
+// 组合条件混入
+@mixin mobile-portrait {
+  @media #{$mobile-portrait} {
+    @content;
+  }
+}
+
+@mixin mobile-landscape {
+  @media #{$mobile-landscape} {
+    @content;
+  }
+}
+
+@mixin tablet-portrait {
+  @media #{$tablet-portrait} {
+    @content;
+  }
+}
+
+@mixin tablet-landscape {
+  @media #{$tablet-landscape} {
+    @content;
+  }
+}
+
+// 项目特定混入 - 兼容现有代码
+@mixin mobile-phone {
+  @media (max-width: #{$bp-mobile-phone}) {
+    @content;
+  }
+}
+
+@mixin mobile-tablet {
+  @media (max-width: #{$bp-mobile-tablet}) {
+    @content;
+  }
+}
+
+@mixin tablet-desktop {
+  @media (max-width: #{$bp-tablet-desktop}) {
+    @content;
+  }
+}
+
+@mixin desktop-wide {
+  @media (max-width: #{$bp-desktop-wide}) {
+    @content;
+  }
+}
+
+@mixin desktop-ultra {
+  @media (max-width: #{$bp-desktop-ultra}) {
+    @content;
+  }
+}
+
+// 便捷的尺寸区间混入
+@mixin xs-only {
+  @media (max-width: #{$mobile-xs}) {
+    @content;
+  }
+}
+
+@mixin sm-only {
+  @media (min-width: #{$mobile-xs + 1px}) and (max-width: #{$mobile-sm}) {
+    @content;
+  }
+}
+
+@mixin md-only {
+  @media (min-width: #{$mobile-sm + 1px}) and (max-width: #{$tablet-sm - 1px}) {
+    @content;
+  }
+}
+
+@mixin lg-only {
+  @media (min-width: #{$tablet-sm}) and (max-width: #{$desktop - 1px}) {
+    @content;
+  }
+}
+
+@mixin xl-only {
+  @media (min-width: #{$desktop}) {
+    @content;
+  }
+}
+
+// 容器查询混入 (现代浏览器支持)
+@mixin container-query($condition) {
+  @container #{$condition} {
+    @content;
+  }
+}
+
+// 工具函数 - 获取断点值
+@function get-breakpoint($name) {
+  @return map-get($breakpoints, $name);
+} 

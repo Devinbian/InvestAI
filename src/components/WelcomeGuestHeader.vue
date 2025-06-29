@@ -74,7 +74,8 @@ onMounted(() => {
     background: linear-gradient(135deg, #eff6ff 0%, #dbeafe 100%);
     border: 1px solid #3b82f6;
     border-radius: 16px;
-    padding: 20px;
+    padding: 20px 0;
+    /* 桌面端：上下20px，左右0px - 消除左右间隔 */
     color: #1e40af;
     overflow: hidden;
     margin-bottom: 24px;
@@ -82,13 +83,18 @@ onMounted(() => {
     box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
 }
 
+/* 桌面端内容区域的内边距 */
 .welcome-guest-header .header-content {
     position: relative;
     z-index: 2;
     display: flex;
     justify-content: center;
     align-items: center;
+    padding: 0 20px;
+    /* 只有内容区域有左右内边距 */
 }
+
+
 
 .welcome-guest-header .greeting-section {
     display: flex;
@@ -185,9 +191,16 @@ onMounted(() => {
 /* 移动端适配 */
 @media (max-width: 768px) {
     .welcome-guest-header {
-        padding: 16px;
+        padding: 16px 0;
+        /* 上下16px，左右0px - 消除左右间隔 */
         border-radius: 12px;
         margin-bottom: 20px;
+    }
+
+    /* 内容区域的内边距 */
+    .welcome-guest-header .header-content {
+        padding: 0 16px;
+        /* 只有内容区域有左右内边距 */
     }
 
     .welcome-guest-header .greeting-section {
@@ -216,8 +229,14 @@ onMounted(() => {
         /* 不需要额外的顶部间距，主页内容已有padding-top */
         margin-bottom: 60px !important;
         /* 增加底部间距，使用更大的值确保生效 */
-        padding: 16px 20px !important;
-        /* 增加内边距，提供更好的视觉效果 */
+        padding: 16px 0 !important;
+        /* 上下16px，左右0px - 消除左右间隔 */
+    }
+
+    /* 微信环境下内容区域的内边距 - 完全由Main容器控制 */
+    :global(body.wechat-browser) :global(.welcome-guest-header) :global(.header-content) {
+        padding: 0 0 !important;
+        /* 微信环境下完全清除左右内边距，间隔由Main容器控制 */
     }
 
     /* 微信环境下进一步优化间距 */

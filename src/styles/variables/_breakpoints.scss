@@ -1,0 +1,73 @@
+// ========================================
+// 全局响应式断点变量
+// ========================================
+
+// 断点定义 - 基于常见设备尺寸和项目需求
+$breakpoints: (
+  // 移动设备
+  'mobile-xs': 320px,     // 超小屏手机 (iPhone SE)
+  'mobile-sm': 375px,     // 小屏手机 (iPhone 6/7/8)
+  'mobile': 480px,        // 标准手机横屏
+  'mobile-lg': 640px,     // 大屏手机 (iPhone Plus)
+  
+  // 平板设备
+  'tablet-sm': 768px,     // 小平板竖屏 (iPad mini)
+  'tablet': 1024px,       // 标准平板横屏 (iPad)
+  'tablet-lg': 1200px,    // 大平板 (iPad Pro)
+  
+  // 桌面设备
+  'desktop': 1400px,      // 标准桌面
+  'desktop-lg': 1600px,   // 大屏桌面
+  'desktop-xl': 1920px    // 超大屏桌面
+);
+
+// 常用断点快捷变量
+$mobile-xs: map-get($breakpoints, 'mobile-xs');
+$mobile-sm: map-get($breakpoints, 'mobile-sm');
+$mobile: map-get($breakpoints, 'mobile');
+$mobile-lg: map-get($breakpoints, 'mobile-lg');
+$tablet-sm: map-get($breakpoints, 'tablet-sm');
+$tablet: map-get($breakpoints, 'tablet');
+$tablet-lg: map-get($breakpoints, 'tablet-lg');
+$desktop: map-get($breakpoints, 'desktop');
+$desktop-lg: map-get($breakpoints, 'desktop-lg');
+$desktop-xl: map-get($breakpoints, 'desktop-xl');
+
+// 项目特定断点 - 基于现有代码分析
+$bp-mobile-phone: 480px;    // 手机端 (对应原 480px)
+$bp-mobile-tablet: 768px;   // 手机和小平板 (对应原 768px)
+$bp-tablet-desktop: 1024px; // 平板到桌面 (对应原 1024px)
+$bp-desktop-wide: 1200px;   // 宽屏桌面 (对应原 1200px)
+$bp-desktop-ultra: 1400px;  // 超宽屏 (对应原 1400px)
+
+// 断点范围定义
+$mobile-range: '(max-width: #{$tablet-sm - 1px})';
+$tablet-range: '(min-width: #{$tablet-sm}) and (max-width: #{$desktop - 1px})';
+$desktop-range: '(min-width: #{$desktop})';
+
+// 设备类型检测断点
+$is-mobile: '(max-width: #{$tablet-sm - 1px})';
+$is-tablet: '(min-width: #{$tablet-sm}) and (max-width: #{$desktop - 1px})';
+$is-desktop: '(min-width: #{$desktop})';
+
+// 触摸设备检测
+$touch-device: '(hover: none) and (pointer: coarse)';
+$non-touch-device: '(hover: hover) and (pointer: fine)';
+
+// 高分辨率屏幕检测
+$high-dpi: '(min-resolution: 2dppx), (-webkit-min-device-pixel-ratio: 2)';
+
+// 屏幕方向检测
+$portrait: '(orientation: portrait)';
+$landscape: '(orientation: landscape)';
+
+// 特殊环境检测
+$reduced-motion: '(prefers-reduced-motion: reduce)';
+$dark-mode: '(prefers-color-scheme: dark)';
+$high-contrast: '(prefers-contrast: high)';
+
+// 常用组合断点
+$mobile-portrait: '(max-width: #{$tablet-sm - 1px}) and (orientation: portrait)';
+$mobile-landscape: '(max-width: #{$tablet-sm - 1px}) and (orientation: landscape)';
+$tablet-portrait: '(min-width: #{$tablet-sm}) and (max-width: #{$desktop - 1px}) and (orientation: portrait)';
+$tablet-landscape: '(min-width: #{$tablet-sm}) and (max-width: #{$desktop - 1px}) and (orientation: landscape)'; 

@@ -1,0 +1,170 @@
+// ========================================
+// 响应式断点使用示例
+// ========================================
+
+@import '../mixins/index';
+
+/* 
+使用示例：
+
+1. 基础用法 - 使用断点名称
+.component {
+  @include respond-to('tablet-sm') {
+    // 小于等于 768px 时的样式
+    padding: 16px;
+  }
+  
+  @include respond-from('desktop') {
+    // 大于等于 1400px 时的样式  
+    padding: 32px;
+  }
+}
+
+2. 设备类型混入
+.mobile-component {
+  @include mobile-only {
+    // 仅移动端样式
+    display: block;
+  }
+  
+  @include desktop-only {
+    // 仅桌面端样式
+    display: flex;
+  }
+}
+
+3. 项目特定断点（兼容现有代码）
+.legacy-component {
+  @include mobile-tablet {
+    // 对应原来的 @media (max-width: 768px)
+    font-size: 14px;
+  }
+  
+  @include mobile-phone {
+    // 对应原来的 @media (max-width: 480px)
+    font-size: 12px;
+  }
+}
+
+4. 组合条件
+.advanced-component {
+  @include mobile-portrait {
+    // 移动端竖屏
+    flex-direction: column;
+  }
+  
+  @include tablet-landscape {
+    // 平板横屏
+    flex-direction: row;
+  }
+}
+
+5. 触摸设备适配
+.interactive-component {
+  @include touch-device {
+    // 触摸设备样式
+    padding: 12px;
+    min-height: 44px;
+  }
+  
+  @include non-touch-device {
+    // 非触摸设备样式
+    padding: 8px;
+    min-height: 32px;
+  }
+}
+
+6. 特殊环境适配
+.accessible-component {
+  @include reduced-motion {
+    // 减少动画用户
+    transition: none;
+  }
+  
+  @include high-contrast {
+    // 高对比度用户
+    border: 2px solid;
+  }
+  
+  @include dark-mode {
+    // 深色模式
+    background: #1a1a1a;
+    color: #ffffff;
+  }
+}
+
+7. 范围查询
+.range-component {
+  @include respond-between('mobile', 'tablet') {
+    // 480px 到 1024px 之间
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
+8. 自定义媒体查询
+.custom-component {
+  @include media('(max-width: 600px) and (orientation: landscape)') {
+    // 自定义条件
+    height: 50vh;
+  }
+}
+
+9. 获取断点值
+.dynamic-component {
+  // 使用函数获取断点值
+  max-width: get-breakpoint('tablet-sm');
+  
+  // 或者使用变量
+  margin-top: $mobile-xs;
+}
+*/
+
+// 实际使用示例 - AIInputCard 重构
+.ai-input-card-example {
+  padding: 20px;
+  
+  @include mobile-tablet {
+    // 替代原来的 @media (max-width: 768px)
+    padding: 12px;
+    margin: 0;
+    border-radius: 0;
+  }
+  
+  @include mobile-phone {
+    // 替代原来的 @media (max-width: 480px)
+    padding: 8px;
+    
+    .ai-func-btn {
+      width: 30px;
+      height: 30px;
+    }
+  }
+  
+  @include touch-device {
+    // 触摸设备优化
+    min-height: 44px;
+  }
+}
+
+// 实际使用示例 - 主页布局重构
+.main-content-example {
+  padding: 56px 32px 0;
+  max-width: 900px;
+  
+  @include mobile-tablet {
+    // 替代原来的 @media (max-width: 768px)
+    padding-top: 76px;
+    padding-left: 0;
+    padding-right: 0;
+  }
+  
+  @include mobile-phone {
+    // 替代原来的 @media (max-width: 480px)
+    padding-top: 80px;
+  }
+  
+  @include xs-only {
+    // 超小屏幕特殊处理
+    padding-top: 100px;
+  }
+} 

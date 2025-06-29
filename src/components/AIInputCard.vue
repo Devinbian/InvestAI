@@ -472,7 +472,13 @@ export default {
 
         /* 主页模式样式 - 贴底显示时的内部样式 */
         margin: 0 !important;
-        padding: 12px 0 calc(12px + env(safe-area-inset-bottom, 0)) 0 !important;
+        padding: 8px 0 calc(8px + env(safe-area-inset-bottom, 0)) 0 !important;
+
+        /* 当输入框获得焦点时，减少底部间距（键盘弹出时） */
+        &:focus-within {
+            padding: 4px 0 4px 0 !important;
+        }
+
         border-radius: 0 !important;
         background: #fff !important;
         box-shadow: 0 -1px 3px 0 rgba(0, 0, 0, 0.05) !important;
@@ -563,7 +569,13 @@ export default {
         width: 100vw !important;
         max-width: 100vw !important;
         margin: 0 !important;
-        padding: 12px 0 calc(12px + env(safe-area-inset-bottom, 0)) 0 !important;
+        padding: 8px 0 calc(8px + env(safe-area-inset-bottom, 0)) 0 !important;
+
+        /* 微信环境下键盘弹出时的特殊处理 */
+        &:focus-within {
+            padding: 4px 0 4px 0 !important;
+        }
+
         border-radius: 0 !important;
         background: #fff !important;
         box-shadow: none !important;
@@ -598,7 +610,13 @@ export default {
 @include mobile-sm {
     .ai-card {
         /* 超小屏幕内部样式 */
-        padding: 10px 0 calc(env(safe-area-inset-bottom) + 10px) 0 !important;
+        padding: 6px 0 calc(env(safe-area-inset-bottom) + 6px) 0 !important;
+
+        /* 超小屏幕键盘弹出时的处理 */
+        &:focus-within {
+            padding: 3px 0 3px 0 !important;
+        }
+
         width: 100% !important;
         max-width: 100% !important;
         border-radius: 0 !important;
@@ -653,7 +671,12 @@ export default {
     :global(body.wechat-browser) .ai-card {
         width: 100vw !important;
         max-width: 100vw !important;
-        padding: 8px 0 calc(env(safe-area-inset-bottom) + 8px) 0 !important;
+        padding: 6px 0 calc(env(safe-area-inset-bottom) + 6px) 0 !important;
+
+        /* 微信超小屏幕键盘弹出时的处理 */
+        &:focus-within {
+            padding: 3px 0 3px 0 !important;
+        }
     }
 
     :global(body.wechat-browser .modern-content.chatting) .ai-card {

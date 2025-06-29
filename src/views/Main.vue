@@ -3384,6 +3384,568 @@ onMounted(() => {
         height: 14px !important;
         stroke-width: 2 !important;
     }
+
+    /* 移动端聊天历史面板显示时的位移 */
+    .modern-content.with-chat-history {
+        transform: translateX(280px);
+    }
+
+    /* 主页模式下为内容区域添加底部间距，避免被输入框遮挡 */
+    .modern-content:not(.chatting) {
+        padding-bottom: 180px !important;
+        /* 为贴底的输入框留出空间 */
+    }
+
+    /* 移动端增加welcome-section和AI卡片之间的间距 */
+    .welcome-section {
+        margin-bottom: 40px !important;
+    }
+
+    .welcome-section.with-performance {
+        margin-bottom: 32px !important;
+    }
+
+    /* 微信浏览器环境下减少间距 */
+    body.wechat-browser .welcome-section.with-performance {
+        margin-bottom: 8px !important;
+        /* 进一步减少微信端间距 */
+    }
+
+    /* 非微信浏览器环境下适当增加间距，确保与输入框有合适距离 */
+    body:not(.wechat-browser) .welcome-section.with-performance {
+        margin-bottom: 32px !important;
+    }
+
+    /* 移动端响应式设计 */
+    .greeting-container {
+        flex-direction: column;
+        gap: 12px;
+        margin-bottom: 16px;
+    }
+
+    .greeting-avatar-large {
+        width: 50px;
+        height: 50px;
+    }
+
+    .greeting-message {
+        align-items: center;
+        text-align: center;
+    }
+
+    .modern-title {
+        font-size: 1.8rem;
+    }
+
+    .modern-subtitle {
+        font-size: 0.85rem;
+        text-align: center;
+    }
+
+    /* 移动端聊天消息字体优化 */
+    .chat-message.user .chat-message-content {
+        font-size: 0.9rem;
+        padding: 12px 16px;
+        max-width: 85%;
+    }
+
+    .chat-message.assistant .chat-message-content {
+        font-size: 0.9rem;
+        padding: 12px 16px;
+        max-width: 100%;
+    }
+
+    /* 移动端聊天历史区域完整重新定义 */
+    .chat-history-area {
+        height: calc(100vh - 76px - 160px) !important;
+        /* 减少高度：76px(导航+间距) + 160px(输入框空间) */
+        padding: 0 0 32px 0 !important;
+        /* 顶部无padding，左右无间距让股票列表占满全屏，底部32px避免遮挡 */
+        margin: 0 !important;
+        /* 移除所有margin */
+        width: 100% !important;
+        max-width: none !important;
+        /* 移动端占满宽度 */
+        box-sizing: border-box !important;
+        /* 确保padding不影响宽度计算 */
+        scrollbar-width: thin;
+        scrollbar-color: rgba(0, 0, 0, 0.2) rgba(0, 0, 0, 0.05);
+        /* 为移动端增加底部间距，确保最后一条消息不被新建聊天按钮遮挡 */
+        padding-bottom: 100px !important;
+        /* 基础20px + 额外80px防重叠空间 */
+    }
+
+    /* 移动端滚动条优化 - 始终可见 */
+    .chat-history-area::-webkit-scrollbar {
+        width: 4px !important;
+        /* 移动端稍细一些 */
+    }
+
+    .chat-history-area::-webkit-scrollbar-track {
+        background: rgba(0, 0, 0, 0.05) !important;
+        /* 轻微的背景色 */
+        border-radius: 2px;
+    }
+
+    .chat-history-area::-webkit-scrollbar-thumb {
+        background: rgba(0, 0, 0, 0.2) !important;
+        border-radius: 2px;
+    }
+
+    /* 移动端生成状态内联样式优化 */
+    .generating-label {
+        font-size: 0.8rem;
+    }
+
+    /* 互动建议适配 */
+    .interaction-suggestions {
+        padding: 10px;
+        margin-top: 12px;
+    }
+
+    .suggestion-intro {
+        font-size: 0.8rem;
+    }
+
+    .suggestion-item {
+        padding: 6px 10px;
+        font-size: 0.8rem;
+    }
+
+    .suggestion-icon {
+        font-size: 0.9rem;
+    }
+
+    /* 股票相关移动端适配 */
+    .stock-header {
+        flex-direction: column;
+        gap: 8px;
+        align-items: flex-start;
+    }
+
+    .stock-price-change {
+        align-self: flex-end;
+        display: flex;
+        flex-direction: column;
+        align-items: flex-end;
+        gap: 2px;
+        flex-shrink: 0;
+    }
+
+    .current-price {
+        font-size: 0.9rem;
+        font-weight: 700;
+        line-height: 1;
+    }
+
+    .price-change {
+        font-size: 0.7rem;
+        padding: 1px 4px;
+        border-radius: 3px;
+        line-height: 1;
+    }
+
+    .detail-row {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 4px;
+        display: contents;
+    }
+
+    .detail-label {
+        min-width: auto;
+        font-size: 0.65rem;
+        color: #64748b;
+        white-space: nowrap;
+        font-weight: 500;
+        line-height: 1;
+        text-align: center;
+    }
+
+    .detail-value {
+        font-size: 0.75rem;
+        font-weight: 600;
+        text-align: center;
+        line-height: 1.2;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        max-width: 100%;
+        color: #1f2937;
+    }
+
+    .detail-group {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        gap: 3px;
+        padding: 6px 4px;
+        border-radius: 6px;
+        background: rgba(255, 255, 255, 0.8);
+        border: 1px solid rgba(226, 232, 240, 0.5);
+        min-height: 40px !important;
+        height: 40px !important;
+        width: 100% !important;
+        box-sizing: border-box !important;
+        overflow: hidden !important;
+    }
+
+    .stock-item-actions {
+        justify-content: flex-start;
+        gap: 4px;
+        flex-wrap: wrap;
+        overflow-x: visible;
+    }
+
+    .stock-item-actions .el-button {
+        font-size: 10px;
+        padding: 4px 8px;
+        min-height: 28px;
+        border-radius: 6px;
+        flex-shrink: 0;
+    }
+
+    .stock-item-actions .el-button svg {
+        width: 10px;
+        height: 10px;
+    }
+
+    .sell-stock-btn,
+    .buy-stock-btn-secondary {
+        font-size: 10px;
+        padding: 4px 8px;
+        min-height: 28px;
+        border-radius: 6px;
+    }
+
+    /* 推荐指数移动端适配 */
+    .recommend-index {
+        flex-wrap: nowrap;
+        gap: 4px;
+        overflow: hidden;
+        display: flex;
+        align-items: center;
+        flex-wrap: wrap;
+    }
+
+    .recommend-stars {
+        display: flex;
+        align-items: center;
+        gap: 1px;
+    }
+
+    .star {
+        font-size: 0.75rem;
+    }
+
+    .recommend-score {
+        font-size: 0.65rem;
+        padding: 1px 3px;
+        white-space: nowrap;
+        color: #64748b;
+        margin-left: 2px;
+    }
+
+    .help-icon {
+        font-size: 0.75rem;
+        margin-left: 2px;
+    }
+
+    .recommend-level {
+        font-size: 0.65rem;
+        padding: 1px 4px;
+        min-width: 40px;
+        white-space: nowrap;
+        font-size: 0.6rem;
+        padding: 1px 3px;
+        margin-left: 2px;
+    }
+
+    /* 优化详细信息显示 - 两行两列布局，平分宽度 */
+    .stock-item .stock-info .stock-details {
+        margin-top: 6px !important;
+        padding: 6px 8px !important;
+        background: #f8fafc !important;
+        border-radius: 6px !important;
+        border: 1px solid #e2e8f0 !important;
+        display: grid !important;
+        grid-template-columns: minmax(0, 1fr) minmax(0, 1fr) !important;
+        gap: 6px 8px !important;
+        align-items: center !important;
+        width: 100% !important;
+        box-sizing: border-box !important;
+        overflow: hidden !important;
+    }
+
+    /* 推荐理由横向显示，限制1行 */
+    .stock-reason {
+        margin-top: 8px !important;
+        padding: 8px !important;
+        background: #fff3cd !important;
+        border-radius: 4px !important;
+        font-size: 0.7rem !important;
+        line-height: 1.3 !important;
+        color: #856404 !important;
+        display: -webkit-box !important;
+        -webkit-line-clamp: 2 !important;
+        -webkit-box-orient: vertical !important;
+        overflow: hidden !important;
+        text-overflow: ellipsis !important;
+        max-height: 2.6rem !important;
+        word-break: break-all !important;
+    }
+
+    /* 移动端股票详情弹窗优化 */
+    .stock-detail-popup {
+        width: 95% !important;
+        max-width: 400px !important;
+        margin: 0 auto !important;
+        border-radius: 12px !important;
+        max-height: 80vh !important;
+        overflow-y: auto !important;
+    }
+
+    .stock-detail-popup .el-dialog__body {
+        padding: 16px !important;
+        max-height: 70vh !important;
+        overflow-y: auto !important;
+    }
+
+    /* 移动端股票操作弹窗样式 */
+    .mobile-stock-dialog {
+        position: fixed !important;
+        bottom: 0 !important;
+        left: 0 !important;
+        right: 0 !important;
+        top: auto !important;
+        transform: none !important;
+        width: 100% !important;
+        max-width: none !important;
+        margin: 0 !important;
+        border-radius: 16px 16px 0 0 !important;
+        background: white !important;
+        box-shadow: 0 -4px 20px rgba(0, 0, 0, 0.15) !important;
+        animation: slideUp 0.3s ease-out !important;
+    }
+
+    @keyframes slideUp {
+        from {
+            transform: translateY(100%);
+        }
+
+        to {
+            transform: translateY(0);
+        }
+    }
+
+    /* 移动端聊天区域新建聊天按钮样式调整 */
+    .chat-actions .new-chat-btn {
+        border-radius: 12px !important;
+        background: #f5f7fa !important;
+        color: #18181b !important;
+        font-weight: 500 !important;
+        border: 1px solid #e0e0e0 !important;
+        box-shadow: none !important;
+        padding: 6px 10px !important;
+        transition: all 0.2s !important;
+        display: flex !important;
+        align-items: center !important;
+        gap: 4px !important;
+        font-size: 0.8rem !important;
+        height: 32px !important;
+        white-space: nowrap !important;
+        flex-shrink: 0 !important;
+        min-width: auto !important;
+    }
+
+    .chat-actions .new-chat-btn:hover {
+        background: #e6e8eb !important;
+        border-color: #d0d0d0 !important;
+    }
+
+    .chat-actions .new-chat-btn:active {
+        transform: scale(0.98) !important;
+    }
+
+    .chat-actions .new-chat-btn svg {
+        width: 14px !important;
+        height: 14px !important;
+    }
+
+    /* 移动端账户信息适配 */
+    .account-header {
+        flex-direction: column;
+        align-items: stretch;
+        gap: 16px;
+    }
+
+    /* 移动端总资产卡片优化 */
+    .total-asset-card {
+        padding: 20px 16px;
+        border-radius: 12px;
+        margin-bottom: 16px;
+        box-shadow: 0 4px 20px rgba(102, 126, 234, 0.25);
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    }
+
+    .total-asset-card::before {
+        background: linear-gradient(135deg, rgba(255, 255, 255, 0.15) 0%, rgba(255, 255, 255, 0.08) 100%);
+    }
+
+    .amount-label {
+        font-size: 0.9rem;
+        margin-bottom: 6px;
+    }
+
+    .amount-value {
+        font-size: 2.2rem;
+        font-weight: 800;
+        margin-bottom: 8px;
+    }
+
+    .asset-change {
+        font-size: 1rem;
+        gap: 6px;
+    }
+
+    .change-label {
+        font-size: 0.85rem;
+    }
+
+    /* 移动端统计卡片网格优化 */
+    .overview-stats {
+        grid-template-columns: repeat(2, 1fr);
+        gap: 10px;
+        margin-top: 12px;
+    }
+
+    .stat-item {
+        padding: 14px 10px;
+        gap: 8px;
+        min-height: 85px;
+        border-radius: 10px;
+        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+        transition: all 0.3s ease;
+        position: relative;
+        overflow: hidden;
+    }
+
+    .stat-item::before {
+        content: '';
+        position: absolute;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        background: linear-gradient(135deg, rgba(255, 255, 255, 0.5) 0%, rgba(255, 255, 255, 0.1) 100%);
+        opacity: 0;
+        transition: opacity 0.3s ease;
+        pointer-events: none;
+    }
+
+    .stat-item:active {
+        transform: scale(0.98);
+        box-shadow: 0 1px 4px rgba(0, 0, 0, 0.12);
+    }
+
+    .stat-item:active::before {
+        opacity: 1;
+    }
+
+    .stat-item:hover {
+        transform: none;
+        box-shadow: 0 3px 12px rgba(0, 0, 0, 0.12);
+    }
+
+    .stat-icon {
+        font-size: 1.4rem;
+        width: 32px;
+        height: 32px;
+        border-radius: 8px;
+        background: linear-gradient(135deg, #f1f5f9 0%, #e2e8f0 100%);
+        margin-bottom: 4px;
+    }
+
+    .stat-icon.cash {
+        background: linear-gradient(135deg, #fef3c7 0%, #fde68a 100%);
+    }
+
+    .stat-icon.portfolio {
+        background: linear-gradient(135deg, #dbeafe 0%, #bfdbfe 100%);
+    }
+
+    .stat-icon.stocks {
+        background: linear-gradient(135deg, #ecfdf5 0%, #d1fae5 100%);
+    }
+
+    .stat-icon.watchlist {
+        background: linear-gradient(135deg, #fef7ff 0%, #f3e8ff 100%);
+    }
+
+    .stat-label {
+        font-size: 0.75rem;
+        color: #64748b !important;
+        margin-bottom: 3px;
+        font-weight: 600;
+        line-height: 1.2;
+    }
+
+    .stat-value {
+        font-size: 1.1rem;
+        font-weight: 800;
+        color: #1e293b !important;
+        line-height: 1.1;
+    }
+
+    .data-grid {
+        grid-template-columns: 1fr;
+    }
+
+    .watchlist-cards {
+        grid-template-columns: 1fr;
+    }
+
+    .tab-item {
+        padding: 8px 12px;
+        font-size: 13px;
+    }
+
+    .portfolio-card,
+    .watchlist-card {
+        padding: 16px;
+    }
+
+    .stock-account-container {
+        padding: 16px;
+    }
+
+    .account-title {
+        font-size: 1.25rem;
+    }
+
+    .amount-value {
+        font-size: 2rem;
+    }
+
+    /* 移动端空状态优化 */
+    .empty-state {
+        padding: 30px 20px;
+    }
+
+    .empty-state .empty-icon {
+        font-size: 36px;
+        margin-bottom: 12px;
+    }
+
+    .empty-state h4 {
+        font-size: 16px;
+        margin: 0 0 6px 0;
+    }
+
+    .empty-state p {
+        font-size: 13px;
+    }
 }
 
 /* 桌面端侧边栏悬浮按钮基础样式 */
@@ -3505,18 +4067,7 @@ body.onboarding-mode {
     will-change: transform;
 }
 
-/* 移动端聊天历史面板显示时的位移 */
-@include mobile {
-    .modern-content.with-chat-history {
-        transform: translateX(280px);
-    }
 
-    /* 主页模式下为内容区域添加底部间距，避免被输入框遮挡 */
-    .modern-content:not(.chatting) {
-        padding-bottom: 180px !important;
-        /* 为贴底的输入框留出空间 */
-    }
-}
 
 /* 引导模式下的特殊样式 */
 .onboarding-active .modern-content {
@@ -3554,28 +4105,7 @@ body.onboarding-mode {
 }
 
 
-/* 移动端增加welcome-section和AI卡片之间的间距 */
-@include mobile {
-    .welcome-section {
-        margin-bottom: 40px !important;
-    }
 
-    .welcome-section.with-performance {
-        margin-bottom: 32px !important;
-    }
-
-    /* 微信浏览器环境下减少间距 */
-    body.wechat-browser .welcome-section.with-performance {
-        margin-bottom: 8px !important;
-        /* 进一步减少微信端间距 */
-    }
-
-    /* 非微信浏览器环境下适当增加间距，确保与输入框有合适距离 */
-    body:not(.wechat-browser) .welcome-section.with-performance {
-        margin-bottom: 32px !important;
-    }
-
-}
 
 .greeting-container {
     display: flex;
@@ -3624,150 +4154,6 @@ body.onboarding-mode {
     margin-bottom: 20px;
     text-align: center;
     line-height: 1.5;
-}
-
-
-
-/* 响应式设计 */
-@include mobile {
-    .greeting-container {
-        flex-direction: column;
-        gap: 12px;
-        margin-bottom: 16px;
-    }
-
-    .greeting-avatar-large {
-        width: 50px;
-        height: 50px;
-    }
-
-    .greeting-message {
-        align-items: center;
-        text-align: center;
-    }
-
-    .modern-title {
-        font-size: 1.8rem;
-    }
-
-    .modern-subtitle {
-        font-size: 0.85rem;
-        text-align: center;
-    }
-
-    /* 移动端聊天消息字体优化 */
-    .chat-message.user .chat-message-content {
-        font-size: 0.9rem;
-        padding: 12px 16px;
-        max-width: 85%;
-    }
-
-    .chat-message.assistant .chat-message-content {
-        font-size: 0.9rem;
-        padding: 12px 16px;
-        max-width: 100%;
-    }
-
-    /* 移动端聊天历史区域完整重新定义 */
-    .chat-history-area {
-        height: calc(100vh - 76px - 160px) !important;
-        /* 减少高度：76px(导航+间距) + 160px(输入框空间) */
-        padding: 0 0 32px 0 !important;
-        /* 顶部无padding，左右无间距让股票列表占满全屏，底部32px避免遮挡 */
-        margin: 0 !important;
-        /* 移除所有margin */
-        width: 100% !important;
-        max-width: none !important;
-        /* 移动端占满宽度 */
-        box-sizing: border-box !important;
-        /* 确保padding不影响宽度计算 */
-        scrollbar-width: thin;
-        scrollbar-color: rgba(0, 0, 0, 0.2) rgba(0, 0, 0, 0.05);
-    }
-
-    /* 移动端滚动条优化 - 始终可见 */
-    .chat-history-area::-webkit-scrollbar {
-        width: 4px !important;
-        /* 移动端稍细一些 */
-    }
-
-    .chat-history-area::-webkit-scrollbar-track {
-        background: rgba(0, 0, 0, 0.05) !important;
-        /* 轻微的背景色 */
-        border-radius: 2px;
-    }
-
-    .chat-history-area::-webkit-scrollbar-thumb {
-        background: rgba(0, 0, 0, 0.2) !important;
-        /* 移动端始终显示 */
-        border-radius: 2px;
-        opacity: 1 !important;
-        /* 强制显示 */
-        transition: background 0.2s ease;
-    }
-
-    .chat-history-area::-webkit-scrollbar-thumb:active {
-        background: rgba(0, 0, 0, 0.4) !important;
-        /* 触摸时加深 */
-    }
-
-    /* 移动端消息间距调整 */
-    .chat-message {
-        margin-bottom: 16px;
-        padding-right: 4px !important;
-        /* 为滚动条留出最小间距，让股票列表占满更多宽度 */
-    }
-
-    /* 最后一条消息增加底部间距，确保与输入框有足够间隔 */
-    .chat-message:last-child {
-        margin-bottom: 32px;
-    }
-
-    .message-text {
-        margin-bottom: 0;
-    }
-
-    /* 移动端主内容区域间距优化 */
-    .modern-content {
-        padding-top: 80px;
-        /* 增加顶部间距，避免太靠顶部 */
-        padding-left: 0px !important;
-        padding-right: 0px !important;
-        /* 移除左右padding，让AI卡片能够占满全屏 */
-    }
-
-    /* 移动端聊天模式下的内容区域 */
-    .modern-content.chatting {
-        padding-top: 76px !important;
-        /* 聊天模式下从导航栏底部开始，增加20px间距 */
-        padding-left: 0 !important;
-        padding-right: 0 !important;
-        /* 移除左右padding，让聊天区域占满宽度 */
-        height: 100vh !important;
-        /* 占满整个视口高度 */
-        overflow: hidden !important;
-    }
-
-    /* 移动端欢迎页面字体优化 */
-    .modern-title {
-        font-size: 1.8rem;
-        margin-bottom: 12px;
-    }
-
-    .modern-desc {
-        font-size: 0.9rem;
-        margin-bottom: 24px;
-        line-height: 1.5;
-        padding: 0 16px;
-    }
-
-    /* 移动端欢迎区域 - 简化样式 */
-    .welcome-section {
-        margin-bottom: 20px;
-        padding: 16px 0 0 0;
-    }
-
-
 }
 
 /* AI生成状态指示器样式 */
@@ -3982,12 +4368,7 @@ body.onboarding-mode {
     }
 }
 
-/* 移动端生成状态内联样式优化 */
-@include mobile {
-    .generating-label {
-        font-size: 0.8rem;
-    }
-}
+
 
 .chat-history-area {
     width: 100%;
@@ -4006,14 +4387,7 @@ body.onboarding-mode {
     /* 添加高度变化的过渡动画 */
 }
 
-/* 移动端聊天历史区域特殊处理，防止与新建聊天按钮重叠 */
-@include mobile {
-    .chat-history-area {
-        /* 为移动端增加底部间距，确保最后一条消息不被新建聊天按钮遮挡 */
-        padding-bottom: 100px !important;
-        /* 基础20px + 额外80px防重叠空间 */
-    }
-}
+
 
 /* 移动端聊天历史底部占位元素 */
 .mobile-chat-spacer {
@@ -4024,11 +4398,7 @@ body.onboarding-mode {
     /* 防止被压缩 */
 }
 
-@include mobile {
-    .mobile-chat-spacer {
-        display: block;
-    }
-}
+
 
 @include tablet-up {
     .mobile-chat-spacer {
@@ -4308,26 +4678,7 @@ body.onboarding-mode {
     border-top: 1px solid rgba(203, 213, 225, 0.5);
 }
 
-/* 移动端适配 */
-@include mobile {
-    .interaction-suggestions {
-        padding: 10px;
-        margin-top: 12px;
-    }
 
-    .suggestion-intro {
-        font-size: 0.8rem;
-    }
-
-    .suggestion-item {
-        padding: 6px 10px;
-        font-size: 0.8rem;
-    }
-
-    .suggestion-icon {
-        font-size: 0.9rem;
-    }
-}
 
 /* 股票操作按钮样式 */
 .stock-actions {
@@ -4856,232 +5207,7 @@ body.onboarding-mode {
     text-align: center;
 }
 
-/* 响应式设计 */
-@include mobile {
-    .stock-header {
-        flex-direction: column;
-        gap: 8px;
-        align-items: flex-start;
-    }
 
-    .stock-price-change {
-        align-self: flex-end;
-    }
-
-    .detail-row {
-        flex-direction: column;
-        align-items: flex-start;
-        gap: 4px;
-    }
-
-    .detail-label {
-        min-width: auto;
-    }
-
-    .stock-item-actions {
-        justify-content: flex-start;
-        gap: 4px;
-        flex-wrap: wrap;
-        overflow-x: visible;
-    }
-
-    .stock-item-actions .el-button {
-        font-size: 10px;
-        padding: 4px 8px;
-        min-height: 28px;
-        border-radius: 6px;
-        flex-shrink: 0;
-    }
-
-    .stock-item-actions .el-button svg {
-        width: 10px;
-        height: 10px;
-    }
-
-    .sell-stock-btn,
-    .buy-stock-btn-secondary {
-        font-size: 10px;
-        padding: 4px 8px;
-        min-height: 28px;
-        border-radius: 6px;
-    }
-
-    .recommend-index {
-        flex-wrap: nowrap;
-        gap: 4px;
-        overflow: hidden;
-    }
-
-    .recommend-score {
-        font-size: 0.65rem;
-        padding: 1px 3px;
-        white-space: nowrap;
-    }
-
-    .recommend-level {
-        font-size: 0.65rem;
-        padding: 1px 4px;
-        min-width: 40px;
-        white-space: nowrap;
-    }
-
-    /* 使用StockList组件，移除重复的股票基础样式 */
-
-    .recommend-index {
-        display: flex;
-        align-items: center;
-        gap: 4px;
-        flex-wrap: wrap;
-    }
-
-    .recommend-stars {
-        display: flex;
-        align-items: center;
-        gap: 1px;
-    }
-
-    .star {
-        font-size: 0.75rem;
-    }
-
-    .recommend-score {
-        font-size: 0.65rem;
-        color: #64748b;
-        margin-left: 2px;
-    }
-
-    .help-icon {
-        font-size: 0.75rem;
-        margin-left: 2px;
-    }
-
-    .recommend-level {
-        font-size: 0.6rem;
-        padding: 1px 3px;
-        margin-left: 2px;
-    }
-
-    .stock-price-change {
-        display: flex;
-        flex-direction: column;
-        align-items: flex-end;
-        gap: 2px;
-        flex-shrink: 0;
-    }
-
-    .current-price {
-        font-size: 0.9rem;
-        font-weight: 700;
-        line-height: 1;
-    }
-
-    .price-change {
-        font-size: 0.7rem;
-        padding: 1px 4px;
-        border-radius: 3px;
-        line-height: 1;
-    }
-
-    /* 优化详细信息显示 - 两行两列布局，平分宽度 */
-    .stock-item .stock-info .stock-details {
-        margin-top: 6px !important;
-        padding: 6px 8px !important;
-        background: #f8fafc !important;
-        border-radius: 6px !important;
-        border: 1px solid #e2e8f0 !important;
-        display: grid !important;
-        grid-template-columns: minmax(0, 1fr) minmax(0, 1fr) !important;
-        gap: 6px 8px !important;
-        align-items: center !important;
-        width: 100% !important;
-        box-sizing: border-box !important;
-        overflow: hidden !important;
-    }
-
-    .detail-row {
-        display: contents;
-    }
-
-    .detail-group {
-        display: flex;
-        flex-direction: column;
-        align-items: center;
-        justify-content: center;
-        gap: 3px;
-        padding: 6px 4px;
-        border-radius: 6px;
-        background: rgba(255, 255, 255, 0.8);
-        border: 1px solid rgba(226, 232, 240, 0.5);
-        min-height: 40px !important;
-        height: 40px !important;
-        width: 100% !important;
-        box-sizing: border-box !important;
-        overflow: hidden !important;
-    }
-
-    .detail-label {
-        font-size: 0.65rem;
-        color: #64748b;
-        white-space: nowrap;
-        font-weight: 500;
-        line-height: 1;
-        text-align: center;
-    }
-
-    .detail-value {
-        font-size: 0.75rem;
-        font-weight: 600;
-        text-align: center;
-        line-height: 1.2;
-        white-space: nowrap;
-        overflow: hidden;
-        text-overflow: ellipsis;
-        max-width: 100%;
-        color: #1f2937;
-    }
-
-    /* 推荐理由横向显示，限制1行 */
-    /* 推荐理由独占一行，居中分割线 */
-    .stock-reason {
-        margin-top: 8px !important;
-        padding: 8px !important;
-        background: #fff3cd !important;
-        border-radius: 4px !important;
-        border: 1px solid #ffeaa7 !important;
-        display: flex !important;
-        align-items: flex-start !important;
-        gap: 6px !important;
-        min-height: 32px !important;
-        grid-column: 1 / -1 !important;
-        position: relative !important;
-    }
-
-
-    .reason-label {
-        font-size: 0.7rem !important;
-        color: #856404 !important;
-        white-space: nowrap !important;
-        flex-shrink: 0 !important;
-        font-weight: bold !important;
-    }
-
-    .reason-text {
-        font-size: 0.7rem !important;
-        line-height: 1.4 !important;
-        color: #533f03 !important;
-        white-space: normal !important;
-        word-wrap: break-word !important;
-        word-break: break-all !important;
-        flex: 1 !important;
-    }
-
-    /* 移除重复的stock-item-actions样式 - 由StockList组件提供 */
-
-    /* 移动端股票列表间距优化 */
-    .stock-list {
-        gap: 6px;
-    }
-}
 
 /* 小屏手机进一步优化 - 移除重复的股票样式，由StockList组件提供 */
 @include mobile-sm {
@@ -5963,8 +6089,7 @@ body.onboarding-mode {
         left: 0 !important;
         right: 0 !important;
         bottom: 0 !important;
-        /* 使用环境变量处理安全区域 */
-        bottom: env(safe-area-inset-bottom, 0) !important;
+        /* 移除重复的安全区域间距，让AIInputCard组件自己处理 */
         z-index: 1000 !important;
         background: transparent !important;
         padding: 0 !important;
@@ -9544,6 +9669,10 @@ body {
         padding: 0;
     }
 
+    .chat-area {
+        padding-top: 100px;
+    }
+
     /* 2. 欢迎区域 - 内容有内边距，容器无边距 */
     .welcome-section {
         width: 100%;
@@ -9574,7 +9703,7 @@ body {
 
     /* 4. 主页模式布局 - 为AI卡片预留底部空间 */
     .modern-content:not(.chatting) {
-        padding-bottom: 120px;
+        padding-bottom: 30px;
         /* AI卡片预留空间 */
     }
 
@@ -9592,7 +9721,6 @@ body {
         overflow-x: auto;
     }
 
-    .new-chat-btn,
     .goto-recommendation-btn {
         font-size: 0.75rem;
         padding: 6px 12px;
@@ -9605,7 +9733,6 @@ body {
     /* 6. AI卡片定位 - 主页模式贴底 */
     .modern-content:not(.chatting) .ai-card {
         position: fixed;
-        bottom: 0;
         left: 0;
         right: 0;
         width: 100%;
@@ -9704,19 +9831,17 @@ body {
 
     /* 微信环境下主页内容区域设置适当内边距 */
     body.wechat-browser .modern-content:not(.chatting) {
-        padding-left: 8px;
-        padding-right: 8px;
+        // padding-left: 8px;
+        // padding-right: 8px;
+        // padding-bottom: 0;
+        padding: 0 8px;
+        /* 微信环境下增加底部空间 */
     }
 
     /* 微信环境下聊天模式无内边距，占满全宽 */
     body.wechat-browser .modern-content.chatting {
         padding-left: 0;
         padding-right: 0;
-    }
-
-    body.wechat-browser .modern-content:not(.chatting) {
-        padding-bottom: 140px;
-        /* 微信环境下增加底部空间 */
     }
 
     body.wechat-browser .modern-content:not(.chatting) .ai-card {

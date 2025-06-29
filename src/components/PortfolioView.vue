@@ -63,23 +63,26 @@
 
         <!-- 持仓列表 - 使用通用StockList组件 -->
         <div class="portfolio-content">
-            <div v-if="userStore.portfolio.length === 0" class="empty-state">
-                <div class="empty-icon">📊</div>
-                <div class="empty-text">
-                    <h4>暂无持仓</h4>
-                    <p>您还没有购买任何股票<br>可以通过聊天分析股票后进行购买</p>
+            <!-- PC端显示空状态和股票列表 -->
+            <template v-if="!isMobileView">
+                <div v-if="userStore.portfolio.length === 0" class="empty-state">
+                    <div class="empty-icon">📊</div>
+                    <div class="empty-text">
+                        <h4>暂无持仓</h4>
+                        <p>您还没有购买任何股票<br>可以通过聊天分析股票后进行购买</p>
+                    </div>
                 </div>
-            </div>
+                <StockList v-else :stocks="portfolioStocks" :actions="portfolioActions" :show-position-status="true"
+                    :show-position-details="true" :show-basic-details="false" :clickable="true"
+                    @stock-click="analyzeStock" @sell-stock="handleSellStock" @buy-stock="handleBuyStock"
+                    @paid-analysis="handlePaidAnalysis" @ai-trading="handleAITrading" />
+            </template>
 
-            <!-- PC端使用StockList -->
-            <StockList v-if="!isMobileView" :stocks="portfolioStocks" :actions="portfolioActions"
-                :show-position-status="true" :show-position-details="true" :show-basic-details="false" :clickable="true"
-                @stock-click="analyzeStock" @sell-stock="handleSellStock" @buy-stock="handleBuyStock"
-                @paid-analysis="handlePaidAnalysis" @ai-trading="handleAITrading" />
-
-            <!-- 移动端使用MobileStockList -->
+            <!-- 移动端使用MobileStockList（空状态由MobileStockList组件内部处理） -->
             <MobileStockList v-else :stocks="portfolioStocks" :actions="portfolioActions" :show-position-status="true"
-                :show-details="true" :clickable="true" @stock-click="analyzeStock" @action-click="handleActionClick" />
+                :show-details="true" :clickable="true" :empty-text="'暂无持仓'"
+                :empty-description="'您还没有购买任何股票，可以通过聊天分析股票后进行购买'" @stock-click="analyzeStock"
+                @action-click="handleActionClick" />
         </div>
     </div>
 </template>

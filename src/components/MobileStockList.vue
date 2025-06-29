@@ -20,8 +20,8 @@
             <div v-if="!stocks || stocks.length === 0" class="empty-state">
                 <div class="empty-icon">📊</div>
                 <div class="empty-text">
-                    <h4>暂无股票数据</h4>
-                    <p>请稍后再试或刷新页面</p>
+                    <h4>{{ emptyText }}</h4>
+                    <p>{{ emptyDescription }}</p>
                 </div>
             </div>
 
@@ -303,6 +303,15 @@ const props = defineProps({
     clickable: {
         type: Boolean,
         default: false
+    },
+    // 空状态配置
+    emptyText: {
+        type: String,
+        default: '暂无股票数据'
+    },
+    emptyDescription: {
+        type: String,
+        default: '请稍后再试或刷新页面'
     }
 });
 

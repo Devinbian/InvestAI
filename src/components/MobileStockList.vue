@@ -513,8 +513,8 @@ const getVisibleActions = (stock) => {
 // 获取主要操作（最多2个）
 const getPrimaryActions = (stock) => {
     const visibleActions = getVisibleActions(stock);
-    // 移动端与PC端保持一致：显示所有操作按钮，但优先显示分析功能
-    const primaryKeys = ['paidAnalysis', 'quantAnalysis'];
+    // 移动端默认显示量化分析和AI委托交易按钮
+    const primaryKeys = ['paidAnalysis', 'quantAnalysis', 'analysis', 'aiTrading'];
 
     // 优先显示分析功能
     const primaryActions = visibleActions.filter(action =>
@@ -523,7 +523,12 @@ const getPrimaryActions = (stock) => {
 
     // 按指定顺序排序：AI委托交易 -> 量化分析
     primaryActions.sort((a, b) => {
-        const orderMap = { 'quantAnalysis': 0, 'paidAnalysis': 1 };
+        const orderMap = {
+            'quantAnalysis': 0,     // AI委托交易优先
+            'aiTrading': 0,         // AI委托交易优先
+            'paidAnalysis': 1,      // 量化分析次之
+            'analysis': 1           // 量化分析次之
+        };
         return (orderMap[a.key] || 999) - (orderMap[b.key] || 999);
     });
 
@@ -610,10 +615,10 @@ const getActionIcon = (action) => {
 // 获取移动端显示文本（优化按钮文本长度）
 const getMobileActionText = (action) => {
     const mobileTextMap = {
-        'analysis': '分析',
-        'aiTrading': 'AI交易',
-        'quantAnalysis': 'AI交易',      // AI委托交易显示为"AI交易"
+        'analysis': '量化分析',          // 量化分析显示完整文本
         'paidAnalysis': '量化分析',      // 量化分析显示完整文本
+        'aiTrading': 'AI委托交易',       // AI委托交易显示完整文本
+        'quantAnalysis': 'AI委托交易',   // AI委托交易显示完整文本
         'addWatchlist': '加自选',
         'removeWatchlist': '移除',
         'buy': '买入',

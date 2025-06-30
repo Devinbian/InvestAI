@@ -218,13 +218,13 @@
                                         <div class="asset-amount">
                                             <span class="amount-label">总资产</span>
                                             <span class="amount-value">¥{{ formatCurrency(message.assetData.totalAssets)
-                                                }}</span>
+                                            }}</span>
                                         </div>
                                         <div class="asset-change"
                                             :class="[message.assetData.totalProfitPercent >= 0 ? 'profit' : 'loss']">
                                             <span class="change-icon">{{ message.assetData.totalProfitPercent >= 0 ?
                                                 '📈' : '📉'
-                                                }}</span>
+                                            }}</span>
                                             <span class="change-label">今日盈亏：</span>
                                             <span class="change-text">
                                                 {{ message.assetData.totalProfitPercent >= 0 ? '+' : '' }}¥{{
@@ -250,7 +250,7 @@
                                         <div class="stat-info">
                                             <div class="stat-label">持仓市值</div>
                                             <div class="stat-value">¥{{ formatCurrency(message.assetData.portfolioValue)
-                                                }}
+                                            }}
                                             </div>
                                         </div>
                                     </div>
@@ -474,7 +474,7 @@
                 </div>
                 <div class="guide-actions">
                     <el-button type="primary" size="small" @click="handleGuideAction">{{ guideActionText
-                    }}</el-button>
+                        }}</el-button>
                     <el-button size="small" @click="dismissGuide">稍后</el-button>
                 </div>
             </div>
@@ -2209,8 +2209,8 @@ onMounted(() => {
     .chat-history-area {
         height: calc(100vh - 76px - 160px) !important;
         /* 减少高度：76px(导航+间距) + 160px(输入框空间) */
-        padding: 0 0 32px 0 !important;
-        /* 顶部无padding，左右无间距让股票列表占满全屏，底部32px避免遮挡 */
+        padding: 0 12px 40px 12px !important;
+        /* 顶部无padding，左右12px间距确保消息不贴边，底部40px避免遮挡 */
         margin: 0 !important;
         /* 移除所有margin */
         width: 100% !important;
@@ -2220,9 +2220,6 @@ onMounted(() => {
         /* 确保padding不影响宽度计算 */
         scrollbar-width: thin;
         scrollbar-color: rgba(0, 0, 0, 0.2) rgba(0, 0, 0, 0.05);
-        /* 为移动端增加底部间距，确保最后一条消息不被新建聊天按钮遮挡 */
-        padding-bottom: 100px !important;
-        /* 基础20px + 额外80px防重叠空间 */
     }
 
     /* 移动端滚动条优化 - 始终可见 */
@@ -3141,7 +3138,7 @@ body.onboarding-mode {
 
 /* 移动端聊天历史底部占位元素 */
 .mobile-chat-spacer {
-    height: 120px;
+    height: 20px;
     /* 确保有足够空间避免被新建聊天按钮遮挡 */
     width: 100%;
     flex-shrink: 0;
@@ -8617,7 +8614,7 @@ body {
     /* 7. 聊天历史区域 */
     .chat-history-area {
         height: calc(var(--vh, 1vh) * 100 - 76px - 160px);
-        padding: 16px 8px 60px 8px;
+        padding: 16px 8px 30px 8px;
         margin: 0;
         width: 100%;
         box-sizing: border-box;
@@ -8627,7 +8624,7 @@ body {
 
     /* 8. 聊天消息样式 */
     .chat-message {
-        padding: 0 8px 16px 0;
+        padding: 0 0 16px 0;
     }
 
     .chat-message.user .chat-message-content {
@@ -8639,7 +8636,7 @@ body {
     }
 
     .chat-message:last-child {
-        margin-bottom: 40px;
+        margin-bottom: 20px;
     }
 
     /* 9. 快捷按钮样式 */

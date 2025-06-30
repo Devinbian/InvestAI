@@ -725,7 +725,6 @@ const mobileSmartRecommendationConfig = computed(() => {
 @media (max-width: 768px) {
     .chat-message {
         margin-bottom: 16px;
-        padding-right: 4px !important;
     }
 
     .chat-message:last-child {

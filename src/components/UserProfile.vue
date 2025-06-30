@@ -24,7 +24,7 @@
             </div>
 
             <!-- 移动端卡片式内容 -->
-            <div class="mobile-content">
+            <div class="mobile-content" data-scrollable>
                 <!-- 账户余额卡片 -->
                 <div class="mobile-balance-card">
                     <div class="balance-header">

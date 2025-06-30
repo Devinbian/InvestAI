@@ -84,7 +84,7 @@
     </div>
 
     <!-- 移动端原生弹窗 -->
-    <div v-else class="mobile-records-overlay" @click="$emit('close')">
+    <div v-else class="mobile-records-overlay" @click="$emit('close')" data-scrollable>
         <div class="mobile-records-container" :class="{ 'filters-expanded': filtersExpanded }" @click.stop>
             <!-- 移动端头部 -->
             <div class="mobile-records-header">

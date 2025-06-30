@@ -94,7 +94,11 @@
                 </div>
                 <!-- 5. 消息推送 -->
                 <div v-show="activeTab === 'messages'" class="tab-panel">
-                    <MessageNotifications @send-to-chat="handleSendToChat" />
+                    <!-- 移动端使用简约推送组件 -->
+                    <MobilePushNotifications v-if="isMobileView" @notification-click="handleNotificationClick"
+                        @action-click="handleNotificationAction" @open-settings="handleOpenSettings" />
+                    <!-- PC端使用桌面版推送组件 -->
+                    <MessagePushCenter v-else @send-to-chat="handleSendToChat" />
                 </div>
             </div>
         </div>
@@ -107,7 +111,8 @@ import { useUserStore } from '../store/user';
 import { useMobileDetection } from '../composables/useResponsiveBreakpoints';
 import MarketIndex from './MarketIndex.vue';
 import StockRecommendations from './StockRecommendations.vue';
-import MessageNotifications from './MessageNotifications.vue';
+import MessagePushCenter from './MessagePushCenter.vue';
+import MobilePushNotifications from './MobilePushNotifications.vue';
 import WatchlistView from './WatchlistView.vue';
 import PortfolioView from './PortfolioView.vue';
 
@@ -265,6 +270,106 @@ const handleShowSellDialog = (stockInfo) => {
 const handleStockAction = (event) => {
     console.log('Sidebar - 转发股票操作:', event);
     emit('stock-action', event);
+};
+
+// 移动端推送通知事件处理方法
+const handleNotificationClick = (notification) => {
+    console.log('Sidebar - 通知点击:', notification);
+    // 根据通知类型执行不同操作
+    switch (notification.type) {
+        case 'market':
+            // 切换到大盘指数tab
+            activeTab.value = 'market';
+            break;
+        case 'trade':
+            // 切换到持仓tab
+            activeTab.value = 'portfolio';
+            break;
+        case 'alert':
+            // 发送风险提醒到聊天
+            emit('send-to-chat', {
+                message: `风险提醒：${notification.message}`,
+                type: 'alert'
+            });
+            break;
+        default:
+            // 发送通知内容到聊天
+            emit('send-to-chat', {
+                message: `${notification.title}: ${notification.message}`,
+                type: 'notification'
+            });
+    }
+};
+
+const handleNotificationAction = ({ notification, action }) => {
+    console.log('Sidebar - 通知操作:', { notification, action });
+
+    switch (action.id) {
+        case 'view':
+            // 查看详情，发送到聊天
+            emit('send-to-chat', {
+                message: `请显示${notification.title}的详细信息`,
+                type: 'query'
+            });
+            break;
+        case 'trade':
+            // 立即交易，打开交易对话框
+            if (notification.stockCode) {
+                emit('show-buy-dialog', {
+                    code: notification.stockCode,
+                    name: notification.stockName || notification.title
+                });
+            }
+            break;
+        case 'adjust':
+            // 调整仓位，切换到持仓tab
+            activeTab.value = 'portfolio';
+            break;
+    }
+};
+
+const handleViewDetail = (notification) => {
+    console.log('Sidebar - 查看详情:', notification);
+    emit('send-to-chat', {
+        message: `请显示${notification.title}的详细信息`,
+        type: 'query'
+    });
+};
+
+const handleOpenTrade = (notification) => {
+    console.log('Sidebar - 打开交易:', notification);
+    if (notification.stockCode) {
+        emit('show-buy-dialog', {
+            code: notification.stockCode,
+            name: notification.stockName || notification.title
+        });
+    }
+};
+
+const handleAdjustPortfolio = (notification) => {
+    console.log('Sidebar - 调整投资组合:', notification);
+    // 切换到持仓tab并发送调整建议到聊天
+    activeTab.value = 'portfolio';
+    emit('send-to-chat', {
+        message: `根据风险提醒，请帮我分析当前投资组合并提供调整建议`,
+        type: 'portfolio-analysis'
+    });
+};
+
+const handleOpenSettings = () => {
+    console.log('Sidebar - 打开推送设置');
+    // 发送设置相关消息到聊天
+    emit('send-to-chat', {
+        message: `请帮我设置消息推送偏好`,
+        type: 'settings'
+    });
+};
+
+// 处理移动端推送组件返回
+const handlePushGoBack = () => {
+    console.log('Sidebar - 推送组件返回');
+    // 切换到默认tab（大盘指数）
+    activeTab.value = 'market';
 };
 
 // 防止滚动事件冒泡到外部页面
@@ -463,6 +568,8 @@ defineExpose({
     padding-bottom: 20px;
     /* 移除固定的最小高度，让内容自然流动 */
     contain: layout;
+    position: relative;
+    /* 为弹窗提供定位基准 */
 }
 
 /* 移动端底部安全区域处理 */
@@ -1357,6 +1464,12 @@ defineExpose({
         overflow: visible !important;
         height: auto !important;
         min-height: auto !important;
+    }
+
+    /* 移动端消息推送组件保持在tab区域内 */
+    .sidebar-container.mobile-expanded .tab-panel .mobile-push-container {
+        height: 100% !important;
+        overflow: hidden !important;
     }
 
     /* 移动端其他可能的滚动容器 */

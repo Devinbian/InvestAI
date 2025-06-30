@@ -173,19 +173,85 @@ function detectEnvironment() {
       }, 100);
     });
 
-    // 防止页面滚动触发浏览器UI
+    // 智能防止页面滚动触发浏览器UI
     document.addEventListener(
       "touchmove",
       function (e) {
-        // 只允许特定元素的滚动
+        // 使用智能检测：只阻止真正需要阻止的滚动
         if (e.touches.length === 1) {
           const target = e.target;
+
+          // 1. 检查元素是否在明确的可滚动容器内
+          const scrollableContainer = target.closest(`
+            .chat-history-area,
+            .chat-messages,
+            .messages-container,
+            .notifications-list,
+            .history-list-container,
+            .settings-content,
+            .detail-content,
+            .sidebar-content,
+            .category-scroll,
+            [data-scrollable],
+            .el-scrollbar,
+            .el-dialog,
+            .el-drawer,
+            .el-select-dropdown,
+            .el-table__body-wrapper,
+            .dropdown-menu,
+            .modal-content,
+            .popup-content,
+            [style*="overflow-y: auto"],
+            [style*="overflow-y: scroll"], 
+            [style*="overflow: auto"],
+            [style*="overflow: scroll"]
+          `);
+
+          // 2. 检查元素本身是否可滚动
+          const computedStyle = window.getComputedStyle(target);
+          const isScrollable =
+            ["auto", "scroll"].includes(computedStyle.overflowY) ||
+            ["auto", "scroll"].includes(computedStyle.overflow);
+
+          // 3. 检查是否是表单元素（应该允许滚动）
+          const isFormElement =
+            target.matches("input, textarea, select") ||
+            target.contentEditable === "true";
+
+          // 4. 检查是否在弹窗或浮层中
+          const inModal = target.closest(
+            ".el-dialog, .el-drawer, .el-popover, .el-tooltip, .modal, .popup, .overlay, .settings-overlay, .detail-overlay",
+          );
+
+          // 5. 检查是否是聊天相关区域
+          const inChatArea = target.closest(
+            ".chat-history-area, .chat-message, .message-text, .markdown-content",
+          );
+
+          // 如果满足以下任一条件，允许滚动：
+          // - 在可滚动容器内
+          // - 元素本身可滚动
+          // - 是表单元素
+          // - 在弹窗/浮层中
+          // - 在聊天区域内
           if (
-            !target.closest(
-              ".modern-content, .chat-history-content, .tab-content, .ai-input, .tab-nav, .sidebar-content, .dropdown-menu",
-            )
+            scrollableContainer ||
+            isScrollable ||
+            isFormElement ||
+            inModal ||
+            inChatArea
           ) {
-            e.preventDefault();
+            return; // 允许滚动
+          }
+
+          // 6. 检查是否是主页面背景区域的无意义滚动
+          const isMainPageBackground =
+            target === document.body ||
+            target === document.documentElement ||
+            target.classList.contains("main-modern");
+
+          if (isMainPageBackground) {
+            e.preventDefault(); // 阻止主页面背景滚动
           }
         }
       },

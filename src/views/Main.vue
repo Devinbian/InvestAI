@@ -218,13 +218,13 @@
                                         <div class="asset-amount">
                                             <span class="amount-label">总资产</span>
                                             <span class="amount-value">¥{{ formatCurrency(message.assetData.totalAssets)
-                                                }}</span>
+                                            }}</span>
                                         </div>
                                         <div class="asset-change"
                                             :class="[message.assetData.totalProfitPercent >= 0 ? 'profit' : 'loss']">
                                             <span class="change-icon">{{ message.assetData.totalProfitPercent >= 0 ?
                                                 '📈' : '📉'
-                                                }}</span>
+                                            }}</span>
                                             <span class="change-label">今日盈亏：</span>
                                             <span class="change-text">
                                                 {{ message.assetData.totalProfitPercent >= 0 ? '+' : '' }}¥{{
@@ -250,7 +250,7 @@
                                         <div class="stat-info">
                                             <div class="stat-label">持仓市值</div>
                                             <div class="stat-value">¥{{ formatCurrency(message.assetData.portfolioValue)
-                                                }}
+                                            }}
                                             </div>
                                         </div>
                                     </div>
@@ -474,7 +474,7 @@
                 </div>
                 <div class="guide-actions">
                     <el-button type="primary" size="small" @click="handleGuideAction">{{ guideActionText
-                    }}</el-button>
+                        }}</el-button>
                     <el-button size="small" @click="dismissGuide">稍后</el-button>
                 </div>
             </div>
@@ -2105,7 +2105,7 @@ onMounted(() => {
         opacity: 0.85 !important;
         transition: all 0.2s ease !important;
         position: fixed !important;
-        z-index: 1001 !important;
+        z-index: 100 !important;
         display: flex !important;
         align-items: center !important;
         justify-content: center !important;

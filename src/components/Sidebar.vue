@@ -23,8 +23,8 @@
             <!-- 移动端关闭按钮 - 放在内容区域内 -->
             <button v-if="isMobileView && isMobileExpanded" class="mobile-close-btn" @click="closeMobileSidebar"
                 title="关闭面板">
-                <svg width="18" height="18" viewBox="0 0 24 24" fill="none">
-                    <path d="M18 6L6 18M6 6l12 12" stroke="currentColor" stroke-width="2" stroke-linecap="round"
+                <svg width="24" height="24" viewBox="0 0 24 24" fill="none">
+                    <path d="M18 6L6 18M6 6l12 12" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"
                         stroke-linejoin="round" />
                 </svg>
             </button>
@@ -722,16 +722,21 @@ defineExpose({
         transform: translateX(0) !important;
     }
 
-    /* 移动端关闭按钮 - 内部浮动设计 */
+    /* 移动端关闭按钮 - 左侧边缘大按钮设计 */
     .mobile-close-btn {
         position: absolute !important;
-        top: 8px !important;
-        right: 8px !important;
-        /* 放在侧边栏内部右上角 */
-        width: 32px !important;
-        height: 32px !important;
-        background: rgba(255, 255, 255, 0.95) !important;
-        border: 1px solid #e5e7eb !important;
+        top: 50% !important;
+        left: -24px !important;
+        /* 放在侧边栏左侧边缘外部，增加突出距离 */
+        transform: translateY(-50%) !important;
+        /* 垂直居中 */
+        width: 48px !important;
+        height: 48px !important;
+        /* 增大按钮尺寸，提升可操作性 */
+        background: rgba(239, 68, 68, 0.95) !important;
+        /* 使用红色背景，更加醒目 */
+        border: 2px solid rgba(255, 255, 255, 0.8) !important;
+        /* 白色边框增强对比度 */
         border-radius: 50% !important;
         /* 圆形按钮 */
         display: flex !important;
@@ -742,8 +747,10 @@ defineExpose({
         transition: background-color 0.15s ease, color 0.15s ease, transform 0.15s ease, box-shadow 0.15s ease !important;
         z-index: 9999 !important;
         /* 提高z-index确保按钮显示在最上层 */
-        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1) !important;
-        color: #6b7280 !important;
+        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2) !important;
+        /* 增强阴影效果 */
+        color: white !important;
+        /* 白色图标 */
         will-change: transform !important;
         /* 确保按钮可见 */
         visibility: visible !important;
@@ -752,17 +759,23 @@ defineExpose({
     }
 
     .mobile-close-btn:hover {
-        background: rgba(249, 250, 251, 0.98) !important;
-        color: #374151 !important;
-        transform: scale(1.05) !important;
-        /* 轻微放大 */
-        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15) !important;
+        background: rgba(220, 38, 38, 0.98) !important;
+        /* 悬停时加深红色 */
+        color: white !important;
+        transform: translateY(-50%) scale(1.1) !important;
+        /* 保持垂直居中并明显放大 */
+        box-shadow: 0 6px 16px rgba(0, 0, 0, 0.25) !important;
+        /* 增强阴影效果 */
+        border-color: rgba(255, 255, 255, 1) !important;
+        /* 悬停时边框更白 */
     }
 
     .mobile-close-btn:active {
-        transform: scale(0.95) !important;
-        background: rgba(243, 244, 246, 0.98) !important;
-        box-shadow: 0 1px 4px rgba(0, 0, 0, 0.1) !important;
+        transform: translateY(-50%) scale(0.95) !important;
+        /* 保持垂直居中并轻微缩小 */
+        background: rgba(185, 28, 28, 0.98) !important;
+        /* 点击时更深的红色 */
+        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2) !important;
     }
 
     /* 移动端侧边栏内容 */

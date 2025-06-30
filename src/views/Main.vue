@@ -218,13 +218,13 @@
                                         <div class="asset-amount">
                                             <span class="amount-label">总资产</span>
                                             <span class="amount-value">¥{{ formatCurrency(message.assetData.totalAssets)
-                                            }}</span>
+                                                }}</span>
                                         </div>
                                         <div class="asset-change"
                                             :class="[message.assetData.totalProfitPercent >= 0 ? 'profit' : 'loss']">
                                             <span class="change-icon">{{ message.assetData.totalProfitPercent >= 0 ?
                                                 '📈' : '📉'
-                                            }}</span>
+                                                }}</span>
                                             <span class="change-label">今日盈亏：</span>
                                             <span class="change-text">
                                                 {{ message.assetData.totalProfitPercent >= 0 ? '+' : '' }}¥{{
@@ -250,7 +250,7 @@
                                         <div class="stat-info">
                                             <div class="stat-label">持仓市值</div>
                                             <div class="stat-value">¥{{ formatCurrency(message.assetData.portfolioValue)
-                                            }}
+                                                }}
                                             </div>
                                         </div>
                                     </div>
@@ -474,7 +474,7 @@
                 </div>
                 <div class="guide-actions">
                     <el-button type="primary" size="small" @click="handleGuideAction">{{ guideActionText
-                        }}</el-button>
+                    }}</el-button>
                     <el-button size="small" @click="dismissGuide">稍后</el-button>
                 </div>
             </div>
@@ -3128,10 +3128,20 @@ body.onboarding-mode {
     /* 页面高度 - 导航栏高度 - 输入区域高度(动态调整) */
     scrollbar-width: thin;
     /* Firefox */
-    scrollbar-color: transparent transparent;
-    /* Firefox */
-    transition: scrollbar-color 0.3s ease, height 0.3s ease;
-    /* 添加高度变化的过渡动画 */
+    scrollbar-color: rgba(0, 0, 0, 0.15) transparent;
+    /* Firefox - 始终显示滚动条 */
+    scroll-behavior: smooth;
+    /* 启用CSS原生平滑滚动 */
+    transition: height 0.3s ease;
+    /* 只保留高度变化的过渡动画 */
+
+    /* 性能优化 */
+    will-change: scroll-position;
+    /* 告诉浏览器这个元素会滚动，进行优化 */
+    -webkit-overflow-scrolling: touch;
+    /* iOS Safari滚动优化 */
+    contain: layout style paint;
+    /* CSS Containment API 优化渲染性能 */
 }
 
 
@@ -3153,52 +3163,25 @@ body.onboarding-mode {
     }
 }
 
-.chat-history-area:hover {
-    scrollbar-color: rgba(0, 0, 0, 0.2) transparent;
-}
-
-.chat-history-area.scrolling {
-    scrollbar-color: rgba(0, 0, 0, 0.3) transparent;
-}
-
-/* 聊天区域滚动条样式 - 只在滚动时或悬停时显示 */
+/* 聊天区域滚动条样式 - 简化版本，始终可见 */
 .chat-history-area::-webkit-scrollbar {
     width: 6px;
 }
 
 .chat-history-area::-webkit-scrollbar-track {
-    background: transparent;
+    background: rgba(0, 0, 0, 0.05);
+    border-radius: 3px;
 }
 
 .chat-history-area::-webkit-scrollbar-thumb {
-    background: transparent;
+    background: rgba(0, 0, 0, 0.15);
     border-radius: 3px;
-    transition: background 0.3s ease, opacity 0.3s ease;
-    opacity: 0;
+    transition: background 0.2s ease;
 }
 
-/* 鼠标悬停在滚动区域时显示滚动条 */
-.chat-history-area:hover::-webkit-scrollbar-thumb {
-    background: rgba(0, 0, 0, 0.2);
-    opacity: 1;
-}
-
-/* 鼠标悬停在滚动条本身时加深颜色 */
+/* 鼠标悬停时加深颜色 */
 .chat-history-area::-webkit-scrollbar-thumb:hover {
-    background: rgba(0, 0, 0, 0.4) !important;
-    opacity: 1;
-}
-
-/* 滚动时显示滚动条的动画效果 */
-.chat-history-area.scrolling::-webkit-scrollbar-thumb {
     background: rgba(0, 0, 0, 0.3);
-    opacity: 1;
-}
-
-/* 确保滚动条在滚动时优先显示 */
-.chat-history-area.scrolling:hover::-webkit-scrollbar-thumb {
-    background: rgba(0, 0, 0, 0.4);
-    opacity: 1;
 }
 
 .chat-message {

@@ -208,39 +208,12 @@ export function useChatManager() {
   // 滚动到底部
   const scrollToBottom = () => {
     if (chatHistoryRef.value) {
-      const isMobile = window.innerWidth <= 768;
-
       nextTick(() => {
-        if (isMobile) {
-          // 移动端特殊处理
-          const maxScrollTop =
-            chatHistoryRef.value.scrollHeight -
-            chatHistoryRef.value.clientHeight;
-          chatHistoryRef.value.scrollTop = maxScrollTop;
-        } else {
-          chatHistoryRef.value.scrollTo({
-            top: chatHistoryRef.value.scrollHeight,
-            behavior: "smooth",
-          });
-        }
-
-        setTimeout(() => {
-          if (chatHistoryRef.value) {
-            chatHistoryRef.value.scrollTop = chatHistoryRef.value.scrollHeight;
-          }
-        }, 100);
-
-        setTimeout(() => {
-          if (chatHistoryRef.value && isMobile) {
-            const currentScrollTop = chatHistoryRef.value.scrollTop;
-            const maxScrollTop =
-              chatHistoryRef.value.scrollHeight -
-              chatHistoryRef.value.clientHeight;
-            if (currentScrollTop < maxScrollTop) {
-              chatHistoryRef.value.scrollTop = maxScrollTop;
-            }
-          }
-        }, 300);
+        // 使用CSS原生smooth滚动，性能更好
+        chatHistoryRef.value.scrollTo({
+          top: chatHistoryRef.value.scrollHeight,
+          behavior: "smooth",
+        });
       });
     }
   };
@@ -255,25 +228,10 @@ export function useChatManager() {
     }
   };
 
-  // 滚动处理
-  let scrollTimer = null;
+  // 滚动处理 - 简化版本
   const handleScroll = () => {
-    if (chatHistoryRef.value) {
-      // 添加滚动中的类名
-      chatHistoryRef.value.classList.add("scrolling");
-
-      // 清除之前的定时器
-      if (scrollTimer) {
-        clearTimeout(scrollTimer);
-      }
-
-      // 设置定时器，滚动停止后1.5秒隐藏滚动条
-      scrollTimer = setTimeout(() => {
-        if (chatHistoryRef.value) {
-          chatHistoryRef.value.classList.remove("scrolling");
-        }
-      }, 1500);
-    }
+    // 移除复杂的滚动处理逻辑，让浏览器原生处理滚动性能优化
+    // 如果需要特殊处理，可以在这里添加简单的逻辑
   };
 
   // 更新聊天历史高度

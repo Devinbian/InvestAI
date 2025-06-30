@@ -164,47 +164,8 @@
 
                 <!-- 操作按钮区域 -->
                 <div class="stock-actions" v-if="actions.length > 0">
-                    <template v-for="action in actions" :key="action.key">
-                        <!-- 自选股相关按钮 -->
-                        <el-button v-if="action.key === 'addWatchlist' && !isInWatchlist(stock)" type="primary"
-                            size="small" @click.stop="handleAction(action.key, stock)" :class="action.class">
-                            <span v-if="action.icon === '⭐'">⭐</span>
-                            <svg v-else-if="action.icon && action.icon.startsWith('M')" width="14" height="14"
-                                viewBox="0 0 24 24" fill="none">
-                                <path :d="action.icon" stroke="currentColor" stroke-width="2" />
-                            </svg>
-                            <span v-else-if="action.icon">{{ action.icon }}</span>
-                            {{ action.text }}
-                        </el-button>
-
-                        <el-button v-if="action.key === 'removeWatchlist' && isInWatchlist(stock)" type="success"
-                            size="small" @click.stop="handleAction(action.key, stock)" :class="action.class">
-                            <span v-if="action.icon === '⭐'">⭐</span>
-                            <svg v-else-if="action.icon && action.icon.startsWith('M')" width="14" height="14"
-                                viewBox="0 0 24 24" fill="none">
-                                <path :d="action.icon" fill="currentColor" />
-                            </svg>
-                            <span v-else-if="action.icon">{{ action.icon }}</span>
-                            {{ action.text }}
-                        </el-button>
-
-                        <!-- 其他操作按钮 -->
-                        <el-button v-if="!['addWatchlist', 'removeWatchlist'].includes(action.key)"
-                            :type="action.type || 'default'" size="small" @click.stop="handleAction(action.key, stock)"
-                            :class="action.class" :loading="action.loading">
-                            <span v-if="action.icon && !action.icon.startsWith('M')">{{ action.icon }}</span>
-                            <svg v-else-if="action.icon" width="14" height="14" viewBox="0 0 24 24" fill="none">
-                                <path :d="action.icon" stroke="currentColor" stroke-width="2"
-                                    :fill="action.iconFill || 'none'" />
-                            </svg>
-                            {{ action.text }}
-                            <!-- 价格标签 -->
-                            <div v-if="action.priceTag" class="price-tag-container">
-                                <span class="price-tag original-price">{{ action.priceTag.original }}</span>
-                                <span class="price-tag promo-price">{{ action.priceTag.promo }}</span>
-                            </div>
-                        </el-button>
-                    </template>
+                    <StockActionButtons :stock="stock" :actions="actions" :is-mobile="isMobile" mode="compact"
+                        size="small" @action-click="handleAction" />
                 </div>
             </div>
         </div>
@@ -220,6 +181,7 @@
 import { computed } from 'vue';
 import { QuestionFilled } from '@element-plus/icons-vue';
 import { useUserStore } from '../store/user';
+import StockActionButtons from './StockActionButtons.vue';
 
 // Props
 const props = defineProps({
@@ -309,6 +271,12 @@ const props = defineProps({
 
     // 交互配置
     clickable: {
+        type: Boolean,
+        default: false
+    },
+
+    // 移动端标识
+    isMobile: {
         type: Boolean,
         default: false
     }
@@ -446,9 +414,12 @@ const handleStockClick = (stock) => {
     }
 };
 
-const handleAction = (actionKey, stock) => {
+const handleAction = (event) => {
+    // StockActionButtons组件发送的事件格式：{ action: actionKey, stock: stock }
+    const { action, stock } = event;
+
     // 发出通用事件
-    emit('action-click', { action: actionKey, stock });
+    emit('action-click', { action, stock });
 
     // 根据操作类型发出具体事件
     const eventMap = {
@@ -457,10 +428,12 @@ const handleAction = (actionKey, stock) => {
         'sell': 'sell-stock',
         'buy': 'buy-stock',
         'analysis': 'paid-analysis',
-        'aiTrading': 'ai-trading'
+        'paidAnalysis': 'paid-analysis',
+        'aiTrading': 'ai-trading',
+        'quantAnalysis': 'ai-trading'
     };
 
-    const eventName = eventMap[actionKey];
+    const eventName = eventMap[action];
     if (eventName) {
         emit(eventName, stock);
     }
@@ -817,21 +790,19 @@ const handleAction = (actionKey, stock) => {
     align-items: center;
 }
 
-/* 侧边栏紧凑布局 - 防止换行 */
+/* 侧边栏紧凑布局 - PC端允许换行显示所有按钮 */
 .recommendations-container .stock-actions,
 .sidebar-container .stock-actions {
-    flex-wrap: nowrap;
+    flex-wrap: wrap;
     gap: 4px;
-    overflow-x: auto;
-    scrollbar-width: none;
-    -ms-overflow-style: none;
+    overflow: visible;
     margin-top: 12px;
+    /* 移除滚动相关样式，允许自然换行 */
+    padding-bottom: 0;
+    padding-right: 0;
 }
 
-.recommendations-container .stock-actions::-webkit-scrollbar,
-.sidebar-container .stock-actions::-webkit-scrollbar {
-    display: none;
-}
+/* 移除滚动条样式，因为现在使用换行布局 */
 
 .recommendations-container .stock-actions .el-button,
 .sidebar-container .stock-actions .el-button {

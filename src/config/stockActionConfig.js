@@ -189,11 +189,6 @@ export const getStockActionConfig = (scenario, options = {}) => {
   let actions =
     STOCK_ACTION_PRESETS[scenario] || STOCK_ACTION_PRESETS.recommendation;
 
-  // 移动端优化
-  if (isMobile) {
-    actions = actions.slice(0, maxButtons);
-  }
-
   // 如果不包含付费功能，过滤掉付费按钮
   if (!includePaidFeatures) {
     actions = actions.filter((action) => !action.priceTag);
@@ -201,6 +196,9 @@ export const getStockActionConfig = (scenario, options = {}) => {
 
   // 按优先级排序
   actions.sort((a, b) => (a.priority || 999) - (b.priority || 999));
+
+  // 移动端不在这里截断，让组件层面处理下拉菜单逻辑
+  // 这样可以确保所有按钮都能被传递给组件
 
   return actions;
 };

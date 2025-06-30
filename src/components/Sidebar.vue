@@ -29,7 +29,7 @@
                 </svg>
             </button>
             <!-- Tab导航 -->
-            <div class="tab-nav" :class="{ 'mobile-nav': isMobileView }">
+            <div class="tab-nav" :class="{ 'mobile-nav': isMobileView }" ref="tabNavRef">
                 <!-- 1. 大盘指数 -->
                 <div class="tab-item" :class="{ 'active': activeTab === 'market' }" @click="activeTab = 'market'">
                     <svg :width="isMobileView ? '18' : '16'" :height="isMobileView ? '18' : '16'" viewBox="0 0 24 24"
@@ -79,16 +79,18 @@
                 </div>
                 <!-- 2. 智能荐股 -->
                 <div v-show="activeTab === 'stocks'" class="tab-panel">
-                    <StockRecommendations @send-to-chat="handleSendToChat" @show-buy-dialog="handleShowBuyDialog" />
+                    <StockRecommendations @send-to-chat="handleSendToChat" @show-buy-dialog="handleShowBuyDialog"
+                        @action-click="handleStockAction" />
                 </div>
                 <!-- 3. 自选股 -->
                 <div v-show="activeTab === 'watchlist'" class="tab-panel">
-                    <WatchlistView @send-to-chat="handleSendToChat" @show-buy-dialog="handleShowBuyDialog" />
+                    <WatchlistView @send-to-chat="handleSendToChat" @show-buy-dialog="handleShowBuyDialog"
+                        @action-click="handleStockAction" />
                 </div>
                 <!-- 4. 持仓 -->
                 <div v-show="activeTab === 'portfolio'" class="tab-panel">
                     <PortfolioView @send-to-chat="handleSendToChat" @show-buy-dialog="handleShowBuyDialog"
-                        @show-sell-dialog="handleShowSellDialog" />
+                        @show-sell-dialog="handleShowSellDialog" @action-click="handleStockAction" />
                 </div>
                 <!-- 5. 消息推送 -->
                 <div v-show="activeTab === 'messages'" class="tab-panel">
@@ -111,7 +113,7 @@ import PortfolioView from './PortfolioView.vue';
 
 
 // 定义emit
-const emit = defineEmits(['send-to-chat', 'show-buy-dialog', 'show-sell-dialog']);
+const emit = defineEmits(['send-to-chat', 'show-buy-dialog', 'show-sell-dialog', 'stock-action']);
 
 const userStore = useUserStore();
 
@@ -142,8 +144,9 @@ watch(deviceType, (newType, oldType) => {
     }
 });
 
-// 保持向后兼容的检测方法
+// 保持向后兼容的检测方法（已由useMobileDetection自动处理）
 const checkMobileView = () => {
+    // 移动端检测现在由useMobileDetection composable自动处理
     console.log('Sidebar移动端检测:', {
         deviceType: deviceType.value,
         isMobileView: isMobileView.value,
@@ -212,8 +215,7 @@ const closeMobileSidebar = () => {
 // 监听窗口大小变化（简化版，主要功能已由响应式断点系统处理）
 const handleResize = () => {
     // 响应式断点系统会自动处理设备类型变化
-    // 这里保留是为了向后兼容
-    checkMobileView();
+    // checkMobileView调用已移除，由useMobileDetection自动处理
 };
 
 // 监听ESC键关闭移动端侧边栏
@@ -225,15 +227,13 @@ const handleKeyDown = (event) => {
 
 // 生命周期
 onMounted(() => {
-    checkMobileView();
+    // 移动端检测由useMobileDetection自动处理
     // 移动端模式下，初始化为非收起状态，这样内容可以正常显示
     if (isMobileView.value) {
         isCollapsed.value = false;
     }
     window.addEventListener('resize', handleResize);
     document.addEventListener('keydown', handleKeyDown);
-
-
 });
 
 onUnmounted(() => {
@@ -259,6 +259,12 @@ const handleShowBuyDialog = (stockInfo) => {
 // 处理子组件显示卖出对话框的事件
 const handleShowSellDialog = (stockInfo) => {
     emit('show-sell-dialog', stockInfo);
+};
+
+// 处理股票操作事件 - 转发到Main.vue
+const handleStockAction = (event) => {
+    console.log('Sidebar - 转发股票操作:', event);
+    emit('stock-action', event);
 };
 
 // 防止滚动事件冒泡到外部页面
@@ -319,11 +325,22 @@ defineExpose({
     border-bottom: 1px solid #e5e7eb;
     background: rgba(255, 255, 255, 0.8);
     flex-shrink: 0;
+    overflow-x: auto;
+    overflow-y: hidden;
+    -webkit-overflow-scrolling: touch;
+    scrollbar-width: none;
+    -ms-overflow-style: none;
+    /* 确保可以滚动 */
+    scroll-behavior: smooth;
+}
+
+.tab-nav::-webkit-scrollbar {
+    display: none;
 }
 
 .tab-item {
-    flex: 1;
-    padding: 10px 4px;
+    flex: none;
+    padding: 10px 12px;
     display: flex;
     align-items: center;
     justify-content: center;
@@ -335,8 +352,30 @@ defineExpose({
     transition: color 0.15s ease, background-color 0.15s ease, border-bottom-color 0.15s ease;
     border-bottom: 2px solid transparent;
     position: relative;
-    min-width: 0;
+    min-width: 80px;
     text-align: center;
+    white-space: nowrap;
+    flex-shrink: 0;
+    /* 微信环境触摸优化 */
+    -webkit-tap-highlight-color: transparent;
+    -webkit-touch-callout: none;
+    -webkit-user-select: none;
+    user-select: none;
+}
+
+/* 微信环境下tab-item的特殊优化 */
+:global(body.wechat-browser) .tab-item {
+    /* 确保触摸事件正确处理 */
+    pointer-events: auto;
+    /* 防止触摸时的高亮效果 */
+    -webkit-tap-highlight-color: rgba(0, 0, 0, 0);
+    /* 优化触摸响应 */
+    touch-action: manipulation;
+    /* 确保点击区域足够大 */
+    min-height: 44px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
 }
 
 .tab-item:hover {
@@ -1402,6 +1441,139 @@ defineExpose({
     .more-icon {
         font-size: 0.9rem !important;
         font-weight: bold !important;
+    }
+}
+
+/* 移动端tab菜单优化 */
+@media (max-width: 768px) {
+    .tab-nav {
+        padding: 0 4px;
+        /* 强制启用滚动 */
+        overflow-x: scroll !important;
+        overflow-y: hidden !important;
+        scroll-snap-type: x mandatory;
+        /* 确保可以滚动 */
+        -webkit-overflow-scrolling: touch;
+        /* 添加滚动指示器 */
+        background: linear-gradient(90deg, rgba(255, 255, 255, 0.8) 0%, rgba(255, 255, 255, 0.6) 10%, rgba(255, 255, 255, 0.6) 90%, rgba(255, 255, 255, 0.8) 100%);
+        /* 确保足够的宽度来滚动 */
+        width: 100%;
+        /* 显示滚动条提示用户可以滚动 */
+        scrollbar-width: thin;
+        scrollbar-color: rgba(0, 0, 0, 0.2) transparent;
+        /* 添加渐变遮罩提示可滚动 */
+        position: relative;
+        /* 确保内容不会换行 */
+        white-space: nowrap;
+        /* 设置最小宽度确保滚动 */
+        min-width: 100%;
+        /* 微信环境特殊优化 */
+        touch-action: pan-x;
+        -webkit-touch-callout: none;
+        -webkit-user-select: none;
+        user-select: none;
+    }
+
+    /* 微信环境下的特殊优化 */
+    :global(body.wechat-browser) .tab-nav {
+        /* 强制启用硬件加速 */
+        transform: translateZ(0);
+        -webkit-transform: translateZ(0);
+        will-change: scroll-position;
+        /* 优化滚动性能 */
+        -webkit-overflow-scrolling: touch !important;
+        /* 防止滚动时的闪烁 */
+        -webkit-backface-visibility: hidden;
+        backface-visibility: hidden;
+        /* 确保触摸事件正确传递 */
+        pointer-events: auto;
+        /* 明确指定只允许水平滚动 */
+        touch-action: pan-x !important;
+        overscroll-behavior-x: contain;
+        overscroll-behavior-y: none;
+    }
+
+    .tab-nav::before {
+        content: '';
+        position: absolute;
+        top: 0;
+        right: 0;
+        width: 20px;
+        height: 100%;
+        background: linear-gradient(to left, rgba(255, 255, 255, 0.9), transparent);
+        pointer-events: none;
+        z-index: 1;
+    }
+
+    .tab-nav::after {
+        content: '';
+        position: absolute;
+        top: 0;
+        left: 0;
+        width: 20px;
+        height: 100%;
+        background: linear-gradient(to right, rgba(255, 255, 255, 0.9), transparent);
+        pointer-events: none;
+        z-index: 1;
+    }
+
+    .tab-nav::-webkit-scrollbar {
+        height: 3px;
+        display: block;
+    }
+
+    .tab-nav::-webkit-scrollbar-track {
+        background: rgba(0, 0, 0, 0.05);
+        border-radius: 1px;
+    }
+
+    .tab-nav::-webkit-scrollbar-thumb {
+        background: rgba(0, 0, 0, 0.3);
+        border-radius: 1px;
+    }
+
+    .tab-nav::-webkit-scrollbar-thumb:hover {
+        background: rgba(0, 0, 0, 0.5);
+    }
+
+    .tab-item {
+        min-width: 85px;
+        padding: 12px 8px;
+        font-size: 0.7rem;
+        /* 滚动对齐 */
+        scroll-snap-align: start;
+        /* 确保不缩小 */
+        flex: 0 0 auto;
+        /* 确保内容不换行 */
+        white-space: nowrap;
+        /* 添加相对定位确保在渐变遮罩之上 */
+        position: relative;
+        z-index: 2;
+        /* 微信环境触摸优化 */
+        -webkit-tap-highlight-color: transparent;
+        -webkit-touch-callout: none;
+        -webkit-user-select: none;
+        user-select: none;
+    }
+
+    /* 微信环境下tab-item的特殊优化 */
+    :global(body.wechat-browser) .tab-item {
+        /* 确保触摸事件正确处理 */
+        pointer-events: auto;
+        /* 防止触摸时的高亮效果 */
+        -webkit-tap-highlight-color: rgba(0, 0, 0, 0);
+        /* 优化触摸响应 */
+        touch-action: manipulation;
+        /* 确保点击区域足够大 */
+        min-height: 44px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+    }
+
+    .tab-text {
+        display: block;
+        margin-top: 2px;
     }
 }
 </style>

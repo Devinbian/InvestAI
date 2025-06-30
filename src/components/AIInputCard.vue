@@ -50,8 +50,8 @@
                     </svg>
                 </el-button>
                 <el-button class="ai-send-btn" :class="{ 'generating': isGenerating }"
-                    :type="isGenerating ? 'danger' : 'primary'" circle
-                    @click="isGenerating ? $emit('stop-generation') : handleSendMessage()"
+                    :type="isGenerating ? 'danger' : 'primary'" circle @mousedown="handleSendButtonMouseDown"
+                    @touchstart="handleSendButtonTouchStart" @click="handleSendButtonClick"
                     :disabled="!isGenerating && !inputMessage.trim()" :title="isGenerating ? '停止生成' : '发送消息'">
                     <!-- 生成中显示停止图标 -->
                     <svg v-if="isGenerating" width="16" height="16" viewBox="0 0 24 24" fill="none">
@@ -162,9 +162,79 @@ export default {
             return classes;
         }
     },
+    data() {
+        return {
+            sendButtonPressed: false,
+            resetButtonStateTimer: null
+        };
+    },
     methods: {
         handleSendMessage() {
             this.$emit('send-message');
+        },
+
+        // 处理发送按钮的 mousedown 事件（PC端）
+        handleSendButtonMouseDown(event) {
+            if (!this.isMobileView) {
+                event.preventDefault(); // 阻止输入框失去焦点
+                this.sendButtonPressed = true;
+                this.executeSendAction();
+                this.scheduleButtonStateReset();
+            }
+        },
+
+        // 处理发送按钮的 touchstart 事件（移动端）
+        handleSendButtonTouchStart(event) {
+            if (this.isMobileView) {
+                event.preventDefault(); // 阻止输入框失去焦点
+                event.stopPropagation(); // 阻止事件冒泡
+                this.sendButtonPressed = true;
+                this.executeSendAction();
+                this.scheduleButtonStateReset();
+            }
+        },
+
+        // 处理发送按钮的 click 事件（作为备用）
+        handleSendButtonClick(event) {
+            // 如果已经通过 mousedown/touchstart 处理过，则跳过
+            if (this.sendButtonPressed) {
+                this.sendButtonPressed = false;
+                event.preventDefault();
+                return;
+            }
+
+            // 备用处理逻辑
+            this.executeSendAction();
+        },
+
+        // 执行发送操作的统一方法
+        executeSendAction() {
+            if (this.isGenerating) {
+                this.$emit('stop-generation');
+            } else if (this.inputMessage.trim()) {
+                this.handleSendMessage();
+            }
+        },
+
+        // 安排按钮状态重置
+        scheduleButtonStateReset() {
+            // 清除之前的定时器
+            if (this.resetButtonStateTimer) {
+                clearTimeout(this.resetButtonStateTimer);
+            }
+
+            // 设置新的定时器，200ms后重置按钮状态
+            this.resetButtonStateTimer = setTimeout(() => {
+                this.sendButtonPressed = false;
+                this.resetButtonStateTimer = null;
+            }, 200);
+        }
+    },
+
+    // 组件销毁时清理定时器
+    beforeUnmount() {
+        if (this.resetButtonStateTimer) {
+            clearTimeout(this.resetButtonStateTimer);
         }
     }
 };

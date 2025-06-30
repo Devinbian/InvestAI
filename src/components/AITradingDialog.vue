@@ -1,16 +1,19 @@
 <template>
     <el-dialog v-model="dialogVisible" title="AI委托交易设置" :width="isMobile ? '95vw' : '750px'"
         :top="isMobile ? '5vh' : '15vh'" class="ai-trading-dialog" :class="{ 'mobile-dialog': isMobile }"
-        destroy-on-close append-to-body :z-index="11000">
+        destroy-on-close append-to-body :z-index="11000" :close-on-click-modal="false"
+        :modal-class="isMobile ? 'mobile-modal' : ''">
         <div v-if="stock" class="ai-trading-content">
             <!-- 股票信息头部 -->
             <div class="stock-header">
-                <div class="stock-info">
-                    <h3>{{ stock.name }}</h3>
-                    <span class="stock-code">{{ stock.code }}</span>
+                <div class="stock-left">
+                    <div class="stock-name-section">
+                        <h3>{{ stock.name }}</h3>
+                        <span class="stock-code">{{ stock.code }}</span>
+                    </div>
                     <span class="current-price">¥{{ stock.price || stock.currentPrice }}</span>
                 </div>
-                <div class="service-cost">
+                <div class="stock-right">
                     <span class="cost-label">服务费用</span>
                     <div class="cost-pricing">
                         <span class="cost-original">3智点</span>
@@ -20,7 +23,7 @@
             </div>
 
             <!-- 滚动内容区域 -->
-            <div class="dialog-scroll-content">
+            <div class="dialog-scroll-content" :class="{ 'wechat-scroll': isWechat }" ref="scrollContainer">
                 <!-- 交易设置表单 -->
                 <el-form :model="form" class="ai-trading-form simple">
                     <!-- 基本交易参数 -->
@@ -125,6 +128,8 @@
                             </el-icon>
                         </el-button>
                     </div>
+
+
                 </el-form>
             </div>
         </div>
@@ -167,11 +172,17 @@ const userStore = useUserStore();
 
 // 响应式数据
 const loading = ref(false);
+const scrollContainer = ref(null);
 
-// 检测移动端
+// 检测移动端和微信浏览器
 const isMobile = computed(() => {
     if (typeof window === 'undefined') return false;
     return window.innerWidth <= 768;
+});
+
+const isWechat = computed(() => {
+    if (typeof window === 'undefined') return false;
+    return /micromessenger/i.test(navigator.userAgent);
 });
 
 // 计算属性：对话框显示状态
@@ -428,10 +439,68 @@ AI将根据您的设置参数，24小时智能监控市场，在最佳时机自�
     }
 };
 
+// 滚动处理
+const handleScroll = (event) => {
+    console.log('滚动事件触发:', {
+        scrollTop: event.target.scrollTop,
+        scrollHeight: event.target.scrollHeight,
+        clientHeight: event.target.clientHeight
+    });
+};
+
+
+
+// 微信浏览器滚动修复
+const fixWechatScroll = () => {
+    if (!isWechat.value || !scrollContainer.value) return;
+
+    const element = scrollContainer.value;
+
+    // 微信浏览器需要特殊处理
+    element.style.overflow = 'auto';
+    element.style.overflowY = 'auto';
+    element.style.webkitOverflowScrolling = 'touch';
+    element.style.touchAction = 'pan-y';
+    element.style.transform = 'translateZ(0)';
+    element.style.position = 'relative';
+
+    // 强制触发滚动事件来激活滚动功能
+    setTimeout(() => {
+        element.scrollTop = 1;
+        setTimeout(() => {
+            element.scrollTop = 0;
+        }, 50);
+    }, 100);
+
+    // 添加触摸事件监听器来强制启用滚动
+    const handleTouchStart = (e) => {
+        e.stopPropagation();
+    };
+
+    const handleTouchMove = (e) => {
+        e.stopPropagation();
+    };
+
+    element.addEventListener('touchstart', handleTouchStart, { passive: true });
+    element.addEventListener('touchmove', handleTouchMove, { passive: true });
+
+    console.log('微信浏览器滚动修复已应用:', {
+        scrollHeight: element.scrollHeight,
+        clientHeight: element.clientHeight,
+        canScroll: element.scrollHeight > element.clientHeight,
+        userAgent: navigator.userAgent
+    });
+};
+
 // 监听对话框打开，初始化表单
 watch(() => props.modelValue, (newVal) => {
     if (newVal && props.stock) {
         initAITradingFromPreferences();
+
+        // 延迟应用微信浏览器滚动修复
+        setTimeout(() => {
+            fixWechatScroll();
+        }, 300);
     }
 });
 </script>
@@ -470,18 +539,25 @@ watch(() => props.modelValue, (newVal) => {
     display: flex;
     justify-content: space-between;
     align-items: center;
-    padding: 20px 24px;
+    padding: 16px 24px;
     background: #f8fafc;
     border-bottom: 1px solid #e2e8f0;
 }
 
-.stock-info {
+.stock-left {
     display: flex;
     align-items: center;
-    gap: 16px;
+    gap: 12px;
+    flex: 1;
 }
 
-.stock-info h3 {
+.stock-name-section {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.stock-name-section h3 {
     margin: 0;
     font-size: 18px;
     font-weight: 600;
@@ -503,11 +579,12 @@ watch(() => props.modelValue, (newVal) => {
     color: #dc2626;
 }
 
-.service-cost {
+.stock-right {
     display: flex;
     flex-direction: column;
     align-items: flex-end;
     gap: 4px;
+    flex-shrink: 0;
 }
 
 .cost-label {
@@ -572,6 +649,7 @@ watch(() => props.modelValue, (newVal) => {
 .dialog-scroll-content {
     max-height: 60vh;
     overflow-y: auto;
+    overflow-x: hidden;
     padding: 0;
     -webkit-overflow-scrolling: touch;
     scrollbar-width: thin;
@@ -728,12 +806,63 @@ watch(() => props.modelValue, (newVal) => {
     display: flex;
     align-items: center;
     gap: 8px;
+    min-width: 200px;
+}
+
+.input-with-unit-small .param-input-small {
+    flex: 1;
+    min-width: 120px;
 }
 
 .input-unit {
     font-size: 14px;
     color: #64748b;
     font-weight: 500;
+    flex-shrink: 0;
+}
+
+/* PC端数字输入框样式优化 */
+.param-input-small :deep(.el-input-number) {
+    width: 100%;
+}
+
+.param-input-small :deep(.el-input__inner) {
+    height: 32px;
+    padding-right: 32px;
+}
+
+.param-input-small :deep(.el-input-number__increase),
+.param-input-small :deep(.el-input-number__decrease) {
+    width: 28px !important;
+    height: 16px !important;
+    line-height: 16px !important;
+    font-size: 12px !important;
+    border: none !important;
+    background: #f5f5f5 !important;
+    color: #666 !important;
+    margin: 0 !important;
+    padding: 0 !important;
+    border-left: 1px solid #dcdfe6 !important;
+}
+
+.param-input-small :deep(.el-input-number__increase) {
+    top: 1px !important;
+    right: 1px !important;
+    border-radius: 0 4px 0 0 !important;
+    border-bottom: 1px solid #dcdfe6 !important;
+}
+
+.param-input-small :deep(.el-input-number__decrease) {
+    bottom: 1px !important;
+    right: 1px !important;
+    border-radius: 0 0 4px 0 !important;
+    top: 16px !important;
+}
+
+.param-input-small :deep(.el-input-number__increase):hover,
+.param-input-small :deep(.el-input-number__decrease):hover {
+    background: #e6e6e6 !important;
+    color: #333 !important;
 }
 
 /* 高级设置切换 */
@@ -785,7 +914,10 @@ watch(() => props.modelValue, (newVal) => {
     .dialog-scroll-content {
         flex: 1 !important;
         overflow-y: auto !important;
+        overflow-x: hidden !important;
         max-height: calc(85vh - 180px) !important;
+        -webkit-overflow-scrolling: touch !important;
+        padding-bottom: 20px !important;
     }
 
     .ai-trading-dialog :deep(.el-dialog__header) {
@@ -801,20 +933,27 @@ watch(() => props.modelValue, (newVal) => {
     }
 
     .stock-header {
-        flex-direction: column;
-        align-items: flex-start;
+        flex-direction: row;
+        align-items: center;
+        justify-content: space-between;
         gap: 8px;
         padding: 10px 12px;
     }
 
-    .stock-info {
+    .stock-left {
         flex-direction: row;
         align-items: center;
-        flex-wrap: wrap;
+        gap: 6px;
+        flex: 1;
+    }
+
+    .stock-name-section {
+        flex-direction: row;
+        align-items: center;
         gap: 6px;
     }
 
-    .stock-info h3 {
+    .stock-name-section h3 {
         font-size: 15px;
         margin-right: 6px;
     }
@@ -828,9 +967,9 @@ watch(() => props.modelValue, (newVal) => {
         font-size: 14px;
     }
 
-    .service-cost {
-        align-self: flex-start;
-        margin-top: 4px;
+    .stock-right {
+        flex-shrink: 0;
+        align-items: flex-end;
     }
 
     .ai-trading-form {
@@ -891,13 +1030,22 @@ watch(() => props.modelValue, (newVal) => {
     }
 
     .advanced-row {
-        flex-direction: row;
-        align-items: center;
-        gap: 8px;
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 6px;
     }
 
     .param-input-small {
         width: 120px;
+    }
+
+    .input-with-unit-small {
+        width: 100%;
+    }
+
+    .input-with-unit-small .param-input-small {
+        flex: 1;
+        min-width: 100px;
     }
 
     .advanced-toggle {
@@ -944,7 +1092,32 @@ watch(() => props.modelValue, (newVal) => {
     }
 
     .dialog-scroll-content {
-        max-height: calc(90vh - 160px) !important;
+        max-height: calc(85vh - 160px) !important;
+        overflow-y: auto !important;
+        overflow-x: hidden !important;
+        -webkit-overflow-scrolling: touch !important;
+        padding-bottom: 20px !important;
+        min-height: 400px !important;
+        scrollbar-width: thin !important;
+    }
+
+    /* 小屏幕滚动条样式 */
+    .dialog-scroll-content::-webkit-scrollbar {
+        width: 8px !important;
+    }
+
+    .dialog-scroll-content::-webkit-scrollbar-track {
+        background: #f1f1f1 !important;
+        border-radius: 4px !important;
+    }
+
+    .dialog-scroll-content::-webkit-scrollbar-thumb {
+        background: #c1c1c1 !important;
+        border-radius: 4px !important;
+    }
+
+    .dialog-scroll-content::-webkit-scrollbar-thumb:hover {
+        background: #a8a8a8 !important;
     }
 
     .ai-trading-dialog :deep(.el-dialog__header) {
@@ -957,9 +1130,25 @@ watch(() => props.modelValue, (newVal) => {
 
     .stock-header {
         padding: 8px 10px;
+        flex-direction: row;
+        align-items: center;
+        justify-content: space-between;
     }
 
-    .stock-info h3 {
+    .stock-left {
+        flex-direction: row;
+        align-items: center;
+        gap: 6px;
+        flex: 1;
+    }
+
+    .stock-name-section {
+        flex-direction: row;
+        align-items: center;
+        gap: 4px;
+    }
+
+    .stock-name-section h3 {
         font-size: 14px;
     }
 
@@ -970,6 +1159,11 @@ watch(() => props.modelValue, (newVal) => {
 
     .current-price {
         font-size: 13px;
+    }
+
+    .stock-right {
+        flex-shrink: 0;
+        align-items: flex-end;
     }
 
     .ai-trading-form {
@@ -991,6 +1185,38 @@ watch(() => props.modelValue, (newVal) => {
 
     .risk-number {
         width: 90px;
+    }
+
+    .advanced-simple {
+        gap: 8px;
+    }
+
+    .advanced-row {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 6px;
+    }
+
+    .param-input-small {
+        width: 100%;
+        min-width: 120px;
+    }
+
+    .input-with-unit-small {
+        display: flex;
+        align-items: center;
+        gap: 6px;
+        width: 100%;
+    }
+
+    .input-with-unit-small .param-input-small {
+        flex: 1;
+        min-width: 0;
+    }
+
+    .input-unit {
+        font-size: 12px;
+        flex-shrink: 0;
     }
 
     .dialog-footer {
@@ -1025,6 +1251,10 @@ watch(() => props.modelValue, (newVal) => {
 
     .dialog-scroll-content {
         max-height: calc(95vh - 140px) !important;
+        overflow-y: auto !important;
+        overflow-x: hidden !important;
+        -webkit-overflow-scrolling: touch !important;
+        padding-bottom: 20px !important;
     }
 
     .ai-trading-dialog :deep(.el-dialog__header) {
@@ -1037,9 +1267,25 @@ watch(() => props.modelValue, (newVal) => {
 
     .stock-header {
         padding: 6px 8px;
+        flex-direction: row;
+        align-items: center;
+        justify-content: space-between;
     }
 
-    .stock-info h3 {
+    .stock-left {
+        flex-direction: row;
+        align-items: center;
+        gap: 6px;
+        flex: 1;
+    }
+
+    .stock-name-section {
+        flex-direction: row;
+        align-items: center;
+        gap: 3px;
+    }
+
+    .stock-name-section h3 {
         font-size: 13px;
     }
 
@@ -1050,6 +1296,11 @@ watch(() => props.modelValue, (newVal) => {
 
     .current-price {
         font-size: 12px;
+    }
+
+    .stock-right {
+        flex-shrink: 0;
+        align-items: flex-end;
     }
 
     .ai-trading-form {
@@ -1071,6 +1322,38 @@ watch(() => props.modelValue, (newVal) => {
 
     .risk-number {
         width: 80px;
+    }
+
+    .advanced-simple {
+        gap: 6px;
+    }
+
+    .advanced-row {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 4px;
+    }
+
+    .param-input-small {
+        width: 100%;
+        min-width: 100px;
+    }
+
+    .input-with-unit-small {
+        display: flex;
+        align-items: center;
+        gap: 4px;
+        width: 100%;
+    }
+
+    .input-with-unit-small .param-input-small {
+        flex: 1;
+        min-width: 0;
+    }
+
+    .input-unit {
+        font-size: 11px;
+        flex-shrink: 0;
     }
 
     .dialog-footer {
@@ -1150,17 +1433,105 @@ watch(() => props.modelValue, (newVal) => {
 }
 
 .mobile-dialog .dialog-scroll-content {
-    flex: 1 !important;
-    overflow-y: auto !important;
-    max-height: calc(85vh - 220px) !important;
-    -webkit-overflow-scrolling: touch !important;
+    flex: 1;
+    overflow-y: auto;
+    overflow-x: hidden;
+    max-height: calc(75vh - 200px);
+    -webkit-overflow-scrolling: touch;
+    padding: 0;
+    margin: 0;
 }
+
+/* 移动端弹框滚动条样式 */
+.mobile-dialog .dialog-scroll-content::-webkit-scrollbar {
+    width: 6px;
+}
+
+.mobile-dialog .dialog-scroll-content::-webkit-scrollbar-track {
+    background: #f1f1f1;
+    border-radius: 3px;
+}
+
+.mobile-dialog .dialog-scroll-content::-webkit-scrollbar-thumb {
+    background: #c1c1c1;
+    border-radius: 3px;
+}
+
+.mobile-dialog .dialog-scroll-content::-webkit-scrollbar-thumb:hover {
+    background: #a8a8a8;
+}
+
+
 
 .mobile-dialog .stock-header {
     flex-shrink: 0 !important;
     padding: 12px 16px !important;
     background: #f8fafc !important;
     border-bottom: 1px solid #e2e8f0 !important;
+    display: flex !important;
+    justify-content: space-between !important;
+    align-items: center !important;
+    flex-wrap: nowrap !important;
+}
+
+.mobile-dialog .stock-left {
+    display: flex !important;
+    align-items: center !important;
+    gap: 8px !important;
+    flex: 1 !important;
+    min-width: 0 !important;
+}
+
+.mobile-dialog .stock-name-section {
+    display: flex !important;
+    align-items: center !important;
+    gap: 6px !important;
+    flex-shrink: 0 !important;
+}
+
+.mobile-dialog .stock-name-section h3 {
+    font-size: 15px !important;
+    margin: 0 !important;
+    white-space: nowrap !important;
+    overflow: hidden !important;
+    text-overflow: ellipsis !important;
+    max-width: 100px !important;
+}
+
+.mobile-dialog .stock-code {
+    font-size: 10px !important;
+    padding: 2px 4px !important;
+    white-space: nowrap !important;
+    flex-shrink: 0 !important;
+}
+
+.mobile-dialog .current-price {
+    font-size: 14px !important;
+    font-weight: 600 !important;
+    color: #dc2626 !important;
+    white-space: nowrap !important;
+    flex-shrink: 0 !important;
+}
+
+.mobile-dialog .stock-right {
+    flex-shrink: 0 !important;
+    align-items: flex-end !important;
+    margin-left: 8px !important;
+}
+
+.mobile-dialog .cost-label {
+    font-size: 11px !important;
+    color: #64748b !important;
+}
+
+.mobile-dialog .cost-pricing {
+    align-items: flex-end !important;
+}
+
+.mobile-dialog .cost-original,
+.mobile-dialog .cost-promo {
+    font-size: 9px !important;
+    padding: 1px 3px !important;
 }
 
 .mobile-dialog .ai-trading-form {
@@ -1187,7 +1558,7 @@ watch(() => props.modelValue, (newVal) => {
 
 .mobile-dialog .dialog-footer {
     flex-shrink: 0 !important;
-    padding: 12px 16px !important;
+    padding: 8px 16px !important;
     background: #f9fafb !important;
     border-top: 1px solid #e5e7eb !important;
 }
@@ -1195,7 +1566,7 @@ watch(() => props.modelValue, (newVal) => {
 .mobile-dialog .dialog-footer .el-button {
     flex: 1 !important;
     max-width: 120px !important;
-    height: 38px !important;
+    height: 36px !important;
     font-size: 14px !important;
     padding: 8px 10px !important;
 }
@@ -1206,6 +1577,57 @@ watch(() => props.modelValue, (newVal) => {
 
 .mobile-dialog .confirm-text-mobile {
     display: inline !important;
+}
+
+/* 移动端滚动优化 */
+@media (max-width: 768px) {
+    .dialog-scroll-content {
+        max-height: calc(75vh - 160px) !important;
+        -webkit-overflow-scrolling: touch !important;
+        padding-bottom: 10px !important;
+    }
+}
+
+/* 微信浏览器专用滚动修复 */
+.wechat-scroll {
+    /* 微信浏览器必须使用明确的高度而不是max-height */
+    height: calc(75vh - 160px) !important;
+    max-height: none !important;
+
+    /* 微信浏览器滚动设置 */
+    overflow: auto !important;
+    overflow-y: auto !important;
+    overflow-x: hidden !important;
+
+    /* 微信浏览器触摸滚动 */
+    -webkit-overflow-scrolling: touch !important;
+    touch-action: pan-y !important;
+
+    /* 微信浏览器需要的特殊属性 */
+    position: relative !important;
+    transform: translateZ(0) !important;
+    -webkit-transform: translate3d(0, 0, 0) !important;
+
+    /* 确保内容可以滚动 */
+    min-height: 400px !important;
+
+    /* 微信浏览器滚动优化 */
+    overscroll-behavior: contain !important;
+    scroll-behavior: auto !important;
+}
+
+/* 微信浏览器移动端优化 */
+@media (max-width: 768px) {
+    .wechat-scroll {
+        height: calc(70vh - 140px) !important;
+        padding-bottom: 20px !important;
+    }
+
+    /* 微信浏览器表单内容优化 */
+    .wechat-scroll .ai-trading-form {
+        padding-bottom: 30px !important;
+        min-height: 500px !important;
+    }
 }
 
 /* 确保弹窗在移动端侧边栏上方显示 */
@@ -1224,5 +1646,95 @@ watch(() => props.modelValue, (newVal) => {
 
 .ai-trading-dialog :deep(.el-dialog__wrapper) {
     z-index: 11000 !important;
+}
+
+/* 移动端模态框优化 */
+.mobile-modal {
+    touch-action: none !important;
+}
+
+.mobile-modal :deep(.el-overlay) {
+    touch-action: none !important;
+}
+
+/* 移动端数字输入框优化 */
+@media (max-width: 768px) {
+
+    /* 数字输入框样式优化 */
+    .mobile-dialog .param-input-small :deep(.el-input-number) {
+        width: 100% !important;
+    }
+
+    .mobile-dialog .param-input-small :deep(.el-input__inner) {
+        height: 36px !important;
+        font-size: 14px !important;
+        padding: 0 32px 0 12px !important;
+        border-radius: 6px !important;
+    }
+
+    .mobile-dialog .param-input-small :deep(.el-input-number__increase),
+    .mobile-dialog .param-input-small :deep(.el-input-number__decrease) {
+        width: 28px !important;
+        height: 18px !important;
+        line-height: 18px !important;
+        font-size: 12px !important;
+        border: none !important;
+        background: #f5f5f5 !important;
+        color: #666 !important;
+        margin: 0 !important;
+        padding: 0 !important;
+        border-left: 1px solid #dcdfe6 !important;
+    }
+
+    .mobile-dialog .param-input-small :deep(.el-input-number__increase) {
+        top: 1px !important;
+        right: 1px !important;
+        border-radius: 0 5px 0 0 !important;
+        border-bottom: 1px solid #dcdfe6 !important;
+    }
+
+    .mobile-dialog .param-input-small :deep(.el-input-number__decrease) {
+        bottom: 1px !important;
+        right: 1px !important;
+        border-radius: 0 0 5px 0 !important;
+        top: 18px !important;
+    }
+
+    .mobile-dialog .param-input-small :deep(.el-input-number__increase):hover,
+    .mobile-dialog .param-input-small :deep(.el-input-number__decrease):hover {
+        background: #e6e6e6 !important;
+        color: #333 !important;
+    }
+
+    .mobile-dialog .input-with-unit-small {
+        display: flex !important;
+        align-items: center !important;
+        gap: 6px !important;
+        width: 100% !important;
+    }
+
+    .mobile-dialog .input-with-unit-small .param-input-small {
+        flex: 1 !important;
+        min-width: 0 !important;
+    }
+
+    .mobile-dialog .input-unit {
+        font-size: 13px !important;
+        color: #64748b !important;
+        font-weight: 500 !important;
+        flex-shrink: 0 !important;
+    }
+
+    .mobile-dialog .advanced-row {
+        flex-direction: column !important;
+        align-items: flex-start !important;
+        gap: 6px !important;
+    }
+
+    .mobile-dialog .param-label {
+        font-size: 13px !important;
+        color: #64748b !important;
+        font-weight: 500 !important;
+    }
 }
 </style>

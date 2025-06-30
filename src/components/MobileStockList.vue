@@ -154,43 +154,10 @@
                     </div>
                 </div>
 
-                <!-- 原生移动端操作区域 -->
-                <div class="native-mobile-actions" v-if="actions.length > 0">
-                    <!-- 主要操作（最多2个） -->
-                    <div class="primary-actions">
-                        <template v-for="action in getPrimaryActions(stock)" :key="action.key">
-                            <button class="primary-action-btn" :class="[action.class, action.type || 'default']"
-                                @click.stop="handleAction(action.key, stock)" :disabled="action.loading">
-                                <div v-if="getActionIcon(action)" class="action-icon" v-html="getActionIcon(action)">
-                                </div>
-                                <span class="action-text">{{ getMobileActionText(action) }}</span>
-                                <div v-if="action.priceTag" class="price-badge">{{ action.priceTag.promo }}</div>
-                            </button>
-                        </template>
-                    </div>
-
-                    <!-- 更多操作（折叠显示） -->
-                    <div v-if="getSecondaryActions(stock).length > 0" class="more-actions">
-                        <button class="more-btn" @click.stop="toggleActions(stock.code, $event)">
-                            <span class="more-icon">⋯</span>
-                        </button>
-
-                        <!-- 折叠的操作菜单 - 移到body下避免遮挡 -->
-                        <teleport to="body" v-if="expandedActions === stock.code">
-                            <div class="actions-menu-overlay" @click="expandedActions = null">
-                                <div class="actions-menu" :data-menu="stock.code" @click.stop>
-                                    <div v-for="action in getSecondaryActions(stock)" :key="action.key"
-                                        class="menu-item" @click="handleAction(action.key, stock)">
-                                        <div v-if="getActionIcon(action)" class="menu-icon"
-                                            v-html="getActionIcon(action)">
-                                        </div>
-                                        <span class="menu-text">{{ getMobileActionText(action) }}</span>
-                                        <div v-if="action.priceTag" class="menu-price">{{ action.priceTag.promo }}</div>
-                                    </div>
-                                </div>
-                            </div>
-                        </teleport>
-                    </div>
+                <!-- 移动端股票操作按钮 -->
+                <div class="mobile-actions" v-if="actions.length > 0">
+                    <StockActionButtons :stock="stock" :actions="actions" :is-mobile="true" mode="compact" size="small"
+                        :max-buttons="maxMobileButtons" @action-click="handleAction" />
                 </div>
             </div>
         </div>
@@ -240,6 +207,7 @@
 import { computed, ref, onMounted, onUnmounted, nextTick, watch } from 'vue';
 import { useUserStore } from '../store/user';
 import { useTouchHandler } from '@/composables/useTouchHandler';
+import StockActionButtons from '@/components/StockActionButtons.vue';
 
 // Props
 const props = defineProps({
@@ -339,14 +307,24 @@ const {
     isMobile
 } = useTouchHandler();
 
-// 展开的操作菜单
-const expandedActions = ref(null);
+// expandedActions 已经不再需要，因为我们使用统一的StockActionButtons组件
 
 // 推荐指数说明显示状态
 const showRatingInfo = ref(false);
 
 // 推荐理由展开状态
 const expandedReasons = ref([]);
+
+// 计算移动端最大按钮数量
+const maxMobileButtons = computed(() => {
+    // 移动端限制显示2个按钮，超过的进入下拉菜单
+    console.log('📱 MobileStockList maxMobileButtons:', {
+        actionsLength: props.actions.length,
+        actions: props.actions.map(a => a.key || a.text),
+        maxButtons: 2
+    });
+    return 2;
+});
 
 // 监听stocks变化，默认展开第一个股票的推荐理由
 const initializeExpandedReasons = () => {
@@ -555,103 +533,7 @@ const getSecondaryActions = (stock) => {
     );
 };
 
-// 切换操作菜单
-const toggleActions = (stockCode, event) => {
-    if (expandedActions.value === stockCode) {
-        expandedActions.value = null;
-        return;
-    }
-
-    expandedActions.value = stockCode;
-
-    // 动态定位菜单
-    nextTick(() => {
-        const menu = document.querySelector(`[data-menu="${stockCode}"]`);
-        if (menu && event) {
-            const button = event.currentTarget;
-            const rect = button.getBoundingClientRect();
-
-            // 获取菜单尺寸
-            const menuRect = menu.getBoundingClientRect();
-
-            // 计算菜单位置
-            let top = rect.bottom + 4;
-            let left = rect.right - menuRect.width;
-
-            // 防止菜单超出视口
-            if (top + menuRect.height > window.innerHeight - 20) {
-                top = rect.top - menuRect.height - 4;
-            }
-
-            if (left < 8) {
-                left = rect.left;
-            }
-
-            if (left + menuRect.width > window.innerWidth - 8) {
-                left = window.innerWidth - menuRect.width - 8;
-            }
-
-            menu.style.top = `${top}px`;
-            menu.style.left = `${left}px`;
-        }
-    });
-};
-
-const getActionIcon = (action) => {
-    // 如果action有SVG路径，返回SVG元素
-    if (action.icon && action.icon.includes('M')) {
-        return `<svg width="16" height="16" viewBox="0 0 24 24" fill="none">
-                    <path d="${action.icon}" stroke="currentColor" stroke-width="2" fill="none"/>
-                </svg>`;
-    }
-
-    // 使用统一的图标映射（确保相同功能使用相同图标）
-    const iconMap = {
-        'addWatchlist': '⭐',
-        'removeWatchlist': '⭐',  // 统一使用星形图标
-        'buy': '💰',
-        'sell': '📤',
-        'analysis': '🎯',
-        'quantAnalysis': '🤖',  // AI委托交易使用机器人图标
-        'paidAnalysis': '🎯',   // 量化分析使用目标图标
-        'aiTrading': '🤖',      // 使用机器人图标表示AI智能交易
-        'addPosition': '📈'
-    };
-
-    return action.icon || iconMap[action.key] || '';
-};
-
-// 获取移动端显示文本（优化按钮文本长度）
-const getMobileActionText = (action) => {
-    const mobileTextMap = {
-        'analysis': '量化分析',          // 量化分析显示完整文本
-        'paidAnalysis': '量化分析',      // 量化分析显示完整文本
-        'aiTrading': 'AI委托交易',       // AI委托交易显示完整文本
-        'quantAnalysis': 'AI委托交易',   // AI委托交易显示完整文本
-        'addWatchlist': '加自选',
-        'removeWatchlist': '移除',
-        'buy': '买入',
-        'sell': '卖出',
-        'addPosition': '加仓'
-    };
-
-    // 如果有移动端专用文本，使用它
-    if (action.mobileText) {
-        return action.mobileText;
-    }
-
-    // 使用映射表中的文本（移动端简化版本）
-    if (mobileTextMap[action.key]) {
-        return mobileTextMap[action.key];
-    }
-
-    // 如果原文本过长，进行截断
-    if (action.text && action.text.length > 4) {
-        return action.text.substring(0, 4);
-    }
-
-    return action.text || '操作';
-};
+// 这些方法已经不再需要，因为我们现在使用统一的StockActionButtons组件
 
 // 事件处理
 const handleStockClick = (stock) => {
@@ -660,12 +542,28 @@ const handleStockClick = (stock) => {
     }
 };
 
-const handleAction = (actionKey, stock) => {
-    // 隐藏下拉菜单
-    expandedActions.value = null;
+const handleAction = (event) => {
+    // StockActionButtons组件发送的事件格式：{ action: actionKey, stock: stock }
+    const { action, stock } = event;
 
-    emit('action-click', { action: actionKey, stock });
-    emit(actionKey.replace(/([A-Z])/g, '-$1').toLowerCase(), stock);
+    emit('action-click', { action, stock });
+
+    // 根据操作类型发出具体事件
+    const eventMap = {
+        'addWatchlist': 'add-watchlist',
+        'removeWatchlist': 'remove-watchlist',
+        'sell': 'sell-stock',
+        'buy': 'buy-stock',
+        'analysis': 'paid-analysis',
+        'paidAnalysis': 'paid-analysis',
+        'aiTrading': 'ai-trading',
+        'quantAnalysis': 'ai-trading'
+    };
+
+    const eventName = eventMap[action];
+    if (eventName) {
+        emit(eventName, stock);
+    }
 };
 
 // 处理股票项触摸事件（使用 composable）
@@ -712,11 +610,8 @@ const toggleReasonExpanded = (stockCode) => {
     }
 };
 
-// 点击外部关闭菜单
+// 点击外部关闭弹窗
 const handleClickOutside = (e) => {
-    if (!e.target.closest('.more-actions') && !e.target.closest('.actions-menu')) {
-        expandedActions.value = null;
-    }
     if (!e.target.closest('.rating-info-popup') && !e.target.closest('.rating-info-btn')) {
         showRatingInfo.value = false;
     }

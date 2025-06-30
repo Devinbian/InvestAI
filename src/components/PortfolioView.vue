@@ -63,7 +63,7 @@
 
         <!-- 持仓列表 - 使用通用StockList组件 -->
         <div class="portfolio-content">
-            <!-- PC端显示空状态和股票列表 -->
+            <!-- PC端使用StockList（空状态由条件判断处理） -->
             <template v-if="!isMobileView">
                 <div v-if="userStore.portfolio.length === 0" class="empty-state">
                     <div class="empty-icon">📊</div>
@@ -73,16 +73,14 @@
                     </div>
                 </div>
                 <StockList v-else :stocks="portfolioStocks" :actions="portfolioActions" :show-position-status="true"
-                    :show-position-details="true" :show-basic-details="false" :clickable="true"
-                    @stock-click="analyzeStock" @sell-stock="handleSellStock" @buy-stock="handleBuyStock"
-                    @paid-analysis="handlePaidAnalysis" @ai-trading="handleAITrading" />
+                    :show-position-details="true" :show-basic-details="false" :clickable="false"
+                    :is-mobile="isMobileView" @action-click="handleActionClick" />
             </template>
 
             <!-- 移动端使用MobileStockList（空状态由MobileStockList组件内部处理） -->
             <MobileStockList v-else :stocks="portfolioStocks" :actions="portfolioActions" :show-position-status="true"
-                :show-details="true" :clickable="true" :empty-text="'暂无持仓'"
-                :empty-description="'您还没有购买任何股票，可以通过聊天分析股票后进行购买'" @stock-click="analyzeStock"
-                @action-click="handleActionClick" />
+                :show-details="true" :clickable="false" :empty-text="'暂无持仓'"
+                :empty-description="'您还没有购买任何股票，可以通过聊天分析股票后进行购买'" @action-click="handleActionClick" />
         </div>
     </div>
 </template>
@@ -94,18 +92,15 @@ import { ElMessage, ElMessageBox } from 'element-plus';
 import StockList from './StockList.vue';
 import MobileStockList from './MobileStockList.vue';
 import { getStockActionConfig } from '../config/stockActionConfig';
+import { useMobileDetection } from '../composables/useResponsiveBreakpoints';
 
 // 定义emit
-const emit = defineEmits(['send-to-chat', 'show-buy-dialog', 'show-sell-dialog']);
+const emit = defineEmits(['send-to-chat', 'show-buy-dialog', 'show-sell-dialog', 'action-click']);
 
 const userStore = useUserStore();
 
-// 移动端检测
-const isMobileView = ref(false);
-
-const checkMobileView = () => {
-    isMobileView.value = window.innerWidth <= 768;
-};
+// 使用统一的移动端检测
+const { isMobileView } = useMobileDetection();
 
 // 持仓操作按钮配置
 const portfolioActions = computed(() => {
@@ -198,90 +193,8 @@ const formatTime = (timeString) => {
     return date.toLocaleDateString('zh-CN');
 };
 
-// 事件处理方法
-const analyzeStock = (stock) => {
-    emit('send-to-chat', {
-        type: 'stock',
-        content: stock,
-        title: `分析${stock.name}(${stock.code})`
-    });
-};
-
-const handleSellStock = (stock) => {
-    // 找到原始持仓数据
-    const position = userStore.portfolio.find(p => p.code === stock.code);
-    if (position) {
-        const enhancedPosition = {
-            ...position,
-            currentPrice: getCurrentPrice(position.code),
-            price: getCurrentPrice(position.code)
-        };
-        emit('show-sell-dialog', enhancedPosition);
-    }
-};
-
-const handleBuyStock = (stock) => {
-    // 找到原始持仓数据
-    const position = userStore.portfolio.find(p => p.code === stock.code);
-    if (position) {
-        emit('show-buy-dialog', position);
-    }
-};
-
-const handlePaidAnalysis = (stock) => {
-    // 检查智点余额是否足够
-    if (userStore.smartPointsBalance < 1) {
-        ElMessage.warning('智点余额不足，请先充值');
-        return;
-    }
-
-    ElMessageBox.confirm(
-        `量化分析 ${stock.name}(${stock.code}) 促销价仅需 1智点（原价3智点），是否继续？`,
-        '付费服务确认',
-        {
-            confirmButtonText: '确认支付 1智点',
-            cancelButtonText: '取消',
-            type: 'info',
-            customClass: 'high-z-index-dialog',
-            appendTo: 'body'
-        }
-    ).then(() => {
-        // 扣除智点并记录交易
-        if (userStore.deductSmartPoints(1)) {
-            // 记录智点消费
-            userStore.addSmartPointsTransaction({
-                type: 'consumption',
-                amount: 1,
-                description: `量化分析报告 - ${stock.name}`,
-                serviceType: 'quant-analysis',
-                stockInfo: {
-                    name: stock.name,
-                    code: stock.code,
-                },
-                balanceAfter: userStore.smartPointsBalance,
-            });
-            ElMessage.success('支付成功，正在生成量化分析...');
-            emit('send-to-chat', {
-                type: 'paid-analysis',
-                content: stock,
-                title: `量化分析${stock.name}(${stock.code})`
-            });
-        } else {
-            ElMessage.error('支付失败，智点余额不足');
-        }
-    }).catch(() => {
-        // 用户取消
-    });
-};
-
-const handleAITrading = (stock) => {
-    // 发送到主界面处理AI委托交易对话框
-    emit('send-to-chat', {
-        type: 'show-ai-trading-dialog',
-        content: stock,
-        title: `AI委托交易设置 ${stock.name}(${stock.code})`
-    });
-};
+// 这些业务逻辑已经移到Main.vue中统一处理，避免重复代码
+// 但保留必要的数据处理方法供Main.vue调用
 
 const formatNumber = (num) => {
     if (num >= 10000) {
@@ -295,34 +208,21 @@ const refreshData = () => {
     // 这里可以添加实际的数据刷新逻辑
 };
 
-// 移动端操作处理
+// 移动端操作处理 - 统一转发到Main.vue处理
 const handleActionClick = ({ action, stock }) => {
-    switch (action) {
-        case 'sell':
-            handleSellStock(stock);
-            break;
-        case 'buy':
-            handleBuyStock(stock);
-            break;
-        case 'analysis':
-            handlePaidAnalysis(stock);
-            break;
-        case 'aiTrading':
-            handleAITrading(stock);
-            break;
-        default:
-            console.log('未知操作:', action);
-    }
+    console.log('PortfolioView - 转发股票操作:', action, stock);
+
+    // 直接转发到Main.vue的统一处理逻辑
+    emit('action-click', { action, stock });
 };
 
 // 生命周期
 onMounted(() => {
-    checkMobileView();
-    window.addEventListener('resize', checkMobileView);
+    // 移动端检测由useMobileDetection自动处理
 });
 
 onUnmounted(() => {
-    window.removeEventListener('resize', checkMobileView);
+    // 清理工作由useMobileDetection自动处理
 });
 </script>
 

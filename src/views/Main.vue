@@ -218,13 +218,13 @@
                                         <div class="asset-amount">
                                             <span class="amount-label">总资产</span>
                                             <span class="amount-value">¥{{ formatCurrency(message.assetData.totalAssets)
-                                            }}</span>
+                                                }}</span>
                                         </div>
                                         <div class="asset-change"
                                             :class="[message.assetData.totalProfitPercent >= 0 ? 'profit' : 'loss']">
                                             <span class="change-icon">{{ message.assetData.totalProfitPercent >= 0 ?
                                                 '📈' : '📉'
-                                            }}</span>
+                                                }}</span>
                                             <span class="change-label">今日盈亏：</span>
                                             <span class="change-text">
                                                 {{ message.assetData.totalProfitPercent >= 0 ? '+' : '' }}¥{{
@@ -250,7 +250,7 @@
                                         <div class="stat-info">
                                             <div class="stat-label">持仓市值</div>
                                             <div class="stat-value">¥{{ formatCurrency(message.assetData.portfolioValue)
-                                            }}
+                                                }}
                                             </div>
                                         </div>
                                     </div>
@@ -418,7 +418,8 @@
 
         <!-- 侧边栏（仅在登录后显示） -->
         <Sidebar v-if="userStore.isLoggedIn" ref="sidebarRef" @send-to-chat="handleSidebarInteraction"
-            @show-buy-dialog="showBuyDialog" @show-sell-dialog="handleShowSellDialog" />
+            @show-buy-dialog="showBuyDialog" @show-sell-dialog="handleShowSellDialog"
+            @stock-action="handleStockAction" />
 
 
 
@@ -473,7 +474,7 @@
                 </div>
                 <div class="guide-actions">
                     <el-button type="primary" size="small" @click="handleGuideAction">{{ guideActionText
-                        }}</el-button>
+                    }}</el-button>
                     <el-button size="small" @click="dismissGuide">稍后</el-button>
                 </div>
             </div>
@@ -635,11 +636,86 @@ const {
     showBuyDialog,
     showQuantAnalysisDialog,
     showPaidAnalysisDialog,
+    handleShowSellDialog,
+    scrollToRecommendation,
+    handleReminderConfirm: stockHandleReminderConfirm,
 } = stockOperations;
 
 // 简化：直接使用stockHandleAITradingConfirmed，无需包装函数
 
+// 缺失的方法定义
+const handlePreferencesSkipped = () => {
+    console.log('用户跳过了偏好设置');
+    // 可以在这里添加跳过偏好设置的逻辑
+};
 
+const handleTradeCompleted = (tradeData) => {
+    console.log('交易完成:', tradeData);
+    // 可以在这里添加交易完成后的逻辑，比如更新用户持仓
+    if (tradeData && tradeData.type === 'buy') {
+        ElMessage.success(`成功买入 ${tradeData.quantity} 股 ${tradeData.stockName}`);
+    } else if (tradeData && tradeData.type === 'sell') {
+        ElMessage.success(`成功卖出 ${tradeData.quantity} 股 ${tradeData.stockName}`);
+    }
+};
+
+const handleWatchlistChanged = (changeData) => {
+    console.log('自选股发生变化:', changeData);
+    // 可以在这里添加自选股变化后的逻辑
+    if (changeData && changeData.action === 'add') {
+        ElMessage.success(`已添加 ${changeData.stockName} 到自选股`);
+    } else if (changeData && changeData.action === 'remove') {
+        ElMessage.success(`已从自选股移除 ${changeData.stockName}`);
+    }
+};
+
+const handleAITradingConfirmed = (tradingData) => {
+    console.log('AI交易确认:', tradingData);
+    // 使用从 useStockOperations 导入的方法，传递必要的参数
+    return stockHandleAITradingConfirmed(
+        tradingData,
+        chatHistory,
+        isChatMode,
+        scrollToBottom
+    );
+};
+
+const showGuideTip = ref(false);
+const guideActionText = ref('开始体验');
+
+// 使用从 useStockOperations 导入的 handleReminderConfirm
+const handleReminderConfirm = (reminder) => {
+    return stockHandleReminderConfirm(reminder);
+};
+
+const handleReminderCancel = (reminder) => {
+    console.log('取消提醒:', reminder);
+    // 可以在这里添加取消提醒的逻辑
+    ElMessage.info('提醒已取消');
+};
+
+const removeReminder = (reminderId) => {
+    console.log('删除提醒:', reminderId);
+    // 从活跃提醒列表中移除
+    const index = activeReminders.value.findIndex(r => r.id === reminderId);
+    if (index !== -1) {
+        activeReminders.value.splice(index, 1);
+        ElMessage.success('提醒已删除');
+    }
+};
+
+// handleShowSellDialog 和 scrollToRecommendation 已在 useStockOperations 中定义
+
+const handleGuideAction = () => {
+    console.log('处理引导操作');
+    // 可以在这里添加引导操作的逻辑
+    showGuideTip.value = false;
+};
+
+const dismissGuide = () => {
+    console.log('关闭引导提示');
+    showGuideTip.value = false;
+};
 
 // 聊天历史相关
 const showChatHistory = ref(false); // 控制聊天历史面板显示
@@ -771,7 +847,7 @@ watch(chatHistory, () => {
         scrollToBottom();
         // 确保滚动事件监听器已绑定
         if (chatHistoryRef.value && !chatHistoryRef.value.hasScrollListener) {
-            chatHistoryRef.value.addEventListener('scroll', handleScroll);
+            chatHistoryRef.value.addEventListener('scroll', handleScroll, { passive: true });
             chatHistoryRef.value.hasScrollListener = true;
         }
     });
@@ -1658,7 +1734,7 @@ onMounted(() => {
     // 添加滚动事件监听
     nextTick(() => {
         if (chatHistoryRef.value && !chatHistoryRef.value.hasScrollListener) {
-            chatHistoryRef.value.addEventListener('scroll', handleScroll);
+            chatHistoryRef.value.addEventListener('scroll', handleScroll, { passive: true });
             chatHistoryRef.value.hasScrollListener = true;
         }
     });

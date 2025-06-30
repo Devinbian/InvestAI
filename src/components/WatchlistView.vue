@@ -32,12 +32,12 @@
             <div v-else class="watchlist-list">
                 <!-- PC端使用StockList -->
                 <StockList v-if="!isMobileView" :stocks="watchlistStocks" :actions="watchlistActions"
-                    :show-watchlist-status="true" :show-basic-details="true" :clickable="true"
-                    @stock-click="handleStockClick" @action-click="handleActionClick" />
+                    :show-watchlist-status="true" :show-basic-details="true" :clickable="false"
+                    :is-mobile="isMobileView" @action-click="handleActionClick" />
 
                 <!-- 移动端使用MobileStockList -->
                 <MobileStockList v-else :stocks="watchlistStocks" :actions="watchlistActions" :show-details="true"
-                    :clickable="true" @stock-click="handleStockClick" @action-click="handleActionClick" />
+                    :clickable="false" @action-click="handleActionClick" />
             </div>
         </div>
 
@@ -57,18 +57,15 @@ import StockList from './StockList.vue';
 import MobileStockList from './MobileStockList.vue';
 import { getStockListConfig } from '../config/stockListConfig';
 import { getStockActionConfig } from '../config/stockActionConfig';
+import { useMobileDetection } from '../composables/useResponsiveBreakpoints';
 
 // 定义emit
-const emit = defineEmits(['send-to-chat', 'show-buy-dialog']);
+const emit = defineEmits(['send-to-chat', 'show-buy-dialog', 'action-click']);
 
 const userStore = useUserStore();
 
-// 移动端检测
-const isMobileView = ref(false);
-
-const checkMobileView = () => {
-    isMobileView.value = window.innerWidth <= 768;
-};
+// 使用统一的移动端检测
+const { isMobileView } = useMobileDetection();
 
 // 自选股操作按钮配置
 const watchlistActions = computed(() => {
@@ -103,31 +100,12 @@ const watchlistStocks = computed(() => {
     });
 });
 
-// 股票点击事件处理
-const handleStockClick = (stock) => {
-    analyzeStock(stock);
-};
-
-// 股票操作按钮点击事件处理
+// 股票操作按钮点击事件处理 - 统一转发到Main.vue处理
 const handleActionClick = ({ action, stock }) => {
-    console.log('执行操作:', action, stock);
+    console.log('WatchlistView - 转发股票操作:', action, stock);
 
-    switch (action) {
-        case 'removeWatchlist':
-            removeFromWatchlist(stock.code);
-            break;
-        case 'analysis':
-            showPaidAnalysisDialog(stock);
-            break;
-        case 'aiTrading':
-            showQuantAnalysisDialog(stock);
-            break;
-        case 'buy':
-            showBuyDialog(stock);
-            break;
-        default:
-            console.log('未知操作:', action);
-    }
+    // 直接转发到Main.vue的统一处理逻辑
+    emit('action-click', { action, stock });
 };
 
 // 模拟获取当前价格（实际应该从API获取）
@@ -242,83 +220,9 @@ const formatAddedTime = (addedAt) => {
     }
 };
 
-// 分析股票
-const analyzeStock = (stock) => {
-    emit('send-to-chat', {
-        type: 'stock',
-        content: {
-            ...stock,
-            recommendIndexDesc: `推荐指数说明：
-5.0：强烈推荐 - 投资价值极高
-4.0-4.9：推荐 - 具备较好投资价值
-3.0-3.9：中性 - 可持续观察
-2.0-2.9：谨慎 - 建议控制仓位
-1.0-1.9：不推荐 - 建议回避`
-        },
-        title: `${stock.name}(${stock.code})股票分析`
-    });
-};
+// analyzeStock方法已移除，股票点击功能已禁用
 
-// 买入股票 - 调用买入对话框
-const showBuyDialog = (stock) => {
-    emit('show-buy-dialog', stock);
-};
-
-// 付费量化分析
-const showPaidAnalysisDialog = (stock) => {
-    // 检查余额是否足够
-    if (userStore.smartPointsBalance < 1) {
-        ElMessage.warning('智点余额不足，请先充值');
-        return;
-    }
-
-    ElMessageBox.confirm(
-        `量化分析 ${stock.name}(${stock.code}) 促销价仅需 1智点（原价3智点），是否继续？`,
-        '付费服务确认',
-        {
-            confirmButtonText: '确认支付 1智点',
-            cancelButtonText: '取消',
-            type: 'info',
-            customClass: 'high-z-index-dialog',
-            appendTo: 'body'
-        }
-    ).then(() => {
-        // 扣费（扣除1智点）
-        if (userStore.deductSmartPoints(1)) {
-            // 记录智点消费
-            userStore.addSmartPointsTransaction({
-                type: 'consumption',
-                amount: 1,
-                description: `量化分析报告 - ${stock.name}`,
-                serviceType: 'quant-analysis',
-                stockInfo: {
-                    name: stock.name,
-                    code: stock.code,
-                },
-                balanceAfter: userStore.smartPointsBalance,
-            });
-            ElMessage.success('支付成功，正在生成量化分析...');
-            emit('send-to-chat', {
-                type: 'paid-analysis',
-                content: stock,
-                title: `量化分析${stock.name}(${stock.code})`
-            });
-        } else {
-            ElMessage.error('支付失败，智点余额不足');
-        }
-    }).catch(() => {
-        // 用户取消
-    });
-};
-
-// 付费AI委托交易 - 发送到主界面处理
-const showQuantAnalysisDialog = (stock) => {
-    emit('send-to-chat', {
-        type: 'show-ai-trading-dialog',
-        content: stock,
-        title: `AI委托交易设置 ${stock.name}(${stock.code})`
-    });
-};
+// 这些业务逻辑已经移到Main.vue中统一处理，避免重复代码
 
 // 从自选股中移除
 const removeFromWatchlist = async (stockCode) => {
@@ -370,12 +274,11 @@ const refreshWatchlist = () => {
 
 // 生命周期
 onMounted(() => {
-    checkMobileView();
-    window.addEventListener('resize', checkMobileView);
+    // 移动端检测由useMobileDetection自动处理
 });
 
 onUnmounted(() => {
-    window.removeEventListener('resize', checkMobileView);
+    // 清理工作由useMobileDetection自动处理
 });
 </script>
 

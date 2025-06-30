@@ -182,7 +182,7 @@ function detectEnvironment() {
           const target = e.target;
           if (
             !target.closest(
-              ".modern-content, .chat-history-content, .tab-content, .ai-input",
+              ".modern-content, .chat-history-content, .tab-content, .ai-input, .tab-nav, .sidebar-content, .dropdown-menu",
             )
           ) {
             e.preventDefault();

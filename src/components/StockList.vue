@@ -445,6 +445,11 @@ const handleAction = (event) => {
     display: flex;
     flex-direction: column;
     gap: 12px;
+    /* 确保容器不限制高度，让内容自然流动 */
+    height: auto;
+    min-height: auto;
+    max-height: none;
+    overflow: visible;
 }
 
 /* 工具栏样式 */
@@ -486,14 +491,19 @@ const handleAction = (event) => {
 .stock-list {
     display: flex;
     flex-direction: column;
-    gap: 12px;
+    gap: 8px;
+    /* 确保列表不限制高度，让内容自然流动 */
+    height: auto;
+    min-height: auto;
+    max-height: none;
+    overflow: visible;
 }
 
 .stock-item {
     background: #f8fafc;
     border: 1px solid #e2e8f0;
     border-radius: 12px;
-    padding: 16px;
+    padding: 12px;
     transition: all 0.2s ease;
 }
 
@@ -508,14 +518,14 @@ const handleAction = (event) => {
 }
 
 .stock-info {
-    margin-bottom: 12px;
+    margin-bottom: 8px;
 }
 
 .stock-header {
     display: flex;
     justify-content: space-between;
     align-items: flex-start;
-    margin-bottom: 12px;
+    margin-bottom: 8px;
 }
 
 .stock-name-code {
@@ -701,8 +711,8 @@ const handleAction = (event) => {
 
 /* 股票详情样式 */
 .stock-details {
-    margin-top: 12px;
-    padding-top: 12px;
+    margin-top: 8px;
+    padding-top: 8px;
     border-top: 1px solid #e2e8f0;
 }
 
@@ -785,7 +795,7 @@ const handleAction = (event) => {
 .stock-actions {
     display: flex;
     gap: 6px;
-    margin-top: 16px;
+    margin-top: 12px;
     flex-wrap: wrap;
     align-items: center;
 }
@@ -796,13 +806,35 @@ const handleAction = (event) => {
     flex-wrap: wrap;
     gap: 4px;
     overflow: visible;
-    margin-top: 12px;
+    margin-top: 8px;
     /* 移除滚动相关样式，允许自然换行 */
     padding-bottom: 0;
     padding-right: 0;
 }
 
 /* 移除滚动条样式，因为现在使用换行布局 */
+
+/* 侧边栏中的股票列表更紧凑 */
+.sidebar-container .stock-list {
+    gap: 6px;
+}
+
+.sidebar-container .stock-item {
+    padding: 10px;
+}
+
+.sidebar-container .stock-info {
+    margin-bottom: 6px;
+}
+
+.sidebar-container .stock-header {
+    margin-bottom: 6px;
+}
+
+.sidebar-container .stock-details {
+    margin-top: 6px;
+    padding-top: 6px;
+}
 
 .recommendations-container .stock-actions .el-button,
 .sidebar-container .stock-actions .el-button {

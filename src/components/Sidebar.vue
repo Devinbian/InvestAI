@@ -557,8 +557,9 @@ defineExpose({
 }
 
 .tab-panel {
-    flex: 1;
-    /* 修复：移除 overflow: visible，改为适当的滚动控制 */
+    /* 修复：不要使用flex: 1，让内容自然高度，这样才能触发父容器滚动 */
+    flex: none;
+    /* PC端需要允许内容超出，让tab-content处理滚动 */
     overflow: visible;
     display: flex;
     flex-direction: column;
@@ -567,9 +568,11 @@ defineExpose({
     min-height: 0;
     padding-bottom: 20px;
     /* 移除固定的最小高度，让内容自然流动 */
-    contain: layout;
+    contain: none;
     position: relative;
     /* 为弹窗提供定位基准 */
+    /* 确保内容可以超出容器高度 */
+    height: auto;
 }
 
 /* 移动端底部安全区域处理 */
@@ -591,22 +594,35 @@ defineExpose({
     }
 }
 
-/* Tab内容区域滚动条样式 */
+/* Tab内容区域滚动条样式 - 精细优雅风格 */
 .tab-content::-webkit-scrollbar {
     width: 4px;
+    /* 精细滚动条 */
 }
 
 .tab-content::-webkit-scrollbar-track {
-    background: #f5f5f5;
+    background: rgba(0, 0, 0, 0.03);
+    border-radius: 2px;
+    /* 几乎透明的轨道 */
 }
 
 .tab-content::-webkit-scrollbar-thumb {
-    background: #d1d5db;
+    background: rgba(0, 0, 0, 0.15);
     border-radius: 2px;
+    /* 淡色滚动条 */
+    min-height: 20px;
+    transition: background-color 0.2s ease;
 }
 
 .tab-content::-webkit-scrollbar-thumb:hover {
-    background: #9ca3af;
+    background: rgba(0, 0, 0, 0.25);
+    /* 悬停时稍微深一点 */
+}
+
+/* Firefox滚动条样式 */
+.tab-content {
+    scrollbar-width: thin !important;
+    scrollbar-color: rgba(0, 0, 0, 0.15) rgba(0, 0, 0, 0.03) !important;
 }
 
 /* 收起/展开功能样式 */
@@ -895,6 +911,32 @@ defineExpose({
         /* PC端：56px(顶部) + 50px(tab导航) */
         padding: 0 !important;
         background: transparent !important;
+        overflow-y: auto !important;
+        overflow-x: hidden !important;
+        /* 精细滚动条 */
+        scrollbar-width: thin !important;
+        scrollbar-color: rgba(0, 0, 0, 0.15) rgba(0, 0, 0, 0.03) !important;
+    }
+
+    /* PC端滚动条样式 - 精细优雅风格 */
+    .sidebar-container:not(.mobile-expanded) .tab-content::-webkit-scrollbar {
+        width: 4px !important;
+    }
+
+    .sidebar-container:not(.mobile-expanded) .tab-content::-webkit-scrollbar-track {
+        background: rgba(0, 0, 0, 0.03) !important;
+        border-radius: 2px !important;
+    }
+
+    .sidebar-container:not(.mobile-expanded) .tab-content::-webkit-scrollbar-thumb {
+        background: rgba(0, 0, 0, 0.15) !important;
+        border-radius: 2px !important;
+        min-height: 20px !important;
+        transition: background-color 0.2s ease !important;
+    }
+
+    .sidebar-container:not(.mobile-expanded) .tab-content::-webkit-scrollbar-thumb:hover {
+        background: rgba(0, 0, 0, 0.25) !important;
     }
 
     /* 移动端tab内容区域 - 无头部版本 */
@@ -940,6 +982,26 @@ defineExpose({
         border-radius: 0 !important;
         box-shadow: none !important;
         overflow: visible !important;
+        height: auto !important;
+        min-height: auto !important;
+        max-height: none !important;
+        flex: none !important;
+    }
+
+    /* PC端确保所有组件都不限制高度 */
+    .sidebar-container:not(.mobile-expanded) .tab-panel .portfolio-view,
+    .sidebar-container:not(.mobile-expanded) .tab-panel .portfolio-content,
+    .sidebar-container:not(.mobile-expanded) .tab-panel .stock-list-container,
+    .sidebar-container:not(.mobile-expanded) .tab-panel .stock-list,
+    .sidebar-container:not(.mobile-expanded) .tab-panel .recommendations-container,
+    .sidebar-container:not(.mobile-expanded) .tab-panel .watchlist-container,
+    .sidebar-container:not(.mobile-expanded) .tab-panel .market-index-container {
+        height: auto !important;
+        min-height: auto !important;
+        max-height: none !important;
+        overflow: visible !important;
+        flex: none !important;
+        contain: none !important;
     }
 
     /* 移动端tab-panel */

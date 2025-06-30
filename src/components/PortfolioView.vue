@@ -228,59 +228,41 @@ onUnmounted(() => {
 
 <style scoped>
 .portfolio-view {
-    background: #fff;
-    border-radius: 12px;
-    border: 1px solid #f0f0f0;
-    overflow: hidden;
-    /* 使用 min-height 而不是固定 height，让内容可以自然展开 */
-    min-height: calc(100vh - 200px);
-    /* 如果内容超出视口，允许滚动 */
-    max-height: calc(100vh - 156px);
+    /* PC端移除外部容器样式，直接使用tab容器的滚动 */
+    background: transparent;
+    border: none;
+    border-radius: 0;
+    overflow: visible;
+    /* 移除固定高度限制，让内容自然流动 */
+    min-height: auto;
+    max-height: none;
     display: flex;
     flex-direction: column;
-    margin: 4px;
-    /* 防止内容溢出导致的布局变化 */
-    contain: layout style;
+    margin: 0;
+    padding: 0;
+    /* 移除容器限制 */
+    contain: none;
 }
 
 .account-summary {
     flex-shrink: 0;
-    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-    color: white;
-    padding: 10px;
-    margin-top: -20px;
+    /* PC端使用透明背景，不显示大卡片 */
+    background: transparent;
+    color: inherit;
+    padding: 0;
+    margin: 0 0 8px 0;
+    border-radius: 0;
     /* 移除固定高度限制，让内容自然展开 */
     min-height: auto;
     /* 移除 max-height 和 overflow: hidden */
     position: relative;
+    box-sizing: border-box;
 }
 
-.account-summary::before {
-    content: '';
-    position: absolute;
-    top: 0;
-    left: 0;
-    right: 0;
-    bottom: 0;
-    background:
-        radial-gradient(circle at 20% 20%, rgba(255, 255, 255, 0.1) 0%, transparent 50%),
-        radial-gradient(circle at 80% 80%, rgba(255, 255, 255, 0.08) 0%, transparent 50%),
-        radial-gradient(circle at 40% 70%, rgba(255, 255, 255, 0.05) 0%, transparent 50%);
-    pointer-events: none;
-}
-
+/* PC端移除装饰性背景效果 */
+.account-summary::before,
 .account-summary::after {
-    content: '';
-    position: absolute;
-    top: -50%;
-    left: -50%;
-    width: 200%;
-    height: 200%;
-    background:
-        linear-gradient(45deg, transparent 30%, rgba(255, 255, 255, 0.03) 50%, transparent 70%),
-        linear-gradient(-45deg, transparent 30%, rgba(255, 255, 255, 0.02) 50%, transparent 70%);
-    animation: shimmer 8s ease-in-out infinite;
-    pointer-events: none;
+    display: none;
 }
 
 @keyframes shimmer {
@@ -299,10 +281,10 @@ onUnmounted(() => {
     display: flex;
     justify-content: space-between;
     align-items: center;
-    margin-bottom: 20px;
+    margin-bottom: 8px;
     position: relative;
     z-index: 1;
-    padding: 10px;
+    padding: 0 12px;
 }
 
 .summary-header h3 {
@@ -351,125 +333,140 @@ onUnmounted(() => {
 }
 
 .summary-main {
-    margin-bottom: 20px;
     position: relative;
     z-index: 1;
-    padding: 10px;
-    margin-top: -20px;
+    /* 使用与portfolio-content相同的左右内边距，确保宽度一致 */
+    padding: 0 12px;
 }
 
 .total-assets-card {
-    background: linear-gradient(135deg, rgba(255, 255, 255, 0.15) 0%, rgba(255, 255, 255, 0.08) 100%);
-    border-radius: 20px;
-    padding: 24px;
+    /* PC端采用移动端紫色渐变样式 */
+    background: linear-gradient(135deg, #6366f1 0%, #8b5cf6 100%);
+    color: white;
+    border-radius: 16px;
+    padding: 14px 16px;
     display: flex;
     align-items: center;
-    gap: 20px;
-    backdrop-filter: blur(20px);
-    border: 1px solid rgba(255, 255, 255, 0.2);
-    box-shadow:
-        0 8px 24px rgba(0, 0, 0, 0.1),
-        inset 0 1px 0 rgba(255, 255, 255, 0.3);
+    gap: 12px;
+    border: none;
+    box-shadow: 0 4px 16px rgba(99, 102, 241, 0.3);
     transition: all 0.3s ease;
+    position: relative;
+    overflow: hidden;
+}
+
+/* 添加光泽效果 */
+.total-assets-card::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: linear-gradient(135deg, rgba(255, 255, 255, 0.1) 0%, transparent 50%, rgba(255, 255, 255, 0.05) 100%);
+    pointer-events: none;
 }
 
 .total-assets-card:hover {
     transform: translateY(-2px) translateZ(0);
-    box-shadow:
-        0 12px 32px rgba(0, 0, 0, 0.15),
-        inset 0 1px 0 rgba(255, 255, 255, 0.4);
+    box-shadow: 0 6px 20px rgba(99, 102, 241, 0.4);
     will-change: transform, box-shadow;
 }
 
 .asset-icon {
-    font-size: 2rem;
-    width: 64px;
-    height: 64px;
-    background: linear-gradient(135deg, rgba(255, 255, 255, 0.2) 0%, rgba(255, 255, 255, 0.1) 100%);
+    /* PC端采用移动端样式 */
+    font-size: 1.2rem;
+    width: 36px;
+    height: 36px;
+    background: rgba(255, 255, 255, 0.2);
     border-radius: 50%;
     display: flex;
     align-items: center;
     justify-content: center;
-    backdrop-filter: blur(20px);
-    border: 1px solid rgba(255, 255, 255, 0.25);
-    box-shadow:
-        0 4px 16px rgba(0, 0, 0, 0.1),
-        inset 0 1px 0 rgba(255, 255, 255, 0.4);
+    flex-shrink: 0;
+    color: white;
+    border: 1px solid rgba(255, 255, 255, 0.3);
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
     position: relative;
 }
 
+/* PC端简化装饰效果 */
 .asset-icon::before {
-    content: '';
-    position: absolute;
-    top: 2px;
-    left: 2px;
-    right: 2px;
-    bottom: 2px;
-    border-radius: 50%;
-    background: linear-gradient(135deg, rgba(255, 255, 255, 0.1) 0%, transparent 100%);
-    pointer-events: none;
+    display: none;
 }
 
 .asset-info {
     flex: 1;
     display: flex;
     flex-direction: column;
-    gap: 4px;
+    gap: 2px;
+    position: relative;
+    z-index: 1;
 }
 
 .asset-label {
-    font-size: 0.875rem;
-    opacity: 0.8;
+    font-size: 0.75rem;
+    color: rgba(255, 255, 255, 0.85);
     font-weight: 500;
+    margin: 0;
+    opacity: 0.9;
 }
 
 .asset-value {
-    font-size: 2rem;
+    font-size: 1.4rem;
     font-weight: 700;
-    line-height: 1.2;
+    color: white;
+    margin: 0;
+    line-height: 1.1;
+    text-shadow: 0 1px 2px rgba(0, 0, 0, 0.1);
 }
 
 .asset-change {
-    display: flex;
+    font-size: 0.7rem;
+    padding: 2px 8px;
+    border-radius: 12px;
+    font-weight: 600;
+    display: inline-flex;
     align-items: center;
-    gap: 4px;
-    font-size: 0.875rem;
-    font-weight: 500;
+    gap: 3px;
+    width: fit-content;
+    background: rgba(255, 255, 255, 0.2);
+    color: white;
     margin-top: 4px;
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    backdrop-filter: blur(10px);
 }
 
-.asset-change.positive {
-    color: #10b981;
-}
-
-.asset-change.negative {
-    color: #ef4444;
+.asset-change svg {
+    width: 10px;
+    height: 10px;
 }
 
 .summary-grid {
     display: grid;
     grid-template-columns: repeat(3, 1fr);
-    gap: 10px;
+    gap: 8px;
     position: relative;
     z-index: 1;
-    padding: 10px;
-    margin-top: -20px;
-    margin-bottom: -10px;
+    padding: 0 12px;
+    margin: 6px 0 0 0;
 }
 
 .summary-card {
-    background: linear-gradient(135deg, rgba(255, 255, 255, 0.12) 0%, rgba(255, 255, 255, 0.06) 100%);
-    border-radius: 16px;
-    padding: 18px;
+    /* PC端采用移动端白色卡片样式 */
+    background: white;
+    border: 1px solid #e2e8f0;
+    border-radius: 12px;
+    padding: 10px 6px;
     display: flex;
+    flex-direction: column;
     align-items: center;
-    gap: 4px;
-    backdrop-filter: blur(20px);
-    border: 1px solid rgba(255, 255, 255, 0.2);
-    box-shadow:
-        0 4px 16px rgba(0, 0, 0, 0.08),
-        inset 0 1px 0 rgba(255, 255, 255, 0.25);
+    justify-content: center;
+    gap: 3px;
+    text-align: center;
     transition: all 0.3s ease;
+    min-height: 64px;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.06);
     position: relative;
     overflow: hidden;
 }
@@ -478,127 +475,120 @@ onUnmounted(() => {
     content: '';
     position: absolute;
     top: 0;
-    left: -100%;
-    width: 100%;
-    height: 100%;
-    background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.1), transparent);
-    transition: left 0.5s ease;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: linear-gradient(135deg, rgba(99, 102, 241, 0.02) 0%, transparent 100%);
+    pointer-events: none;
 }
 
 .summary-card:hover {
-    background: linear-gradient(135deg, rgba(255, 255, 255, 0.18) 0%, rgba(255, 255, 255, 0.1) 100%);
-    transform: translateY(-2px) translateZ(0);
-    box-shadow:
-        0 8px 24px rgba(0, 0, 0, 0.12),
-        inset 0 1px 0 rgba(255, 255, 255, 0.35);
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.12);
+    border-color: #c7d2fe;
     will-change: transform, box-shadow;
 }
 
 .summary-card:hover::before {
-    left: 100%;
+    background: linear-gradient(135deg, rgba(99, 102, 241, 0.05) 0%, transparent 100%);
 }
 
 .card-icon {
-    font-size: 1.5rem;
-    width: 32px;
-    height: 32px;
-    background: linear-gradient(135deg, rgba(255, 255, 255, 0.2) 0%, rgba(255, 255, 255, 0.08) 100%);
-    border-radius: 50%;
+    /* PC端采用移动端样式 */
+    font-size: 1.1rem;
+    margin-bottom: 2px;
+    color: #6366f1;
+    flex-shrink: 0;
+    width: 24px;
+    height: 24px;
     display: flex;
     align-items: center;
     justify-content: center;
-    flex-shrink: 0;
-    border: 1px solid rgba(255, 255, 255, 0.25);
-    box-shadow:
-        0 2px 8px rgba(0, 0, 0, 0.1),
-        inset 0 1px 0 rgba(255, 255, 255, 0.3);
+    background: rgba(99, 102, 241, 0.08);
+    border-radius: 6px;
     position: relative;
+    z-index: 1;
 }
 
+/* PC端移除卡片图标装饰效果 */
 .card-icon::before {
-    content: '';
-    position: absolute;
-    top: 1px;
-    left: 1px;
-    right: 1px;
-    bottom: 1px;
-    border-radius: 50%;
-    background: linear-gradient(135deg, rgba(255, 255, 255, 0.08) 0%, transparent 100%);
-    pointer-events: none;
+    display: none;
 }
 
 .card-content {
     display: flex;
     flex-direction: column;
-    gap: 2px;
-    min-width: 0;
+    align-items: center;
+    gap: 1px;
+    width: 100%;
+    position: relative;
+    z-index: 1;
 }
 
 .card-label {
-    font-size: 0.75rem;
-    opacity: 0.8;
+    font-size: 0.65rem;
+    color: #64748b;
     font-weight: 500;
+    text-align: center;
+    margin: 0;
+    line-height: 1.1;
+    opacity: 0.9;
 }
 
 .card-value {
-    font-size: 1rem;
-    font-weight: 600;
-    line-height: 1;
+    font-size: 0.85rem;
+    color: #1e293b;
+    font-weight: 700;
+    text-align: center;
+    margin: 0;
+    line-height: 1.1;
 }
 
 .card-value.positive {
-    color: #10b981;
+    color: #059669;
 }
 
 .card-value.negative {
-    color: #ef4444;
+    color: #dc2626;
 }
 
 .portfolio-content {
-    flex: 1;
-    overflow-y: auto;
-    overflow-x: hidden;
-    /* 添加内边距，参照自选股的样式 */
-    padding: 12px;
-    /* 添加滚动条稳定性 */
-    scrollbar-gutter: stable;
-    /* 移除固定的 min-height，让内容自然流动 */
-    /* 确保可以滚动到底部 */
-    height: 0;
-    /* 配合 flex: 1 使用 */
+    /* PC端移除内部滚动，使用外部tab容器的滚动 */
+    flex: none;
+    overflow: visible;
+    /* 添加左右内边距，给股票列表合适的间隔 */
+    padding: 0 12px;
+    /* 让内容自然流动，确保能被外部容器滚动 */
+    height: auto;
+    min-height: auto;
+    max-height: none;
+    /* 确保内容可以正常流动 */
+    width: 100%;
+    box-sizing: border-box;
+    /* 添加顶部间隔，与资产卡片分开 */
+    margin-top: 8px;
+    /* 确保内容能够超出容器，触发父级滚动 */
+    contain: none;
 }
 
-/* 添加滚动条样式 */
-.portfolio-content::-webkit-scrollbar {
-    width: 4px;
-}
-
-.portfolio-content::-webkit-scrollbar-track {
-    background: #f5f5f5;
-}
-
-.portfolio-content::-webkit-scrollbar-thumb {
-    background: #d1d5db;
-    border-radius: 2px;
-}
-
-.portfolio-content::-webkit-scrollbar-thumb:hover {
-    background: #9ca3af;
-}
+/* PC端移除内部滚动条样式，使用外部tab容器的滚动条 */
 
 .empty-state {
     display: flex;
     flex-direction: column;
     align-items: center;
     justify-content: center;
-    /* 调整高度，确保在有内边距的容器中正确显示 */
-    height: calc(100% - 32px);
-    /* 减去父容器的padding */
+    /* PC端调整空状态样式 */
+    height: auto;
     min-height: 300px;
     text-align: center;
     color: #6b7280;
     /* 添加一些内边距 */
     padding: 40px 20px;
+    background: white;
+    border-radius: 12px;
+    border: 1px solid #f0f0f0;
+    margin: 0;
 }
 
 .empty-icon {
@@ -947,12 +937,14 @@ onUnmounted(() => {
 /* 移动端响应式样式 */
 @media (max-width: 768px) {
 
-    /* 移动端容器优化 */
+    /* 移动端容器保持原有样式 */
     .portfolio-view {
+        background: #fff !important;
+        border-radius: 8px !important;
+        border: 1px solid #f0f0f0 !important;
         min-height: auto !important;
         max-height: none !important;
         margin: 0 !important;
-        border-radius: 8px !important;
         overflow: visible !important;
     }
 

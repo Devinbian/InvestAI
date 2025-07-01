@@ -675,10 +675,14 @@ setInterval(updateChatHistoryList, 1000);
 
 .chat-info {
     @media (max-width: 768px) {
-        @include mobile-touch-optimization;
+        @include mobile-clickable-area(56px);
         display: flex;
         flex-direction: column;
         justify-content: center;
+        -webkit-user-select: text !important;
+        -moz-user-select: text !important;
+        -ms-user-select: text !important;
+        user-select: text !important;
     }
 }
 

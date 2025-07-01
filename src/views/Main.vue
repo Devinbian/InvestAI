@@ -2763,7 +2763,12 @@ onMounted(() => {
 /* 允许文本选择的元素 */
 input,
 textarea,
-[contenteditable] {
+[contenteditable],
+.chat-message .message-text,
+.chat-message .markdown-content,
+.chat-message .markdown-content *,
+.chat-title,
+.chat-history-container .chat-info .chat-title {
     -webkit-user-select: text !important;
     -khtml-user-select: text !important;
     -moz-user-select: text !important;

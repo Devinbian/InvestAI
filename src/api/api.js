@@ -43,7 +43,7 @@ export const updateUserPortrait = (params) => request.post(api.updateUserPortrai
 // 获取推荐股票
 export const recommendStock = (params) => request.get(api.recommendStockApi, {
   params,
-  timeout: 60000 // 设置60秒超时
+  timeout: 600000 // 设置600秒超时
 });
 
 // 创建会话

@@ -143,7 +143,8 @@ export function useStockOperations() {
     };
     const processingMessage1 = {
       role: "assistant",
-      content: "正在为您分析市场数据，请等待片刻......",
+      content: "",
+      isGenerating: true,
     };
     chatHistory.value.push(processingMessage, processingMessage1);
 
@@ -203,24 +204,19 @@ export function useStockOperations() {
 
         console.log("智能荐股API响应:", stockList);
 
-        // 构建荐股消息内容
-        const stockListMessage = {
-          content: mockRes.data.content,
-          hasStockInfo: stockList.length > 0,
-          isRecommendation: stockList.length > 0,
-          role: "assistant",
-          stockList: stockList,
-        };
-
-        // 为荐股消息添加持久化标识和唯一ID
-        const recommendationMessage = {
-          ...stockListMessage,
-          isPersistent: true,
-          messageId: `recommendation-${Date.now()}`,
-          timestamp: new Date().toISOString(),
-        };
-
-        chatHistory.value.push(recommendationMessage);
+        // 更新最后一条AI消息为荐股结果
+        const lastMessage = chatHistory.value[chatHistory.value.length - 1];
+        if (lastMessage && lastMessage.role === "assistant") {
+          lastMessage.content = mockRes.data.content;
+          lastMessage.isGenerating = false; // 取消生成状态
+          lastMessage.hasStockInfo = stockList.length > 0;
+          lastMessage.isRecommendation = stockList.length > 0;
+          lastMessage.stockList = stockList;
+          lastMessage.isPersistent = true;
+          lastMessage.messageId = `recommendation-${Date.now()}`;
+          lastMessage.timestamp = new Date().toISOString();
+          chatHistory.value = [...chatHistory.value]; // 触发响应式更新
+        }
 
         await nextTick();
         scrollToBottom();
@@ -236,7 +232,10 @@ export function useStockOperations() {
         const lastMessage = chatHistory.value[chatHistory.value.length - 1];
         if (lastMessage.content) {
           lastMessage.content += `\n[已终止，${response.exceptionTip || "服务器繁忙"}]`;
+        } else {
+          lastMessage.content = `[已终止，${response.exceptionTip || "服务器繁忙"}]`;
         }
+        lastMessage.isGenerating = false; // 错误时取消生成状态
         chatHistory.value = [...chatHistory.value];
       }
     } catch (err) {
@@ -244,7 +243,10 @@ export function useStockOperations() {
       const lastMessage = chatHistory.value[chatHistory.value.length - 1];
       if (lastMessage.content) {
         lastMessage.content += `\n[已终止，${err.message || "服务器繁忙"}]`;
+      } else {
+        lastMessage.content = `[已终止，${err.message || "服务器繁忙"}]`;
       }
+      lastMessage.isGenerating = false; // 错误时取消生成状态
       chatHistory.value = [...chatHistory.value];
     }
   };
@@ -265,12 +267,11 @@ export function useStockOperations() {
     isChatMode.value = true;
 
     const userMessage = "资讯推送";
-    const processingMessage = "正在获取最新财经资讯，请稍候...";
 
     // 添加用户消息和处理中的AI消息
     chatHistory.value.push(
       { role: "user", content: userMessage },
-      { role: "assistant", content: processingMessage },
+      { role: "assistant", content: "", isGenerating: true },
     );
 
     // 检查是否被中断
@@ -292,6 +293,7 @@ export function useStockOperations() {
     const lastMessage = chatHistory.value[chatHistory.value.length - 1];
     if (lastMessage && lastMessage.role === "assistant") {
       lastMessage.content = res.data.content;
+      lastMessage.isGenerating = false; // 取消生成状态
       chatHistory.value = [...chatHistory.value];
     }
 
@@ -375,11 +377,10 @@ export function useStockOperations() {
 
     // 添加用户消息和处理中的AI消息
     const userMessage = "我的资产分析";
-    const processingMessage = "正在分析您的投资组合，请稍候...";
 
     chatHistory.value.push(
       { role: "user", content: userMessage },
-      { role: "assistant", content: processingMessage },
+      { role: "assistant", content: "", isGenerating: true },
     );
 
     // 检查是否被中断
@@ -498,6 +499,7 @@ export function useStockOperations() {
     const lastMessage = chatHistory.value[chatHistory.value.length - 1];
     if (lastMessage && lastMessage.role === "assistant") {
       lastMessage.content = res.data.content;
+      lastMessage.isGenerating = false; // 取消生成状态
       lastMessage.hasAssetInfo = true;
       lastMessage.assetData = {
         totalAssets,

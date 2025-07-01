@@ -2,7 +2,7 @@
     <div :class="['chat-message', message.role]">
         <div class="chat-message-content">
             <!-- AI生成中状态显示 -->
-            <div v-if="message.role === 'assistant' && !message.content && isGenerating && isLastMessage"
+            <div v-if="message.role === 'assistant' && (message.isGenerating || (!message.content && isGenerating && isLastMessage))"
                 class="message-text generating-message">
                 <div class="generating-content-inline">
                     <div class="generating-dots">
@@ -15,7 +15,8 @@
             </div>
 
             <!-- 正常消息内容 -->
-            <div v-else-if="message.content" class="message-text" :class="getMessageStatusClass(message.content)">
+            <div v-else-if="message.content && !message.isGenerating" class="message-text"
+                :class="getMessageStatusClass(message.content)">
                 <MarkdownRenderer :content="message.content" />
             </div>
 

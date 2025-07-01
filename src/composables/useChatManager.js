@@ -42,10 +42,11 @@ export function useChatManager() {
       conversationId = await chatHistoryStore.createNewChat();
     }
 
-    // 添加空的AI消息占位符
+    // 添加空的AI消息占位符，使用isGenerating标志
     chatHistory.value.push({
       role: "assistant",
       content: "",
+      isGenerating: true,
       timestamp: Date.now(),
     });
 
@@ -79,6 +80,7 @@ export function useChatManager() {
                 chatHistory.value[chatHistory.value.length - 1];
               if (lastMessage && lastMessage.role === "assistant") {
                 lastMessage.content += data;
+                lastMessage.isGenerating = false; // 开始接收内容时取消生成状态
 
                 // 滚动到底部
                 requestAnimationFrame(() => {
@@ -112,6 +114,7 @@ export function useChatManager() {
               } else {
                 lastMessage.content = "[连接中断]";
               }
+              lastMessage.isGenerating = false; // 错误时取消生成状态
               // 触发响应式更新
               chatHistory.value = [...chatHistory.value];
             }
@@ -136,6 +139,7 @@ export function useChatManager() {
         } else {
           lastMessage.content = "[请求失败]";
         }
+        lastMessage.isGenerating = false; // 错误时取消生成状态
         // 触发响应式更新
         chatHistory.value = [...chatHistory.value];
       }
@@ -176,6 +180,7 @@ export function useChatManager() {
           // 如果没有内容，设置停止标识
           lastMessage.content = "[已停止生成]";
         }
+        lastMessage.isGenerating = false; // 停止时取消生成状态
         // 触发响应式更新
         chatHistory.value = [...chatHistory.value];
       }

@@ -81,7 +81,7 @@
                 <div v-for="(message, idx) in chatHistory" :key="idx" :class="['chat-message', message.role]">
                     <div class="chat-message-content">
                         <!-- AI生成中状态显示 -->
-                        <div v-if="message.role === 'assistant' && !message.content && isGenerating && idx === chatHistory.length - 1"
+                        <div v-if="message.role === 'assistant' && (message.isGenerating || (!message.content && isGenerating && idx === chatHistory.length - 1))"
                             class="message-text generating-message">
                             <div class="generating-content-inline">
                                 <div class="generating-dots">
@@ -93,7 +93,7 @@
                             </div>
                         </div>
                         <!-- 正常消息内容 -->
-                        <div v-else-if="message.content" class="message-text">
+                        <div v-else-if="message.content && !message.isGenerating" class="message-text">
                             <MarkdownRenderer :content="message.content" />
                         </div>
 
@@ -1222,7 +1222,7 @@ const handleWatchlistView = async () => {
         // 添加用户消息和处理中消息
         chatHistory.value.push(
             { role: 'user', content: '查看我的自选股列表' },
-            { role: 'assistant', content: '正在获取您的自选股数据...' }
+            { role: 'assistant', content: '', isGenerating: true }
         );
 
         // 再次检查是否被中断
@@ -1257,6 +1257,7 @@ const handleWatchlistView = async () => {
         const lastMessage = chatHistory.value[chatHistory.value.length - 1];
         if (lastMessage && lastMessage.role === 'assistant') {
             lastMessage.content = assistantMessage;
+            lastMessage.isGenerating = false; // 取消生成状态
             lastMessage.hasWatchlistInfo = true;
             lastMessage.watchlistData = watchlistData;
             lastMessage.isWatchlistDisplay = true;
@@ -1493,8 +1494,11 @@ const continueAnalysis = async (stockInfo, isPaid = false) => {
 
     chatHistory.value.push(
         {
-            role: 'assistant', content: `正在为您量化分析【${stockInfo.name}(${stockInfo.code})】，请等待片刻......`,
-            hasStockInfo: false, stockInfo: stockInfo
+            role: 'assistant',
+            content: '',
+            isGenerating: true,
+            hasStockInfo: false,
+            stockInfo: stockInfo
         },
     );
 
@@ -1523,7 +1527,9 @@ const continueAnalysis = async (stockInfo, isPaid = false) => {
                     }
                     aiContent += data;
 
-                    chatHistory.value[chatHistory.value.length - 1].content = aiContent;
+                    const lastMessage = chatHistory.value[chatHistory.value.length - 1];
+                    lastMessage.content = aiContent;
+                    lastMessage.isGenerating = false; // 开始接收内容时取消生成状态
                     chatHistory.value = [...chatHistory.value]; // 触发响应式更新
                     // 使用 requestAnimationFrame 优化滚动
                     requestAnimationFrame(() => {

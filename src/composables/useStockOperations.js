@@ -503,6 +503,7 @@ export function useStockOperations() {
       lastMessage.hasAssetInfo = true;
       lastMessage.assetData = {
         totalAssets,
+        balance: totalAssets - portfolioValue, // 可用资金 = 总资产 - 持仓市值
         portfolioCount,
         watchlistCount,
         portfolioData: portfolioData.map((item) => ({

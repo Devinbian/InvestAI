@@ -724,6 +724,9 @@ const chatHistoryComponentRef = ref(null);
 // 快捷操作自定义相关
 const customizeDialogVisible = ref(false);
 
+// 资产分析Tab切换
+const activeTab = ref('portfolio'); // 默认显示持仓明细
+
 
 
 // 简化的ShortcutsBar组件操作函数

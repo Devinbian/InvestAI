@@ -294,6 +294,7 @@ export function useChatManager() {
     isChatMode,
     isGenerating,
     inputMessage,
+    currentAbortController,
 
     // 方法
     sendMessage,

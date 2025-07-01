@@ -20,6 +20,8 @@
                 <MarkdownRenderer :content="message.content" />
             </div>
 
+
+
             <!-- 互动建议（资讯推送、智能复盘等，不包括自选股） -->
             <div v-if="message.hasInteractionButtons && message.interactionData && !message.isWatchlistDisplay"
                 class="interaction-suggestions">
@@ -285,6 +287,31 @@
                 </MobileStockList>
             </div>
         </div>
+
+        <!-- AI消息操作按钮（放在消息气泡外面） -->
+        <div v-if="message.role === 'assistant' && message.content && !message.isGenerating"
+            class="message-actions-external">
+            <div class="action-buttons">
+                <el-button size="small" text @click="handleCopyMessage" class="action-btn copy-btn"
+                    :title="copyButtonText">
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none">
+                        <rect x="9" y="9" width="13" height="13" rx="2" ry="2" stroke="currentColor" stroke-width="2" />
+                        <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1" stroke="currentColor"
+                            stroke-width="2" />
+                    </svg>
+                    <span class="action-text">{{ copyButtonText }}</span>
+                </el-button>
+                <el-button size="small" text @click="handleRegenerateMessage" class="action-btn regenerate-btn"
+                    title="重新生成">
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none">
+                        <path
+                            d="M23 4v6h-6M1 20v-6h6M20.49 9A9 9 0 0 0 5.64 5.64L1 10m22 4l-4.64 4.36A9 9 0 0 1 3.51 15"
+                            stroke="currentColor" stroke-width="2" fill="none" />
+                    </svg>
+                    <span class="action-text">重新生成</span>
+                </el-button>
+            </div>
+        </div>
     </div>
 </template>
 
@@ -352,11 +379,15 @@ const emit = defineEmits([
     'watchlist-action-click',
     'portfolio-action-click',
     'stock-action-click',
-    'refresh-recommendation'
+    'refresh-recommendation',
+    'copy-message',
+    'regenerate-message'
 ]);
 
 // 本地状态
 const localActiveTab = ref('portfolio');
+const copyButtonText = ref('复制');
+const isCopying = ref(false);
 
 // 获取消息状态类
 const getMessageStatusClass = (content) => {
@@ -415,6 +446,67 @@ const handleChatStockAction = (event) => {
             emit('show-quant-analysis-dialog', event.stock);
             break;
     }
+};
+
+// 复制消息内容
+const handleCopyMessage = async () => {
+    if (isCopying.value) return;
+
+    try {
+        isCopying.value = true;
+
+        // 获取纯文本内容（去除markdown格式）
+        const textContent = props.message.content || '';
+
+        // 使用现代的 Clipboard API
+        if (navigator.clipboard && window.isSecureContext) {
+            await navigator.clipboard.writeText(textContent);
+        } else {
+            // 降级方案：使用传统的方法
+            const textArea = document.createElement('textarea');
+            textArea.value = textContent;
+            textArea.style.position = 'fixed';
+            textArea.style.left = '-999999px';
+            textArea.style.top = '-999999px';
+            document.body.appendChild(textArea);
+            textArea.focus();
+            textArea.select();
+            document.execCommand('copy');
+            textArea.remove();
+        }
+
+        // 更新按钮文本
+        copyButtonText.value = '已复制';
+
+        // 发送复制事件
+        emit('copy-message', {
+            message: props.message,
+            content: textContent
+        });
+
+        // 2秒后恢复按钮文本
+        setTimeout(() => {
+            copyButtonText.value = '复制';
+            isCopying.value = false;
+        }, 2000);
+
+    } catch (error) {
+        console.error('复制失败:', error);
+        copyButtonText.value = '复制失败';
+
+        setTimeout(() => {
+            copyButtonText.value = '复制';
+            isCopying.value = false;
+        }, 2000);
+    }
+};
+
+// 重新生成消息
+const handleRegenerateMessage = () => {
+    emit('regenerate-message', {
+        message: props.message,
+        messageId: props.message.id || props.message.timestamp
+    });
 };
 
 // 计算属性
@@ -554,9 +646,10 @@ const mobileSmartRecommendationConfig = computed(() => {
 .chat-message {
     display: flex;
     margin-bottom: 24px;
-    padding: 0 20px;
+    /* padding: 0 20px; */
     width: 100%;
     box-sizing: border-box;
+    flex-direction: column;
 }
 
 .chat-message.user .chat-message-content {
@@ -830,6 +923,102 @@ const mobileSmartRecommendationConfig = computed(() => {
 .message-text {
     line-height: 1.6;
     color: #333;
+}
+
+/* AI消息操作按钮样式（外部底部） */
+.message-actions-external {
+    margin-top: 8px;
+    /* margin-left: 48px; */
+    /* 与消息气泡对齐 */
+    opacity: 0;
+    transition: opacity 0.2s ease;
+    width: fit-content;
+    clear: both;
+    /* 确保独立一行 */
+    display: block;
+    /* 块级元素 */
+}
+
+.chat-message.assistant:hover .message-actions-external {
+    opacity: 1;
+}
+
+.action-buttons {
+    display: flex;
+    /* gap: 8px; */
+    justify-content: flex-start;
+}
+
+.action-btn {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    padding: 4px 8px !important;
+    height: auto !important;
+    font-size: 12px !important;
+    color: #6b7280 !important;
+    background: transparent !important;
+    border: 1px solid transparent !important;
+    border-radius: 6px !important;
+    transition: all 0.2s ease;
+    min-height: 28px;
+}
+
+.action-btn:hover {
+    color: #374151 !important;
+    background: rgba(0, 0, 0, 0.05) !important;
+    border-color: rgba(0, 0, 0, 0.1) !important;
+    transform: translateY(-1px);
+}
+
+.action-btn:active {
+    transform: translateY(0);
+}
+
+.action-btn svg {
+    flex-shrink: 0;
+}
+
+.action-text {
+    font-size: 12px;
+    font-weight: 500;
+}
+
+.copy-btn:hover {
+    color: #3b82f6 !important;
+    background: rgba(59, 130, 246, 0.1) !important;
+    border-color: rgba(59, 130, 246, 0.2) !important;
+}
+
+.regenerate-btn:hover {
+    color: #10b981 !important;
+    background: rgba(16, 185, 129, 0.1) !important;
+    border-color: rgba(16, 185, 129, 0.2) !important;
+}
+
+/* 移动端适配 */
+@media (max-width: 768px) {
+    .message-actions-external {
+        opacity: 1;
+        /* 移动端始终显示 */
+        margin-top: 12px;
+        margin-left: 0;
+        /* 移动端不需要额外的左边距 */
+    }
+
+    .action-buttons {
+        justify-content: center;
+        /* gap: 12px; */
+    }
+
+    .action-btn {
+        padding: 6px 12px !important;
+        min-height: 32px;
+    }
+
+    .action-text {
+        font-size: 13px;
+    }
 }
 
 /* 互动建议样式 */

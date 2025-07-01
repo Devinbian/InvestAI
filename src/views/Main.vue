@@ -97,6 +97,8 @@
                             <MarkdownRenderer :content="message.content" />
                         </div>
 
+
+
                         <!-- 互动建议（资讯推送、智能复盘等，不包括自选股） -->
                         <div v-if="message.hasInteractionButtons && message.interactionData && !message.isWatchlistDisplay"
                             class="interaction-suggestions">
@@ -370,6 +372,32 @@
                             </MobileStockList>
                         </div>
                     </div>
+
+                    <!-- AI消息操作按钮（放在消息气泡外面） -->
+                    <div v-if="message.role === 'assistant' && message.content && !message.isGenerating"
+                        class="message-actions-external">
+                        <div class="action-buttons">
+                            <el-button size="small" text @click="handleCopyMessage(message)" class="action-btn copy-btn"
+                                :title="getCopyButtonText(message)">
+                                <svg width="14" height="14" viewBox="0 0 24 24" fill="none">
+                                    <rect x="9" y="9" width="13" height="13" rx="2" ry="2" stroke="currentColor"
+                                        stroke-width="2" />
+                                    <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"
+                                        stroke="currentColor" stroke-width="2" />
+                                </svg>
+                                <span class="action-text">{{ getCopyButtonText(message) }}</span>
+                            </el-button>
+                            <el-button size="small" text @click="handleRegenerateMessage(message)"
+                                class="action-btn regenerate-btn" title="重新生成">
+                                <svg width="14" height="14" viewBox="0 0 24 24" fill="none">
+                                    <path
+                                        d="M23 4v6h-6M1 20v-6h6M20.49 9A9 9 0 0 0 5.64 5.64L1 10m22 4l-4.64 4.36A9 9 0 0 1 3.51 15"
+                                        stroke="currentColor" stroke-width="2" fill="none" />
+                                </svg>
+                                <span class="action-text">重新生成</span>
+                            </el-button>
+                        </div>
+                    </div>
                 </div>
 
 
@@ -567,6 +595,7 @@ const {
     isChatMode,
     isGenerating,
     inputMessage,
+    currentAbortController,
     sendMessage: chatSendMessage,
     stopGeneration,
     createNewChat: chatCreateNewChat,
@@ -720,6 +749,9 @@ const dismissGuide = () => {
 // 聊天历史相关
 const showChatHistory = ref(false); // 控制聊天历史面板显示
 const chatHistoryComponentRef = ref(null);
+
+// 消息操作相关
+const messageCopyStates = ref(new Map()); // 存储每条消息的复制状态
 
 // 快捷操作自定义相关
 const customizeDialogVisible = ref(false);
@@ -1066,6 +1098,227 @@ const handleMainContentClick = (event) => {
 };
 
 // 聊天历史处理函数已移至 useChatManager
+
+// 获取复制按钮文本
+const getCopyButtonText = (message) => {
+    const messageKey = message.id || message.timestamp || Date.now();
+    const state = messageCopyStates.value.get(messageKey);
+    return state?.text || '复制';
+};
+
+// 复制消息内容
+const handleCopyMessage = async (message) => {
+    const messageKey = message.id || message.timestamp || Date.now();
+    const currentState = messageCopyStates.value.get(messageKey);
+
+    if (currentState?.isCopying) return;
+
+    try {
+        // 设置复制状态
+        messageCopyStates.value.set(messageKey, { isCopying: true, text: '复制中...' });
+
+        // 获取纯文本内容（去除markdown格式）
+        const textContent = message.content || '';
+
+        // 使用现代的 Clipboard API
+        if (navigator.clipboard && window.isSecureContext) {
+            await navigator.clipboard.writeText(textContent);
+        } else {
+            // 降级方案：使用传统的方法
+            const textArea = document.createElement('textarea');
+            textArea.value = textContent;
+            textArea.style.position = 'fixed';
+            textArea.style.left = '-999999px';
+            textArea.style.top = '-999999px';
+            document.body.appendChild(textArea);
+            textArea.focus();
+            textArea.select();
+            document.execCommand('copy');
+            textArea.remove();
+        }
+
+        // 更新按钮文本
+        messageCopyStates.value.set(messageKey, { isCopying: false, text: '已复制' });
+
+        ElMessage.success('消息已复制到剪贴板');
+
+        // 2秒后恢复按钮文本
+        setTimeout(() => {
+            messageCopyStates.value.set(messageKey, { isCopying: false, text: '复制' });
+        }, 2000);
+
+    } catch (error) {
+        console.error('复制失败:', error);
+        messageCopyStates.value.set(messageKey, { isCopying: false, text: '复制失败' });
+        ElMessage.error('复制失败，请手动选择文本复制');
+
+        setTimeout(() => {
+            messageCopyStates.value.set(messageKey, { isCopying: false, text: '复制' });
+        }, 2000);
+    }
+};
+
+// 重新生成消息
+const handleRegenerateMessage = async (message) => {
+    try {
+        // 找到该消息在聊天历史中的索引
+        const messageIndex = chatHistory.value.findIndex(
+            msg => (msg.id && msg.id === message.id) ||
+                (msg.timestamp && msg.timestamp === message.timestamp)
+        );
+
+        if (messageIndex === -1) {
+            ElMessage.error('无法找到要重新生成的消息');
+            return;
+        }
+
+        // 找到对应的用户消息（通常在AI消息的前一条）
+        let userMessageIndex = -1;
+        for (let i = messageIndex - 1; i >= 0; i--) {
+            if (chatHistory.value[i].role === 'user') {
+                userMessageIndex = i;
+                break;
+            }
+        }
+
+        let userMessage;
+
+        if (userMessageIndex === -1) {
+            // 没有找到直接的用户消息，可能是通过快捷操作生成的消息
+            const aiMessage = chatHistory.value[messageIndex];
+
+            // 检查消息是否有特殊标识来推断原始请求类型
+            if (aiMessage.hasStockInfo || aiMessage.stockList || aiMessage.content.includes('智能荐股') || aiMessage.content.includes('推荐')) {
+                userMessage = { content: '智能荐股' };
+            } else if (aiMessage.isNewsUpdate || aiMessage.content.includes('资讯') || aiMessage.content.includes('新闻')) {
+                userMessage = { content: '资讯推送' };
+            } else if (aiMessage.hasAssetInfo || aiMessage.assetData || aiMessage.content.includes('资产') || aiMessage.content.includes('持仓')) {
+                userMessage = { content: '我的资产分析' };
+            } else if (aiMessage.isWatchlistDisplay || aiMessage.watchlistData || aiMessage.content.includes('自选股')) {
+                userMessage = { content: '查看自选股' };
+            } else {
+                // 如果无法推断，使用通用的重新生成请求
+                userMessage = { content: '请重新生成回复' };
+            }
+        } else {
+            userMessage = chatHistory.value[userMessageIndex];
+        }
+
+        // 先清空当前AI消息内容，然后设置为生成中状态
+        const currentMessage = chatHistory.value[messageIndex];
+        currentMessage.content = '';
+        currentMessage.isGenerating = true;
+        currentMessage.timestamp = Date.now();
+
+        // 触发响应式更新，确保UI立即显示清空效果
+        chatHistory.value = [...chatHistory.value];
+
+        // 保存聊天历史
+        chatHistoryStore.saveChatHistory();
+
+        ElMessage.info('正在重新生成回复...');
+
+        // 等待一下让用户看到清空效果，然后开始重新生成
+        await nextTick();
+        await new Promise(resolve => setTimeout(resolve, 200));
+
+        // 直接调用API重新生成
+        isGenerating.value = true;
+        currentAbortController.value = new AbortController();
+
+        try {
+            // 获取当前聊天会话ID
+            let conversationId = chatHistoryStore.currentChatId;
+            if (!conversationId) {
+                conversationId = await chatHistoryStore.createNewChat();
+            }
+
+            // 调用流式API
+            await authFetchEventSource(
+                `${api.devPrefix}${api.chatStreamApi}?conversationId=${conversationId}&userInput=${encodeURIComponent(userMessage.content)}`,
+                {
+                    method: 'GET',
+                    headers: {
+                        'Accept': 'text/event-stream',
+                        'Cache-Control': 'no-cache',
+                    },
+                    signal: currentAbortController.value.signal,
+                    onopen: async (response) => {
+                        console.log('重新生成 - 流式连接已建立');
+                    },
+                    onmessage: (event) => {
+                        try {
+                            const data = event.data;
+                            if (data.trim().length === 0) return;
+
+                            // 更新指定位置的AI消息内容
+                            const targetMessage = chatHistory.value[messageIndex];
+                            if (targetMessage && targetMessage.role === 'assistant') {
+                                targetMessage.content += data;
+                                targetMessage.isGenerating = false;
+
+                                // 滚动到底部
+                                requestAnimationFrame(() => {
+                                    scrollToBottom();
+                                });
+                            }
+                        } catch (err) {
+                            console.error('重新生成 - 解析消息时出错:', err);
+                        }
+                    },
+                    onclose: () => {
+                        console.log('重新生成 - 流式连接已关闭');
+                        isGenerating.value = false;
+                        currentAbortController.value = null;
+                    },
+                    onerror: (err) => {
+                        console.error('重新生成 - 流式连接错误:', err);
+                        isGenerating.value = false;
+                        currentAbortController.value = null;
+
+                        // 更新目标消息，添加错误标识
+                        const targetMessage = chatHistory.value[messageIndex];
+                        if (targetMessage && targetMessage.role === 'assistant') {
+                            if (targetMessage.content) {
+                                targetMessage.content += '\n\n[连接中断]';
+                            } else {
+                                targetMessage.content = '[连接中断]';
+                            }
+                            targetMessage.isGenerating = false;
+                            // 触发响应式更新
+                            chatHistory.value = [...chatHistory.value];
+                        }
+
+                        ElMessage.error('重新生成失败，连接中断');
+                    },
+                }
+            );
+        } catch (err) {
+            console.error('重新生成失败:', err);
+            isGenerating.value = false;
+            currentAbortController.value = null;
+
+            // 更新目标消息，添加错误标识
+            const targetMessage = chatHistory.value[messageIndex];
+            if (targetMessage && targetMessage.role === 'assistant') {
+                if (targetMessage.content) {
+                    targetMessage.content += '\n\n[请求失败]';
+                } else {
+                    targetMessage.content = '[请求失败]';
+                }
+                targetMessage.isGenerating = false;
+                // 触发响应式更新
+                chatHistory.value = [...chatHistory.value];
+            }
+
+            ElMessage.error('重新生成失败，请稍后重试');
+        }
+
+    } catch (error) {
+        console.error('重新生成消息失败:', error);
+        ElMessage.error('重新生成失败，请稍后重试');
+    }
+};
 
 // 智能荐股功能 - 使用组合式函数
 const handleSmartRecommendation = async () => {
@@ -3201,10 +3454,11 @@ body.onboarding-mode {
 .chat-message {
     display: flex;
     margin-bottom: 24px;
-    padding: 0 20px;
+    // padding: 0 20px;
     /* 添加左右间距，与AI卡片的内边距保持一致，确保消息内容不贴边 */
     width: 100%;
     box-sizing: border-box;
+    flex-direction: column;
 }
 
 .chat-message.user .chat-message-content {
@@ -3345,6 +3599,77 @@ body.onboarding-mode {
 
 .message-text:last-child {
     margin-bottom: 0;
+}
+
+/* AI消息操作按钮样式（外部底部） */
+.message-actions-external {
+    margin-top: 8px;
+    margin-left: 48px;
+    /* 与消息气泡对齐 */
+    opacity: 0;
+    transition: opacity 0.2s ease;
+    width: fit-content;
+    clear: both;
+    /* 确保独立一行 */
+    display: block;
+    /* 块级元素 */
+}
+
+.chat-message.assistant:hover .message-actions-external {
+    opacity: 1;
+}
+
+.action-buttons {
+    display: flex;
+    gap: 8px;
+    justify-content: flex-start;
+}
+
+.action-btn {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    padding: 4px 8px !important;
+    height: auto !important;
+    font-size: 12px !important;
+    color: #6b7280 !important;
+    background: transparent !important;
+    border: 1px solid transparent !important;
+    border-radius: 6px !important;
+    transition: all 0.2s ease;
+    min-height: 28px;
+}
+
+.action-btn:hover {
+    color: #374151 !important;
+    background: rgba(0, 0, 0, 0.05) !important;
+    border-color: rgba(0, 0, 0, 0.1) !important;
+    transform: translateY(-1px);
+}
+
+.action-btn:active {
+    transform: translateY(0);
+}
+
+.action-btn svg {
+    flex-shrink: 0;
+}
+
+.action-text {
+    font-size: 12px;
+    font-weight: 500;
+}
+
+.copy-btn:hover {
+    color: #3b82f6 !important;
+    background: rgba(59, 130, 246, 0.1) !important;
+    border-color: rgba(59, 130, 246, 0.2) !important;
+}
+
+.regenerate-btn:hover {
+    color: #10b981 !important;
+    background: rgba(16, 185, 129, 0.1) !important;
+    border-color: rgba(16, 185, 129, 0.2) !important;
 }
 
 /* 互动建议样式 */
@@ -8779,6 +9104,30 @@ body {
         font-size: 8px;
         padding: 1px 3px;
         border-radius: 2px;
+    }
+
+    /* AI消息操作按钮移动端适配 */
+    .message-actions-external {
+        opacity: 1;
+        /* 移动端始终显示 */
+        margin-top: 12px;
+        margin-left: 0;
+        /* 移动端不需要额外的左边距 */
+    }
+
+    .action-buttons {
+        justify-content: center;
+        gap: 12px;
+    }
+
+    .action-btn {
+        padding: 6px 12px !important;
+        min-height: 32px;
+        font-size: 12px !important;
+    }
+
+    .action-text {
+        font-size: 12px;
     }
 }
 

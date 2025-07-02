@@ -67,8 +67,13 @@ export function useChatManager() {
 
     // 创建新的聊天会话（如果需要）
     let conversationId = chatHistoryStore.currentChatId;
-    if (!chatHistoryStore.currentChatId) {
+    console.log("发送消息时的currentChatId:", conversationId);
+
+    if (!conversationId) {
+      console.log("创建新聊天会话");
       conversationId = await chatHistoryStore.createNewChat();
+    } else {
+      console.log("使用现有聊天会话:", conversationId);
     }
 
     // 添加空的AI消息占位符，使用isGenerating标志
@@ -141,6 +146,10 @@ export function useChatManager() {
               lastMessage.isGenerating = false;
               lastMessage.isStreamPaused = false;
             }
+
+            // 保存聊天记录到存储
+            chatHistoryStore.updateCurrentChatMessages(chatHistory.value);
+            console.log("流式响应完成，聊天记录已保存");
           },
           onerror: (err) => {
             console.error("流式连接错误:", err);
@@ -167,6 +176,10 @@ export function useChatManager() {
               // 触发响应式更新
               chatHistory.value = [...chatHistory.value];
             }
+
+            // 保存聊天记录到存储
+            chatHistoryStore.updateCurrentChatMessages(chatHistory.value);
+            console.log("流式连接错误，聊天记录已保存");
 
             ElMessage.error("连接中断，请重试");
           },
@@ -195,6 +208,10 @@ export function useChatManager() {
         // 触发响应式更新
         chatHistory.value = [...chatHistory.value];
       }
+
+      // 保存聊天记录到存储
+      chatHistoryStore.updateCurrentChatMessages(chatHistory.value);
+      console.log("发送消息失败，聊天记录已保存");
 
       ElMessage.error("发送消息失败，请重试");
     }
@@ -242,7 +259,10 @@ export function useChatManager() {
         chatHistory.value = [...chatHistory.value];
       }
 
-      console.log("🛑 生成已停止");
+      // 保存聊天记录到存储
+      chatHistoryStore.updateCurrentChatMessages(chatHistory.value);
+
+      console.log("🛑 生成已停止，聊天记录已保存");
     } else {
       console.log("🛑 当前没有正在进行的生成任务");
     }
@@ -250,6 +270,17 @@ export function useChatManager() {
 
   // 创建新聊天
   const createNewChat = (isMobileView, mobileAdaptation, scrollToTop) => {
+    // 检查当前是否已经是空聊天状态
+    const isCurrentlyEmpty =
+      chatHistory.value.length === 0 &&
+      inputMessage.value.trim() === "" &&
+      !isChatMode.value;
+
+    if (isCurrentlyEmpty) {
+      ElMessage.info("当前已是新聊天状态");
+      return;
+    }
+
     chatHistory.value = [];
     inputMessage.value = "";
     isChatMode.value = false;
@@ -323,15 +354,38 @@ export function useChatManager() {
     isChatMode.value = chatHistory.value.length > 0;
     chatHistoryStore.setCurrentChat(chat.id);
 
+    // 确保currentChatId正确设置
+    console.log(
+      "加载聊天记录:",
+      chat.id,
+      "消息数量:",
+      chatHistory.value.length,
+    );
+
     nextTick(() => {
       scrollToBottom();
     });
   };
 
-  const handleCreateNewChat = async () => {
+  const handleCreateNewChat = async (
+    isMobileView,
+    mobileAdaptation,
+    scrollToTop,
+  ) => {
     try {
+      // 检查当前是否已经是空聊天状态
+      const isCurrentlyEmpty =
+        chatHistory.value.length === 0 &&
+        inputMessage.value.trim() === "" &&
+        !isChatMode.value;
+
+      if (isCurrentlyEmpty) {
+        ElMessage.info("当前已是新聊天状态");
+        return;
+      }
+
       const chatId = await chatHistoryStore.createNewChat();
-      createNewChat();
+      createNewChat(isMobileView, mobileAdaptation, scrollToTop);
       console.log("新聊天创建成功:", chatId);
     } catch (error) {
       console.error("创建新聊天失败:", error);
@@ -343,10 +397,15 @@ export function useChatManager() {
     chatHistoryStore.renameChat(chatId, newTitle);
   };
 
-  const handleDeleteChat = (chatId) => {
+  const handleDeleteChat = (
+    chatId,
+    isMobileView,
+    mobileAdaptation,
+    scrollToTop,
+  ) => {
     chatHistoryStore.deleteChat(chatId);
     if (chatHistoryStore.currentChatId === chatId) {
-      createNewChat();
+      createNewChat(isMobileView, mobileAdaptation, scrollToTop);
     }
   };
 

@@ -133,14 +133,12 @@ export const useChatHistoryStore = defineStore("chatHistory", {
     async getConversationId() {
       let chatId = `chat_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
       try {
-          const response = await createConversation();
-          if (response && response.data && response.data.success) {
-              chatId = response.data.data;
-              console.log("获取会话ID成功:", chatId);
-          }
-      } catch (error) {
-        
-      }
+        const response = await createConversation();
+        if (response && response.data && response.data.success) {
+          chatId = response.data.data;
+          console.log("获取会话ID成功:", chatId);
+        }
+      } catch (error) {}
       return chatId;
     },
 
@@ -153,6 +151,19 @@ export const useChatHistoryStore = defineStore("chatHistory", {
         return chat.messages;
       }
       return [];
+    },
+
+    // 设置当前聊天
+    setCurrentChat(chatId) {
+      const chat = this.chatHistoryList.find((c) => c.id === chatId);
+      if (chat) {
+        this.currentChatId = chatId;
+        this.currentChatMessages = [...chat.messages];
+        console.log("设置当前聊天:", chatId, "消息数量:", chat.messages.length);
+        return true;
+      }
+      console.warn("未找到聊天记录:", chatId);
+      return false;
     },
 
     // 更新当前聊天消息

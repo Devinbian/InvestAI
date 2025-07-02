@@ -7,8 +7,8 @@
         <!-- 聊天历史记录 -->
         <ChatHistory v-if="userStore.isLoggedIn" :visible="showChatHistory"
             :current-chat-id="chatHistoryStore.currentChatId" :chat-history="chatHistory" @load-chat="handleLoadChat"
-            @create-new-chat="handleCreateNewChat" @rename-chat="handleRenameChat" @delete-chat="handleDeleteChat"
-            @close-panel="closeChatHistory" ref="chatHistoryComponentRef" />
+            @create-new-chat="wrappedHandleCreateNewChat" @rename-chat="handleRenameChat"
+            @delete-chat="wrappedHandleDeleteChat" @close-panel="closeChatHistory" ref="chatHistoryComponentRef" />
 
         <!-- 移动端侧边栏悬浮切换按钮 -->
         <button v-show="isMobileSidebarAvailable" class="floating-sidebar-toggle" @click="handleMobileSidebarToggle"
@@ -95,10 +95,10 @@
                         <!-- 正常消息内容 -->
                         <div v-else-if="message.content && !message.isGenerating" class="message-text">
                             <MarkdownRenderer :content="message.content" />
-                            
+
                             <!-- 流式暂停加载指示器 -->
-                            <div v-if="message.role === 'assistant' && (isStreamPaused || message.isStreamPaused) && isGenerating && idx === chatHistory.length - 1" 
-                                 class="stream-pause-loader">
+                            <div v-if="message.role === 'assistant' && (isStreamPaused || message.isStreamPaused) && isGenerating && idx === chatHistory.length - 1"
+                                class="stream-pause-loader">
                                 <div class="stream-dots">
                                     <span class="stream-dot"></span>
                                     <span class="stream-dot"></span>
@@ -885,6 +885,15 @@ const sendMessage = async () => {
 // 创建新聊天 - 使用组合式函数
 const createNewChat = () => {
     chatCreateNewChat(isMobileView, mobileAdaptation, scrollToTop);
+};
+
+// 包装聊天历史相关函数，传递必要参数
+const wrappedHandleCreateNewChat = () => {
+    handleCreateNewChat(isMobileView, mobileAdaptation, scrollToTop);
+};
+
+const wrappedHandleDeleteChat = (chatId) => {
+    handleDeleteChat(chatId, isMobileView, mobileAdaptation, scrollToTop);
 };
 
 watch(chatHistory, () => {
@@ -3427,10 +3436,14 @@ body.onboarding-mode {
 }
 
 @keyframes stream-pulse {
-    0%, 60%, 100% {
+
+    0%,
+    60%,
+    100% {
         transform: scale(1);
         opacity: 0.5;
     }
+
     30% {
         transform: scale(1.2);
         opacity: 1;

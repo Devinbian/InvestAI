@@ -18,9 +18,17 @@
             <div v-else-if="message.content && !message.isGenerating" class="message-text"
                 :class="getMessageStatusClass(message.content)">
                 <MarkdownRenderer :content="message.content" />
+                
+                <!-- 流式暂停加载指示器 -->
+                <div v-if="message.role === 'assistant' && (isStreamPaused || message.isStreamPaused) && isGenerating && isLastMessage" 
+                     class="stream-pause-loader">
+                    <div class="stream-dots">
+                        <span class="stream-dot"></span>
+                        <span class="stream-dot"></span>
+                        <span class="stream-dot"></span>
+                    </div>
+                </div>
             </div>
-
-
 
             <!-- 互动建议（资讯推送、智能复盘等，不包括自选股） -->
             <div v-if="message.hasInteractionButtons && message.interactionData && !message.isWatchlistDisplay"
@@ -364,6 +372,10 @@ const props = defineProps({
     formatRecommendationTime: {
         type: Function,
         required: true
+    },
+    isStreamPaused: {
+        type: Boolean,
+        default: false
     }
 });
 
@@ -905,7 +917,6 @@ const mobileSmartRecommendationConfig = computed(() => {
 }
 
 @keyframes typing-dots {
-
     0%,
     60%,
     100% {
@@ -915,6 +926,51 @@ const mobileSmartRecommendationConfig = computed(() => {
 
     30% {
         transform: translateY(-8px);
+        opacity: 1;
+    }
+}
+
+/* 流式暂停加载指示器样式 */
+.stream-pause-loader {
+    display: inline-flex;
+    align-items: center;
+    margin-left: 8px;
+    margin-top: 4px;
+}
+
+.stream-dots {
+    display: inline-flex;
+    gap: 3px;
+    align-items: center;
+}
+
+.stream-dots .stream-dot {
+    width: 4px;
+    height: 4px;
+    border-radius: 50%;
+    background: #94a3b8;
+    animation: stream-pulse 1.2s ease-in-out infinite;
+}
+
+.stream-dots .stream-dot:nth-child(1) {
+    animation-delay: 0s;
+}
+
+.stream-dots .stream-dot:nth-child(2) {
+    animation-delay: 0.15s;
+}
+
+.stream-dots .stream-dot:nth-child(3) {
+    animation-delay: 0.3s;
+}
+
+@keyframes stream-pulse {
+    0%, 60%, 100% {
+        transform: scale(1);
+        opacity: 0.5;
+    }
+    30% {
+        transform: scale(1.2);
         opacity: 1;
     }
 }

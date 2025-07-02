@@ -15,6 +15,35 @@ export function useChatManager() {
   const currentAbortController = ref(null);
   const inputMessage = ref("");
 
+  // 流式暂停检测相关状态
+  const isStreamPaused = ref(false);
+  const streamPauseTimer = ref(null);
+  const STREAM_PAUSE_TIMEOUT = 5000; // 5秒无数据认为暂停
+
+  // 清除流式暂停检测定时器
+  const clearStreamPauseTimer = () => {
+    if (streamPauseTimer.value) {
+      clearTimeout(streamPauseTimer.value);
+      streamPauseTimer.value = null;
+    }
+    isStreamPaused.value = false;
+  };
+
+  // 重置流式暂停检测定时器
+  const resetStreamPauseTimer = () => {
+    clearStreamPauseTimer();
+
+    // 只有在正在生成且有内容时才启动暂停检测
+    if (isGenerating.value) {
+      streamPauseTimer.value = setTimeout(() => {
+        if (isGenerating.value) {
+          console.log("🔄 检测到流式输出暂停");
+          isStreamPaused.value = true;
+        }
+      }, STREAM_PAUSE_TIMEOUT);
+    }
+  };
+
   // 发送消息
   const sendMessage = async (
     userStore,
@@ -47,10 +76,12 @@ export function useChatManager() {
       role: "assistant",
       content: "",
       isGenerating: true,
+      isStreamPaused: false,
       timestamp: Date.now(),
     });
 
     isGenerating.value = true;
+    isStreamPaused.value = false;
     currentAbortController.value = new AbortController();
 
     try {
@@ -66,6 +97,8 @@ export function useChatManager() {
           signal: currentAbortController.value.signal,
           onopen: async (response) => {
             console.log("流式连接已建立");
+            // 连接建立后开始暂停检测
+            resetStreamPauseTimer();
           },
           onmessage: (event) => {
             try {
@@ -81,6 +114,10 @@ export function useChatManager() {
               if (lastMessage && lastMessage.role === "assistant") {
                 lastMessage.content += data;
                 lastMessage.isGenerating = false; // 开始接收内容时取消生成状态
+                lastMessage.isStreamPaused = false; // 收到数据时取消暂停状态
+
+                // 重置暂停检测定时器
+                resetStreamPauseTimer();
 
                 // 滚动到底部
                 requestAnimationFrame(() => {
@@ -94,12 +131,23 @@ export function useChatManager() {
           onclose: () => {
             console.log("流式连接已关闭");
             isGenerating.value = false;
+            isStreamPaused.value = false;
             currentAbortController.value = null;
+            clearStreamPauseTimer();
+
+            // 更新最后一条消息的状态
+            const lastMessage = chatHistory.value[chatHistory.value.length - 1];
+            if (lastMessage && lastMessage.role === "assistant") {
+              lastMessage.isGenerating = false;
+              lastMessage.isStreamPaused = false;
+            }
           },
           onerror: (err) => {
             console.error("流式连接错误:", err);
             isGenerating.value = false;
+            isStreamPaused.value = false;
             currentAbortController.value = null;
+            clearStreamPauseTimer();
 
             // 更新最后一条AI消息，添加错误标识
             if (
@@ -115,6 +163,7 @@ export function useChatManager() {
                 lastMessage.content = "[连接中断]";
               }
               lastMessage.isGenerating = false; // 错误时取消生成状态
+              lastMessage.isStreamPaused = false; // 错误时取消暂停状态
               // 触发响应式更新
               chatHistory.value = [...chatHistory.value];
             }
@@ -126,7 +175,9 @@ export function useChatManager() {
     } catch (err) {
       console.error("发送消息失败:", err);
       isGenerating.value = false;
+      isStreamPaused.value = false;
       currentAbortController.value = null;
+      clearStreamPauseTimer();
 
       // 更新最后一条AI消息，添加错误标识
       if (
@@ -140,6 +191,7 @@ export function useChatManager() {
           lastMessage.content = "[请求失败]";
         }
         lastMessage.isGenerating = false; // 错误时取消生成状态
+        lastMessage.isStreamPaused = false; // 错误时取消暂停状态
         // 触发响应式更新
         chatHistory.value = [...chatHistory.value];
       }
@@ -162,10 +214,14 @@ export function useChatManager() {
       currentAbortController.value = null;
     }
 
+    // 清除暂停检测定时器
+    clearStreamPauseTimer();
+
     // 无论是否有AbortController，只要isGenerating为true就可以停止
     if (isGenerating.value) {
       // 重置生成状态
       isGenerating.value = false;
+      isStreamPaused.value = false;
 
       // 更新最后一条AI消息，添加停止标识
       if (
@@ -181,6 +237,7 @@ export function useChatManager() {
           lastMessage.content = "[已停止生成]";
         }
         lastMessage.isGenerating = false; // 停止时取消生成状态
+        lastMessage.isStreamPaused = false; // 停止时取消暂停状态
         // 触发响应式更新
         chatHistory.value = [...chatHistory.value];
       }
@@ -196,6 +253,12 @@ export function useChatManager() {
     chatHistory.value = [];
     inputMessage.value = "";
     isChatMode.value = false;
+
+    // 清除暂停检测定时器
+    clearStreamPauseTimer();
+    isGenerating.value = false;
+    isStreamPaused.value = false;
+
     chatHistoryStore.clearCurrentChat();
 
     // 确保移动端布局重置
@@ -295,6 +358,8 @@ export function useChatManager() {
     isGenerating,
     inputMessage,
     currentAbortController,
+    // 新增：流式暂停相关状态
+    isStreamPaused,
 
     // 方法
     sendMessage,
@@ -308,5 +373,8 @@ export function useChatManager() {
     handleCreateNewChat,
     handleRenameChat,
     handleDeleteChat,
+    // 新增：流式暂停相关方法
+    clearStreamPauseTimer,
+    resetStreamPauseTimer,
   };
 }

@@ -22,19 +22,71 @@
 
         <!-- PC端快捷操作栏（聊天模式下显示在输入框上方） -->
         <div class="chat-shortcuts pc-shortcuts" v-if="mode === 'chat' && showChatShortcuts && !isMobileView">
-            <div class="shortcuts-grid">
+            <div class="shortcuts-grid" :style="{
+                display: 'grid !important',
+                gridTemplateColumns: 'repeat(5, 1fr) !important',
+                gap: '6px !important',
+                width: '100% !important',
+                maxWidth: 'none !important',
+                margin: '0 !important',
+                padding: '0 !important',
+                boxSizing: 'border-box !important'
+            }">
                 <el-button v-for="shortcut in activeShortcuts" :key="shortcut.id" class="chat-shortcut-btn"
-                    @click="handleShortcutClick(shortcut)">
-                    <span class="btn-icon">{{ shortcut.icon }}</span>
-                    <span class="btn-text">{{ shortcut.shortTitle || shortcut.title }}</span>
+                    @click="handleShortcutClick(shortcut)" :style="{
+                        width: '100%',
+                        height: '40px',
+                        minWidth: '0',
+                        maxWidth: 'none',
+                        margin: '0',
+                        padding: '4px 2px',
+                        boxSizing: 'border-box',
+                        display: 'flex',
+                        flexDirection: 'column',
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                        gap: '1px',
+                        fontSize: '12px'
+                    }">
+                    <span class="btn-icon" :style="{ fontSize: '14px', lineHeight: '1' }">{{ shortcut.icon }}</span>
+                    <span class="btn-text" :style="{ fontSize: '10px', lineHeight: '1.2', fontWeight: '500' }">{{
+                        shortcut.shortTitle || shortcut.title }}</span>
                 </el-button>
-                <el-button class="chat-shortcut-btn customize-btn-chat" @click="openCustomizeDialog">
-                    <span class="btn-icon">⚙️</span>
-                    <span class="btn-text">设置</span>
+                <el-button class="chat-shortcut-btn customize-btn-chat" @click="openCustomizeDialog" :style="{
+                    width: '100%',
+                    height: '40px',
+                    minWidth: '0',
+                    maxWidth: 'none',
+                    margin: '0',
+                    padding: '6px 8px',
+                    boxSizing: 'border-box',
+                    display: 'flex',
+                    flexDirection: 'column',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    gap: '1px',
+                    fontSize: '12px'
+                }">
+                    <span class="btn-icon" :style="{ fontSize: '14px', lineHeight: '1' }">⚙️</span>
+                    <span class="btn-text" :style="{ fontSize: '10px', lineHeight: '1.2', fontWeight: '500' }">设置</span>
                 </el-button>
-                <el-button class="chat-shortcut-btn close-btn" @click="toggleChatShortcuts">
-                    <span class="btn-icon">✕</span>
-                    <span class="btn-text">收起</span>
+                <el-button class="chat-shortcut-btn close-btn" @click="toggleChatShortcuts" :style="{
+                    width: '100%',
+                    height: '40px',
+                    minWidth: '0',
+                    maxWidth: 'none',
+                    margin: '0',
+                    padding: '6px 8px',
+                    boxSizing: 'border-box',
+                    display: 'flex',
+                    flexDirection: 'column',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    gap: '1px',
+                    fontSize: '12px'
+                }">
+                    <span class="btn-icon" :style="{ fontSize: '14px', lineHeight: '1' }">✕</span>
+                    <span class="btn-text" :style="{ fontSize: '10px', lineHeight: '1.2', fontWeight: '500' }">收起</span>
                 </el-button>
             </div>
         </div>

@@ -8970,6 +8970,42 @@ body {
     }
 }
 
+/* ========== PC端快捷操作网格布局 ========== */
+.chat-shortcuts.pc-shortcuts {
+    display: block !important;
+}
+
+.chat-shortcuts.pc-shortcuts .shortcuts-grid {
+    display: grid !important;
+    grid-template-columns: 1fr 1fr 1fr 1fr !important;
+    grid-gap: 12px !important;
+    gap: 12px !important;
+    max-width: 100% !important;
+    width: 100% !important;
+    margin: 0 !important;
+    padding: 0 !important;
+    box-sizing: border-box !important;
+}
+
+.chat-shortcuts.pc-shortcuts .chat-shortcut-btn {
+    height: 48px !important;
+    padding: 8px 12px !important;
+    border-radius: 12px !important;
+    font-size: 13px !important;
+    display: flex !important;
+    flex-direction: column !important;
+    align-items: center !important;
+    justify-content: center !important;
+    gap: 2px !important;
+    width: 100% !important;
+    text-align: center !important;
+    min-width: 0 !important;
+    max-width: none !important;
+    box-sizing: border-box !important;
+    margin: 0 !important;
+    flex: none !important;
+}
+
 /* ========== 微信环境特殊处理 ========== */
 @include mobile {
 

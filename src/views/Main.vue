@@ -155,7 +155,7 @@
                             class="watchlist-display-container">
                             <!-- 概览信息 -->
                             <div class="watchlist-overview">
-                                <div class="overview-stats">
+                                <div class="overview-stats watchlist-stats">
                                     <div class="stat-item total">
                                         <div class="stat-icon">⭐</div>
                                         <div class="stat-info">
@@ -228,13 +228,13 @@
                                         <div class="asset-amount">
                                             <span class="amount-label">总资产</span>
                                             <span class="amount-value">¥{{ formatCurrency(message.assetData.totalAssets)
-                                                }}</span>
+                                            }}</span>
                                         </div>
                                         <div class="asset-change"
                                             :class="[message.assetData.totalProfitPercent >= 0 ? 'profit' : 'loss']">
                                             <span class="change-icon">{{ message.assetData.totalProfitPercent >= 0 ?
                                                 '📈' : '📉'
-                                                }}</span>
+                                            }}</span>
                                             <span class="change-label">今日盈亏：</span>
                                             <span class="change-text">
                                                 {{ message.assetData.totalProfitPercent >= 0 ? '+' : '' }}¥{{
@@ -246,7 +246,7 @@
                                     </div>
                                 </div>
 
-                                <div class="overview-stats">
+                                <div class="overview-stats asset-stats">
                                     <div class="stat-item">
                                         <div class="stat-icon cash">💵</div>
                                         <div class="stat-info">
@@ -510,7 +510,7 @@
                 </div>
                 <div class="guide-actions">
                     <el-button type="primary" size="small" @click="handleGuideAction">{{ guideActionText
-                    }}</el-button>
+                        }}</el-button>
                     <el-button size="small" @click="dismissGuide">稍后</el-button>
                 </div>
             </div>
@@ -2842,7 +2842,13 @@ onMounted(() => {
     }
 
     /* 移动端统计卡片网格优化 */
-    .overview-stats {
+    .overview-stats.watchlist-stats {
+        grid-template-columns: repeat(3, 1fr);
+        gap: 8px;
+        margin-top: 12px;
+    }
+
+    .overview-stats.asset-stats {
         grid-template-columns: repeat(2, 1fr);
         gap: 10px;
         margin-top: 12px;
@@ -4585,8 +4591,19 @@ body.onboarding-mode {
 
 .overview-stats {
     display: grid;
-    grid-template-columns: repeat(4, 1fr);
     gap: 16px;
+    justify-content: center;
+    margin-bottom: 20px;
+}
+
+/* 自选股统计 - 3列布局 */
+.overview-stats.watchlist-stats {
+    grid-template-columns: repeat(3, 1fr);
+}
+
+/* 资产分析统计 - 4列布局 */
+.overview-stats.asset-stats {
+    grid-template-columns: repeat(4, 1fr);
 }
 
 .stat-item {
@@ -8386,7 +8403,13 @@ body {
     }
 
     /* 移动端统计卡片网格优化 */
-    .overview-stats {
+    .overview-stats.watchlist-stats {
+        grid-template-columns: repeat(3, 1fr);
+        gap: 8px;
+        margin-top: 12px;
+    }
+
+    .overview-stats.asset-stats {
         grid-template-columns: repeat(2, 1fr);
         gap: 10px;
         margin-top: 12px;
@@ -8548,7 +8571,13 @@ body {
     }
 
     /* 超小屏幕统计卡片紧凑布局 */
-    .overview-stats {
+    .overview-stats.watchlist-stats {
+        grid-template-columns: repeat(3, 1fr);
+        gap: 4px;
+        margin-top: 10px;
+    }
+
+    .overview-stats.asset-stats {
         grid-template-columns: repeat(2, 1fr);
         gap: 6px;
         margin-top: 10px;

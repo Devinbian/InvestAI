@@ -18,10 +18,10 @@
             <div v-else-if="message.content && !message.isGenerating" class="message-text"
                 :class="getMessageStatusClass(message.content)">
                 <MarkdownRenderer :content="message.content" />
-                
+
                 <!-- 流式暂停加载指示器 -->
-                <div v-if="message.role === 'assistant' && (isStreamPaused || message.isStreamPaused) && isGenerating && isLastMessage" 
-                     class="stream-pause-loader">
+                <div v-if="message.role === 'assistant' && (isStreamPaused || message.isStreamPaused) && isGenerating && isLastMessage"
+                    class="stream-pause-loader">
                     <div class="stream-dots">
                         <span class="stream-dot"></span>
                         <span class="stream-dot"></span>
@@ -77,7 +77,7 @@
             <div v-if="message.isWatchlistDisplay && message.watchlistData" class="watchlist-display-container">
                 <!-- 概览信息 -->
                 <div class="watchlist-overview">
-                    <div class="overview-stats">
+                    <div class="overview-stats watchlist-stats">
                         <div class="stat-item total">
                             <div class="stat-icon">⭐</div>
                             <div class="stat-info">
@@ -164,7 +164,7 @@
                         </div>
                     </div>
 
-                    <div class="overview-stats">
+                    <div class="overview-stats asset-stats">
                         <div class="stat-item">
                             <div class="stat-icon cash">💵</div>
                             <div class="stat-info">
@@ -917,6 +917,7 @@ const mobileSmartRecommendationConfig = computed(() => {
 }
 
 @keyframes typing-dots {
+
     0%,
     60%,
     100% {
@@ -965,10 +966,14 @@ const mobileSmartRecommendationConfig = computed(() => {
 }
 
 @keyframes stream-pulse {
-    0%, 60%, 100% {
+
+    0%,
+    60%,
+    100% {
         transform: scale(1);
         opacity: 0.5;
     }
+
     30% {
         transform: scale(1.2);
         opacity: 1;
@@ -1837,9 +1842,20 @@ const mobileSmartRecommendationConfig = computed(() => {
 }
 
 .overview-stats {
-    display: flex;
+    display: grid;
     gap: 16px;
-    justify-content: space-around;
+    justify-content: center;
+    margin-bottom: 16px;
+}
+
+/* 自选股统计 - 3列布局 */
+.overview-stats.watchlist-stats {
+    grid-template-columns: repeat(3, 1fr);
+}
+
+/* 资产分析统计 - 4列布局 */
+.overview-stats.asset-stats {
+    grid-template-columns: repeat(4, 1fr);
 }
 
 .stat-item {
@@ -2111,8 +2127,19 @@ const mobileSmartRecommendationConfig = computed(() => {
 
 .overview-stats {
     display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
     gap: 12px;
+    justify-content: center;
+    margin-bottom: 16px;
+}
+
+/* 自选股统计 - 3列布局 */
+.overview-stats.watchlist-stats {
+    grid-template-columns: repeat(3, 1fr);
+}
+
+/* 资产分析统计 - 4列布局 */
+.overview-stats.asset-stats {
+    grid-template-columns: repeat(4, 1fr);
 }
 
 .overview-stats .stat-item {
@@ -2268,8 +2295,14 @@ const mobileSmartRecommendationConfig = computed(() => {
         flex-direction: column;
     }
 
-    .overview-stats {
+    .overview-stats.watchlist-stats {
+        grid-template-columns: repeat(3, 1fr);
+        gap: 8px;
+    }
+
+    .overview-stats.asset-stats {
         grid-template-columns: repeat(2, 1fr);
+        gap: 8px;
     }
 
     .asset-amount {

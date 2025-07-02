@@ -928,7 +928,6 @@ const mobileSmartRecommendationConfig = computed(() => {
 /* AI消息操作按钮样式（外部底部） */
 .message-actions-external {
     margin-top: 8px;
-    /* margin-left: 48px; */
     /* 与消息气泡对齐 */
     opacity: 0;
     transition: opacity 0.2s ease;
@@ -945,23 +944,23 @@ const mobileSmartRecommendationConfig = computed(() => {
 
 .action-buttons {
     display: flex;
-    /* gap: 8px; */
+    gap: 0px;
     justify-content: flex-start;
 }
 
 .action-btn {
     display: flex;
     align-items: center;
-    gap: 4px;
-    padding: 4px 8px !important;
+    gap: 2px;
+    padding: 2px 4px !important;
     height: auto !important;
-    font-size: 12px !important;
+    font-size: 11px !important;
     color: #6b7280 !important;
     background: transparent !important;
     border: 1px solid transparent !important;
-    border-radius: 6px !important;
+    border-radius: 4px !important;
     transition: all 0.2s ease;
-    min-height: 28px;
+    min-height: 24px;
 }
 
 .action-btn:hover {
@@ -980,7 +979,7 @@ const mobileSmartRecommendationConfig = computed(() => {
 }
 
 .action-text {
-    font-size: 12px;
+    font-size: 11px;
     font-weight: 500;
 }
 
@@ -1004,20 +1003,24 @@ const mobileSmartRecommendationConfig = computed(() => {
         margin-top: 12px;
         margin-left: 0;
         /* 移动端不需要额外的左边距 */
+        display: flex;
+        justify-content: flex-start;
     }
 
     .action-buttons {
-        justify-content: center;
-        /* gap: 12px; */
+        justify-content: flex-start;
+        gap: 0px;
+        width: fit-content;
     }
 
     .action-btn {
-        padding: 6px 12px !important;
-        min-height: 32px;
+        padding: 4px 0 !important;
+        min-height: 28px;
+        gap: 2px;
     }
 
     .action-text {
-        font-size: 13px;
+        font-size: 11px;
     }
 }
 

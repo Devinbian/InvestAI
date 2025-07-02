@@ -2547,7 +2547,7 @@ onUnmounted(() => {
     }
 
     .action-btn {
-        padding: 6px 12px;
+        padding: 6px 0;
         font-size: 0.8125rem;
     }
 

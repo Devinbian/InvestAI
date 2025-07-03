@@ -153,10 +153,34 @@ function detectEnvironment() {
         document.documentElement.style.setProperty("--vh", `${vh}px`);
         document.documentElement.style.setProperty("--keyboard-vh", `${vh}px`);
 
-        // 延迟重置布局，确保键盘完全收起
-        setTimeout(() => {
-          window.scrollTo(0, 0);
-        }, 100);
+        // 只在键盘完全收起且没有输入框获得焦点时才重置滚动
+        const activeElement = document.activeElement;
+        const isInputFocused =
+          activeElement &&
+          (activeElement.tagName === "INPUT" ||
+            activeElement.tagName === "TEXTAREA" ||
+            activeElement.contentEditable === "true" ||
+            activeElement.closest(".el-input, .el-textarea, .ai-input"));
+
+        if (!isInputFocused) {
+          // 延迟重置布局，确保键盘完全收起
+          setTimeout(() => {
+            // 再次检查输入框状态，避免在用户快速切换输入框时重置滚动
+            const currentActiveElement = document.activeElement;
+            const isStillInputFocused =
+              currentActiveElement &&
+              (currentActiveElement.tagName === "INPUT" ||
+                currentActiveElement.tagName === "TEXTAREA" ||
+                currentActiveElement.contentEditable === "true" ||
+                currentActiveElement.closest(
+                  ".el-input, .el-textarea, .ai-input",
+                ));
+
+            if (!isStillInputFocused) {
+              window.scrollTo(0, 0);
+            }
+          }, 300);
+        }
       }
     }
 
@@ -216,7 +240,8 @@ function detectEnvironment() {
           // 3. 检查是否是表单元素（应该允许滚动）
           const isFormElement =
             target.matches("input, textarea, select") ||
-            target.contentEditable === "true";
+            target.contentEditable === "true" ||
+            target.closest(".el-input, .el-textarea, .ai-input, .ai-input-row");
 
           // 4. 检查是否在弹窗或浮层中
           const inModal = target.closest(
@@ -269,13 +294,42 @@ function detectEnvironment() {
       { passive: false },
     );
 
-    // 防止长按菜单
+    // 防止长按菜单 - 但保留输入框的原生操作功能
     document.addEventListener("contextmenu", function (e) {
-      e.preventDefault();
+      // 检查是否是输入相关元素
+      const isInputElement =
+        e.target.matches('input, textarea, [contenteditable="true"]') ||
+        e.target.closest(".el-input, .el-textarea");
+
+      // 如果不是输入元素，则阻止右键菜单
+      if (!isInputElement) {
+        e.preventDefault();
+      }
     });
 
     // 强制隐藏微信底部工具栏
     function hideWechatToolbar() {
+      // 检查是否有输入框正在获得焦点
+      const activeElement = document.activeElement;
+      const isInputFocused =
+        activeElement &&
+        (activeElement.tagName === "INPUT" ||
+          activeElement.tagName === "TEXTAREA" ||
+          activeElement.contentEditable === "true" ||
+          activeElement.closest(".el-input, .el-textarea, .ai-input"));
+
+      // 如果输入框正在获得焦点，不执行滚动操作
+      if (isInputFocused) {
+        console.log("输入框获得焦点，跳过滚动重置");
+        return;
+      }
+
+      // 检查键盘是否正在显示
+      if (isKeyboardOpen) {
+        console.log("键盘正在显示，跳过滚动重置");
+        return;
+      }
+
       window.scrollTo(0, 0);
       document.body.style.height = `${window.innerHeight}px`;
       document.documentElement.style.height = `${window.innerHeight}px`;
@@ -284,12 +338,43 @@ function detectEnvironment() {
     // 页面加载完成后隐藏工具栏
     setTimeout(hideWechatToolbar, 500);
 
-    // 用户交互后隐藏工具栏
-    document.addEventListener("touchend", hideWechatToolbar);
-    document.addEventListener("click", hideWechatToolbar);
+    // 用户交互后隐藏工具栏 - 但要避免在输入时触发
+    document.addEventListener("touchend", (e) => {
+      // 检查触摸结束的目标是否是输入相关元素
+      const isInputElement =
+        e.target.matches('input, textarea, [contenteditable="true"]') ||
+        e.target.closest(".el-input, .el-textarea, .ai-input, .ai-input-row");
 
-    // 页面获得焦点时隐藏工具栏
-    window.addEventListener("focus", hideWechatToolbar);
+      if (!isInputElement) {
+        setTimeout(hideWechatToolbar, 100);
+      }
+    });
+
+    document.addEventListener("click", (e) => {
+      // 检查点击的目标是否是输入相关元素
+      const isInputElement =
+        e.target.matches('input, textarea, [contenteditable="true"]') ||
+        e.target.closest(".el-input, .el-textarea, .ai-input, .ai-input-row");
+
+      if (!isInputElement) {
+        setTimeout(hideWechatToolbar, 100);
+      }
+    });
+
+    // 页面获得焦点时隐藏工具栏 - 但要检查焦点元素
+    window.addEventListener("focus", (e) => {
+      const isInputElement =
+        e.target &&
+        (e.target.matches('input, textarea, [contenteditable="true"]') ||
+          e.target.closest(
+            ".el-input, .el-textarea, .ai-input, .ai-input-row",
+          ));
+
+      if (!isInputElement) {
+        hideWechatToolbar();
+      }
+    });
+
     window.addEventListener("pageshow", hideWechatToolbar);
   }
 

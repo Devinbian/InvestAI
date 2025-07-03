@@ -4,7 +4,7 @@
         <div class="ai-input-row">
             <el-input v-model="inputMessage" class="ai-input" type="textarea" :autosize="{ minRows: 2, maxRows: 6 }"
                 :placeholder="placeholder" @keyup.enter.ctrl="handleSendMessage" clearable maxlength="500"
-                show-word-limit />
+                show-word-limit :input-style="{ userSelect: 'text', WebkitUserSelect: 'text' }" ref="inputRef" />
         </div>
 
         <!-- 按钮区域 -->
@@ -228,6 +228,25 @@ export default {
                 this.sendButtonPressed = false;
                 this.resetButtonStateTimer = null;
             }, 200);
+        },
+
+        // 手动触发全选功能
+        selectAll() {
+            if (this.$refs.inputRef && this.$refs.inputRef.textarea) {
+                this.$refs.inputRef.textarea.select();
+            }
+        },
+
+        // 获取输入框焦点
+        focus() {
+            if (this.$refs.inputRef && this.$refs.inputRef.textarea) {
+                this.$refs.inputRef.textarea.focus();
+            }
+        },
+
+        // 获取输入框元素（供外部使用）
+        getInputElement() {
+            return this.$refs.inputRef?.textarea;
         }
     },
 
@@ -265,6 +284,9 @@ export default {
     display: flex;
     flex-direction: column;
     gap: 8px;
+    min-height: 72px !important;
+    contain: layout !important;
+    will-change: auto !important;
 }
 
 .ai-buttons-row {
@@ -310,6 +332,22 @@ export default {
     font-size: 0.95rem !important;
     line-height: 1.5 !important;
     color: #374151 !important;
+    /* 确保原生操作功能正常 */
+    user-select: text !important;
+    -webkit-user-select: text !important;
+    -moz-user-select: text !important;
+    -ms-user-select: text !important;
+    /* 确保右键菜单可用 */
+    -webkit-touch-callout: default !important;
+    /* 防止文本选择时布局变动 */
+    min-height: 48px !important;
+    max-height: 180px !important;
+    overflow-y: auto !important;
+    /* 确保选择状态时容器尺寸稳定 */
+    box-sizing: border-box !important;
+    /* 防止选择工具栏影响布局 */
+    position: relative !important;
+    z-index: 1 !important;
 }
 
 .ai-input :deep(.el-textarea__inner::placeholder) {
@@ -553,6 +591,12 @@ export default {
         background: #fff !important;
         box-shadow: 0 -1px 3px 0 rgba(0, 0, 0, 0.05) !important;
         border-top: 1px solid #e5e7eb !important;
+
+        /* 防止键盘弹起时布局变动 */
+        transform: translateZ(0) !important;
+        backface-visibility: hidden !important;
+        /* 确保固定定位稳定 */
+        will-change: auto !important;
     }
 
     /* 聊天模式下的AI卡片样式 */
@@ -569,6 +613,11 @@ export default {
         width: 100% !important;
         box-sizing: border-box !important;
         margin: 0 !important;
+
+        /* 移动端防止布局抖动 */
+        min-height: 64px !important;
+        /* 确保内容不会溢出 */
+        overflow: hidden !important;
     }
 
     .ai-buttons-row {
@@ -689,6 +738,25 @@ export default {
         box-shadow: 0 2px 8px 0 rgba(0, 0, 0, 0.04) !important;
         width: 100% !important;
         max-width: 100% !important;
+    }
+
+    .ai-input :deep(.el-textarea__inner) {
+        /* 移动端文本选择优化 */
+        -webkit-user-select: text !important;
+        user-select: text !important;
+        /* 防止选择时的视觉跳动 */
+        outline: none !important;
+        /* 确保选择高亮不影响布局 */
+        background-attachment: local !important;
+    }
+
+    /* 防止文本选择工具栏影响布局 */
+    .ai-input :deep(.el-textarea__inner)::selection {
+        background-color: rgba(59, 130, 246, 0.3) !important;
+    }
+
+    .ai-input :deep(.el-textarea__inner)::-moz-selection {
+        background-color: rgba(59, 130, 246, 0.3) !important;
     }
 }
 

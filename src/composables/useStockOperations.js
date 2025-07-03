@@ -126,14 +126,18 @@ export function useStockOperations() {
     isChatMode.value = true;
 
     // 构建智能荐股消息
-    const userPreferences = userStore.userInfo?.preferences;
+    const userPreferences = userStore.getUserPreferences();
     let message = "智能荐股：根据我的投资偏好推荐优质股票\n";
     let userPreferencesText = "";
-    if (userPreferences) {
+    if (userPreferences && userPreferences.riskLevel) {
       userPreferencesText += `我的投资偏好：
             - 风险偏好：${getRiskLevelText(userPreferences.riskLevel)} 
             - 投资经验：${getExperienceText(userPreferences.experience)} 
             - 关注板块：${getFocusIndustryText(userPreferences.sectors?.categories)}`;
+    } else {
+      // 如果没有偏好设置，提示用户先设置偏好
+      userPreferencesText =
+        "\n\n💡 提示：您还没有设置投资偏好，建议先完善投资偏好设置以获得更精准的推荐。";
     }
 
     // 先显示初始消息
@@ -539,14 +543,14 @@ export function useStockOperations() {
     ElMessage.info("正在刷新荐股列表...");
 
     // 重新调用智能荐股API
-    const userPreferences = userStore.userInfo?.preferences;
+    const userPreferences = userStore.getUserPreferences();
     let requestMessage = "智能荐股：根据我的投资偏好推荐优质股票";
 
-    if (userPreferences) {
+    if (userPreferences && userPreferences.riskLevel) {
       requestMessage += `\n\n我的投资偏好：
 - 风险偏好：${getRiskLevelText(userPreferences.riskLevel)}
-- 投资经验：${userPreferences.experience === "beginner" ? "新手" : "有经验"}
-- 关注板块：${userPreferences.sectors?.majorCategories?.join("、") || "未设置"}`;
+- 投资经验：${getExperienceText(userPreferences.experience)}
+- 关注板块：${getFocusIndustryText(userPreferences.sectors?.categories)}`;
     }
 
     try {

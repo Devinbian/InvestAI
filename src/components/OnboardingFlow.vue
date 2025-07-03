@@ -101,6 +101,7 @@ import { ref, reactive, computed, toRaw, onMounted, watch } from 'vue';
 import { useRouter } from 'vue-router';
 import { useUserStore } from '@/store/user';
 import InvestmentPreferencesForm from './InvestmentPreferencesForm.vue';
+import { ElMessage } from 'element-plus';
 
 const emit = defineEmits(['complete']);
 const router = useRouter();
@@ -218,10 +219,173 @@ const summaryData = computed(() => {
     };
 });
 
-const finishOnboarding = () => {
-    // 标记引导完成
-    userStore.completeOnboarding(toRaw(preferences));
-    emit('complete', summaryData.value);
+const finishOnboarding = async () => {
+    try {
+        // 准备API请求数据 - 确保数据格式正确
+        const finalPreferences = toRaw(preferences);
+
+        // 数据验证和格式化
+        const portraitData = {
+            investStyle: String(finalPreferences.riskLevel || 'balanced'),
+            investExperience: String(finalPreferences.experience || 'beginner'),
+            riskTolerance: Number(finalPreferences.userTraits?.risk_tolerance || 3),
+            involveLevel: Number(finalPreferences.userTraits?.active_participation || 3),
+            learnIntention: Number(finalPreferences.userTraits?.learning_willingness || 3),
+            strategyComplexity: Number(finalPreferences.userTraits?.strategy_dependency || 2),
+            tradeFrequency: Number(finalPreferences.userTraits?.trading_frequency || 2),
+            innovationAcceptance: Number(finalPreferences.userTraits?.innovation_trial || 3),
+            focusIndustry: '[]', // 默认空数组的JSON字符串
+        };
+
+        // 处理关注板块 - 转换为API需要的格式
+        let subCategories = finalPreferences.sectors?.subCategories || [];
+        if (subCategories.length > 0) {
+            try {
+                const { majorSectors, subSectors } = await import('@/config/userPortrait');
+
+                // 创建父分类查找表
+                const parentLookup = majorSectors.reduce((acc, sector) => {
+                    acc[sector.value] = {
+                        value: sector.value,
+                        label: sector.label
+                    };
+                    return acc;
+                }, {});
+
+                // 创建子分类查找表
+                const childLookup = subSectors.reduce((acc, sector) => {
+                    acc[sector.value] = {
+                        value: sector.value,
+                        label: sector.label,
+                        parent: sector.parent
+                    };
+                    return acc;
+                }, {});
+
+                // 按父分类分组，构建树形结构
+                const treeMap = subCategories.reduce((acc, subValue) => {
+                    const child = childLookup[subValue];
+                    if (child) {
+                        const parentValue = child.parent;
+                        const parent = parentLookup[parentValue];
+
+                        if (parent && !acc[parentValue]) {
+                            acc[parentValue] = {
+                                value: parent.value,
+                                label: parent.label,
+                                children: []
+                            };
+                        }
+
+                        if (parent) {
+                            acc[parentValue].children.push({
+                                value: child.value,
+                                label: child.label
+                            });
+                        }
+                    }
+                    return acc;
+                }, {});
+
+                // 转换为数组并设置到API数据
+                const focusIndustry = Object.values(treeMap);
+                portraitData.focusIndustry = JSON.stringify(focusIndustry);
+
+                // 同时更新本地数据结构
+                finalPreferences.sectors.categories = focusIndustry;
+            } catch (sectorError) {
+                console.warn('处理关注板块时出错:', sectorError);
+                portraitData.focusIndustry = '[]'; // 出错时使用空数组
+            }
+        }
+
+        console.log('引导流程完成，准备同步数据到API:', portraitData);
+
+        // 调用API保存到服务器
+        const { updateUserPortrait } = await import('@/api/api');
+        const res = await updateUserPortrait(portraitData);
+
+        console.log('API调用响应:', res);
+
+        // 检查API响应
+        if (res && res.data && res.data.success) {
+            console.log('引导数据API同步成功');
+
+            // API保存成功，标记引导完成并保存到本地
+            userStore.completeOnboarding(finalPreferences);
+
+            // 同时更新用户信息中的偏好设置，确保智能荐股等功能能正确读取
+            userStore.setUserInfo({
+                ...userStore.userInfo,
+                preferences: finalPreferences
+            });
+
+            console.log('引导完成，用户偏好已同步到userStore.userInfo.preferences');
+
+            emit('complete', {
+                preferences: {
+                    ...finalPreferences,
+                    completedAt: new Date().toISOString()
+                },
+                profile: {
+                    riskLabel: getRiskLevelText(finalPreferences.riskLevel),
+                    experienceLabel: getExperienceText(finalPreferences.experience)
+                }
+            });
+        } else {
+            // API保存失败，但仍然保存到本地
+            console.warn('引导流程数据API保存失败，但已保存到本地:', res);
+
+            // 即使API失败，也要完成引导流程
+            userStore.completeOnboarding(finalPreferences);
+
+            // 确保本地数据同步
+            userStore.setUserInfo({
+                ...userStore.userInfo,
+                preferences: finalPreferences
+            });
+
+            // 显示用户友好的错误提示
+            ElMessage.warning('数据同步失败，但您的偏好已保存到本地');
+
+            emit('complete', {
+                preferences: {
+                    ...finalPreferences,
+                    completedAt: new Date().toISOString()
+                },
+                profile: {
+                    riskLabel: getRiskLevelText(finalPreferences.riskLevel),
+                    experienceLabel: getExperienceText(finalPreferences.experience)
+                }
+            });
+        }
+    } catch (error) {
+        console.error('引导流程完成时保存数据失败:', error);
+
+        // 即使API调用失败，也要完成引导流程，确保用户体验
+        const finalPreferences = toRaw(preferences);
+        userStore.completeOnboarding(finalPreferences);
+
+        // 确保本地数据同步
+        userStore.setUserInfo({
+            ...userStore.userInfo,
+            preferences: finalPreferences
+        });
+
+        // 显示用户友好的错误提示
+        ElMessage.warning('数据同步失败，但您的偏好已保存到本地');
+
+        emit('complete', {
+            preferences: {
+                ...finalPreferences,
+                completedAt: new Date().toISOString()
+            },
+            profile: {
+                riskLabel: getRiskLevelText(finalPreferences.riskLevel),
+                experienceLabel: getExperienceText(finalPreferences.experience)
+            }
+        });
+    }
 };
 
 // 动态主题系统 - 根据用户偏好调整界面

@@ -267,12 +267,34 @@ watch(currentStep, () => {
 
 // Initialize with existing user preferences when dialog opens
 const initializePreferences = async () => {
-    console.log(localStorage.getItem('userInfo'));
+    console.log('初始化偏好设置...');
+    console.log('本地用户信息:', localStorage.getItem('userInfo'));
+    console.log('引导状态:', localStorage.getItem('onboardingStatus'));
 
-    let preferences = await getUserPortraitDetail();
+    // 按优先级获取偏好设置数据
+    let preferences = null;
+
+    // 1. 优先从userStore.userInfo.preferences获取（引导完成后的数据）
+    if (userStore.userInfo?.preferences?.riskLevel) {
+        preferences = userStore.userInfo.preferences;
+        console.log('从userStore.userInfo.preferences获取到偏好设置:', preferences);
+    }
+    // 2. 如果没有，尝试从引导状态中获取（引导过程中的数据）
+    else if (userStore.onboardingStatus?.preferences?.riskLevel) {
+        preferences = userStore.onboardingStatus.preferences;
+        console.log('从onboardingStatus获取到偏好设置:', preferences);
+    }
+    // 3. 如果本地都没有，才从API获取（服务器端数据）
+    else {
+        console.log('本地没有偏好设置，尝试从API获取...');
+        preferences = await getUserPortraitDetail();
+        if (preferences) {
+            console.log('从API获取到偏好设置:', preferences);
+        }
+    }
 
     if (preferences) {
-        // Load existing preferences
+        // 确保数据结构完整性
         let userTraits = preferences.userTraits || {};
         userTraits.risk_tolerance = userTraits.risk_tolerance || 3;
         userTraits.active_participation = userTraits.active_participation || 3;
@@ -281,17 +303,38 @@ const initializePreferences = async () => {
         userTraits.strategy_dependency = userTraits.strategy_dependency || 2;
         userTraits.trading_frequency = userTraits.trading_frequency || 2;
         preferences.userTraits = userTraits;
+
+        // 确保sectors结构完整性
+        if (!preferences.sectors) {
+            preferences.sectors = {
+                majorCategories: [],
+                subCategories: [],
+                categories: []
+            };
+        }
+
         Object.assign(localPreferences, preferences);
-        console.log('Loaded preferences:', localPreferences);
+        console.log('成功加载偏好设置:', localPreferences);
     } else {
-        // Initialize with default values for new users
+        // 如果所有来源都没有数据，使用默认值
         Object.assign(localPreferences, {
             riskLevel: '',
             experience: '',
-            userTraits: { risk_tolerance: 3, active_participation: 3, learning_willingness: 3, strategy_dependency: 2, trading_frequency: 2, innovation_trial: 3 },
-            sectors: { majorCategories: [], subCategories: [] }
+            userTraits: {
+                risk_tolerance: 3,
+                active_participation: 3,
+                learning_willingness: 3,
+                strategy_dependency: 2,
+                trading_frequency: 2,
+                innovation_trial: 3
+            },
+            sectors: {
+                majorCategories: [],
+                subCategories: [],
+                categories: []
+            }
         });
-        console.log('No existing preferences found, using defaults');
+        console.log('使用默认偏好设置');
     }
 };
 
@@ -415,25 +458,37 @@ const handlePreferencesSubmit = async () => {
         completedAt: new Date().toISOString()
     };
 
-    // 准备API请求数据
+    // 准备API请求数据 - 确保数据格式正确
     const portraitData = {
-        investStyle: preferences.riskLevel,
-        investExperience: preferences.experience,
-        riskTolerance: preferences.userTraits.risk_tolerance,
-        involveLevel: preferences.userTraits.active_participation,
-        learnIntention: preferences.userTraits.learning_willingness,
-        strategyComplexity: preferences.userTraits.strategy_dependency,
-        tradeFrequency: preferences.userTraits.trading_frequency,
-        innovationAcceptance: preferences.userTraits.innovation_trial,
-        focusIndustry: '',
+        investStyle: String(preferences.riskLevel || 'balanced'),
+        investExperience: String(preferences.experience || 'beginner'),
+        riskTolerance: Number(preferences.userTraits?.risk_tolerance || 3),
+        involveLevel: Number(preferences.userTraits?.active_participation || 3),
+        learnIntention: Number(preferences.userTraits?.learning_willingness || 3),
+        strategyComplexity: Number(preferences.userTraits?.strategy_dependency || 2),
+        tradeFrequency: Number(preferences.userTraits?.trading_frequency || 2),
+        innovationAcceptance: Number(preferences.userTraits?.innovation_trial || 3),
+        focusIndustry: '[]', // 默认空数组的JSON字符串
     };
+
     // 处理关注板块
-    let subCategories = preferences.sectors.subCategories || [];
-    let focusIndustry = formatSectorTree(subCategories);
-    portraitData.focusIndustry = JSON.stringify(focusIndustry);
-    preferences.sectors.categories = focusIndustry;
+    let subCategories = preferences.sectors?.subCategories || [];
+    if (subCategories.length > 0) {
+        try {
+            let focusIndustry = formatSectorTree(subCategories);
+            portraitData.focusIndustry = JSON.stringify(focusIndustry);
+            preferences.sectors.categories = focusIndustry;
+        } catch (sectorError) {
+            console.warn('处理关注板块时出错:', sectorError);
+            portraitData.focusIndustry = '[]'; // 出错时使用空数组
+        }
+    }
+
+    console.log('个人偏好设置，准备同步数据到API:', portraitData);
 
     let res = await updateUserPortrait(portraitData);
+
+    console.log('API调用响应:', res);
 
     if (res && res.data && res.data.success) {
         const currentUser = userStore.userInfo;
@@ -450,10 +505,21 @@ const handlePreferencesSubmit = async () => {
 
         emit('preferences-completed', preferences);
     } else {
-        ElMessage.error('保存偏好设置失败，请稍后重试');
-        preferencesLoading.value = false;
-    }
+        // 即使API失败，也要保存到本地
+        const currentUser = userStore.userInfo;
+        userStore.setUserInfo({
+            ...currentUser,
+            preferences
+        });
 
+        localStorage.setItem('onboardingCompleted', 'true');
+        ElMessage.warning('数据同步失败，但您的偏好已保存到本地');
+        visible.value = false;
+        preferencesLoading.value = false;
+        currentStep.value = 0; // Reset for next time
+
+        emit('preferences-completed', preferences);
+    }
 };
 
 const skipPreferences = () => {

@@ -635,5 +635,90 @@ export const useUserStore = defineStore("user", {
       // 只有登录用户且未完成引导才显示引导流程
       return this.isLoggedIn && !this.onboardingStatus.completed;
     },
+
+    // 检查用户是否有偏好设置
+    hasUserPreferences() {
+      // 优先检查userInfo中的preferences
+      if (this.userInfo?.preferences?.riskLevel) {
+        return true;
+      }
+
+      // 其次检查引导状态中的preferences
+      if (this.onboardingStatus?.preferences?.riskLevel) {
+        return true;
+      }
+
+      // 最后检查旧版本的标记
+      if (localStorage.getItem("onboardingCompleted") === "true") {
+        return true;
+      }
+
+      return false;
+    },
+
+    // 获取用户偏好设置（优先级：userInfo > onboardingStatus > null）
+    getUserPreferences() {
+      console.log("=== getUserPreferences 调试信息 ===");
+      console.log("userInfo:", this.userInfo);
+      console.log("onboardingStatus:", this.onboardingStatus);
+
+      // 优先从userInfo.preferences获取（引导完成后的数据）
+      if (this.userInfo?.preferences?.riskLevel) {
+        console.log(
+          "从userInfo.preferences获取偏好设置:",
+          this.userInfo.preferences,
+        );
+        return this.userInfo.preferences;
+      }
+
+      // 其次从onboardingStatus.preferences获取（引导过程中的数据）
+      if (this.onboardingStatus?.preferences?.riskLevel) {
+        console.log(
+          "从onboardingStatus.preferences获取偏好设置:",
+          this.onboardingStatus.preferences,
+        );
+        return this.onboardingStatus.preferences;
+      }
+
+      // 检查localStorage中的数据
+      const localUserInfo = localStorage.getItem("userInfo");
+      const localOnboardingStatus = localStorage.getItem("onboardingStatus");
+
+      console.log("localStorage userInfo:", localUserInfo);
+      console.log("localStorage onboardingStatus:", localOnboardingStatus);
+
+      if (localUserInfo) {
+        try {
+          const parsedUserInfo = JSON.parse(localUserInfo);
+          if (parsedUserInfo?.preferences?.riskLevel) {
+            console.log(
+              "从localStorage userInfo获取偏好设置:",
+              parsedUserInfo.preferences,
+            );
+            return parsedUserInfo.preferences;
+          }
+        } catch (error) {
+          console.error("解析localStorage userInfo失败:", error);
+        }
+      }
+
+      if (localOnboardingStatus) {
+        try {
+          const parsedOnboardingStatus = JSON.parse(localOnboardingStatus);
+          if (parsedOnboardingStatus?.preferences?.riskLevel) {
+            console.log(
+              "从localStorage onboardingStatus获取偏好设置:",
+              parsedOnboardingStatus.preferences,
+            );
+            return parsedOnboardingStatus.preferences;
+          }
+        } catch (error) {
+          console.error("解析localStorage onboardingStatus失败:", error);
+        }
+      }
+
+      console.log("没有找到用户偏好设置");
+      return null;
+    },
   },
 });

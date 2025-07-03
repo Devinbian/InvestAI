@@ -318,6 +318,7 @@ import { ref, reactive, computed, watch, onMounted, onUnmounted } from 'vue';
 import { ElMessage } from 'element-plus';
 import { useUserStore } from '@/store/user';
 import { riskOptions, experienceOptions, userTraits, majorSectors, subSectors } from '@/config/userPortrait';
+import { updateUserPortrait, getUserPortrait } from '@/api/api';
 
 // import InvestmentPreferencesForm from './InvestmentPreferencesForm.vue'; // Self import is not needed
 
@@ -352,7 +353,7 @@ const isTablet = computed(() => windowWidth.value >= 768 && windowWidth.value < 
 const userStore = useUserStore();
 
 // Local reactive state for the form
-const localPreferencesForm = reactive({
+const localPreferencesForm = useUserStore().preferences || reactive({
     riskLevel: '',
     experience: '',
     userTraits: {
@@ -365,7 +366,8 @@ const localPreferencesForm = reactive({
     },
     sectors: {
         majorCategories: [],
-        subCategories: []
+        subCategories: [],
+        categories: []
     }
 });
 
@@ -425,12 +427,114 @@ function handlePrevious() {
 function handleNext() {
     if (isStepValid.value) {
         if (isLastStep.value) {
+            handlePreferencesSubmit();
             emit('complete');
         } else {
             emit('next');
         }
     }
 }
+
+
+/**
+ * 根据子分类value数组生成包含父子关系的结构
+ * @param {string[]} subCategoryValues 子分类value数组
+ * @returns {Array} 格式化后的数据结构：[{"value": "","label": "","children": [{"value": "","label": ""}]}]
+ */
+/**
+ * 将子分类value数组转换为树形结构
+ * @param {string[]} subCategoryValues - 子分类value数组
+ * @returns {Array} 格式化后的树形结构
+ */
+function formatSectorTree(subCategoryValues) {
+    // 1. 创建父分类查找表 (value -> majorSector)
+    const parentLookup = majorSectors.reduce((acc, sector) => {
+        acc[sector.value] = {
+            value: sector.value,
+            label: sector.label
+        };
+        return acc;
+    }, {});
+    // 2. 创建子分类查找表 (value -> subSector)
+    const childLookup = subSectors.reduce((acc, sector) => {
+        acc[sector.value] = {
+            value: sector.value,
+            label: sector.label,
+            parent: sector.parent
+        };
+        return acc;
+    }, {});
+    // 3. 按父分类分组
+    const treeMap = subCategoryValues.reduce((acc, subValue) => {
+        const child = childLookup[subValue];
+        if (child) {
+            const parentValue = child.parent;
+            const parent = parentLookup[parentValue];
+
+            if (!acc[parentValue]) {
+                acc[parentValue] = {
+                    value: parent.value,
+                    label: parent.label,
+                    children: []
+                };
+            }
+
+            acc[parentValue].children.push({
+                value: child.value,
+                label: child.label
+            });
+        }
+        return acc;
+    }, {});
+    // 4. 转换为数组
+    return Object.values(treeMap);
+}
+
+const handlePreferencesSubmit = async () => {
+    if (!isStepValid.value) return;
+
+    const preferences = {
+        ...localPreferencesForm,
+        completedAt: new Date().toISOString()
+    };
+
+    // 准备API请求数据
+    const portraitData = {
+        investStyle: preferences.riskLevel,
+        investExperience: preferences.experience,
+        riskTolerance: preferences.userTraits.risk_tolerance,
+        involveLevel: preferences.userTraits.active_participation,
+        learnIntention: preferences.userTraits.learning_willingness,
+        strategyComplexity: preferences.userTraits.strategy_dependency,
+        tradeFrequency: preferences.userTraits.trading_frequency,
+        innovationAcceptance: preferences.userTraits.innovation_trial,
+        focusIndustry: '',
+    };
+    // 处理关注板块
+    let subCategories = preferences.sectors.subCategories || [];
+    let focusIndustry = formatSectorTree(subCategories);
+    portraitData.focusIndustry = JSON.stringify(focusIndustry);
+    preferences.sectors.categories = focusIndustry;
+
+    let res = await updateUserPortrait(portraitData);
+
+    if (res && res.data && res.data.success) {
+        const currentUser = userStore.userInfo;
+        userStore.setUserInfo({
+            ...currentUser,
+            preferences
+        });
+
+        localStorage.setItem('onboardingCompleted', 'true');
+        ElMessage.success('投资偏好设置完成！');
+
+
+        emit('preferences-completed', preferences);
+    } else {
+        ElMessage.error('保存偏好设置失败，请稍后重试');
+    }
+
+};
 
 // All the data options (riskOptions, experienceOptions, userTraits, etc.) are kept here as they are part of the form's definition.
 

@@ -204,7 +204,7 @@ const handleLogin = async () => {
                     let majorCategories = [];
                     let subCategories = [];
                     sectors.forEach(item => {
-                        majorCategories.push(item.parent);
+                        majorCategories.push({value: item.value, label: item.label});
                         subCategories = subCategories.concat(item.children);
                     });
                     let userInfo = {

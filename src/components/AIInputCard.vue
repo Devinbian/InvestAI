@@ -609,10 +609,10 @@ export default {
     }
 
     .ai-input-row {
-        padding: 0 16px !important;
-        width: 100% !important;
+        padding: 10px 16px !important;
+        width: 95% !important;
         box-sizing: border-box !important;
-        margin: 0 !important;
+        margin: 0 10px !important;
 
         /* 移动端防止布局抖动 */
         min-height: 64px !important;
@@ -783,9 +783,9 @@ export default {
 
     .ai-input-row {
         padding: 8px 12px !important;
-        width: 100% !important;
+        width: 95% !important;
         box-sizing: border-box !important;
-        margin: 0 !important;
+        margin: 0 5px !important;
     }
 
     .ai-buttons-row {

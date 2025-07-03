@@ -228,13 +228,13 @@
                                         <div class="asset-amount">
                                             <span class="amount-label">总资产</span>
                                             <span class="amount-value">¥{{ formatCurrency(message.assetData.totalAssets)
-                                            }}</span>
+                                                }}</span>
                                         </div>
                                         <div class="asset-change"
                                             :class="[message.assetData.totalProfitPercent >= 0 ? 'profit' : 'loss']">
                                             <span class="change-icon">{{ message.assetData.totalProfitPercent >= 0 ?
                                                 '📈' : '📉'
-                                            }}</span>
+                                                }}</span>
                                             <span class="change-label">今日盈亏：</span>
                                             <span class="change-text">
                                                 {{ message.assetData.totalProfitPercent >= 0 ? '+' : '' }}¥{{
@@ -260,7 +260,7 @@
                                         <div class="stat-info">
                                             <div class="stat-label">持仓市值</div>
                                             <div class="stat-value">¥{{ formatCurrency(message.assetData.portfolioValue)
-                                                }}
+                                            }}
                                             </div>
                                         </div>
                                     </div>
@@ -510,7 +510,7 @@
                 </div>
                 <div class="guide-actions">
                     <el-button type="primary" size="small" @click="handleGuideAction">{{ guideActionText
-                        }}</el-button>
+                    }}</el-button>
                     <el-button size="small" @click="dismissGuide">稍后</el-button>
                 </div>
             </div>
@@ -3527,7 +3527,7 @@ body.onboarding-mode {
 
 .chat-message {
     display: flex;
-    margin-bottom: 24px;
+    margin-bottom: 0.625rem;
     // padding: 0 20px;
     /* 添加左右间距，与AI卡片的内边距保持一致，确保消息内容不贴边 */
     width: 100%;
@@ -9042,7 +9042,7 @@ body {
 
     /* 8. 聊天消息样式 */
     .chat-message {
-        padding: 0 0 16px 0;
+        padding: 0 0 0.3125rem 0;
     }
 
     .chat-message.user .chat-message-content {

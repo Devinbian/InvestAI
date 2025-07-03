@@ -7,12 +7,11 @@
 
             <div class="step-content-scrollable">
                 <div class="experience-options">
-                    <div v-for="option in experienceOptions" :key="option.value" class="experience-option"
-                        :class="{ selected: localPreferencesForm.experience === option.value }"
-                        @click="localPreferencesForm.experience = option.value">
+                    <div v-for="option in experienceOptions" :key="option.id" class="experience-option"
+                        :class="{ selected: localPreferencesForm.experience === option.id }"
+                        @click="handleExperienceSelect(option.id)">
                         <div class="option-radio">
-                            <div class="radio-dot"
-                                :class="{ checked: localPreferencesForm.experience === option.value }">
+                            <div class="radio-dot" :class="{ checked: localPreferencesForm.experience === option.id }">
                             </div>
                         </div>
                         <div class="experience-content">
@@ -25,6 +24,16 @@
                         </div>
                     </div>
                 </div>
+
+                <!-- 步骤0的操作按钮 -->
+                <div v-if="showActions && currentStep === 0" class="action-buttons">
+                    <el-button v-if="currentStep > 0" class="action-btn" @click="handlePrevious">
+                        上一步
+                    </el-button>
+                    <el-button class="action-btn primary" @click="handleNext" :disabled="!isStepValid">
+                        {{ isLastStep ? '完成' : '下一步' }}
+                    </el-button>
+                </div>
             </div>
         </div>
 
@@ -35,12 +44,12 @@
 
             <div class="step-content-scrollable">
                 <div class="risk-options">
-                    <div v-for="option in riskOptions" :key="option.riskLevel" class="risk-option"
-                        :class="{ selected: localPreferencesForm.riskLevel === option.riskLevel }"
-                        @click="localPreferencesForm.riskLevel = option.riskLevel">
+                    <div v-for="option in riskOptions" :key="option.value" class="risk-option"
+                        :class="{ selected: localPreferencesForm.riskLevel === option.value }"
+                        @click="handleRiskLevelSelect(option.value)">
                         <div class="option-radio">
                             <div class="radio-dot"
-                                :class="{ checked: localPreferencesForm.riskLevel === option.riskLevel }">
+                                :class="{ checked: localPreferencesForm.riskLevel === option.value }">
                             </div>
                         </div>
                         <div class="option-content">
@@ -72,6 +81,16 @@
                             </div>
                         </div>
                     </div>
+                </div>
+
+                <!-- 步骤1的操作按钮 -->
+                <div v-if="showActions && currentStep === 1" class="action-buttons">
+                    <el-button v-if="currentStep > 0" class="action-btn" @click="handlePrevious">
+                        上一步
+                    </el-button>
+                    <el-button class="action-btn primary" @click="handleNext" :disabled="!isStepValid">
+                        {{ isLastStep ? '完成' : '下一步' }}
+                    </el-button>
                 </div>
             </div>
         </div>
@@ -127,6 +146,16 @@
                             </div>
                         </div>
                     </div>
+                </div>
+
+                <!-- 步骤2的操作按钮 -->
+                <div v-if="showActions && currentStep === 2" class="action-buttons">
+                    <el-button v-if="currentStep > 0" class="action-btn" @click="handlePrevious">
+                        上一步
+                    </el-button>
+                    <el-button class="action-btn primary" @click="handleNext" :disabled="!isStepValid">
+                        {{ isLastStep ? '完成' : '下一步' }}
+                    </el-button>
                 </div>
             </div>
         </div>
@@ -298,23 +327,25 @@
                         </div>
                     </div>
                 </div>
+
+                <!-- 步骤3的操作按钮 -->
+                <div v-if="showActions && currentStep === 3" class="action-buttons">
+                    <el-button v-if="currentStep > 0" class="action-btn" @click="handlePrevious">
+                        上一步
+                    </el-button>
+                    <el-button class="action-btn primary" @click="handleNext" :disabled="!isStepValid">
+                        {{ isLastStep ? '完成' : '下一步' }}
+                    </el-button>
+                </div>
             </div>
         </div>
 
-        <!-- 操作按钮 -->
-        <div v-if="showActions" class="action-buttons">
-            <el-button v-if="currentStep > 0" class="action-btn" @click="handlePrevious">
-                上一步
-            </el-button>
-            <el-button class="action-btn primary" @click="handleNext" :disabled="!isStepValid">
-                {{ isLastStep ? '完成' : '下一步' }}
-            </el-button>
-        </div>
+
     </div>
 </template>
 
 <script setup>
-import { ref, reactive, computed, watch, onMounted, onUnmounted } from 'vue';
+import { ref, reactive, computed, watch, onMounted, onUnmounted, nextTick } from 'vue';
 import { ElMessage } from 'element-plus';
 import { useUserStore } from '@/store/user';
 import { riskOptions, experienceOptions, userTraits, majorSectors, subSectors } from '@/config/userPortrait';
@@ -371,12 +402,14 @@ const localPreferencesForm = reactive({
 
 // Sync from parent to local state
 watch(() => props.preferencesForm, (newValue) => {
-    Object.assign(localPreferencesForm, newValue);
+    if (newValue) {
+        Object.assign(localPreferencesForm, newValue);
+    }
 }, { deep: true, immediate: true });
 
 // Sync from local state to parent
 watch(localPreferencesForm, (newValue) => {
-    emit('update:preferencesForm', newValue);
+    emit('update:preferencesForm', { ...newValue });
 }, { deep: true });
 
 
@@ -418,6 +451,8 @@ const isStepValid = computed(() => {
 
 const isLastStep = computed(() => props.currentStep === preferenceSteps.length - 1);
 
+
+
 function handlePrevious() {
     emit('previous');
 }
@@ -430,6 +465,14 @@ function handleNext() {
             emit('next');
         }
     }
+}
+
+function handleExperienceSelect(experienceId) {
+    localPreferencesForm.experience = experienceId;
+}
+
+function handleRiskLevelSelect(riskLevel) {
+    localPreferencesForm.riskLevel = riskLevel;
 }
 
 // All the data options (riskOptions, experienceOptions, userTraits, etc.) are kept here as they are part of the form's definition.
@@ -571,7 +614,7 @@ onUnmounted(() => {
 .preferences-form-container {
     display: flex;
     flex-direction: column;
-    height: 100%;
+    min-height: 400px;
     overflow: hidden;
     background: transparent;
     padding: 0;
@@ -580,7 +623,7 @@ onUnmounted(() => {
 .step-content {
     display: flex;
     flex-direction: column;
-    height: 100%;
+    flex: 1;
     overflow: hidden;
     padding: 0;
 }
@@ -626,10 +669,16 @@ onUnmounted(() => {
         margin-bottom: 24px;
     }
 
-    /* PC端特别增加滚动容器的底部间距 */
+    /* PC端滚动容器样式 */
     .step-content-scrollable {
+        flex: 1;
+        overflow-y: auto;
+        overflow-x: hidden;
         padding: 0 4px 32px 4px;
         /* PC端增加更多底部间距 */
+        min-height: 0;
+        scroll-behavior: smooth;
+        -webkit-overflow-scrolling: touch;
     }
 }
 
@@ -645,7 +694,7 @@ onUnmounted(() => {
 .experience-option {
     border: 2px solid #e5e7eb;
     border-radius: 12px;
-    padding: 16px;
+    padding: 20px;
     transition: all 0.3s ease;
     cursor: pointer;
     display: flex;
@@ -701,13 +750,14 @@ onUnmounted(() => {
 
 .experience-content {
     flex: 1;
+    padding: 4px 0;
 }
 
 .experience-header {
     display: flex;
     align-items: center;
     gap: 8px;
-    margin-bottom: 6px;
+    margin-bottom: 10px;
 }
 
 .experience-icon {
@@ -724,13 +774,16 @@ onUnmounted(() => {
     font-size: 0.9rem;
     font-weight: 500;
     color: #374151;
-    margin-bottom: 6px;
+    margin-bottom: 8px;
+    padding-bottom: 4px;
+    border-bottom: 1px solid #f3f4f6;
 }
 
 .experience-desc {
     font-size: 0.825rem;
     color: #6b7280;
     line-height: 1.4;
+    margin-top: 4px;
 }
 
 /* ===== 风险选项样式 - 完整的卡片设计 ===== */
@@ -1766,16 +1819,20 @@ onUnmounted(() => {
         padding: 0;
         background: transparent;
         min-height: auto;
-        height: auto;
+        height: 100%;
+        display: flex;
+        flex-direction: column;
     }
 
     .step-content {
         padding: 0;
         background: transparent;
-        height: auto;
+        height: 100%;
         min-height: auto;
         display: flex;
         flex-direction: column;
+        flex: 1;
+        overflow: hidden;
     }
 
     .step-title {
@@ -1802,45 +1859,35 @@ onUnmounted(() => {
         overflow-y: auto;
         overflow-x: hidden;
         -webkit-overflow-scrolling: touch;
-        padding: 0 12px 30px 12px;
-        /* 增加底部留白 */
+        padding: 0 12px 20px 12px;
+        /* 减少底部留白，为操作按钮留出空间 */
         min-height: 0;
-        height: auto;
-        /* 内容高度自适应，移除最大高度限制 */
+        /* 移除height: 100%，让flex: 1来控制高度 */
         scroll-behavior: smooth;
     }
 
-    /* 针对内容较少的步骤（如投资经验）进行特殊处理 */
-    .step-content[data-step="0"] .step-content-scrollable,
-    .step-content[data-step="1"] .step-content-scrollable {
-        display: block;
-        /* 移除flex布局，让内容自然堆叠 */
+    /* 所有步骤的滚动容器设置 - 可滚动 */
+    .step-content-scrollable {
+        flex: 1;
+        overflow-y: auto;
+        overflow-x: hidden;
+        min-height: 0;
+        -webkit-overflow-scrolling: touch;
     }
 
-    /* 针对内容较多的步骤（如板块选择）也保持自适应高度 */
-    .step-content[data-step="3"] .step-content-scrollable {
-        max-height: none;
-        /* 移除高度限制 */
-        overflow-y: visible;
-        /* 允许内容正常显示 */
-    }
 
-    /* 确保经验选项容器不会被拉伸 */
-    .step-content[data-step="0"] {
-        min-height: auto;
-        height: auto;
-        justify-content: flex-start;
+
+    /* 所有步骤统一布局 - 填满容器高度 */
+    .step-content {
+        display: flex;
+        flex-direction: column;
+        height: 100%;
+        flex: 1;
+        overflow: hidden;
     }
 
     .step-content[data-step="0"] .experience-options {
         margin-bottom: 20px;
-    }
-
-    /* 风险选项容器高度优化 */
-    .step-content[data-step="1"] {
-        min-height: auto;
-        height: auto;
-        justify-content: flex-start;
     }
 
     .step-content[data-step="1"] .risk-options {
@@ -1885,6 +1932,7 @@ onUnmounted(() => {
 
     .experience-content {
         flex: 1;
+        padding: 4px 0;
     }
 
     .experience-header {
@@ -1903,16 +1951,19 @@ onUnmounted(() => {
     }
 
     .experience-label {
-        font-size: 0.75rem;
-        margin-bottom: 6px;
-        color: #6b7280;
+        font-size: 0.85rem;
+        margin-bottom: 10px;
+        padding-bottom: 6px;
+        color: #374151;
         font-weight: 500;
+        border-bottom: 1px solid #f3f4f6;
     }
 
     .experience-desc {
         font-size: 0.8rem;
         line-height: 1.4;
         color: #6b7280;
+        margin-top: 6px;
     }
 
     /* 风险选项移动端 - 增强卡片设计 */
@@ -2474,22 +2525,53 @@ onUnmounted(() => {
         align-items: center;
         gap: 10px;
         /* 精细调整按钮间距 */
-        padding: 18px 16px;
-        /* 减少上下padding */
-        background: transparent;
+        padding: 20px 16px;
+        /* 增加上下padding，确保按钮可见 */
+        background: white;
         border-top: 1px solid #e5e7eb;
         /* 添加顶部分割线 */
         position: static;
         /* 移除固定定位 */
-        margin-top: 28px;
-        /* 移动端增加与内容的间距 */
+        margin-top: 16px;
+        /* 添加顶部间距，确保与内容分离 */
         margin-left: 0;
         /* 确保贴边 */
         margin-right: 0;
         /* 确保贴边 */
         flex-shrink: 0;
-        /* 安全区域适配 */
-        padding-bottom: calc(18px + env(safe-area-inset-bottom, 0px));
+        /* 防止按钮被压缩 */
+        /* 安全区域适配 - 避免浏览器工具栏遮挡 */
+        padding-bottom: calc(30px + env(safe-area-inset-bottom, 20px));
+        /* 增加底部padding，确保在所有设备上都能完整显示 */
+        min-height: 100px;
+        /* 设置更大的最小高度，确保按钮区域足够大 */
+        /* 额外的底部空间避免浏览器工具栏遮挡 */
+        margin-bottom: 20px;
+    }
+
+    /* 所有环境下统一处理 - 可滚动 */
+    .step-content-scrollable {
+        flex: 1;
+        overflow-y: auto;
+        overflow-x: hidden;
+        min-height: 0;
+        -webkit-overflow-scrolling: touch;
+        /* 增加底部padding，为按钮留出空间 */
+        padding-bottom: 20px;
+    }
+
+
+
+    /* 微信环境下的按钮样式统一处理 */
+    :global(body.wechat-browser) .action-buttons {
+        background: transparent;
+        margin-top: 20px;
+        padding-bottom: calc(40px + env(safe-area-inset-bottom, 30px));
+        /* 微信环境下增加更多底部空间 */
+        min-height: 110px;
+        /* 确保按钮区域足够大 */
+        margin-bottom: 30px;
+        /* 额外的底部空间避免微信工具栏遮挡 */
     }
 
     .action-buttons .action-btn {

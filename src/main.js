@@ -44,18 +44,12 @@ function detectEnvironment() {
         overscroll-behavior: none !important;
       }
       
-      /* 强制隐藏微信底部工具栏 */
+      /* 微信环境简化样式 - 移除所有键盘相关的动态调整 */
       body.wechat-browser {
         height: 100vh !important;
-        height: calc(var(--vh, 1vh) * 100) !important;
         max-height: 100vh !important;
-        max-height: calc(var(--vh, 1vh) * 100) !important;
-        overflow: hidden !important;
-        position: fixed !important;
-        top: 0 !important;
-        left: 0 !important;
-        transform: translateZ(0) !important;
-        -webkit-transform: translateZ(0) !important;
+        overflow: auto !important;
+        position: relative !important;
         width: 100vw !important;
         max-width: 100vw !important;
         margin: 0 !important;
@@ -63,9 +57,6 @@ function detectEnvironment() {
         /* 禁用滚动弹性效果，防止触发浏览器UI */
         overscroll-behavior-y: none !important;
         overscroll-behavior-x: none !important;
-        /* 强制触发硬件加速 */
-        -webkit-backface-visibility: hidden !important;
-        backface-visibility: hidden !important;
       }
       
       /* 微信环境下强制所有容器占满全宽 */
@@ -76,126 +67,30 @@ function detectEnvironment() {
       body.wechat-browser #app {
         width: 100vw !important;
         max-width: 100vw !important;
-        height: calc(var(--vh, 1vh) * 100) !important;
-        max-height: calc(var(--vh, 1vh) * 100) !important;
+        height: 100vh !important;
+        max-height: 100vh !important;
         margin: 0 !important;
         padding: 0 !important;
         overflow-x: hidden !important;
-        overflow-y: hidden !important;
-        position: fixed !important;
-        top: 0 !important;
-        left: 0 !important;
-      }
-      
-      /* 微信环境下键盘弹起时的布局调整 */
-      body.wechat-browser.keyboard-open {
-        height: calc(var(--keyboard-vh, 1vh) * 100) !important;
-        max-height: calc(var(--keyboard-vh, 1vh) * 100) !important;
-      }
-      
-      body.wechat-browser.keyboard-open #app {
-        height: calc(var(--keyboard-vh, 1vh) * 100) !important;
-        max-height: calc(var(--keyboard-vh, 1vh) * 100) !important;
-      }
-      
-      /* 微信环境下键盘弹起时欢迎区域上移 */
-      body.wechat-browser.keyboard-open .welcome-section {
-        transform: translateY(-20px) !important;
-        transition: transform 0.3s ease !important;
-      }
-      
-      /* 微信环境下键盘弹起时AI输入卡片适配 */
-      body.wechat-browser.keyboard-open .ai-card {
-        padding: 4px 0 4px 0 !important;
-        transition: padding 0.3s ease !important;
+        overflow-y: auto !important;
+        position: relative !important;
       }
     `;
     document.head.appendChild(style);
 
-    // 键盘检测和适配逻辑
-    let isKeyboardOpen = false;
-    let originalViewportHeight = window.innerHeight;
+    // 完全禁用键盘检测和适配逻辑
+    console.log("微信环境检测到，但键盘检测已完全禁用");
 
-    function setViewportHeight() {
-      const currentHeight = window.innerHeight;
-      const heightDifference = originalViewportHeight - currentHeight;
+    // 设置固定的视口高度变量，不再动态调整
+    const vh = window.innerHeight * 0.01;
+    document.documentElement.style.setProperty("--vh", `${vh}px`);
+    document.documentElement.style.setProperty("--keyboard-vh", `${vh}px`);
 
-      // 检测键盘状态（高度变化超过150px认为是键盘）
-      const keyboardVisible = heightDifference > 150;
+    // 不再监听任何键盘相关事件
+    console.log("已设置固定视口高度变量，不再进行键盘检测");
 
-      if (keyboardVisible !== isKeyboardOpen) {
-        isKeyboardOpen = keyboardVisible;
-
-        console.log("键盘状态变化:", {
-          visible: keyboardVisible,
-          originalHeight: originalViewportHeight,
-          currentHeight: currentHeight,
-          difference: heightDifference,
-        });
-
-        // 添加或移除键盘状态CSS类
-        if (keyboardVisible) {
-          document.body.classList.add("keyboard-open");
-        } else {
-          document.body.classList.remove("keyboard-open");
-        }
-      }
-
-      // 设置视口高度变量
-      if (keyboardVisible) {
-        // 键盘打开时使用当前高度
-        const vh = currentHeight * 0.01;
-        document.documentElement.style.setProperty("--vh", `${vh}px`);
-        document.documentElement.style.setProperty("--keyboard-vh", `${vh}px`);
-      } else {
-        // 键盘关闭时使用原始高度
-        const vh = originalViewportHeight * 0.01;
-        document.documentElement.style.setProperty("--vh", `${vh}px`);
-        document.documentElement.style.setProperty("--keyboard-vh", `${vh}px`);
-
-        // 只在键盘完全收起且没有输入框获得焦点时才重置滚动
-        const activeElement = document.activeElement;
-        const isInputFocused =
-          activeElement &&
-          (activeElement.tagName === "INPUT" ||
-            activeElement.tagName === "TEXTAREA" ||
-            activeElement.contentEditable === "true" ||
-            activeElement.closest(".el-input, .el-textarea, .ai-input"));
-
-        if (!isInputFocused) {
-          // 延迟重置布局，确保键盘完全收起
-          setTimeout(() => {
-            // 再次检查输入框状态，避免在用户快速切换输入框时重置滚动
-            const currentActiveElement = document.activeElement;
-            const isStillInputFocused =
-              currentActiveElement &&
-              (currentActiveElement.tagName === "INPUT" ||
-                currentActiveElement.tagName === "TEXTAREA" ||
-                currentActiveElement.contentEditable === "true" ||
-                currentActiveElement.closest(
-                  ".el-input, .el-textarea, .ai-input",
-                ));
-
-            if (!isStillInputFocused) {
-              window.scrollTo(0, 0);
-            }
-          }, 300);
-        }
-      }
-    }
-
-    // 初始化视口高度
-    originalViewportHeight = window.innerHeight;
-    setViewportHeight();
-
-    // 监听视口变化
-    window.addEventListener("resize", setViewportHeight);
-    window.addEventListener("orientationchange", () => {
-      setTimeout(() => {
-        originalViewportHeight = window.innerHeight;
-        setViewportHeight();
-      }, 100);
-    });
+    // 不再监听视口变化，保持固定布局
+    console.log("微信环境键盘检测已完全禁用，使用固定布局");
 
     // 智能防止页面滚动触发浏览器UI
     document.addEventListener(
@@ -216,6 +111,11 @@ function detectEnvironment() {
             .detail-content,
             .sidebar-content,
             .category-scroll,
+            .onboarding-flow,
+            .form-container,
+            .step-content,
+            .step-content-scrollable,
+            .preferences-form-container,
             [data-scrollable],
             .el-scrollbar,
             .el-dialog,

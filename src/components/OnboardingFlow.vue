@@ -5,7 +5,8 @@
         { 'is-tablet': deviceInfo.isTablet },
         { 'is-touch': deviceInfo.isTouch },
         { 'prefers-reduced-motion': deviceInfo.prefersReducedMotion },
-        { 'prefers-dark': deviceInfo.prefersDark }
+        { 'prefers-dark': deviceInfo.prefersDark },
+        { 'is-wechat': deviceInfo.isWechat }
     ]">
         <!-- 第1步：欢迎引导 -->
         <div v-if="currentStepName === 'welcome'" class="onboarding-step welcome-step">
@@ -254,13 +255,20 @@ const applyThemeToDocument = () => {
     root.classList.add(`theme-${currentTheme.value}`);
 };
 
+// 检测微信浏览器环境
+const isWechatBrowser = () => {
+    const ua = navigator.userAgent.toLowerCase();
+    return ua.includes('micromessenger');
+};
+
 // 检测设备和用户偏好
 const deviceInfo = reactive({
     isMobile: false,
     isTablet: false,
     isTouch: false,
     prefersReducedMotion: false,
-    prefersDark: false
+    prefersDark: false,
+    isWechat: false
 });
 
 const detectDeviceInfo = () => {
@@ -269,6 +277,7 @@ const detectDeviceInfo = () => {
     deviceInfo.isTouch = 'ontouchstart' in window || navigator.maxTouchPoints > 0;
     deviceInfo.prefersReducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
     deviceInfo.prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+    deviceInfo.isWechat = isWechatBrowser();
 };
 
 onMounted(() => {
@@ -277,6 +286,48 @@ onMounted(() => {
 
     // 恢复引导进度
     initializeOnboardingProgress();
+
+    // 微信环境适配
+    if (deviceInfo.isWechat) {
+        document.body.classList.add('wechat-browser');
+    }
+
+    // 设置CSS自定义属性来处理真实的视口高度（所有设备都需要）
+    const setRealViewportHeight = () => {
+        const vh = window.innerHeight * 0.01;
+        // 设置侧边栏使用的CSS变量
+        document.documentElement.style.setProperty('--vh', `${vh}px`);
+        // 设置引导页面使用的CSS变量
+        document.documentElement.style.setProperty('--real-vh', `${window.innerHeight}px`);
+
+        // 检测是否支持动态视口单位
+        const testEl = document.createElement('div');
+        testEl.style.height = '100dvh';
+        document.body.appendChild(testEl);
+        const supportsDvh = testEl.offsetHeight > 0;
+        document.body.removeChild(testEl);
+
+        console.log('视口高度更新:', {
+            windowHeight: window.innerHeight,
+            vh: vh,
+            supportsDvh: supportsDvh,
+            realVh: window.innerHeight,
+            isMobile: deviceInfo.isMobile
+        });
+    };
+
+    // 初始设置
+    setRealViewportHeight();
+
+    // 监听变化（所有设备）
+    window.addEventListener('resize', setRealViewportHeight);
+    window.addEventListener('orientationchange', setRealViewportHeight);
+
+    // 移动端额外的延迟执行
+    if (deviceInfo.isMobile) {
+        setTimeout(setRealViewportHeight, 100);
+        setTimeout(setRealViewportHeight, 300);
+    }
 
     // 监听屏幕变化
     window.addEventListener('resize', detectDeviceInfo);
@@ -380,10 +431,9 @@ function getTraitDescription(traitId, value) {
     display: flex;
     flex-direction: column;
     align-items: center;
-    justify-content: flex-start;
+    justify-content: center;
     background-color: #f8fafc;
     padding: 20px;
-    padding-top: 10vh;
     box-sizing: border-box;
     /* 移动端支持 */
     -webkit-overflow-scrolling: touch;
@@ -690,15 +740,15 @@ function getTraitDescription(traitId, value) {
     background: white;
     border-radius: 12px;
     box-shadow: 0 8px 30px rgba(0, 0, 0, 0.08);
-    overflow: visible;
-    /* 确保内容和按钮都能正确显示 */
+    overflow-y: auto;
+    /* 允许垂直滚动 */
     display: flex;
     flex-direction: column;
-    /* 高度自适应，上下添加安全间隔 */
-    min-height: auto;
-    max-height: calc(100vh - 120px);
-    /* 上下各60px安全间隔 */
-    margin: 60px 0;
+    /* PC端完全自适应高度，根据内容调整 */
+    width: 100%;
+    max-width: 1000px;
+    max-height: calc(100vh - 40px);
+    /* 上下各20px安全间隔 */
     padding: 30px 0;
     /* 上下安全间距 */
     /* 移动端滚动优化 */
@@ -721,7 +771,7 @@ function getTraitDescription(traitId, value) {
 
 .form-container :deep(.action-buttons) {
     flex-shrink: 0;
-    margin-top: auto;
+    margin-top: 30px;
     /* 确保按钮能够使用全宽并有正确的左右间距 */
     margin-left: -20px;
     /* 抵消form-container的内边距 */
@@ -735,12 +785,11 @@ function getTraitDescription(traitId, value) {
 @media (max-width: 768px) {
     .onboarding-flow {
         padding: 12px;
-        padding-top: 3vh;
-        /* 减少顶部间距 */
-        padding-bottom: 3vh;
-        /* 添加底部安全间距 */
-        min-height: auto;
-        height: auto;
+        /* 移动端也使用垂直居中 */
+        justify-content: center;
+        min-height: 100vh;
+        min-height: 100dvh;
+        /* 动态视口高度 */
     }
 
     .onboarding-step {
@@ -891,13 +940,18 @@ function getTraitDescription(traitId, value) {
 
     .form-container {
         border-radius: 20px;
-        margin: 20px 4px;
-        /* 添加上下安全间距 */
-        height: auto;
-        min-height: auto;
-        max-height: calc(100vh - 80px);
-        /* 移动端上下各40px安全间隔 */
-        overflow-y: visible;
+        margin: 0 4px;
+        /* 移动端完全自适应高度 */
+        width: calc(100% - 8px);
+        max-width: none;
+        max-height: calc(100vh - 24px);
+        /* 移动端上下各12px安全间隔 */
+        overflow-y: auto;
+        /* 整个容器可滚动 */
+        display: flex;
+        flex-direction: column;
+        /* 移动端滚动优化 */
+        -webkit-overflow-scrolling: touch;
     }
 
     /* 移动端按钮样式调整 */
@@ -906,6 +960,22 @@ function getTraitDescription(traitId, value) {
         margin-left: -16px;
         margin-right: -16px;
         width: calc(100% + 32px);
+        /* 按钮跟随内容，不固定 */
+        position: static;
+        margin-top: 20px;
+        background: transparent;
+        border-top: 1px solid #e5e7eb;
+        /* 移除固定定位相关样式 */
+    }
+
+
+
+    /* 微信环境下特殊处理 - 优化滚动体验 */
+    .is-wechat .form-container {
+        /* 微信环境完全自适应高度 */
+        max-height: calc(100vh - 24px);
+        overflow-y: auto;
+        -webkit-overflow-scrolling: touch;
     }
 }
 
@@ -913,10 +983,8 @@ function getTraitDescription(traitId, value) {
 @media (max-width: 480px) {
     .onboarding-flow {
         padding: 8px;
-        padding-top: 2vh;
-        /* 进一步减少顶部间距 */
-        padding-bottom: 2vh;
-        /* 添加底部安全间距 */
+        /* 超小屏幕也使用垂直居中 */
+        justify-content: center;
     }
 
     .welcome-hero,
@@ -971,12 +1039,21 @@ function getTraitDescription(traitId, value) {
 
     .form-container {
         margin: 15px 2px;
-        /* 超小屏幕减小安全间距 */
-        height: auto;
-        min-height: auto;
-        max-height: calc(100vh - 60px);
-        /* 超小屏幕上下各30px安全间隔 */
-        overflow: visible;
+        /* 多层回退方案确保兼容性 */
+        height: calc(100vh - 140px);
+        max-height: calc(100vh - 140px);
+        /* 使用JavaScript计算的真实视口高度 */
+        height: calc(var(--real-vh, 100vh) - 140px);
+        max-height: calc(var(--real-vh, 100vh) - 140px);
+        /* 现代浏览器使用动态视口高度 */
+        height: calc(100dvh - 140px);
+        max-height: calc(100dvh - 140px);
+        /* 超小屏幕上下各70px安全间隔，确保按钮完全可见 */
+        overflow-y: auto;
+        /* 整个容器可滚动 */
+        display: flex;
+        flex-direction: column;
+        -webkit-overflow-scrolling: touch;
     }
 
     /* 超小屏幕按钮样式调整 */
@@ -989,6 +1066,27 @@ function getTraitDescription(traitId, value) {
         /* 减少上下padding */
         gap: 8px;
         /* 进一步减小按钮间距 */
+        /* 按钮跟随内容，不固定 */
+        position: static;
+        margin-top: 16px;
+        background: transparent;
+        border-top: 1px solid #e5e7eb;
+    }
+
+    /* 微信环境下特殊处理 - 优化滚动体验 */
+    .is-wechat .form-container {
+        /* 多层回退方案确保兼容性 */
+        height: calc(100vh - 140px);
+        max-height: calc(100vh - 140px);
+        /* 使用JavaScript计算的真实视口高度 */
+        height: calc(var(--real-vh, 100vh) - 140px);
+        max-height: calc(var(--real-vh, 100vh) - 140px);
+        /* 现代浏览器使用动态视口高度 */
+        height: calc(100dvh - 140px);
+        max-height: calc(100dvh - 140px);
+        min-height: 450px;
+        overflow-y: auto;
+        -webkit-overflow-scrolling: touch;
     }
 
     /* 超小屏幕按钮精细化 */
@@ -1026,10 +1124,12 @@ function getTraitDescription(traitId, value) {
     }
 
     .form-container {
-        height: auto;
+        height: 70vh;
         min-height: 40vh;
         max-height: 70vh;
-        overflow: visible;
+        overflow: hidden;
+        display: flex;
+        flex-direction: column;
     }
 }
 

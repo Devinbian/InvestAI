@@ -124,7 +124,7 @@ import { useUserStore } from '@/store/user';
 import InvestmentPreferencesForm from './InvestmentPreferencesForm.vue';
 import { updateUserPortrait, getUserPortrait } from '@/api/api';
 import { majorSectors, subSectors } from '@/config/userPortrait';
-import { isNumber } from 'element-plus/es/utils/types.mjs';
+
 
 // Props
 const props = defineProps({
@@ -245,9 +245,9 @@ const localPreferences = reactive({
 const isStepValid = computed(() => {
     switch (currentStep.value) {
         case 0:
-            return isNumber(localPreferences.experience);
+            return !!localPreferences.experience;
         case 1:
-            return isNumber(localPreferences.riskLevel);
+            return !!localPreferences.riskLevel;
         case 2:
             return true;
         case 3:

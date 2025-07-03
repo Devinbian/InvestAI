@@ -11,7 +11,7 @@
             @delete-chat="wrappedHandleDeleteChat" @close-panel="closeChatHistory" ref="chatHistoryComponentRef" />
 
         <!-- 移动端侧边栏悬浮切换按钮 -->
-        <button v-show="isMobileSidebarAvailable" class="floating-sidebar-toggle" @click="handleMobileSidebarToggle"
+        <button v-if="isMobileSidebarAvailable" class="floating-sidebar-toggle" @click="handleMobileSidebarToggle"
             title="打开功能面板">
             <svg width="20" height="20" viewBox="0 0 24 24" fill="none">
                 <path d="M3 12h18m-9 9l9-9-9-9" stroke="currentColor" stroke-width="2" stroke-linecap="round"
@@ -228,13 +228,13 @@
                                         <div class="asset-amount">
                                             <span class="amount-label">总资产</span>
                                             <span class="amount-value">¥{{ formatCurrency(message.assetData.totalAssets)
-                                                }}</span>
+                                            }}</span>
                                         </div>
                                         <div class="asset-change"
                                             :class="[message.assetData.totalProfitPercent >= 0 ? 'profit' : 'loss']">
                                             <span class="change-icon">{{ message.assetData.totalProfitPercent >= 0 ?
                                                 '📈' : '📉'
-                                                }}</span>
+                                            }}</span>
                                             <span class="change-label">今日盈亏：</span>
                                             <span class="change-text">
                                                 {{ message.assetData.totalProfitPercent >= 0 ? '+' : '' }}¥{{
@@ -260,7 +260,7 @@
                                         <div class="stat-info">
                                             <div class="stat-label">持仓市值</div>
                                             <div class="stat-value">¥{{ formatCurrency(message.assetData.portfolioValue)
-                                            }}
+                                                }}
                                             </div>
                                         </div>
                                     </div>
@@ -510,7 +510,7 @@
                 </div>
                 <div class="guide-actions">
                     <el-button type="primary" size="small" @click="handleGuideAction">{{ guideActionText
-                    }}</el-button>
+                        }}</el-button>
                     <el-button size="small" @click="dismissGuide">稍后</el-button>
                 </div>
             </div>
@@ -578,6 +578,8 @@ import { formatCurrency } from '@/utils/formatters';
 
 const userStore = useUserStore();
 const chatHistoryStore = useChatHistoryStore();
+
+
 
 // 使用用户认证组合式函数
 const authentication = useAuthentication();
@@ -755,6 +757,8 @@ const dismissGuide = () => {
     console.log('关闭引导提示');
     showGuideTip.value = false;
 };
+
+
 
 // 聊天历史相关
 const showChatHistory = ref(false); // 控制聊天历史面板显示
@@ -988,19 +992,15 @@ const sidebarRef = ref(null);
 
 // 计算属性：检查移动端侧边栏是否可用
 const isMobileSidebarAvailable = computed(() => {
-    return userStore.isLoggedIn &&
-        isMobileView.value &&
-        sidebarRef.value &&
-        typeof sidebarRef.value.toggleSidebar === 'function';
+    // 只有在用户已登录且在移动端时才显示按钮
+    return userStore.isLoggedIn && isMobileView.value;
 });
 
 // 处理移动端侧边栏切换，带双重检查
 const handleMobileSidebarToggle = () => {
     // 在点击时再次检查条件，确保组件仍然可用
     if (userStore.isLoggedIn &&
-        isMobileView.value &&
-        sidebarRef.value &&
-        typeof sidebarRef.value.toggleSidebar === 'function') {
+        isMobileView.value) {
         mobileAdaptation.toggleMobileSidebar(sidebarRef);
     } else {
         console.warn('移动端侧边栏不可用，忽略点击事件', {
@@ -8749,7 +8749,7 @@ body {
     /* iOS设备下的欢迎区域特殊处理 - 仅主界面模式 */
     @supports (-webkit-touch-callout: none) {
         body:not(.wechat-browser) .modern-content:not(.chatting) .welcome-section {
-            transform: translateY(-60px) !important;
+            transform: translateY(-10px) !important;
             /* iOS设备需要上移更多 */
         }
     }
@@ -8757,7 +8757,7 @@ body {
     /* Android Chrome浏览器下的欢迎区域处理 - 仅主界面模式 */
     @supports (-webkit-appearance: none) and (not (-webkit-touch-callout: none)) {
         body:not(.wechat-browser) .modern-content:not(.chatting) .welcome-section {
-            transform: translateY(-50px) !important;
+            transform: translateY(-10px) !important;
             /* Android Chrome需要中等上移距离 */
         }
     }

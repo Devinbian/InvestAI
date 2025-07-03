@@ -1,6 +1,6 @@
 <template>
-    <el-dialog v-model="visible" :show-close="false" :close-on-click-modal="false" :lock-scroll="false"
-        :width="dialogWidth" class="auth-dialog">
+    <el-dialog v-model="visible" :show-close="false" :close-on-click-modal="false" :lock-scroll="true"
+        :width="dialogWidth" class="auth-dialog" :class="{ 'wechat-env': isWechat }">
         <template #header>
             <div></div>
         </template>
@@ -88,7 +88,7 @@
 </template>
 
 <script setup>
-import { ref, reactive, computed, watch } from 'vue';
+import { ref, reactive, computed, watch, onMounted, onUnmounted } from 'vue';
 import { ElMessage } from 'element-plus';
 import { useUserStore } from '@/store/user';
 import { login, register } from '@/api/api';
@@ -116,6 +116,7 @@ const loginFormRef = ref(null);
 const loginLoading = ref(false);
 const wechatLoginLoading = ref(false);
 const isRegisterMode = ref(props.registerMode);
+const isWechat = ref(false);
 
 // 响应式对话框宽度
 const dialogWidth = computed(() => {
@@ -214,13 +215,13 @@ const handleLogin = async () => {
                         preferences: {
                             experience: userPortrait.investExperience, // 投资经验
                             riskLevel: userPortrait.investStyle, // 投资风格
-                            userTraits:{
+                            userTraits: {
                                 active_participation: userPortrait.involveLevel,
                                 innovation_trial: userPortrait.innovationAcceptance,
                                 learning_willingness: userPortrait.learnIntention,
                                 risk_tolerance: userPortrait.riskTolerance,
-                                strategy_dependency: userPortrait.strategyComplexity, 
-                                trading_frequency: userPortrait.tradeFrequency, 
+                                strategy_dependency: userPortrait.strategyComplexity,
+                                trading_frequency: userPortrait.tradeFrequency,
                             },
                             sectors: {
                                 majorCategories: majorCategories,
@@ -336,6 +337,24 @@ const closeDialog = () => {
     }
 };
 
+// 完全移除键盘检测逻辑
+// 对话框采用固定尺寸方案，不需要键盘检测
+
+// 生命周期钩子 - 简化版
+onMounted(() => {
+    if (typeof window !== 'undefined') {
+        // 检测微信环境（仅用于样式类名）
+        const ua = navigator.userAgent.toLowerCase();
+        isWechat.value = ua.indexOf('micromessenger') !== -1;
+
+        console.log('对话框挂载完成，微信环境:', isWechat.value);
+    }
+});
+
+onUnmounted(() => {
+    console.log('对话框卸载');
+});
+
 // 监听 registerMode prop 变化
 watch(() => props.registerMode, (newVal) => {
     isRegisterMode.value = newVal;
@@ -349,6 +368,27 @@ watch(() => props.registerMode, (newVal) => {
     overflow: hidden;
     box-shadow: 0 8px 32px rgba(0, 0, 0, 0.12);
     border: 1px solid #e5e7eb;
+}
+
+/* 键盘激活时的样式 */
+:deep(.auth-dialog.keyboard-active) {
+    position: fixed !important;
+    top: 50% !important;
+    transform: translateY(-50%) !important;
+    margin-top: 0 !important;
+}
+
+/* 移动端对话框样式 - 简化版 */
+@media (max-width: 768px) {
+    :deep(.auth-dialog) {
+        width: 90% !important;
+        max-width: 380px !important;
+        margin: 0 !important;
+        border-radius: 12px !important;
+    }
+
+
+
 }
 
 :deep(.auth-dialog .el-dialog__header) {
@@ -704,7 +744,7 @@ watch(() => props.registerMode, (newVal) => {
     }
 
     .auth-form-item {
-        margin-bottom: 12px;
+        margin-bottom: 20px;
     }
 
     :deep(.auth-input .el-input__wrapper) {
@@ -734,6 +774,35 @@ watch(() => props.registerMode, (newVal) => {
         padding-top: 12px;
         margin-top: 12px;
     }
+
+    /* 容器样式保持简洁 */
+    .auth-container {
+        padding: 20px 20px !important;
+        gap: 16px !important;
+        min-height: auto !important;
+        height: auto !important;
+        display: flex !important;
+        flex-direction: column !important;
+        justify-content: flex-start !important;
+        background: white !important;
+        text-align: center !important;
+    }
+
+    /* logo区域样式 */
+    .auth-logo-section {
+        display: block !important;
+        padding-right: 0 !important;
+        margin-bottom: 0 !important;
+    }
+
+    /* 表单区域样式 */
+    .auth-form-wrapper {
+        max-width: 100% !important;
+        padding-left: 0 !important;
+        border-left: none !important;
+        border-top: 1px solid #f3f4f6 !important;
+        padding-top: 16px !important;
+    }
 }
 
 /* 超小屏幕适配 (小于480px) */
@@ -761,7 +830,7 @@ watch(() => props.registerMode, (newVal) => {
     }
 
     .auth-form-item {
-        margin-bottom: 10px;
+        margin-bottom: 20px;
     }
 
     :deep(.auth-input .el-input__wrapper) {
@@ -796,6 +865,8 @@ watch(() => props.registerMode, (newVal) => {
     .cancel-btn {
         font-size: 0.8rem;
     }
+
+    /* 超小屏幕下保持正常样式 - 不需要键盘激活特殊处理 */
 }
 
 /* 横屏手机适配 */
@@ -837,7 +908,7 @@ watch(() => props.registerMode, (newVal) => {
     }
 
     .auth-form-item {
-        margin-bottom: 12px;
+        margin-bottom: 20px;
     }
 
     :deep(.auth-input .el-input__wrapper) {

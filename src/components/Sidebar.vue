@@ -941,7 +941,9 @@ defineExpose({
 
     /* 移动端tab内容区域 - 无头部版本 */
     .sidebar-container.mobile-expanded .tab-content {
+        /* 多层回退方案确保兼容性 */
         height: calc(100vh - 40px) !important;
+        height: calc(var(--real-vh, 100vh) - 40px) !important;
         height: calc(100dvh - 40px) !important;
         height: calc(var(--vh, 1vh) * 100 - 40px) !important;
         /* 只减去tab导航(40px) */

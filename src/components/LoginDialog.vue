@@ -249,7 +249,9 @@ const handleLogin = async () => {
                                 majorCategories: majorCategories,
                                 subCategories: subCategories,
                                 categories: sectors
-                            }
+                            },
+                            completed: userPortrait.completeUserPortraitFlag, // 用户画像是否完成设置
+                            currentStep: userPortrait.userPortraitStep, // 用户画像设置阶段，取值为0-4，0-未开始设置，4-全部完成设置
                         };
                     }
 

@@ -7,7 +7,7 @@
 
             <div class="step-content-scrollable">
                 <div class="experience-options">
-                    <div v-for="option in experienceOptions" :key="option.value" class="experience-option"
+                    <div v-for="option in experienceOptions" :key="option.id" class="experience-option"
                         :class="{ selected: isExperienceSelected(option) }" @click="handleExperienceSelect(option.id)">
                         <div class="option-radio">
                             <div class="radio-dot" :class="{ checked: isExperienceSelected(option) }">
@@ -44,7 +44,8 @@
             <div class="step-content-scrollable">
                 <div class="risk-options">
                     <div v-for="option in riskOptions" :key="option.riskLevel" class="risk-option"
-                        :class="{ selected: isRiskLevelSelected(option) }" @click="handleRiskLevelSelect(option.value)">
+                        :class="{ selected: isRiskLevelSelected(option) }"
+                        @click="handleRiskLevelSelect(option.riskLevel)">
                         <div class="option-radio">
                             <div class="radio-dot" :class="{ checked: isRiskLevelSelected(option) }">
                             </div>

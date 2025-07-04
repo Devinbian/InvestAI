@@ -234,13 +234,13 @@
                                                 <span class="amount-label">总资产</span>
                                                 <span class="amount-value">¥{{
                                                     formatCurrency(message.assetData.totalAssets)
-                                                }}</span>
+                                                    }}</span>
                                             </div>
                                             <div class="asset-change"
                                                 :class="[message.assetData.totalProfitPercent >= 0 ? 'profit' : 'loss']">
                                                 <span class="change-icon">{{ message.assetData.totalProfitPercent >= 0 ?
                                                     '📈' : '📉'
-                                                }}</span>
+                                                    }}</span>
                                                 <span class="change-label">今日盈亏：</span>
                                                 <span class="change-text">
                                                     {{ message.assetData.totalProfitPercent >= 0 ? '+' : '' }}¥{{
@@ -267,7 +267,7 @@
                                                 <div class="stat-label">持仓市值</div>
                                                 <div class="stat-value">¥{{
                                                     formatCurrency(message.assetData.portfolioValue)
-                                                }}
+                                                    }}
                                                 </div>
                                             </div>
                                         </div>
@@ -532,7 +532,7 @@
                 </div>
                 <div class="guide-actions">
                     <el-button type="primary" size="small" @click="handleGuideAction">{{ guideActionText
-                        }}</el-button>
+                    }}</el-button>
                     <el-button size="small" @click="dismissGuide">稍后</el-button>
                 </div>
             </div>
@@ -5481,7 +5481,7 @@ body {
 }
 
 :deep(.el-overlay) {
-    z-index: 10999 !important;
+    z-index: 501 !important;
 }
 
 /* Element Plus下拉菜单 */

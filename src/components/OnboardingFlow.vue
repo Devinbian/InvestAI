@@ -102,6 +102,7 @@ import { useRouter } from 'vue-router';
 import { useUserStore } from '@/store/user';
 import InvestmentPreferencesForm from './InvestmentPreferencesForm.vue';
 import { ElMessage } from 'element-plus';
+import { riskOptions, experienceOptions } from '../config/userPortrait';
 
 const emit = defineEmits(['complete']);
 const router = useRouter();
@@ -144,8 +145,8 @@ const formStep = computed(() => {
 
 // --- Form Data ---
 const preferences = reactive({
-    riskLevel: '',
-    experience: '',
+    riskLevel: null,
+    experience: null,
     userTraits: {
         risk_tolerance: 3,
         active_participation: 3,
@@ -242,37 +243,14 @@ const finishOnboarding = async () => {
         // 准备最终的偏好设置数据
         const finalPreferences = toRaw(preferences);
 
-        // 将数值格式转换为字符串格式（用于显示和本地存储）
-        const convertRiskLevelToString = (riskLevel) => {
-            const riskLevelMap = {
-                1: 'conservative',
-                2: 'stable',
-                3: 'balanced',
-                4: 'growth',
-                5: 'aggressive'
-            };
-            return riskLevelMap[riskLevel] || 'balanced';
-        };
-
-        const convertExperienceToString = (experience) => {
-            const experienceMap = {
-                1: 'beginner',
-                2: 'experienced'
-            };
-            return experienceMap[experience] || 'beginner';
-        };
-
-        // 注意：API调用已经在InvestmentPreferencesForm中完成了，这里只需要完成引导流程
-        console.log('🎯 API调用已在表单中完成，直接完成引导流程');
-
         // 标记引导完成并保存到本地
         userStore.completeOnboarding(finalPreferences);
 
         // 确保保存到用户信息中的数据格式正确（字符串格式）
         const finalPreferencesForUser = {
             ...finalPreferences,
-            riskLevel: typeof finalPreferences.riskLevel === 'number' ? convertRiskLevelToString(finalPreferences.riskLevel) : finalPreferences.riskLevel,
-            experience: typeof finalPreferences.experience === 'number' ? convertExperienceToString(finalPreferences.experience) : finalPreferences.experience
+            riskLevel: riskOptions.find(item => item.riskLevel === finalPreferences.riskLevel).value,
+            experience: experienceOptions.find(item => item.value === finalPreferences.experience).name
         };
 
         // 同时更新用户信息中的偏好设置，确保智能荐股等功能能正确读取
@@ -289,8 +267,8 @@ const finishOnboarding = async () => {
                 completedAt: new Date().toISOString()
             },
             profile: {
-                riskLabel: getRiskLevelText(finalPreferences.riskLevel),
-                experienceLabel: getExperienceText(finalPreferences.experience)
+                riskLabel: finalPreferences.riskLevel,
+                experienceLabel: finalPreferences.experience
             }
         });
     } catch (error) {

@@ -1,6 +1,6 @@
 <template>
     <el-dialog v-model="visible" :show-close="false" :close-on-click-modal="false" :lock-scroll="true"
-        :width="dialogWidth" class="auth-dialog" :class="{ 'wechat-env': isWechat }">
+        :width="dialogWidth" class="auth-dialog" :class="{ 'wechat-env': isWechat }" :z-index="500">
         <template #header>
             <div></div>
         </template>
@@ -92,6 +92,7 @@ import { ref, reactive, computed, watch, onMounted, onUnmounted } from 'vue';
 import { ElMessage } from 'element-plus';
 import { useUserStore } from '@/store/user';
 import { login, register } from '@/api/api';
+import { riskOptions, experienceOptions } from '../config/userPortrait';
 
 // Props
 const props = defineProps({
@@ -210,33 +211,13 @@ const handleLogin = async () => {
                         subCategories = subCategories.concat(item.children);
                     });
 
-                    // 数据格式转换函数
-                    const convertRiskLevelToString = (riskLevel) => {
-                        const riskLevelMap = {
-                            1: 'conservative',
-                            2: 'stable',
-                            3: 'balanced',
-                            4: 'growth',
-                            5: 'aggressive'
-                        };
-                        return typeof riskLevel === 'number' ? riskLevelMap[riskLevel] : riskLevel;
-                    };
-
-                    const convertExperienceToString = (experience) => {
-                        const experienceMap = {
-                            1: 'beginner',
-                            2: 'experienced'
-                        };
-                        return typeof experience === 'number' ? experienceMap[experience] : experience;
-                    };
-
                     // 对于新用户，如果没有有效的偏好设置数据，不要设置preferences
                     let preferences = null;
                     if (!isNewUser || (userPortrait.investExperience && userPortrait.investStyle)) {
                         // 只有老用户或者有有效偏好数据的新用户才设置preferences
                         preferences = {
-                            experience: convertExperienceToString(userPortrait.investExperience), // 投资经验
-                            riskLevel: convertRiskLevelToString(userPortrait.investStyle), // 投资风格
+                            experience: experienceOptions.find(item => item.value === userPortrait.investExperience).name, // 投资经验
+                            riskLevel: riskOptions.find(item => item.riskLevel === userPortrait.investStyle).value, // 投资风格
                             userTraits: {
                                 active_participation: userPortrait.involveLevel,
                                 innovation_trial: userPortrait.innovationAcceptance,
@@ -255,6 +236,7 @@ const handleLogin = async () => {
 
                     let userInfo = {
                         nickname: res.data.data.nickname,
+                        phone: res.data.data.phone,
                         isNewUser: isNewUser,
                         token: res.data.data.token,
                         preferences: preferences
@@ -415,9 +397,6 @@ watch(() => props.registerMode, (newVal) => {
         margin: 0 !important;
         border-radius: 12px !important;
     }
-
-
-
 }
 
 :deep(.auth-dialog .el-dialog__header) {
@@ -967,5 +946,30 @@ watch(() => props.registerMode, (newVal) => {
         padding-top: 12px;
         margin-top: 12px;
     }
+}
+
+/* 确保Element Plus组件的z-index高于登录弹窗 */
+:global(.el-message) {
+    z-index: 3000 !important;
+}
+
+:global(.el-message-box) {
+    z-index: 3000 !important;
+}
+
+:global(.el-tooltip__popper) {
+    z-index: 2000 !important;
+}
+
+:global(.el-notification) {
+    z-index: 4000 !important;
+}
+
+:global(.el-loading-mask) {
+    z-index: 2500 !important;
+}
+
+:global(.el-overlay) {
+    z-index: 2000 !important;
 }
 </style>

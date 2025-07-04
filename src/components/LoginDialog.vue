@@ -211,29 +211,32 @@ const handleLogin = async () => {
                         subCategories = subCategories.concat(item.children);
                     });
 
-                    // 对于新用户，如果没有有效的偏好设置数据，不要设置preferences
+                    // 对于新用户，不设置preferences，让他们进入引导流程
                     let preferences = null;
-                    if (!isNewUser || (userPortrait.investExperience && userPortrait.investStyle)) {
-                        // 只有老用户或者有有效偏好数据的新用户才设置preferences
-                        preferences = {
-                            experience: experienceOptions.find(item => item.value === userPortrait.investExperience).name, // 投资经验
-                            riskLevel: riskOptions.find(item => item.riskLevel === userPortrait.investStyle).value, // 投资风格
-                            userTraits: {
-                                active_participation: userPortrait.involveLevel,
-                                innovation_trial: userPortrait.innovationAcceptance,
-                                learning_willingness: userPortrait.learnIntention,
-                                risk_tolerance: userPortrait.riskTolerance,
-                                strategy_dependency: userPortrait.strategyComplexity,
-                                trading_frequency: userPortrait.tradeFrequency,
-                            },
-                            sectors: {
-                                majorCategories: majorCategories,
-                                subCategories: subCategories,
-                                categories: sectors
-                            },
-                            completed: userPortrait.completeUserPortraitFlag, // 用户画像是否完成设置
-                            currentStep: userPortrait.userPortraitStep, // 用户画像设置阶段，取值为0-4，0-未开始设置，4-全部完成设置
-                        };
+                    if (!isNewUser) {
+                        // 只有老用户才从API获取偏好设置
+                        // 检查是否有完整的偏好设置数据
+                        if (userPortrait.investExperience && userPortrait.investStyle && userPortrait.completeUserPortraitFlag) {
+                            preferences = {
+                                experience: userPortrait.investExperience, // 投资经验
+                                riskLevel: userPortrait.investStyle, // 投资风格
+                                userTraits: {
+                                    active_participation: userPortrait.involveLevel,
+                                    innovation_trial: userPortrait.innovationAcceptance,
+                                    learning_willingness: userPortrait.learnIntention,
+                                    risk_tolerance: userPortrait.riskTolerance,
+                                    strategy_dependency: userPortrait.strategyComplexity,
+                                    trading_frequency: userPortrait.tradeFrequency,
+                                },
+                                sectors: {
+                                    majorCategories: majorCategories,
+                                    subCategories: subCategories,
+                                    categories: sectors
+                                },
+                                completed: userPortrait.completeUserPortraitFlag, // 用户画像是否完成设置
+                                currentStep: userPortrait.userPortraitStep, // 用户画像设置阶段，取值为0-4，0-未开始设置，4-全部完成设置
+                            };
+                        }
                     }
 
                     let userInfo = {

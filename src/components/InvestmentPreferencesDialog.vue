@@ -332,8 +332,8 @@ const initializePreferences = async () => {
 
         // 如果所有来源都没有数据，使用默认值
         Object.assign(localPreferences, {
-            riskLevel: '',
-            experience: '',
+            riskLevel: null,
+            experience: null,
             userTraits: {
                 risk_tolerance: 3,
                 active_participation: 3,

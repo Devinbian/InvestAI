@@ -99,6 +99,11 @@ const handleCommand = async (command) => {
                 // 跳转到主页面（初始状态）
                 await router.push('/');
 
+                // 延迟刷新页面，确保完全重置状态
+                setTimeout(() => {
+                    window.location.reload();
+                }, 500);
+
             } catch (error) {
                 // 用户取消退出，不执行任何操作
                 console.log('用户取消退出登录');

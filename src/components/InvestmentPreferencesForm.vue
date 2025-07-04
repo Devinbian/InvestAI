@@ -383,8 +383,8 @@ const userStore = useUserStore();
 
 // Local reactive state for the form - 创建新的响应式对象
 const localPreferencesForm = reactive({
-    riskLevel: '',
-    experience: '',
+    riskLevel: null,
+    experience: null,
     userTraits: {
         risk_tolerance: 3,
         active_participation: 3,
@@ -406,8 +406,8 @@ const initializeFormData = () => {
     if (userPreferences) {
         // 只复制数据，不直接引用，但对于新用户确保sectors部分是空的
         Object.assign(localPreferencesForm, {
-            riskLevel: userPreferences.riskLevel || '',
-            experience: userPreferences.experience || '',
+            riskLevel: userPreferences.riskLevel || null,
+            experience: userPreferences.experience || null,
             userTraits: {
                 risk_tolerance: userPreferences.userTraits?.risk_tolerance || 3,
                 active_participation: userPreferences.userTraits?.active_participation || 3,
@@ -521,23 +521,15 @@ function handleRiskLevelSelect(riskLevel) {
 
 // 将数值格式转换为字符串格式（API需要）
 const convertRiskLevelToString = (riskLevel) => {
-    const riskLevelMap = {
-        1: 'conservative',
-        2: 'stable',
-        3: 'balanced',
-        4: 'growth',
-        5: 'aggressive'
-    };
-    return riskLevelMap[riskLevel] || 'balanced';
+
+    const options = riskOptions.find(option => option.riskLevel === riskLevel);
+    return options.value || 'balanced';
 };
 
 // 将数值格式转换为字符串格式（API需要）
 const convertExperienceToString = (experience) => {
-    const experienceMap = {
-        1: 'beginner',
-        2: 'experienced'
-    };
-    return experienceMap[experience] || 'beginner';
+    const experienceOptions = experienceOptions.find(option => option.id === experience);
+    return experienceOptions.name || 'beginner';
 };
 
 /**
@@ -602,32 +594,10 @@ const handlePreferencesSubmit = async () => {
         completedAt: new Date().toISOString()
     };
 
-    // 将字符串格式转换为数值格式（API需要）
-    const convertRiskLevelToNumber = (riskLevel) => {
-        if (typeof riskLevel === 'number') return riskLevel;
-        const riskLevelMap = {
-            'conservative': 1,
-            'stable': 2,
-            'balanced': 3,
-            'growth': 4,
-            'aggressive': 5
-        };
-        return riskLevelMap[riskLevel] || 3;
-    };
-
-    const convertExperienceToNumber = (experience) => {
-        if (typeof experience === 'number') return experience;
-        const experienceMap = {
-            'beginner': 1,
-            'experienced': 2
-        };
-        return experienceMap[experience] || 1;
-    };
-
     // 准备API请求数据 - 修复：investStyle和investExperience传递数值
     const portraitData = {
-        investStyle: convertRiskLevelToNumber(preferences.riskLevel),
-        investExperience: convertExperienceToNumber(preferences.experience),
+        investStyle: parseInt(preferences.riskLevel || 0),
+        investExperience: parseInt(preferences.experience || 0),
         riskTolerance: parseInt(preferences.userTraits.risk_tolerance || 3),
         involveLevel: parseInt(preferences.userTraits.active_participation || 3),
         learnIntention: parseInt(preferences.userTraits.learning_willingness || 3),
@@ -738,18 +708,9 @@ const toggleSubSector = (value) => {
     }
 };
 
-const getMajorSectorIcon = (value) => {
-    const sector = majorSectors.find(s => s.value === value);
-    return sector ? sector.icon : '';
-};
-
 const getMajorSectorLabel = (value) => {
     const sector = majorSectors.find(s => s.value === value);
     return sector ? sector.label : '';
-};
-
-const getSubSectorsByParent = (parentValue) => {
-    return subSectors.filter(sub => sub.parent === parentValue);
 };
 
 const handleSectorSearch = () => {
@@ -784,38 +745,6 @@ const toggleSubSectorFromSearch = (subOption) => {
         }
     }
     toggleSubSector(subOption.value);
-};
-
-const getRiskLevelText = (level) => {
-    // 数值格式映射
-    const riskLevelMap = {
-        1: '求稳型',
-        2: '稳健型',
-        3: '均衡型',
-        4: '成长型',
-        5: '进取型'
-    };
-
-    // 字符串格式映射
-    const riskValueMap = {
-        'conservative': '求稳型',
-        'stable': '稳健型',
-        'balanced': '均衡型',
-        'growth': '成长型',
-        'aggressive': '进取型'
-    };
-
-    // 先尝试数值格式
-    if (typeof level === 'number' && riskLevelMap[level]) {
-        return riskLevelMap[level];
-    }
-
-    // 再尝试字符串格式
-    if (typeof level === 'string' && riskValueMap[level]) {
-        return riskValueMap[level];
-    }
-
-    return '未设置';
 };
 
 // 窗口大小监听

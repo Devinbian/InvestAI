@@ -81,10 +81,11 @@
                             <span class="item-icon">🧠</span>
                             <span class="item-label">投资性格</span>
                         </div>
-                        <div class="item-value tags">
-                            <span v-for="(value, key) in preferences.userTraits" :key="key" class="tag-new">
-                                {{ getTraitDescription(key, value) }}
-                            </span>
+                        <div class="item-value traits-list">
+                            <div v-for="(value, key) in preferences.userTraits" :key="key" class="trait-item">
+                                <span class="trait-title">{{ getTraitTitle(key) }}</span>
+                                <span class="trait-desc">{{ getTraitDescription(key, value) }}</span>
+                            </div>
                         </div>
                     </div>
                 </div>
@@ -102,18 +103,51 @@ import { useRouter } from 'vue-router';
 import { useUserStore } from '@/store/user';
 import InvestmentPreferencesForm from './InvestmentPreferencesForm.vue';
 import { ElMessage } from 'element-plus';
-import { riskOptions, experienceOptions } from '../config/userPortrait';
+import { riskOptions, experienceOptions, majorSectors, subSectors, userTraits } from '../config/userPortrait';
+import { getRiskLevelText, getExperienceText, getSectorsSummary, getSectorLabel, getTraitDescription, getTraitTitle } from '@/utils/userPortraitHelpers';
 
 const emit = defineEmits(['complete']);
 const router = useRouter();
 const userStore = useUserStore();
+
+// Props
+const props = defineProps({
+    forceStart: {
+        type: Boolean,
+        default: false
+    }
+});
 
 // --- State Management ---
 const STEPS = ['welcome', 'form-step-0', 'form-step-1', 'form-step-2', 'form-step-3', 'complete'];
 const currentStepIndex = ref(0);
 
 // 从用户store恢复引导进度
-const initializeOnboardingProgress = () => {
+const initializeOnboardingProgress = (forceStart = false) => {
+    // 如果强制从头开始（新用户注册），则不恢复进度
+    if (forceStart) {
+        currentStepIndex.value = 0;
+        // 重置偏好设置为初始状态
+        Object.assign(preferences, {
+            riskLevel: null,
+            experience: null,
+            userTraits: {
+                risk_tolerance: 3,
+                active_participation: 3,
+                learning_willingness: 3,
+                strategy_dependency: 2,
+                trading_frequency: 2,
+                innovation_trial: 3
+            },
+            sectors: {
+                majorCategories: [],
+                subCategories: [],
+                categories: []
+            }
+        });
+        return;
+    }
+
     const progress = userStore.getOnboardingProgress();
     if (progress && progress.currentStep >= 0 && progress.currentStep < STEPS.length) {
         currentStepIndex.value = progress.currentStep;
@@ -162,24 +196,6 @@ const preferences = reactive({
     }
 });
 
-// --- Validation ---
-const isStepValid = computed(() => {
-    if (!isAssessmentStep.value) return false;
-
-    switch (formStep.value) {
-        case 0:
-            return !!preferences.experience;
-        case 1:
-            return !!preferences.riskLevel;
-        case 2:
-            return true;
-        case 3:
-            return preferences.sectors.subCategories.length > 0;
-        default:
-            return false;
-    }
-});
-
 // --- Navigation Functions ---
 function startAssessment() {
     currentStepIndex.value = 1;
@@ -219,23 +235,6 @@ function handleFormComplete() {
     userStore.updateOnboardingProgress(currentStepIndex.value, toRaw(preferences));
 }
 
-// --- Final Data Preparation & Emission ---
-const summaryData = computed(() => {
-    const riskLabel = getRiskLevelText(preferences.riskLevel);
-    const finalPreferences = toRaw(preferences);
-
-    return {
-        preferences: {
-            ...finalPreferences,
-            completedAt: new Date().toISOString()
-        },
-        profile: {
-            riskLabel: riskLabel,
-            experienceLabel: getExperienceText(preferences.experience)
-        }
-    };
-});
-
 const finishOnboarding = async () => {
     try {
         console.log('🎯 开始完成引导流程');
@@ -246,53 +245,13 @@ const finishOnboarding = async () => {
         // 标记引导完成并保存到本地
         userStore.completeOnboarding(finalPreferences);
 
-        // 确保保存到用户信息中的数据格式正确（字符串格式）
-        const finalPreferencesForUser = {
-            ...finalPreferences,
-            riskLevel: riskOptions.find(item => item.riskLevel === finalPreferences.riskLevel).value,
-            experience: experienceOptions.find(item => item.value === finalPreferences.experience).name
-        };
-
         // 同时更新用户信息中的偏好设置，确保智能荐股等功能能正确读取
         userStore.setUserInfo({
             ...userStore.userInfo,
-            preferences: finalPreferencesForUser
+            preferences: finalPreferences
         });
 
         console.log('🎯 引导完成，用户偏好已同步到userStore.userInfo.preferences');
-
-        emit('complete', {
-            preferences: {
-                ...finalPreferences,
-                completedAt: new Date().toISOString()
-            },
-            profile: {
-                riskLabel: finalPreferences.riskLevel,
-                experienceLabel: finalPreferences.experience
-            }
-        });
-    } catch (error) {
-        console.error('引导流程完成时出错:', error);
-
-        // 即使出错，也要完成引导流程，确保用户体验
-        const finalPreferences = toRaw(preferences);
-        userStore.completeOnboarding(finalPreferences);
-
-        // 确保保存到用户信息中的数据格式正确（字符串格式）
-        const finalPreferencesForUser = {
-            ...finalPreferences,
-            riskLevel: typeof finalPreferences.riskLevel === 'number' ? convertRiskLevelToString(finalPreferences.riskLevel) : finalPreferences.riskLevel,
-            experience: typeof finalPreferences.experience === 'number' ? convertExperienceToString(finalPreferences.experience) : finalPreferences.experience
-        };
-
-        // 确保本地数据同步，使用统一的字符串格式
-        userStore.setUserInfo({
-            ...userStore.userInfo,
-            preferences: finalPreferencesForUser
-        });
-
-        // 显示用户友好的错误提示
-        ElMessage.warning('引导流程完成，但数据同步可能存在问题');
 
         emit('complete', {
             preferences: {
@@ -304,6 +263,10 @@ const finishOnboarding = async () => {
                 experienceLabel: getExperienceText(finalPreferences.experience)
             }
         });
+    } catch (error) {
+        console.error('引导流程完成时出错:', error);
+        // 显示用户友好的错误提示
+        ElMessage.warning('引导流程完成，但数据同步可能存在问题');
     }
 };
 
@@ -367,8 +330,8 @@ onMounted(() => {
     detectDeviceInfo();
     applyThemeToDocument();
 
-    // 恢复引导进度
-    initializeOnboardingProgress();
+    // 恢复引导进度，如果是强制开始则从头开始
+    initializeOnboardingProgress(props.forceStart);
 
     // 微信环境适配
     if (deviceInfo.isWechat) {
@@ -422,143 +385,17 @@ onMounted(() => {
 
 
 // --- Helper Functions for Summary Page ---
-function getExperienceText(experience) {
-    // 数值格式映射
-    if (experience === 1) return '投资新手';
-    if (experience === 2) return '有投资经验';
-
-    // 字符串格式映射
-    const stringMap = {
-        'beginner': '投资新手',
-        'experienced': '有投资经验'
-    };
-    return stringMap[experience] || '未设置';
-}
-
 function getExperienceIcon(experience) {
-    // 数值格式映射
-    if (experience === 1) return '🌱';
-    if (experience === 2) return '📈';
-
-    // 字符串格式映射
-    const stringMap = {
-        'beginner': '🌱',
-        'experienced': '📈'
-    };
-    return stringMap[experience] || '🤔';
-}
-
-function getRiskLevelText(level) {
-    // 数值格式映射
-    const numberMap = {
-        1: '求稳型',
-        2: '稳健型',
-        3: '均衡型',
-        4: '成长型',
-        5: '进取型'
-    };
-
-    // 字符串格式映射
-    const stringMap = {
-        'conservative': '求稳型',
-        'stable': '稳健型',
-        'balanced': '均衡型',
-        'growth': '成长型',
-        'aggressive': '进取型'
-    };
-
-    // 先尝试数值格式
-    if (typeof level === 'number' && numberMap[level]) {
-        return numberMap[level];
-    }
-
-    // 再尝试字符串格式
-    if (typeof level === 'string' && stringMap[level]) {
-        return stringMap[level];
-    }
-
-    return '未设置';
+    const option = experienceOptions.find(item => item.value === experience);
+    return option ? option.icon : '🤔';
 }
 
 function getRiskLevelIcon(level) {
-    // 数值格式映射
-    const numberMap = {
-        1: '🛡️',
-        2: '🏦',
-        3: '⚖️',
-        4: '🚀',
-        5: '⚡'
-    };
-
-    // 字符串格式映射
-    const stringMap = {
-        'conservative': '🛡️',
-        'stable': '🏦',
-        'balanced': '⚖️',
-        'growth': '🚀',
-        'aggressive': '⚡'
-    };
-
-    // 先尝试数值格式
-    if (typeof level === 'number' && numberMap[level]) {
-        return numberMap[level];
-    }
-
-    // 再尝试字符串格式
-    if (typeof level === 'string' && stringMap[level]) {
-        return stringMap[level];
-    }
-
-    return '🤔';
+    const option = riskOptions.find(item => item.riskLevel === level);
+    return option ? option.icon : '🤔';
 }
 
-const sectorLabels = {
-    internet: '互联网', ai: '人工智能', new_energy: '新能源', software: '软件服务',
-    hardware: '电子硬件', banking: '银行', insurance: '保险', securities: '证券',
-    food_beverage: '食品饮料', retail: '零售', appliances: '家电', pharma: '医药制造',
-    medical_devices: '医疗器械', manufacturing: '先进制造', materials: '基础材料',
-    infrastructure: '基础设施', environmental: '环保', military: '军工'
-};
 
-function getSectorsSummary(sectors) {
-    if (sectors && sectors.subCategories && sectors.subCategories.length > 0) {
-        const names = sectors.subCategories.map(s => sectorLabels[s] || s);
-        return names.slice(0, 5).join('、') + (names.length > 5 ? '...' : '');
-    }
-    return '未选择';
-}
-
-function getSectorLabel(sector) {
-    return sectorLabels[sector] || sector;
-}
-
-const traitDefinitions = {
-    risk_tolerance: [
-        { value: 1, desc: '保守' }, { value: 2, desc: '偏保守' }, { value: 3, desc: '中性' }, { value: 4, desc: '偏进取' }, { value: 5, desc: '非常进取' }
-    ],
-    active_participation: [
-        { value: 1, desc: '依赖AI' }, { value: 2, desc: 'AI辅助' }, { value: 3, desc: '自主决策' }, { value: 4, desc: '积极研究' }, { value: 5, 'desc': '主导策略' }
-    ],
-    learning_willingness: [
-        { value: 1, desc: '无意学习' }, { value: 2, desc: '偶尔了解' }, { value: 3, desc: '愿意学习' }, { value: 4, desc: '主动研究' }, { value: 5, desc: '深度钻研' }
-    ],
-    strategy_dependency: [
-        { value: 1, desc: '简单策略' }, { value: 2, desc: '常规策略' }, { value: 3, desc: '中等策略' }, { value: 4, desc: '复杂策略' }, { value: 5, desc: '高级策略' }
-    ],
-    trading_frequency: [
-        { value: 1, desc: '长期持有' }, { value: 2, desc: '低频交易' }, { value: 3, desc: '中频交易' }, { value: 4, desc: '高频交易' }, { value: 5, desc: '超高频交易' }
-    ],
-    innovation_trial: [
-        { value: 1, desc: '不试新' }, { value: 2, desc: '谨慎尝试' }, { value: 3, desc: '开放尝试' }, { value: 4, desc: '拥抱创新' }, { value: 5, desc: '积极试新' }
-    ]
-};
-
-function getTraitDescription(traitId, value) {
-    const trait = traitDefinitions[traitId];
-    if (!trait) return '';
-    const option = trait.find(opt => opt.value === value);
-    return option ? option.desc : '';
-}
 
 // 清理可能存在的旧引导数据
 const clearOldOnboardingData = () => {
@@ -880,6 +717,45 @@ onMounted(() => {
     transform: translateY(-1px);
 }
 
+/* 投资性格特征样式 */
+.traits-list {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 12px;
+    margin-top: 0.5rem;
+}
+
+.trait-item {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    padding: 10px 12px;
+    background: #f8fafc;
+    border: 1px solid #e2e8f0;
+    border-radius: 8px;
+    transition: all 0.2s ease;
+}
+
+.trait-item:hover {
+    background: #f1f5f9;
+    border-color: #cbd5e1;
+    transform: translateY(-1px);
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+}
+
+.trait-title {
+    font-size: 0.8rem;
+    font-weight: 600;
+    color: #475569;
+    margin-bottom: 2px;
+}
+
+.trait-desc {
+    font-size: 0.75rem;
+    color: #64748b;
+    line-height: 1.3;
+}
+
 .finish-btn {
     height: 50px;
     font-size: 1.1rem;
@@ -946,6 +822,28 @@ onMounted(() => {
     /* 抵消form-container的内边距 */
     width: calc(100% + 40px);
     /* 补偿被抵消的宽度 */
+}
+
+/* 中等屏幕优化 (平板端) */
+@media (max-width: 1024px) and (min-width: 769px) {
+
+    /* 平板端投资性格特征样式 */
+    .traits-list {
+        grid-template-columns: 1fr 1fr;
+        gap: 10px;
+    }
+
+    .trait-item {
+        padding: 8px 10px;
+    }
+
+    .trait-title {
+        font-size: 0.75rem;
+    }
+
+    .trait-desc {
+        font-size: 0.7rem;
+    }
 }
 
 /* 移动端专用优化 */
@@ -1096,6 +994,29 @@ onMounted(() => {
         justify-content: center;
     }
 
+    /* 移动端投资性格特征样式 */
+    .traits-list {
+        grid-template-columns: 1fr;
+        gap: 8px;
+        margin-top: 0.25rem;
+    }
+
+    .trait-item {
+        padding: 8px 12px;
+        border-radius: 6px;
+        gap: 2px;
+    }
+
+    .trait-title {
+        font-size: 0.75rem;
+        font-weight: 600;
+    }
+
+    .trait-desc {
+        font-size: 0.7rem;
+        line-height: 1.3;
+    }
+
     .finish-btn {
         height: 48px;
         font-size: 1rem;
@@ -1202,6 +1123,29 @@ onMounted(() => {
         padding: 3px 6px;
         font-size: 0.7rem;
         min-height: 24px;
+    }
+
+    /* 超小屏幕投资性格特征样式 */
+    .traits-list {
+        grid-template-columns: 1fr;
+        gap: 6px;
+        margin-top: 0.2rem;
+    }
+
+    .trait-item {
+        padding: 6px 8px;
+        border-radius: 4px;
+        gap: 1px;
+    }
+
+    .trait-title {
+        font-size: 0.7rem;
+        font-weight: 600;
+    }
+
+    .trait-desc {
+        font-size: 0.65rem;
+        line-height: 1.2;
     }
 
     .form-container {

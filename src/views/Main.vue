@@ -24,8 +24,8 @@
             :class="{ 'chatting': isChatMode, 'with-sidebar': userStore.isLoggedIn, 'with-chat-history': showChatHistory }"
             @click="handleMainContentClick">
             <!-- 个性化引导流程 -->
-            <OnboardingFlow v-if="showOnboarding" @complete="onOnboardingComplete" @analyze-stock="handleAnalyzeStock"
-                @execute-action="handleOnboardingAction" />
+            <OnboardingFlow v-if="showOnboarding" :force-start="newUserForceStart" @complete="onOnboardingComplete"
+                @analyze-stock="handleAnalyzeStock" @execute-action="handleOnboardingAction" />
 
             <!-- 初始状态：标题、描述和输入区域作为一个整体 -->
             <div class="center-container chat-area" v-else-if="!isChatMode">
@@ -234,13 +234,13 @@
                                                 <span class="amount-label">总资产</span>
                                                 <span class="amount-value">¥{{
                                                     formatCurrency(message.assetData.totalAssets)
-                                                    }}</span>
+                                                }}</span>
                                             </div>
                                             <div class="asset-change"
                                                 :class="[message.assetData.totalProfitPercent >= 0 ? 'profit' : 'loss']">
                                                 <span class="change-icon">{{ message.assetData.totalProfitPercent >= 0 ?
                                                     '📈' : '📉'
-                                                    }}</span>
+                                                }}</span>
                                                 <span class="change-label">今日盈亏：</span>
                                                 <span class="change-text">
                                                     {{ message.assetData.totalProfitPercent >= 0 ? '+' : '' }}¥{{
@@ -267,7 +267,7 @@
                                                 <div class="stat-label">持仓市值</div>
                                                 <div class="stat-value">¥{{
                                                     formatCurrency(message.assetData.portfolioValue)
-                                                    }}
+                                                }}
                                                 </div>
                                             </div>
                                         </div>
@@ -487,7 +487,7 @@
 
         <!-- 登录对话框组件 -->
         <LoginDialog v-model="loginDialogVisible" :register-mode="isRegisterMode"
-            @login-success="(data) => handleLoginSuccess(data, () => { showOnboarding = true; }, dismissGuide)"
+            @login-success="(data) => handleLoginSuccess(data, () => { showOnboarding = true; newUserForceStart = data.isNewUser; }, dismissGuide)"
             @show-recovery="showPasswordRecovery" />
 
         <!-- 找回密码对话框组件 -->
@@ -532,7 +532,7 @@
                 </div>
                 <div class="guide-actions">
                     <el-button type="primary" size="small" @click="handleGuideAction">{{ guideActionText
-                    }}</el-button>
+                        }}</el-button>
                     <el-button size="small" @click="dismissGuide">稍后</el-button>
                 </div>
             </div>
@@ -702,6 +702,7 @@ const {
     showPaidAnalysisDialog,
     handleShowSellDialog,
     scrollToRecommendation,
+    refreshRecommendation: stockRefreshRecommendation,
     handleReminderConfirm: stockHandleReminderConfirm,
 } = stockOperations;
 
@@ -750,6 +751,11 @@ const guideActionText = ref('开始体验');
 // 使用从 useStockOperations 导入的 handleReminderConfirm
 const handleReminderConfirm = (reminder) => {
     return stockHandleReminderConfirm(reminder);
+};
+
+// 刷新荐股列表的包装函数
+const refreshRecommendation = (message) => {
+    return stockRefreshRecommendation(message, userStore, chatHistory);
 };
 
 const handleReminderCancel = (reminder) => {
@@ -868,6 +874,7 @@ const userPerformanceData = computed(() => {
 
 // 个性化引导流程控制
 const showOnboarding = ref(false); // 是否显示引导流程
+const newUserForceStart = ref(false); // 标记是否为新用户注册，需要强制从头开始引导
 
 // 投资偏好设置
 const preferencesDialogVisible = ref(false);
@@ -1919,12 +1926,25 @@ const handleChatStockAction = handleStockAction;
 // 获取智能荐股配置
 const getSmartRecommendationConfig = (message) => {
     const config = getStockListConfig('smartRecommendation');
-    return {
+    const finalConfig = {
         ...config,
         toolbarTitle: '智能荐股推荐',
         timestamp: message.timestamp,
         showToolbar: message.isPersistent
     };
+
+    console.log('🔍 智能荐股配置:', {
+        message: {
+            hasStockInfo: message.hasStockInfo,
+            stockList: message.stockList,
+            stockListLength: message.stockList?.length,
+            isPersistent: message.isPersistent,
+            isRecommendation: message.isRecommendation
+        },
+        config: finalConfig
+    });
+
+    return finalConfig;
 };
 
 // 股票点击事件处理
@@ -2279,6 +2299,7 @@ ${message.interactionData.newsItems.map(news => `- ${news.title}: ${news.summary
 // 个性化引导完成处理
 const onOnboardingComplete = (data) => {
     showOnboarding.value = false;
+    newUserForceStart.value = false; // 重置强制开始标记
 
     // 根据用户偏好显示简单的欢迎消息
     if (data && data.profile) {

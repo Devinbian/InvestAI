@@ -58,9 +58,9 @@ export function useAuthentication() {
           onShowOnboarding();
         }
       }, 500);
-      ElMessage.success(
-        "注册成功！已为您准备了100万资金和10智点用于体验交易功能",
-      );
+      // ElMessage.success(
+      //   "注册成功！已为您准备了100万资金和10智点用于体验交易功能",
+      // );
     } else {
       // 老用户登录成功，检查是否需要继续引导流程
       if (userStore.shouldShowOnboarding()) {
@@ -131,6 +131,11 @@ export function useAuthentication() {
 
       // 跳转到主页面（初始状态）
       await router.push("/");
+
+      // 延迟刷新页面，确保完全重置状态
+      setTimeout(() => {
+        window.location.reload();
+      }, 500);
     } catch (error) {
       // 用户取消退出，不执行任何操作
       console.log("用户取消退出登录");

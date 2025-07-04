@@ -308,6 +308,15 @@ const currentPrices = {
     '000700': 15.80
 };
 
+// 添加调试日志
+console.log('🔍 StockList组件接收到的数据:', {
+    stocks: props.stocks,
+    stocksLength: props.stocks?.length,
+    hasStocks: props.stocks && props.stocks.length > 0,
+    showRecommendIndex: props.showRecommendIndex,
+    actions: props.actions
+});
+
 // 方法
 const getCurrentPrice = (stock) => {
     if (stock.currentPrice) return stock.currentPrice;

@@ -1,5 +1,6 @@
 import { defineStore } from "pinia";
 import { createConversation } from "@/api/api";
+import { chatHistoryManager } from "@/utils/performanceOptimizer";
 
 export const useChatHistoryStore = defineStore("chatHistory", {
   state: () => ({
@@ -85,12 +86,19 @@ export const useChatHistoryStore = defineStore("chatHistory", {
   },
 
   actions: {
-    // 保存到localStorage
+    // 保存到localStorage - 优化版本
     saveChatHistory() {
-      localStorage.setItem(
-        "chatHistoryList",
-        JSON.stringify(this.chatHistoryList),
+      // 限制聊天历史数量和消息数量，防止内存过度占用
+      const optimizedChatList = chatHistoryManager.compressChatData(
+        this.chatHistoryList,
       );
+      const limitedChatList =
+        chatHistoryManager.limitChatHistory(optimizedChatList);
+
+      localStorage.setItem("chatHistoryList", JSON.stringify(limitedChatList));
+
+      // 更新内存中的数据
+      this.chatHistoryList = limitedChatList;
     },
 
     // 生成聊天标题

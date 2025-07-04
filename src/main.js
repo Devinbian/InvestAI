@@ -7,6 +7,8 @@ import App from "./App.vue";
 import router from "./router";
 // 导入 MessageBox z-index 修复样式
 import "./assets/global-messagebox.css";
+// 导入性能优化工具
+import { performanceOptimizer } from "./utils/performanceOptimizer";
 
 // 微信环境检测和处理
 function detectEnvironment() {
@@ -312,3 +314,40 @@ app.use(ElementPlus, {
 });
 
 app.mount("#app");
+
+// 启动性能监控
+if (process.env.NODE_ENV === "development") {
+  performanceOptimizer.startMonitoring();
+
+  // 每60秒输出性能报告，进一步减少频率
+  setInterval(() => {
+    const report = performanceOptimizer.getPerformanceReport();
+    if (report.memoryUsage && report.memoryUsage.current > 150) {
+      console.warn("🚨 内存使用过高:", report.memoryUsage.current + "MB");
+    }
+    if (report.suggestions.length > 0) {
+      console.warn("💡 性能优化建议:", report.suggestions);
+    }
+  }, 60000);
+}
+
+// 生产环境也启用基础监控
+if (process.env.NODE_ENV === "production") {
+  // 监控严重的内存问题
+  if (performance.memory) {
+    setInterval(() => {
+      const memoryMB = Math.round(
+        performance.memory.usedJSHeapSize / 1024 / 1024,
+      );
+      if (memoryMB > 150) {
+        console.warn("🚨 内存使用过高:", memoryMB + "MB");
+        // 触发自动清理
+        performanceOptimizer.triggerMemoryCleanup();
+
+        if (memoryMB > 200) {
+          console.error("🔥 内存使用严重过高，建议刷新页面");
+        }
+      }
+    }, 120000); // 2分钟检查一次
+  }
+}

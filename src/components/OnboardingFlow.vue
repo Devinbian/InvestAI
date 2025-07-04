@@ -39,7 +39,7 @@
             <div class="form-container">
                 <InvestmentPreferencesForm :currentStep="formStep" :preferencesForm="preferences"
                     @update:preferencesForm="handlePreferencesUpdate" @previous="goToPreviousStep" @next="goToNextStep"
-                    @complete="goToNextStep" show-actions />
+                    @complete="handleFormComplete" show-actions />
             </div>
         </div>
 
@@ -116,9 +116,16 @@ const initializeOnboardingProgress = () => {
     const progress = userStore.getOnboardingProgress();
     if (progress && progress.currentStep >= 0 && progress.currentStep < STEPS.length) {
         currentStepIndex.value = progress.currentStep;
-        // 恢复已保存的偏好设置
+        // 恢复已保存的偏好设置，但确保sectors部分是空的
         if (progress.preferences) {
-            Object.assign(preferences, progress.preferences);
+            Object.assign(preferences, {
+                ...progress.preferences,
+                sectors: {
+                    majorCategories: [],
+                    subCategories: [],
+                    categories: []
+                }
+            });
         }
     }
 };
@@ -148,8 +155,9 @@ const preferences = reactive({
         innovation_trial: 3
     },
     sectors: {
-        majorCategories: ['technology', 'emerging'],
-        subCategories: ['internet', 'ai', 'new_energy']
+        majorCategories: [],
+        subCategories: [],
+        categories: []
     }
 });
 
@@ -202,6 +210,14 @@ function handlePreferencesUpdate(newPrefs) {
     Object.assign(preferences, newPrefs);
 }
 
+// 处理表单完成事件
+function handleFormComplete() {
+    console.log('🎯 引导流程表单完成，进入完成页面');
+    // 进入完成页面，显示用户画像
+    currentStepIndex.value = STEPS.length - 1; // 进入 'complete' 步骤
+    userStore.updateOnboardingProgress(currentStepIndex.value, toRaw(preferences));
+}
+
 // --- Final Data Preparation & Emission ---
 const summaryData = computed(() => {
     const riskLabel = getRiskLevelText(preferences.riskLevel);
@@ -221,159 +237,84 @@ const summaryData = computed(() => {
 
 const finishOnboarding = async () => {
     try {
-        // 准备API请求数据 - 确保数据格式正确
+        console.log('🎯 开始完成引导流程');
+
+        // 准备最终的偏好设置数据
         const finalPreferences = toRaw(preferences);
 
-        // 数据验证和格式化
-        const portraitData = {
-            investStyle: String(finalPreferences.riskLevel || 'balanced'),
-            investExperience: String(finalPreferences.experience || 'beginner'),
-            riskTolerance: Number(finalPreferences.userTraits?.risk_tolerance || 3),
-            involveLevel: Number(finalPreferences.userTraits?.active_participation || 3),
-            learnIntention: Number(finalPreferences.userTraits?.learning_willingness || 3),
-            strategyComplexity: Number(finalPreferences.userTraits?.strategy_dependency || 2),
-            tradeFrequency: Number(finalPreferences.userTraits?.trading_frequency || 2),
-            innovationAcceptance: Number(finalPreferences.userTraits?.innovation_trial || 3),
-            focusIndustry: '[]', // 默认空数组的JSON字符串
+        // 将数值格式转换为字符串格式（用于显示和本地存储）
+        const convertRiskLevelToString = (riskLevel) => {
+            const riskLevelMap = {
+                1: 'conservative',
+                2: 'stable',
+                3: 'balanced',
+                4: 'growth',
+                5: 'aggressive'
+            };
+            return riskLevelMap[riskLevel] || 'balanced';
         };
 
-        // 处理关注板块 - 转换为API需要的格式
-        let subCategories = finalPreferences.sectors?.subCategories || [];
-        if (subCategories.length > 0) {
-            try {
-                const { majorSectors, subSectors } = await import('@/config/userPortrait');
+        const convertExperienceToString = (experience) => {
+            const experienceMap = {
+                1: 'beginner',
+                2: 'experienced'
+            };
+            return experienceMap[experience] || 'beginner';
+        };
 
-                // 创建父分类查找表
-                const parentLookup = majorSectors.reduce((acc, sector) => {
-                    acc[sector.value] = {
-                        value: sector.value,
-                        label: sector.label
-                    };
-                    return acc;
-                }, {});
+        // 注意：API调用已经在InvestmentPreferencesForm中完成了，这里只需要完成引导流程
+        console.log('🎯 API调用已在表单中完成，直接完成引导流程');
 
-                // 创建子分类查找表
-                const childLookup = subSectors.reduce((acc, sector) => {
-                    acc[sector.value] = {
-                        value: sector.value,
-                        label: sector.label,
-                        parent: sector.parent
-                    };
-                    return acc;
-                }, {});
+        // 标记引导完成并保存到本地
+        userStore.completeOnboarding(finalPreferences);
 
-                // 按父分类分组，构建树形结构
-                const treeMap = subCategories.reduce((acc, subValue) => {
-                    const child = childLookup[subValue];
-                    if (child) {
-                        const parentValue = child.parent;
-                        const parent = parentLookup[parentValue];
+        // 确保保存到用户信息中的数据格式正确（字符串格式）
+        const finalPreferencesForUser = {
+            ...finalPreferences,
+            riskLevel: typeof finalPreferences.riskLevel === 'number' ? convertRiskLevelToString(finalPreferences.riskLevel) : finalPreferences.riskLevel,
+            experience: typeof finalPreferences.experience === 'number' ? convertExperienceToString(finalPreferences.experience) : finalPreferences.experience
+        };
 
-                        if (parent && !acc[parentValue]) {
-                            acc[parentValue] = {
-                                value: parent.value,
-                                label: parent.label,
-                                children: []
-                            };
-                        }
+        // 同时更新用户信息中的偏好设置，确保智能荐股等功能能正确读取
+        userStore.setUserInfo({
+            ...userStore.userInfo,
+            preferences: finalPreferencesForUser
+        });
 
-                        if (parent) {
-                            acc[parentValue].children.push({
-                                value: child.value,
-                                label: child.label
-                            });
-                        }
-                    }
-                    return acc;
-                }, {});
+        console.log('🎯 引导完成，用户偏好已同步到userStore.userInfo.preferences');
 
-                // 转换为数组并设置到API数据
-                const focusIndustry = Object.values(treeMap);
-                portraitData.focusIndustry = JSON.stringify(focusIndustry);
-
-                // 同时更新本地数据结构
-                finalPreferences.sectors.categories = focusIndustry;
-            } catch (sectorError) {
-                console.warn('处理关注板块时出错:', sectorError);
-                portraitData.focusIndustry = '[]'; // 出错时使用空数组
+        emit('complete', {
+            preferences: {
+                ...finalPreferences,
+                completedAt: new Date().toISOString()
+            },
+            profile: {
+                riskLabel: getRiskLevelText(finalPreferences.riskLevel),
+                experienceLabel: getExperienceText(finalPreferences.experience)
             }
-        }
-
-        console.log('引导流程完成，准备同步数据到API:', portraitData);
-
-        // 调用API保存到服务器
-        const { updateUserPortrait } = await import('@/api/api');
-        const res = await updateUserPortrait(portraitData);
-
-        console.log('API调用响应:', res);
-
-        // 检查API响应
-        if (res && res.data && res.data.success) {
-            console.log('引导数据API同步成功');
-
-            // API保存成功，标记引导完成并保存到本地
-            userStore.completeOnboarding(finalPreferences);
-
-            // 同时更新用户信息中的偏好设置，确保智能荐股等功能能正确读取
-            userStore.setUserInfo({
-                ...userStore.userInfo,
-                preferences: finalPreferences
-            });
-
-            console.log('引导完成，用户偏好已同步到userStore.userInfo.preferences');
-
-            emit('complete', {
-                preferences: {
-                    ...finalPreferences,
-                    completedAt: new Date().toISOString()
-                },
-                profile: {
-                    riskLabel: getRiskLevelText(finalPreferences.riskLevel),
-                    experienceLabel: getExperienceText(finalPreferences.experience)
-                }
-            });
-        } else {
-            // API保存失败，但仍然保存到本地
-            console.warn('引导流程数据API保存失败，但已保存到本地:', res);
-
-            // 即使API失败，也要完成引导流程
-            userStore.completeOnboarding(finalPreferences);
-
-            // 确保本地数据同步
-            userStore.setUserInfo({
-                ...userStore.userInfo,
-                preferences: finalPreferences
-            });
-
-            // 显示用户友好的错误提示
-            ElMessage.warning('数据同步失败，但您的偏好已保存到本地');
-
-            emit('complete', {
-                preferences: {
-                    ...finalPreferences,
-                    completedAt: new Date().toISOString()
-                },
-                profile: {
-                    riskLabel: getRiskLevelText(finalPreferences.riskLevel),
-                    experienceLabel: getExperienceText(finalPreferences.experience)
-                }
-            });
-        }
+        });
     } catch (error) {
-        console.error('引导流程完成时保存数据失败:', error);
+        console.error('引导流程完成时出错:', error);
 
-        // 即使API调用失败，也要完成引导流程，确保用户体验
+        // 即使出错，也要完成引导流程，确保用户体验
         const finalPreferences = toRaw(preferences);
         userStore.completeOnboarding(finalPreferences);
 
-        // 确保本地数据同步
+        // 确保保存到用户信息中的数据格式正确（字符串格式）
+        const finalPreferencesForUser = {
+            ...finalPreferences,
+            riskLevel: typeof finalPreferences.riskLevel === 'number' ? convertRiskLevelToString(finalPreferences.riskLevel) : finalPreferences.riskLevel,
+            experience: typeof finalPreferences.experience === 'number' ? convertExperienceToString(finalPreferences.experience) : finalPreferences.experience
+        };
+
+        // 确保本地数据同步，使用统一的字符串格式
         userStore.setUserInfo({
             ...userStore.userInfo,
-            preferences: finalPreferences
+            preferences: finalPreferencesForUser
         });
 
         // 显示用户友好的错误提示
-        ElMessage.warning('数据同步失败，但您的偏好已保存到本地');
+        ElMessage.warning('引导流程完成，但数据同步可能存在问题');
 
         emit('complete', {
             preferences: {
@@ -504,38 +445,93 @@ onMounted(() => {
 
 // --- Helper Functions for Summary Page ---
 function getExperienceText(experience) {
-    const map = {
+    // 数值格式映射
+    if (experience === 1) return '投资新手';
+    if (experience === 2) return '有投资经验';
+
+    // 字符串格式映射
+    const stringMap = {
         'beginner': '投资新手',
         'experienced': '有投资经验'
     };
-    return map[experience] || '未设置';
+    return stringMap[experience] || '未设置';
 }
 
 function getExperienceIcon(experience) {
-    const map = {
+    // 数值格式映射
+    if (experience === 1) return '🌱';
+    if (experience === 2) return '📈';
+
+    // 字符串格式映射
+    const stringMap = {
         'beginner': '🌱',
         'experienced': '📈'
     };
-    return map[experience] || '🤔';
+    return stringMap[experience] || '🤔';
 }
 
 function getRiskLevelText(level) {
-    const map = {
-        'conservative': '保守型', 'stable': '稳健型', 'balanced': '平衡型',
-        'growth': '成长型', 'aggressive': '激进型'
+    // 数值格式映射
+    const numberMap = {
+        1: '求稳型',
+        2: '稳健型',
+        3: '均衡型',
+        4: '成长型',
+        5: '进取型'
     };
-    return map[level] || '未设置';
+
+    // 字符串格式映射
+    const stringMap = {
+        'conservative': '求稳型',
+        'stable': '稳健型',
+        'balanced': '均衡型',
+        'growth': '成长型',
+        'aggressive': '进取型'
+    };
+
+    // 先尝试数值格式
+    if (typeof level === 'number' && numberMap[level]) {
+        return numberMap[level];
+    }
+
+    // 再尝试字符串格式
+    if (typeof level === 'string' && stringMap[level]) {
+        return stringMap[level];
+    }
+
+    return '未设置';
 }
 
 function getRiskLevelIcon(level) {
-    const map = {
+    // 数值格式映射
+    const numberMap = {
+        1: '🛡️',
+        2: '🏦',
+        3: '⚖️',
+        4: '🚀',
+        5: '⚡'
+    };
+
+    // 字符串格式映射
+    const stringMap = {
         'conservative': '🛡️',
         'stable': '🏦',
         'balanced': '⚖️',
         'growth': '🚀',
         'aggressive': '⚡'
     };
-    return map[level] || '🤔';
+
+    // 先尝试数值格式
+    if (typeof level === 'number' && numberMap[level]) {
+        return numberMap[level];
+    }
+
+    // 再尝试字符串格式
+    if (typeof level === 'string' && stringMap[level]) {
+        return stringMap[level];
+    }
+
+    return '🤔';
 }
 
 const sectorLabels = {
@@ -585,6 +581,35 @@ function getTraitDescription(traitId, value) {
     const option = trait.find(opt => opt.value === value);
     return option ? option.desc : '';
 }
+
+// 清理可能存在的旧引导数据
+const clearOldOnboardingData = () => {
+    // 清理localStorage中的引导状态，确保用户从头开始
+    const onboardingStatus = localStorage.getItem('onboardingStatus');
+    if (onboardingStatus) {
+        try {
+            const status = JSON.parse(onboardingStatus);
+            if (status.preferences && status.preferences.sectors) {
+                // 清空sectors数据
+                status.preferences.sectors = {
+                    majorCategories: [],
+                    subCategories: [],
+                    categories: []
+                };
+                localStorage.setItem('onboardingStatus', JSON.stringify(status));
+                userStore.onboardingStatus = status;
+            }
+        } catch (error) {
+            console.warn('Failed to parse onboarding status:', error);
+        }
+    }
+};
+
+// 组件挂载时执行初始化
+onMounted(() => {
+    clearOldOnboardingData();
+    initializeOnboardingProgress();
+});
 </script>
 
 <style scoped>

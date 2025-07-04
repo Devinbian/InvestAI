@@ -79,21 +79,49 @@ export function useStockOperations() {
     });
   };
 
-  // 用户偏好文本转换函数
+  // 用户偏好文本转换函数 - 支持数值和字符串格式
   const getRiskLevelText = (level) => {
-    const riskOptions = [
-      { riskLevel: 1, title: "保守型" },
-      { riskLevel: 2, title: "稳健型" },
-      { riskLevel: 3, title: "平衡型" },
-      { riskLevel: 4, title: "成长型" },
-      { riskLevel: 5, title: "激进型" },
-    ];
-    const riskOption = riskOptions.find((option) => option.riskLevel === level);
-    return riskOption ? riskOption.title : "未设置";
+    // 数值格式映射
+    const riskLevelMap = {
+      1: "求稳型",
+      2: "稳健型",
+      3: "均衡型",
+      4: "成长型",
+      5: "进取型",
+    };
+
+    // 字符串格式映射
+    const riskValueMap = {
+      conservative: "求稳型",
+      stable: "稳健型",
+      balanced: "均衡型",
+      growth: "成长型",
+      aggressive: "进取型",
+    };
+
+    // 先尝试数值格式
+    if (typeof level === "number" && riskLevelMap[level]) {
+      return riskLevelMap[level];
+    }
+
+    // 再尝试字符串格式
+    if (typeof level === "string" && riskValueMap[level]) {
+      return riskValueMap[level];
+    }
+
+    return "未设置";
   };
 
   const getExperienceText = (experience) => {
-    return experience === 1 ? "新手" : experience === 2 ? "有经验" : "未设置";
+    // 数值格式映射
+    if (experience === 1) return "投资新手";
+    if (experience === 2) return "有投资经验";
+
+    // 字符串格式映射
+    if (experience === "beginner") return "投资新手";
+    if (experience === "experienced") return "有投资经验";
+
+    return "未设置";
   };
 
   const getFocusIndustryText = (focusIndustry) => {
@@ -174,16 +202,36 @@ export function useStockOperations() {
     }
 
     try {
+      console.log("🔍 智能推荐API调用参数:", {
+        pageNo: 1,
+        pageSize: 3,
+        conversationId: conversationId,
+        userInfo: userStore.userInfo,
+        hasPreferences: !!userStore.userInfo?.preferences,
+      });
+
       let response = await recommendStock({
         pageNo: 1,
         pageSize: 3,
         conversationId: conversationId,
       });
 
+      console.log("🔍 智能推荐API响应:", response);
+
       // 在获取数据后再次检查是否被中断
       if (isStillGenerating && !isStillGenerating()) {
         console.log("🚀 智能荐股 - 在数据处理前被中断");
         return;
+      }
+
+      // 检查响应是否有效
+      if (!response) {
+        throw new Error("API响应为空");
+      }
+
+      // 检查是否有错误信息
+      if (response.code && response.code !== "B0001") {
+        throw new Error(response.message || "API调用失败");
       }
 
       if (response && response.data && response.data.success) {
@@ -233,25 +281,75 @@ export function useStockOperations() {
           }, 300);
         }
       } else {
+        // API返回成功但没有数据的情况
+        console.log("智能荐股API返回但无有效数据:", response);
         const lastMessage = chatHistory.value[chatHistory.value.length - 1];
-        if (lastMessage.content) {
-          lastMessage.content += `\n[已终止，${response.exceptionTip || "服务器繁忙"}]`;
-        } else {
-          lastMessage.content = `[已终止，${response.exceptionTip || "服务器繁忙"}]`;
-        }
-        lastMessage.isGenerating = false; // 错误时取消生成状态
+        const errorMsg =
+          response?.data?.message ||
+          response?.message ||
+          "暂时无法获取推荐数据";
+
+        lastMessage.content = `抱歉，${errorMsg}。请稍后再试或联系客服。
+
+📝 **您可以尝试：**
+- 刷新页面后重试
+- 检查网络连接
+- 稍后再次尝试
+
+💡 **替代方案：**
+- 查看市场热门股票
+- 浏览行业分析报告
+- 使用自选股功能`;
+
+        lastMessage.isGenerating = false;
+        lastMessage.hasError = true;
         chatHistory.value = [...chatHistory.value];
+
+        ElMessage.warning("智能推荐暂时不可用，请稍后再试");
       }
     } catch (err) {
-      console.error("智能荐股API调用失败:", JSON.stringify(err));
+      console.error("智能荐股API调用失败:", err);
       const lastMessage = chatHistory.value[chatHistory.value.length - 1];
-      if (lastMessage.content) {
-        lastMessage.content += `\n[已终止，${err.message || "服务器繁忙"}]`;
+
+      // 根据错误类型提供不同的处理
+      let errorMessage = "智能推荐服务暂时不可用";
+      let userFriendlyMessage = "";
+
+      if (err.message && err.message.includes("500")) {
+        errorMessage = "服务器内部错误";
+        userFriendlyMessage = `${errorMessage}，我们的技术团队已收到通知。
+
+🔧 **临时解决方案：**
+- 可以先查看市场热门股票
+- 使用自选股功能关注感兴趣的股票
+- 稍后再次尝试智能推荐
+
+📞 **需要帮助？**
+- 联系在线客服
+- 查看帮助文档`;
+      } else if (err.message && err.message.includes("网络")) {
+        errorMessage = "网络连接问题";
+        userFriendlyMessage = `${errorMessage}，请检查您的网络连接。
+
+🌐 **请尝试：**
+- 检查网络连接
+- 刷新页面重试
+- 切换网络环境`;
       } else {
-        lastMessage.content = `[已终止，${err.message || "服务器繁忙"}]`;
+        userFriendlyMessage = `${errorMessage}，请稍后再试。
+
+💡 **您可以：**
+- 稍后重新尝试
+- 查看其他功能
+- 联系客服获取帮助`;
       }
-      lastMessage.isGenerating = false; // 错误时取消生成状态
+
+      lastMessage.content = userFriendlyMessage;
+      lastMessage.isGenerating = false;
+      lastMessage.hasError = true;
       chatHistory.value = [...chatHistory.value];
+
+      ElMessage.error(errorMessage);
     }
   };
 

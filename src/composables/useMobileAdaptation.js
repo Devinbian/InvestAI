@@ -2,6 +2,7 @@ import { ref, nextTick, onMounted, onUnmounted } from "vue";
 import { useResponsiveBreakpoints } from "./useResponsiveBreakpoints";
 import { useMobileLayout } from "./useMobileLayout";
 import { useMobileMenu } from "./useMobileMenu";
+import { timerManager } from "@/utils/performanceOptimizer";
 
 /**
  * 移动端适配逻辑的composable（重构版）
@@ -17,6 +18,11 @@ export function useMobileAdaptation() {
   // 保持向后兼容的响应式状态
   const isManualDebug = ref(false);
 
+  // 缓存和防抖相关状态
+  const lastCheckTime = ref(0);
+  const lastViewportSize = ref({ width: 0, height: 0 });
+  const CHECK_DEBOUNCE_DELAY = 150;
+
   // 向后兼容的方法包装
   const setDynamicViewportHeight = layout.setDynamicViewportHeight;
   const showMobileUserMenu = menu.showMobileUserMenu;
@@ -24,8 +30,31 @@ export function useMobileAdaptation() {
   const handleMobileCommand = menu.handleMobileCommand;
   const toggleMobileSidebar = menu.toggleMobileSidebar;
 
-  // 检测移动端视图（保持向后兼容）
+  // 检测移动端视图（优化版本，避免重复调用）
   const checkMobileView = () => {
+    const now = Date.now();
+    const currentSize = {
+      width: window.innerWidth,
+      height: window.innerHeight,
+    };
+
+    // 防抖：如果距离上次检查时间过短，跳过
+    if (now - lastCheckTime.value < CHECK_DEBOUNCE_DELAY) {
+      return;
+    }
+
+    // 缓存：如果视口大小没有变化，跳过
+    if (
+      currentSize.width === lastViewportSize.value.width &&
+      currentSize.height === lastViewportSize.value.height
+    ) {
+      return;
+    }
+
+    // 更新缓存
+    lastCheckTime.value = now;
+    lastViewportSize.value = currentSize;
+
     // 现在由useResponsiveBreakpoints自动处理
     console.log("移动端检测:", {
       windowWidth: breakpoints.currentWidth.value,
@@ -60,7 +89,7 @@ export function useMobileAdaptation() {
     layout.resetContentPosition();
   };
 
-  // 确保移动端修复正确应用（简化版）
+  // 确保移动端修复正确应用（优化版本）
   const ensureMobileFixApplied = (isChatMode = false) => {
     if (!breakpoints.isMobileView.value || isChatMode) return;
 
@@ -69,12 +98,20 @@ export function useMobileAdaptation() {
       return;
     }
 
-    // 使用新的布局管理
-    layout.resetContentPosition();
-    console.log("移动端布局已重置");
+    // 使用定时器管理器防抖
+    timerManager.clear("mobile-fix-ensure");
+    timerManager.create(
+      "mobile-fix-ensure",
+      () => {
+        // 使用新的布局管理
+        layout.resetContentPosition();
+        console.log("移动端布局已重置");
+      },
+      50,
+    );
   };
 
-  // 移动端聊天框修复（使用新的布局管理）
+  // 移动端聊天框修复（优化版本，避免重复调用）
   const fixMobileChatBox = (isChatMode = false) => {
     console.log("fixMobileChatBox被调用", {
       isMobileView: breakpoints.isMobileView.value,
@@ -87,8 +124,16 @@ export function useMobileAdaptation() {
       return;
     }
 
-    // 使用新的布局管理
-    layout.fixMobileChatBox(isChatMode);
+    // 使用定时器管理器防抖
+    timerManager.clear("mobile-chat-fix");
+    timerManager.create(
+      "mobile-chat-fix",
+      () => {
+        // 使用新的布局管理
+        layout.fixMobileChatBox(isChatMode);
+      },
+      100,
+    );
   };
 
   // 重置移动端布局（使用新的布局管理）

@@ -200,21 +200,43 @@ const handleLogin = async () => {
 
                 if (res && res.data && res.data.success) {
                     let userPortrait = res.data.data.userPortrait || {};
+
                     // 关注板块
                     let sectors = JSON.parse(res.data.data.userPortrait?.focusIndustry || null) || [];
                     let majorCategories = [];
                     let subCategories = [];
                     sectors.forEach(item => {
-                        majorCategories.push({value: item.value, label: item.label});
+                        majorCategories.push({ value: item.value, label: item.label });
                         subCategories = subCategories.concat(item.children);
                     });
-                    let userInfo = {
-                        nickname: res.data.data.nickname,
-                        isNewUser: isNewUser,
-                        token: res.data.data.token,
-                        preferences: {
-                            experience: userPortrait.investExperience, // 投资经验
-                            riskLevel: userPortrait.investStyle, // 投资风格
+
+                    // 数据格式转换函数
+                    const convertRiskLevelToString = (riskLevel) => {
+                        const riskLevelMap = {
+                            1: 'conservative',
+                            2: 'stable',
+                            3: 'balanced',
+                            4: 'growth',
+                            5: 'aggressive'
+                        };
+                        return typeof riskLevel === 'number' ? riskLevelMap[riskLevel] : riskLevel;
+                    };
+
+                    const convertExperienceToString = (experience) => {
+                        const experienceMap = {
+                            1: 'beginner',
+                            2: 'experienced'
+                        };
+                        return typeof experience === 'number' ? experienceMap[experience] : experience;
+                    };
+
+                    // 对于新用户，如果没有有效的偏好设置数据，不要设置preferences
+                    let preferences = null;
+                    if (!isNewUser || (userPortrait.investExperience && userPortrait.investStyle)) {
+                        // 只有老用户或者有有效偏好数据的新用户才设置preferences
+                        preferences = {
+                            experience: convertExperienceToString(userPortrait.investExperience), // 投资经验
+                            riskLevel: convertRiskLevelToString(userPortrait.investStyle), // 投资风格
                             userTraits: {
                                 active_participation: userPortrait.involveLevel,
                                 innovation_trial: userPortrait.innovationAcceptance,
@@ -228,7 +250,14 @@ const handleLogin = async () => {
                                 subCategories: subCategories,
                                 categories: sectors
                             }
-                        }
+                        };
+                    }
+
+                    let userInfo = {
+                        nickname: res.data.data.nickname,
+                        isNewUser: isNewUser,
+                        token: res.data.data.token,
+                        preferences: preferences
                     };
                     userStore.setUserInfo(userInfo);
                     userStore.setToken(res.data.data.token);

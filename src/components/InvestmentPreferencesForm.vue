@@ -8,10 +8,9 @@
             <div class="step-content-scrollable">
                 <div class="experience-options">
                     <div v-for="option in experienceOptions" :key="option.value" class="experience-option"
-                        :class="{ selected: localPreferencesForm.experience === option.value }"
-                        @click="handleExperienceSelect(option.value)">
+                        :class="{ selected: isExperienceSelected(option) }" @click="handleExperienceSelect(option.id)">
                         <div class="option-radio">
-                            <div class="radio-dot" :class="{ checked: localPreferencesForm.experience === option.value }">
+                            <div class="radio-dot" :class="{ checked: isExperienceSelected(option) }">
                             </div>
                         </div>
                         <div class="experience-content">
@@ -45,11 +44,9 @@
             <div class="step-content-scrollable">
                 <div class="risk-options">
                     <div v-for="option in riskOptions" :key="option.riskLevel" class="risk-option"
-                        :class="{ selected: localPreferencesForm.riskLevel === option.riskLevel }"
-                        @click="handleRiskLevelSelect(option.riskLevel)">
+                        :class="{ selected: isRiskLevelSelected(option) }" @click="handleRiskLevelSelect(option.value)">
                         <div class="option-radio">
-                            <div class="radio-dot"
-                                :class="{ checked: localPreferencesForm.riskLevel === option.riskLevel }">
+                            <div class="radio-dot" :class="{ checked: isRiskLevelSelected(option) }">
                             </div>
                         </div>
                         <div class="option-content">
@@ -383,8 +380,8 @@ const isTablet = computed(() => windowWidth.value >= 768 && windowWidth.value < 
 // Store
 const userStore = useUserStore();
 
-// Local reactive state for the form
-const localPreferencesForm = useUserStore().preferences || reactive({
+// Local reactive state for the form - 创建新的响应式对象
+const localPreferencesForm = reactive({
     riskLevel: '',
     experience: '',
     userTraits: {
@@ -401,6 +398,35 @@ const localPreferencesForm = useUserStore().preferences || reactive({
         categories: []
     }
 });
+
+// 初始化时从 userStore 获取数据
+const initializeFormData = () => {
+    const userPreferences = userStore.preferences;
+    if (userPreferences) {
+        // 只复制数据，不直接引用，但对于新用户确保sectors部分是空的
+        Object.assign(localPreferencesForm, {
+            riskLevel: userPreferences.riskLevel || '',
+            experience: userPreferences.experience || '',
+            userTraits: {
+                risk_tolerance: userPreferences.userTraits?.risk_tolerance || 3,
+                active_participation: userPreferences.userTraits?.active_participation || 3,
+                learning_willingness: userPreferences.userTraits?.learning_willingness || 3,
+                strategy_dependency: userPreferences.userTraits?.strategy_dependency || 2,
+                trading_frequency: userPreferences.userTraits?.trading_frequency || 2,
+                innovation_trial: userPreferences.userTraits?.innovation_trial || 3
+            },
+            sectors: {
+                // 对于引导流程，始终从空开始，让用户重新选择
+                majorCategories: [],
+                subCategories: [],
+                categories: []
+            }
+        });
+    }
+};
+
+// 立即初始化
+initializeFormData();
 
 // Sync from parent to local state
 watch(() => props.preferencesForm, (newValue) => {
@@ -470,6 +496,20 @@ function handleNext() {
     }
 }
 
+// 检查投资经验是否选中
+function isExperienceSelected(option) {
+    // 支持字符串和数字格式的匹配
+    return localPreferencesForm.experience === option.id ||
+        localPreferencesForm.experience === option.value;
+}
+
+// 检查风险偏好是否选中
+function isRiskLevelSelected(option) {
+    // 支持字符串和数字格式的匹配
+    return localPreferencesForm.riskLevel === option.value ||
+        localPreferencesForm.riskLevel === option.riskLevel;
+}
+
 function handleExperienceSelect(experienceId) {
     localPreferencesForm.experience = experienceId;
 }
@@ -477,6 +517,27 @@ function handleExperienceSelect(experienceId) {
 function handleRiskLevelSelect(riskLevel) {
     localPreferencesForm.riskLevel = riskLevel;
 }
+
+// 将数值格式转换为字符串格式（API需要）
+const convertRiskLevelToString = (riskLevel) => {
+    const riskLevelMap = {
+        1: 'conservative',
+        2: 'stable',
+        3: 'balanced',
+        4: 'growth',
+        5: 'aggressive'
+    };
+    return riskLevelMap[riskLevel] || 'balanced';
+};
+
+// 将数值格式转换为字符串格式（API需要）
+const convertExperienceToString = (experience) => {
+    const experienceMap = {
+        1: 'beginner',
+        2: 'experienced'
+    };
+    return experienceMap[experience] || 'beginner';
+};
 
 /**
  * 根据子分类value数组生成包含父子关系的结构
@@ -540,31 +601,69 @@ const handlePreferencesSubmit = async () => {
         completedAt: new Date().toISOString()
     };
 
-    // 准备API请求数据
+    // 将字符串格式转换为数值格式（API需要）
+    const convertRiskLevelToNumber = (riskLevel) => {
+        if (typeof riskLevel === 'number') return riskLevel;
+        const riskLevelMap = {
+            'conservative': 1,
+            'stable': 2,
+            'balanced': 3,
+            'growth': 4,
+            'aggressive': 5
+        };
+        return riskLevelMap[riskLevel] || 3;
+    };
+
+    const convertExperienceToNumber = (experience) => {
+        if (typeof experience === 'number') return experience;
+        const experienceMap = {
+            'beginner': 1,
+            'experienced': 2
+        };
+        return experienceMap[experience] || 1;
+    };
+
+    // 准备API请求数据 - 修复：investStyle和investExperience传递数值
     const portraitData = {
-        investStyle: preferences.riskLevel,
-        investExperience: preferences.experience,
-        riskTolerance: preferences.userTraits.risk_tolerance,
-        involveLevel: preferences.userTraits.active_participation,
-        learnIntention: preferences.userTraits.learning_willingness,
-        strategyComplexity: preferences.userTraits.strategy_dependency,
-        tradeFrequency: preferences.userTraits.trading_frequency,
-        innovationAcceptance: preferences.userTraits.innovation_trial,
+        investStyle: convertRiskLevelToNumber(preferences.riskLevel),
+        investExperience: convertExperienceToNumber(preferences.experience),
+        riskTolerance: parseInt(preferences.userTraits.risk_tolerance || 3),
+        involveLevel: parseInt(preferences.userTraits.active_participation || 3),
+        learnIntention: parseInt(preferences.userTraits.learning_willingness || 3),
+        strategyComplexity: parseInt(preferences.userTraits.strategy_dependency || 2),
+        tradeFrequency: parseInt(preferences.userTraits.trading_frequency || 2),
+        innovationAcceptance: parseInt(preferences.userTraits.innovation_trial || 3),
         focusIndustry: '',
     };
     // 处理关注板块
     let subCategories = preferences.sectors.subCategories || [];
-    let focusIndustry = formatSectorTree(subCategories);
-    portraitData.focusIndustry = JSON.stringify(focusIndustry);
-    preferences.sectors.categories = focusIndustry;
+    if (subCategories.length > 0) {
+        try {
+            let focusIndustry = formatSectorTree(subCategories);
+            portraitData.focusIndustry = JSON.stringify(focusIndustry);
+            preferences.sectors.categories = focusIndustry;
+        } catch (error) {
+            console.warn('处理关注板块时出错:', error);
+            portraitData.focusIndustry = '[]'; // 出错时使用空数组
+        }
+    } else {
+        portraitData.focusIndustry = '[]'; // 没有选择板块时使用空数组
+    }
 
     let res = await updateUserPortrait(portraitData);
 
     if (res && res.data && res.data.success) {
+        // 确保保存到用户信息中的数据格式正确（字符串格式）
+        const finalPreferences = {
+            ...preferences,
+            riskLevel: convertRiskLevelToString(preferences.riskLevel),
+            experience: convertExperienceToString(preferences.experience)
+        };
+
         const currentUser = userStore.userInfo;
         userStore.setUserInfo({
             ...currentUser,
-            preferences
+            preferences: finalPreferences
         });
 
         localStorage.setItem('onboardingCompleted', 'true');
@@ -687,14 +786,35 @@ const toggleSubSectorFromSearch = (subOption) => {
 };
 
 const getRiskLevelText = (level) => {
-    const map = {
-        'conservative': '保守型',
-        'stable': '稳健型',
-        'balanced': '平衡型',
-        'growth': '成长型',
-        'aggressive': '激进型'
+    // 数值格式映射
+    const riskLevelMap = {
+        1: '求稳型',
+        2: '稳健型',
+        3: '均衡型',
+        4: '成长型',
+        5: '进取型'
     };
-    return map[level] || '未设置';
+
+    // 字符串格式映射
+    const riskValueMap = {
+        'conservative': '求稳型',
+        'stable': '稳健型',
+        'balanced': '均衡型',
+        'growth': '成长型',
+        'aggressive': '进取型'
+    };
+
+    // 先尝试数值格式
+    if (typeof level === 'number' && riskLevelMap[level]) {
+        return riskLevelMap[level];
+    }
+
+    // 再尝试字符串格式
+    if (typeof level === 'string' && riskValueMap[level]) {
+        return riskValueMap[level];
+    }
+
+    return '未设置';
 };
 
 // 窗口大小监听

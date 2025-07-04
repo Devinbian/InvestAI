@@ -82,17 +82,20 @@ export const useUserStore = defineStore("user", {
       localStorage.removeItem("aiTradingRecords");
       localStorage.removeItem("pendingOrders");
 
-      // 只有在明确退出登录且用户未完成引导时才清空引导状态
-      if (clearOnboarding && !this.onboardingStatus.completed) {
+      // 引导状态处理逻辑：
+      // 1. 如果用户已完成引导，退出时可以选择性清除引导状态
+      // 2. 如果用户未完成引导，保留引导进度，下次登录时继续
+      if (clearOnboarding && this.onboardingStatus.completed) {
+        // 用户已完成引导，可以清除引导状态（避免重复引导）
         localStorage.removeItem("onboardingStatus");
-        // 重置引导状态
+        localStorage.removeItem("onboardingCompleted");
         this.onboardingStatus = {
           completed: false,
           currentStep: 0,
           preferences: null,
         };
       }
-      // 如果用户已完成引导，即使主动退出也保留引导状态，避免重复引导
+      // 如果用户未完成引导，保留引导状态和进度，下次登录时继续
     },
 
     // 自选股管理
@@ -632,23 +635,36 @@ export const useUserStore = defineStore("user", {
     },
 
     shouldShowOnboarding() {
-      // 只有登录用户且未完成引导才显示引导流程
-      return this.isLoggedIn && !this.onboardingStatus.completed;
+      // 必须是登录用户
+      if (!this.isLoggedIn) {
+        return false;
+      }
+
+      // 如果引导状态明确显示已完成，不显示引导
+      if (this.onboardingStatus.completed) {
+        return false;
+      }
+
+      // 如果用户信息中有完整的偏好设置，说明已完成引导
+      if (this.hasUserPreferences()) {
+        return false;
+      }
+
+      // 其他情况显示引导流程
+      return true;
     },
 
     // 检查用户是否有偏好设置
     hasUserPreferences() {
-      // 优先检查userInfo中的preferences
-      if (this.userInfo?.preferences?.riskLevel) {
+      // 优先检查userInfo中的preferences（完整的偏好设置）
+      if (
+        this.userInfo?.preferences?.riskLevel &&
+        this.userInfo?.preferences?.experience
+      ) {
         return true;
       }
 
-      // 其次检查引导状态中的preferences
-      if (this.onboardingStatus?.preferences?.riskLevel) {
-        return true;
-      }
-
-      // 最后检查旧版本的标记
+      // 检查旧版本的标记
       if (localStorage.getItem("onboardingCompleted") === "true") {
         return true;
       }
@@ -658,25 +674,13 @@ export const useUserStore = defineStore("user", {
 
     // 获取用户偏好设置（优先级：userInfo > onboardingStatus > null）
     getUserPreferences() {
-      console.log("=== getUserPreferences 调试信息 ===");
-      console.log("userInfo:", this.userInfo);
-      console.log("onboardingStatus:", this.onboardingStatus);
-
       // 优先从userInfo.preferences获取（引导完成后的数据）
       if (this.userInfo?.preferences?.riskLevel) {
-        console.log(
-          "从userInfo.preferences获取偏好设置:",
-          this.userInfo.preferences,
-        );
         return this.userInfo.preferences;
       }
 
       // 其次从onboardingStatus.preferences获取（引导过程中的数据）
       if (this.onboardingStatus?.preferences?.riskLevel) {
-        console.log(
-          "从onboardingStatus.preferences获取偏好设置:",
-          this.onboardingStatus.preferences,
-        );
         return this.onboardingStatus.preferences;
       }
 
@@ -684,17 +688,10 @@ export const useUserStore = defineStore("user", {
       const localUserInfo = localStorage.getItem("userInfo");
       const localOnboardingStatus = localStorage.getItem("onboardingStatus");
 
-      console.log("localStorage userInfo:", localUserInfo);
-      console.log("localStorage onboardingStatus:", localOnboardingStatus);
-
       if (localUserInfo) {
         try {
           const parsedUserInfo = JSON.parse(localUserInfo);
           if (parsedUserInfo?.preferences?.riskLevel) {
-            console.log(
-              "从localStorage userInfo获取偏好设置:",
-              parsedUserInfo.preferences,
-            );
             return parsedUserInfo.preferences;
           }
         } catch (error) {
@@ -706,10 +703,6 @@ export const useUserStore = defineStore("user", {
         try {
           const parsedOnboardingStatus = JSON.parse(localOnboardingStatus);
           if (parsedOnboardingStatus?.preferences?.riskLevel) {
-            console.log(
-              "从localStorage onboardingStatus获取偏好设置:",
-              parsedOnboardingStatus.preferences,
-            );
             return parsedOnboardingStatus.preferences;
           }
         } catch (error) {
@@ -717,7 +710,6 @@ export const useUserStore = defineStore("user", {
         }
       }
 
-      console.log("没有找到用户偏好设置");
       return null;
     },
   },

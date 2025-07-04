@@ -117,7 +117,9 @@ export function useAuthentication() {
       );
 
       // 用户确认退出，执行退出操作
-      userStore.logout();
+      // 如果用户未完成引导流程，保留引导状态
+      const shouldClearOnboarding = userStore.onboardingStatus.completed;
+      userStore.logout(shouldClearOnboarding);
 
       // 重置页面状态
       if (onResetPageState) {
@@ -129,11 +131,6 @@ export function useAuthentication() {
 
       // 跳转到主页面（初始状态）
       await router.push("/");
-
-      // 页面刷新，确保完全重置状态
-      setTimeout(() => {
-        window.location.reload();
-      }, 500);
     } catch (error) {
       // 用户取消退出，不执行任何操作
       console.log("用户取消退出登录");

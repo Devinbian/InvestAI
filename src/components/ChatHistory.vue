@@ -209,9 +209,10 @@
 </template>
 
 <script setup>
-import { ref, computed, watch } from 'vue';
+import { ref, computed, watch, onMounted, onUnmounted } from 'vue';
 import { ElMessage, ElMessageBox } from 'element-plus';
 import { useTouchHandler } from '@/composables/useTouchHandler';
+import { timerManager } from '@/utils/performanceOptimizer';
 
 // 定义props和emits
 const props = defineProps({
@@ -243,7 +244,21 @@ const renamingChat = ref(null);
 const isSearchFocused = ref(false);
 
 // 从localStorage获取聊天历史
-const chatHistoryList = ref(JSON.parse(localStorage.getItem('chatHistoryList') || '[]'));
+const chatHistoryList = ref([]);
+
+// 初始化聊天历史数据
+const initializeChatHistory = () => {
+    try {
+        const stored = localStorage.getItem('chatHistoryList');
+        chatHistoryList.value = stored ? JSON.parse(stored) : [];
+    } catch (error) {
+        console.warn('Failed to parse chat history from localStorage:', error);
+        chatHistoryList.value = [];
+    }
+};
+
+// 立即初始化
+initializeChatHistory();
 
 
 
@@ -259,11 +274,11 @@ const onSearchBlur = () => {
 // 计算属性 - 过滤后的聊天记录
 const filteredChats = computed(() => {
     if (!searchKeyword.value) {
-        return chatHistoryList.value;
+        return chatHistoryList.value || [];
     }
-    return chatHistoryList.value.filter(chat =>
-        chat.title.toLowerCase().includes(searchKeyword.value.toLowerCase()) ||
-        chat.messages.some(msg => msg.content && msg.content.toLowerCase().includes(searchKeyword.value.toLowerCase()))
+    return (chatHistoryList.value || []).filter(chat =>
+        chat.title && chat.title.toLowerCase().includes(searchKeyword.value.toLowerCase()) ||
+        chat.messages && chat.messages.some(msg => msg.content && msg.content.toLowerCase().includes(searchKeyword.value.toLowerCase()))
     );
 });
 
@@ -271,7 +286,8 @@ const filteredChats = computed(() => {
 const todayChats = computed(() => {
     const today = new Date();
     today.setHours(0, 0, 0, 0);
-    return filteredChats.value.filter(chat => {
+    return (filteredChats.value || []).filter(chat => {
+        if (!chat.lastMessage) return false;
         const chatDate = new Date(chat.lastMessage);
         chatDate.setHours(0, 0, 0, 0);
         return chatDate.getTime() === today.getTime();
@@ -282,7 +298,8 @@ const yesterdayChats = computed(() => {
     const yesterday = new Date();
     yesterday.setDate(yesterday.getDate() - 1);
     yesterday.setHours(0, 0, 0, 0);
-    return filteredChats.value.filter(chat => {
+    return (filteredChats.value || []).filter(chat => {
+        if (!chat.lastMessage) return false;
         const chatDate = new Date(chat.lastMessage);
         chatDate.setHours(0, 0, 0, 0);
         return chatDate.getTime() === yesterday.getTime();
@@ -299,7 +316,8 @@ const thisWeekChats = computed(() => {
     yesterday.setDate(yesterday.getDate() - 1);
     yesterday.setHours(23, 59, 59, 999);
 
-    return filteredChats.value.filter(chat => {
+    return (filteredChats.value || []).filter(chat => {
+        if (!chat.lastMessage) return false;
         const chatDate = new Date(chat.lastMessage);
         return chatDate >= weekStart && chatDate <= yesterday;
     });
@@ -311,7 +329,8 @@ const olderChats = computed(() => {
     weekStart.setDate(today.getDate() - today.getDay());
     weekStart.setHours(0, 0, 0, 0);
 
-    return filteredChats.value.filter(chat => {
+    return (filteredChats.value || []).filter(chat => {
+        if (!chat.lastMessage) return false;
         const chatDate = new Date(chat.lastMessage);
         return chatDate < weekStart;
     });
@@ -428,11 +447,25 @@ watch(() => chatHistoryList.value, () => {
 
 // 监听localStorage变化，同步数据
 const updateChatHistoryList = () => {
-    chatHistoryList.value = JSON.parse(localStorage.getItem('chatHistoryList') || '[]');
+    try {
+        const stored = localStorage.getItem('chatHistoryList');
+        chatHistoryList.value = stored ? JSON.parse(stored) : [];
+    } catch (error) {
+        console.warn('Failed to update chat history from localStorage:', error);
+        chatHistoryList.value = [];
+    }
 };
 
-// 定期检查localStorage变化
-setInterval(updateChatHistoryList, 1000);
+// 定期检查localStorage变化 - 优化版本
+onMounted(() => {
+    // 使用定时器管理器，并降低检查频率
+    timerManager.create('chat-history-sync', updateChatHistoryList, 5000, true);
+});
+
+onUnmounted(() => {
+    // 清理定时器
+    timerManager.clear('chat-history-sync');
+});
 </script>
 
 <style scoped lang="scss">

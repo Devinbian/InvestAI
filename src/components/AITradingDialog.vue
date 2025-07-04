@@ -248,18 +248,39 @@ const initAITradingFromPreferences = () => {
 
 // 获取风险等级文本
 const getRiskLevelText = (level) => {
-    const map = {
-        'conservative': '保守型',
+    // 数值格式映射
+    const riskLevelMap = {
+        1: '求稳型',
+        2: '稳健型',
+        3: '均衡型',
+        4: '成长型',
+        5: '进取型'
+    };
+
+    // 字符串格式映射
+    const riskValueMap = {
+        'conservative': '求稳型',
         'stable': '稳健型',
-        'balanced': '平衡型',
+        'balanced': '均衡型',
         'growth': '成长型',
-        'aggressive': '激进型',
+        'aggressive': '进取型',
         'low': '低风险',
         'medium': '中风险',
         'high': '高风险',
         'moderate': '稳健型'
     };
-    return map[level] || '未设置';
+
+    // 先尝试数值格式
+    if (typeof level === 'number' && riskLevelMap[level]) {
+        return riskLevelMap[level];
+    }
+
+    // 再尝试字符串格式
+    if (typeof level === 'string' && riskValueMap[level]) {
+        return riskValueMap[level];
+    }
+
+    return '未设置';
 };
 
 // 获取策略文本

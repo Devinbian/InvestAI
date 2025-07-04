@@ -76,124 +76,48 @@
                 </template>
             </div>
 
-            <!-- 聊天历史区域 -->
+            <!-- 聊天历史区域 - 优化版本，使用虚拟滚动 -->
             <div class="chat-history-area chat-area" v-if="isChatMode && chatHistory.length" ref="chatHistoryRef">
-                <div v-for="(message, idx) in chatHistory" :key="idx" :class="['chat-message', message.role]">
-                    <div class="chat-message-content">
-                        <!-- AI生成中状态显示 -->
-                        <div v-if="message.role === 'assistant' && (message.isGenerating || (!message.content && isGenerating && idx === chatHistory.length - 1))"
-                            class="message-text generating-message">
-                            <div class="generating-content-inline">
-                                <div class="generating-dots">
-                                    <span class="dot"></span>
-                                    <span class="dot"></span>
-                                    <span class="dot"></span>
-                                </div>
-                                <span class="generating-label">AI正在思考中...</span>
-                            </div>
-                        </div>
-                        <!-- 正常消息内容 -->
-                        <div v-else-if="message.content && !message.isGenerating" class="message-text">
-                            <MarkdownRenderer :content="message.content" />
-
-                            <!-- 流式暂停加载指示器 -->
-                            <div v-if="message.role === 'assistant' && (isStreamPaused || message.isStreamPaused) && isGenerating && idx === chatHistory.length - 1"
-                                class="stream-pause-loader">
-                                <div class="stream-dots">
-                                    <span class="stream-dot"></span>
-                                    <span class="stream-dot"></span>
-                                    <span class="stream-dot"></span>
-                                </div>
-                            </div>
-                        </div>
-
-                        <!-- 互动建议（资讯推送、智能复盘等，不包括自选股） -->
-                        <div v-if="message.hasInteractionButtons && message.interactionData && !message.isWatchlistDisplay"
-                            class="interaction-suggestions">
-                            <div class="suggestion-intro">
-                                💡 <span class="intro-text">{{
-                                    message.isNewsUpdate ? '基于这些资讯，我建议您可以：' :
-                                        '基于复盘结果，我建议您可以：'
-                                }}</span>
-                            </div>
-                            <div class="suggestion-items">
-                                <div v-for="action in message.interactionData.recommendActions" :key="action.id"
-                                    @click="handleInteractionAction(action, message)" class="suggestion-item">
-                                    <span class="suggestion-icon">{{ action.icon }}</span>
-                                    <span class="suggestion-text">{{ action.description }}</span>
-                                    <span class="suggestion-arrow">→</span>
-                                </div>
-                            </div>
-                        </div>
-
-                        <!-- 单只股票操作按钮 -->
-                        <div v-if="message.hasStockInfo && message.stockInfo" class="stock-actions">
-                            <StockActionButtons :stock="message.stockInfo" :actions="getChatStockActions(message)"
-                                :is-mobile="isMobileView" :mode="message.isBuyMode ? 'minimal' : 'compact'"
-                                @action-click="handleChatStockAction" @add-watchlist="addToWatchlist"
-                                @remove-watchlist="(stock) => removeFromWatchlist(stock.code)"
-                                @show-buy-dialog="showBuyDialog" @show-ai-trading-dialog="showQuantAnalysisDialog" />
-
-                            <!-- 设置提醒按钮（仅在量化分析消息中显示） -->
-                            <el-button v-if="message.isQuantAnalysis" size="small"
-                                @click="setQuantAnalysisReminder(message)" class="reminder-btn-small">
-                                <svg width="14" height="14" viewBox="0 0 24 24" fill="none">
-                                    <path
-                                        d="M12 22c1.1 0 2-.9 2-2h-4c0 1.1.9 2 2 2zm6-6v-5c0-3.07-1.64-5.64-4.5-6.32V4c0-.83-.67-1.5-1.5-1.5s-1.5.67-1.5 1.5v.68C7.63 5.36 6 7.92 6 11v5l-2 2v1h16v-1l-2-2z"
-                                        fill="currentColor" />
-                                </svg>
-                                设置提醒
-                                <span v-if="activeReminders.filter(r => r.isActive).length > 0"
-                                    class="reminder-count-badge-small">
-                                    {{activeReminders.filter(r => r.isActive).length}}
-                                </span>
-                            </el-button>
-                        </div>
-
-                        <!-- 自选股列表展示 -->
-                        <div v-if="message.isWatchlistDisplay && message.watchlistData"
-                            class="watchlist-display-container">
-                            <!-- 概览信息 -->
-                            <div class="watchlist-overview">
-                                <div class="overview-stats watchlist-stats">
-                                    <div class="stat-item total">
-                                        <div class="stat-icon">⭐</div>
-                                        <div class="stat-info">
-                                            <span class="stat-value">{{ message.watchlistStats.total }}</span>
-                                            <span class="stat-label">关注</span>
-                                        </div>
+                <!-- 当消息数量较少时使用普通渲染 -->
+                <template v-if="chatHistory.length <= 50">
+                    <div v-for="(message, idx) in chatHistory" :key="idx" :class="['chat-message', message.role]">
+                        <div class="chat-message-content">
+                            <!-- 消息内容 -->
+                            <!-- AI生成中状态显示 -->
+                            <div v-if="message.role === 'assistant' && (message.isGenerating || (!message.content && isGenerating && idx === chatHistory.length - 1))"
+                                class="message-text generating-message">
+                                <div class="generating-content-inline">
+                                    <div class="generating-dots">
+                                        <span class="dot"></span>
+                                        <span class="dot"></span>
+                                        <span class="dot"></span>
                                     </div>
-                                    <div class="stat-item up">
-                                        <div class="stat-icon">📈</div>
-                                        <div class="stat-info">
-                                            <span class="stat-value">{{ message.watchlistStats.upCount }}</span>
-                                            <span class="stat-label">上涨</span>
-                                        </div>
-                                    </div>
-                                    <div class="stat-item down">
-                                        <div class="stat-icon">📉</div>
-                                        <div class="stat-info">
-                                            <span class="stat-value">{{ message.watchlistStats.downCount }}</span>
-                                            <span class="stat-label">下跌</span>
-                                        </div>
+                                    <span class="generating-label">AI正在思考中...</span>
+                                </div>
+                            </div>
+                            <!-- 正常消息内容 -->
+                            <div v-else-if="message.content && !message.isGenerating" class="message-text">
+                                <MarkdownRenderer :content="message.content" />
+
+                                <!-- 流式暂停加载指示器 -->
+                                <div v-if="message.role === 'assistant' && (isStreamPaused || message.isStreamPaused) && isGenerating && idx === chatHistory.length - 1"
+                                    class="stream-pause-loader">
+                                    <div class="stream-dots">
+                                        <span class="stream-dot"></span>
+                                        <span class="stream-dot"></span>
+                                        <span class="stream-dot"></span>
                                     </div>
                                 </div>
                             </div>
 
-                            <!-- 使用通用股票列表组件 -->
-                            <StockList v-if="!isMobileView" :stocks="message.watchlistData"
-                                :show-watchlist-status="true" :show-basic-details="true"
-                                :actions="watchlistActionButtons" @stock-click="handleStockClick"
-                                @action-click="handleWatchlistActionClick" />
-                            <MobileStockList v-else :stocks="message.watchlistData" :show-watchlist-status="true"
-                                :show-details="true" :actions="watchlistActionButtons" @stock-click="handleStockClick"
-                                @action-click="handleWatchlistActionClick" />
-
-                            <!-- 自选股互动建议 -->
-                            <div v-if="message.hasInteractionButtons && message.interactionData"
+                            <!-- 互动建议（资讯推送、智能复盘等，不包括自选股） -->
+                            <div v-if="message.hasInteractionButtons && message.interactionData && !message.isWatchlistDisplay"
                                 class="interaction-suggestions">
                                 <div class="suggestion-intro">
-                                    💡 <span class="intro-text">基于您的自选股，建议您可以：</span>
+                                    💡 <span class="intro-text">{{
+                                        message.isNewsUpdate ? '基于这些资讯，我建议您可以：' :
+                                            '基于复盘结果，我建议您可以：'
+                                    }}</span>
                                 </div>
                                 <div class="suggestion-items">
                                     <div v-for="action in message.interactionData.recommendActions" :key="action.id"
@@ -203,215 +127,313 @@
                                         <span class="suggestion-arrow">→</span>
                                     </div>
                                 </div>
-                                <!-- 自选股时显示更新时间 -->
-                                <div v-if="message.watchlistStats" class="suggestion-time">
-                                    数据更新时间：{{ message.watchlistStats.updateTime }}
-                                </div>
                             </div>
 
-                        </div>
+                            <!-- 单只股票操作按钮 -->
+                            <div v-if="message.hasStockInfo && message.stockInfo" class="stock-actions">
+                                <StockActionButtons :stock="message.stockInfo" :actions="getChatStockActions(message)"
+                                    :is-mobile="isMobileView" :mode="message.isBuyMode ? 'minimal' : 'compact'"
+                                    @action-click="handleChatStockAction" @add-watchlist="addToWatchlist"
+                                    @remove-watchlist="(stock) => removeFromWatchlist(stock.code)"
+                                    @show-buy-dialog="showBuyDialog"
+                                    @show-ai-trading-dialog="showQuantAnalysisDialog" />
 
-                        <!-- 股票账户信息展示 -->
-                        <div v-if="message.hasAssetInfo && message.assetData" class="stock-account-container">
-                            <!-- 账户标题 -->
-                            <div class="account-header">
-                                <div class="account-title-section">
-                                    <h3 class="account-title">📊 我的股票账户</h3>
-                                    <div class="account-time">{{ formatRecommendationTime(message.timestamp) }}</div>
-                                </div>
+                                <!-- 设置提醒按钮（仅在量化分析消息中显示） -->
+                                <el-button v-if="message.isQuantAnalysis" size="small"
+                                    @click="setQuantAnalysisReminder(message)" class="reminder-btn-small">
+                                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none">
+                                        <path
+                                            d="M12 22c1.1 0 2-.9 2-2h-4c0 1.1.9 2 2 2zm6-6v-5c0-3.07-1.64-5.64-4.5-6.32V4c0-.83-.67-1.5-1.5-1.5s-1.5.67-1.5 1.5v.68C7.63 5.36 6 7.92 6 11v5l-2 2v1h16v-1l-2-2z"
+                                            fill="currentColor" />
+                                    </svg>
+                                    设置提醒
+                                    <span v-if="activeReminders.filter(r => r.isActive).length > 0"
+                                        class="reminder-count-badge-small">
+                                        {{activeReminders.filter(r => r.isActive).length}}
+                                    </span>
+                                </el-button>
                             </div>
 
-                            <!-- 账户总览 -->
-                            <div class="account-overview">
-                                <div class="overview-main">
-                                    <div class="total-asset-card">
-                                        <div class="asset-amount">
-                                            <span class="amount-label">总资产</span>
-                                            <span class="amount-value">¥{{ formatCurrency(message.assetData.totalAssets)
-                                            }}</span>
+                            <!-- 自选股列表展示 -->
+                            <div v-if="message.isWatchlistDisplay && message.watchlistData"
+                                class="watchlist-display-container">
+                                <!-- 概览信息 -->
+                                <div class="watchlist-overview">
+                                    <div class="overview-stats watchlist-stats">
+                                        <div class="stat-item total">
+                                            <div class="stat-icon">⭐</div>
+                                            <div class="stat-info">
+                                                <span class="stat-value">{{ message.watchlistStats.total }}</span>
+                                                <span class="stat-label">关注</span>
+                                            </div>
                                         </div>
-                                        <div class="asset-change"
-                                            :class="[message.assetData.totalProfitPercent >= 0 ? 'profit' : 'loss']">
-                                            <span class="change-icon">{{ message.assetData.totalProfitPercent >= 0 ?
-                                                '📈' : '📉'
-                                            }}</span>
-                                            <span class="change-label">今日盈亏：</span>
-                                            <span class="change-text">
-                                                {{ message.assetData.totalProfitPercent >= 0 ? '+' : '' }}¥{{
-                                                    message.assetData.totalProfit }}
-                                                ({{ message.assetData.totalProfitPercent >= 0 ? '+' : '' }}{{
-                                                    message.assetData.totalProfitPercent }}%)
-                                            </span>
+                                        <div class="stat-item up">
+                                            <div class="stat-icon">📈</div>
+                                            <div class="stat-info">
+                                                <span class="stat-value">{{ message.watchlistStats.upCount }}</span>
+                                                <span class="stat-label">上涨</span>
+                                            </div>
                                         </div>
-                                    </div>
-                                </div>
-
-                                <div class="overview-stats asset-stats">
-                                    <div class="stat-item">
-                                        <div class="stat-icon cash">💵</div>
-                                        <div class="stat-info">
-                                            <div class="stat-label">可用资金</div>
-                                            <div class="stat-value">¥{{ formatCurrency(message.assetData.balance) }}
+                                        <div class="stat-item down">
+                                            <div class="stat-icon">📉</div>
+                                            <div class="stat-info">
+                                                <span class="stat-value">{{ message.watchlistStats.downCount }}</span>
+                                                <span class="stat-label">下跌</span>
                                             </div>
                                         </div>
                                     </div>
-                                    <div class="stat-item">
-                                        <div class="stat-icon portfolio">📊</div>
-                                        <div class="stat-info">
-                                            <div class="stat-label">持仓市值</div>
-                                            <div class="stat-value">¥{{ formatCurrency(message.assetData.portfolioValue)
+                                </div>
+
+                                <!-- 使用通用股票列表组件 -->
+                                <StockList v-if="!isMobileView" :stocks="message.watchlistData"
+                                    :show-watchlist-status="true" :show-basic-details="true"
+                                    :actions="watchlistActionButtons" @stock-click="handleStockClick"
+                                    @action-click="handleWatchlistActionClick" />
+                                <MobileStockList v-else :stocks="message.watchlistData" :show-watchlist-status="true"
+                                    :show-details="true" :actions="watchlistActionButtons"
+                                    @stock-click="handleStockClick" @action-click="handleWatchlistActionClick" />
+
+                                <!-- 自选股互动建议 -->
+                                <div v-if="message.hasInteractionButtons && message.interactionData"
+                                    class="interaction-suggestions">
+                                    <div class="suggestion-intro">
+                                        💡 <span class="intro-text">基于您的自选股，建议您可以：</span>
+                                    </div>
+                                    <div class="suggestion-items">
+                                        <div v-for="action in message.interactionData.recommendActions" :key="action.id"
+                                            @click="handleInteractionAction(action, message)" class="suggestion-item">
+                                            <span class="suggestion-icon">{{ action.icon }}</span>
+                                            <span class="suggestion-text">{{ action.description }}</span>
+                                            <span class="suggestion-arrow">→</span>
+                                        </div>
+                                    </div>
+                                    <!-- 自选股时显示更新时间 -->
+                                    <div v-if="message.watchlistStats" class="suggestion-time">
+                                        数据更新时间：{{ message.watchlistStats.updateTime }}
+                                    </div>
+                                </div>
+
+                            </div>
+
+                            <!-- 股票账户信息展示 -->
+                            <div v-if="message.hasAssetInfo && message.assetData" class="stock-account-container">
+                                <!-- 账户标题 -->
+                                <div class="account-header">
+                                    <div class="account-title-section">
+                                        <h3 class="account-title">📊 我的股票账户</h3>
+                                        <div class="account-time">{{ formatRecommendationTime(message.timestamp) }}
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <!-- 账户总览 -->
+                                <div class="account-overview">
+                                    <div class="overview-main">
+                                        <div class="total-asset-card">
+                                            <div class="asset-amount">
+                                                <span class="amount-label">总资产</span>
+                                                <span class="amount-value">¥{{
+                                                    formatCurrency(message.assetData.totalAssets)
+                                                }}</span>
+                                            </div>
+                                            <div class="asset-change"
+                                                :class="[message.assetData.totalProfitPercent >= 0 ? 'profit' : 'loss']">
+                                                <span class="change-icon">{{ message.assetData.totalProfitPercent >= 0 ?
+                                                    '📈' : '📉'
+                                                }}</span>
+                                                <span class="change-label">今日盈亏：</span>
+                                                <span class="change-text">
+                                                    {{ message.assetData.totalProfitPercent >= 0 ? '+' : '' }}¥{{
+                                                        message.assetData.totalProfit }}
+                                                    ({{ message.assetData.totalProfitPercent >= 0 ? '+' : '' }}{{
+                                                        message.assetData.totalProfitPercent }}%)
+                                                </span>
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                    <div class="overview-stats asset-stats">
+                                        <div class="stat-item">
+                                            <div class="stat-icon cash">💵</div>
+                                            <div class="stat-info">
+                                                <div class="stat-label">可用资金</div>
+                                                <div class="stat-value">¥{{ formatCurrency(message.assetData.balance) }}
+                                                </div>
+                                            </div>
+                                        </div>
+                                        <div class="stat-item">
+                                            <div class="stat-icon portfolio">📊</div>
+                                            <div class="stat-info">
+                                                <div class="stat-label">持仓市值</div>
+                                                <div class="stat-value">¥{{
+                                                    formatCurrency(message.assetData.portfolioValue)
                                                 }}
+                                                </div>
+                                            </div>
+                                        </div>
+                                        <div class="stat-item">
+                                            <div class="stat-icon stocks">🏢</div>
+                                            <div class="stat-info">
+                                                <div class="stat-label">持仓股票</div>
+                                                <div class="stat-value">{{ message.assetData.portfolioCount }}只</div>
+                                            </div>
+                                        </div>
+                                        <div class="stat-item">
+                                            <div class="stat-icon watchlist">⭐</div>
+                                            <div class="stat-info">
+                                                <div class="stat-label">自选股票</div>
+                                                <div class="stat-value">{{ message.assetData.watchlistCount }}只</div>
                                             </div>
                                         </div>
                                     </div>
-                                    <div class="stat-item">
-                                        <div class="stat-icon stocks">🏢</div>
-                                        <div class="stat-info">
-                                            <div class="stat-label">持仓股票</div>
-                                            <div class="stat-value">{{ message.assetData.portfolioCount }}只</div>
+                                </div>
+
+                                <!-- Tab导航和内容 -->
+                                <div class="account-tabs">
+                                    <div class="tab-nav">
+                                        <div class="tab-item" :class="{ active: activeTab === 'portfolio' }"
+                                            @click="activeTab = 'portfolio'">
+                                            📈 持仓明细 ({{ message.assetData.portfolioCount }})
+                                        </div>
+                                        <div class="tab-item" :class="{ active: activeTab === 'watchlist' }"
+                                            @click="activeTab = 'watchlist'">
+                                            ⭐ 自选股票 ({{ message.assetData.watchlistCount }})
                                         </div>
                                     </div>
-                                    <div class="stat-item">
-                                        <div class="stat-icon watchlist">⭐</div>
-                                        <div class="stat-info">
-                                            <div class="stat-label">自选股票</div>
-                                            <div class="stat-value">{{ message.assetData.watchlistCount }}只</div>
+
+                                    <div class="tab-content">
+                                        <!-- 持仓明细Tab -->
+                                        <div v-if="activeTab === 'portfolio'" class="tab-panel">
+                                            <template v-if="message.assetData.portfolioData.length > 0">
+                                                <StockList v-if="!isMobileView"
+                                                    :stocks="message.assetData.portfolioData"
+                                                    :show-position-status="true" :show-position-details="true"
+                                                    :show-basic-details="false" :actions="portfolioActionButtons"
+                                                    @stock-click="handleStockClick"
+                                                    @action-click="handlePortfolioActionClick" />
+                                                <MobileStockList v-else :stocks="message.assetData.portfolioData"
+                                                    :show-position-status="true" :show-details="true"
+                                                    :actions="portfolioActionButtons" @stock-click="handleStockClick"
+                                                    @action-click="handlePortfolioActionClick" />
+                                            </template>
+
+                                            <!-- 空状态 -->
+                                            <div v-else class="empty-state">
+                                                <div class="empty-icon">📊</div>
+                                                <div class="empty-text">
+                                                    <h4>暂无持仓</h4>
+                                                    <p>您还没有购买任何股票，可以通过AI分析后进行投资</p>
+                                                </div>
+                                            </div>
+                                        </div>
+
+                                        <!-- 自选股票Tab -->
+                                        <div v-if="activeTab === 'watchlist'" class="tab-panel">
+                                            <template v-if="message.assetData.watchlistData.length > 0">
+                                                <StockList v-if="!isMobileView"
+                                                    :stocks="message.assetData.watchlistData"
+                                                    :show-watchlist-status="true" :show-basic-details="true"
+                                                    :actions="watchlistActionButtons" @stock-click="handleStockClick"
+                                                    @action-click="handleWatchlistActionClick" />
+                                                <MobileStockList v-else :stocks="message.assetData.watchlistData"
+                                                    :show-watchlist-status="true" :show-details="true"
+                                                    :actions="watchlistActionButtons" @stock-click="handleStockClick"
+                                                    @action-click="handleWatchlistActionClick" />
+                                            </template>
+
+                                            <!-- 空状态 -->
+                                            <div v-else class="empty-state">
+                                                <div class="empty-icon">⭐</div>
+                                                <div class="empty-text">
+                                                    <h4>暂无自选股</h4>
+                                                    <p>您还没有添加任何自选股票，可以通过搜索添加关注的股票</p>
+                                                </div>
+                                            </div>
                                         </div>
                                     </div>
                                 </div>
                             </div>
 
-                            <!-- Tab导航和内容 -->
-                            <div class="account-tabs">
-                                <div class="tab-nav">
-                                    <div class="tab-item" :class="{ active: activeTab === 'portfolio' }"
-                                        @click="activeTab = 'portfolio'">
-                                        📈 持仓明细 ({{ message.assetData.portfolioCount }})
-                                    </div>
-                                    <div class="tab-item" :class="{ active: activeTab === 'watchlist' }"
-                                        @click="activeTab = 'watchlist'">
-                                        ⭐ 自选股票 ({{ message.assetData.watchlistCount }})
-                                    </div>
-                                </div>
-
-                                <div class="tab-content">
-                                    <!-- 持仓明细Tab -->
-                                    <div v-if="activeTab === 'portfolio'" class="tab-panel">
-                                        <template v-if="message.assetData.portfolioData.length > 0">
-                                            <StockList v-if="!isMobileView" :stocks="message.assetData.portfolioData"
-                                                :show-position-status="true" :show-position-details="true"
-                                                :show-basic-details="false" :actions="portfolioActionButtons"
-                                                @stock-click="handleStockClick"
-                                                @action-click="handlePortfolioActionClick" />
-                                            <MobileStockList v-else :stocks="message.assetData.portfolioData"
-                                                :show-position-status="true" :show-details="true"
-                                                :actions="portfolioActionButtons" @stock-click="handleStockClick"
-                                                @action-click="handlePortfolioActionClick" />
-                                        </template>
-
-                                        <!-- 空状态 -->
-                                        <div v-else class="empty-state">
-                                            <div class="empty-icon">📊</div>
-                                            <div class="empty-text">
-                                                <h4>暂无持仓</h4>
-                                                <p>您还没有购买任何股票，可以通过AI分析后进行投资</p>
-                                            </div>
-                                        </div>
-                                    </div>
-
-                                    <!-- 自选股票Tab -->
-                                    <div v-if="activeTab === 'watchlist'" class="tab-panel">
-                                        <template v-if="message.assetData.watchlistData.length > 0">
-                                            <StockList v-if="!isMobileView" :stocks="message.assetData.watchlistData"
-                                                :show-watchlist-status="true" :show-basic-details="true"
-                                                :actions="watchlistActionButtons" @stock-click="handleStockClick"
-                                                @action-click="handleWatchlistActionClick" />
-                                            <MobileStockList v-else :stocks="message.assetData.watchlistData"
-                                                :show-watchlist-status="true" :show-details="true"
-                                                :actions="watchlistActionButtons" @stock-click="handleStockClick"
-                                                @action-click="handleWatchlistActionClick" />
-                                        </template>
-
-                                        <!-- 空状态 -->
-                                        <div v-else class="empty-state">
-                                            <div class="empty-icon">⭐</div>
-                                            <div class="empty-text">
-                                                <h4>暂无自选股</h4>
-                                                <p>您还没有添加任何自选股票，可以通过搜索添加关注的股票</p>
-                                            </div>
-                                        </div>
-                                    </div>
-                                </div>
+                            <!-- 股票列表（智能荐股等场景） -->
+                            <div v-if="message.hasStockInfo && message.stockList" class="stock-list"
+                                :class="{ 'persistent-stock-list': message.isPersistent }">
+                                <StockList v-if="!isMobileView" :stocks="message.stockList"
+                                    v-bind="getSmartRecommendationConfig(message)" @stock-click="handleStockClick"
+                                    @action-click="handleStockActionClick">
+                                    <template #toolbar-actions v-if="message.isPersistent">
+                                        <el-button size="small" text @click="refreshRecommendation(message)"
+                                            class="refresh-recommendation-btn">
+                                            <svg width="14" height="14" viewBox="0 0 24 24" fill="none">
+                                                <path
+                                                    d="M23 4v6h-6M1 20v-6h6M20.49 9A9 9 0 0 0 5.64 5.64L1 10m22 4l-4.64 4.36A9 9 0 0 1 3.51 15"
+                                                    stroke="currentColor" stroke-width="2" fill="none" />
+                                            </svg>
+                                            刷新荐股
+                                        </el-button>
+                                    </template>
+                                </StockList>
+                                <MobileStockList v-else :stocks="message.stockList"
+                                    v-bind="getMobileSmartRecommendationConfig(message, getStockListConfig)"
+                                    @stock-click="handleStockClick" @action-click="handleStockActionClick"
+                                    :show-toolbar="true" :toolbar-title="'智能荐股'" :show-time="true"
+                                    :timestamp="message.timestamp">
+                                    <template #toolbar-actions>
+                                        <button @click="refreshRecommendation(message)" class="mobile-refresh-btn">
+                                            <svg width="14" height="14" viewBox="0 0 24 24" fill="none">
+                                                <path
+                                                    d="M23 4v6h-6M1 20v-6h6M20.49 9A9 9 0 0 0 5.64 5.64L1 10m22 4l-4.64 4.36A9 9 0 0 1 3.51 15"
+                                                    stroke="currentColor" stroke-width="2" fill="none" />
+                                            </svg>
+                                        </button>
+                                    </template>
+                                </MobileStockList>
                             </div>
                         </div>
 
-                        <!-- 股票列表（智能荐股等场景） -->
-                        <div v-if="message.hasStockInfo && message.stockList" class="stock-list"
-                            :class="{ 'persistent-stock-list': message.isPersistent }">
-                            <StockList v-if="!isMobileView" :stocks="message.stockList"
-                                v-bind="getSmartRecommendationConfig(message)" @stock-click="handleStockClick"
-                                @action-click="handleStockActionClick">
-                                <template #toolbar-actions v-if="message.isPersistent">
-                                    <el-button size="small" text @click="refreshRecommendation(message)"
-                                        class="refresh-recommendation-btn">
-                                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none">
-                                            <path
-                                                d="M23 4v6h-6M1 20v-6h6M20.49 9A9 9 0 0 0 5.64 5.64L1 10m22 4l-4.64 4.36A9 9 0 0 1 3.51 15"
-                                                stroke="currentColor" stroke-width="2" fill="none" />
-                                        </svg>
-                                        刷新荐股
-                                    </el-button>
-                                </template>
-                            </StockList>
-                            <MobileStockList v-else :stocks="message.stockList"
-                                v-bind="getMobileSmartRecommendationConfig(message, getStockListConfig)"
-                                @stock-click="handleStockClick" @action-click="handleStockActionClick"
-                                :show-toolbar="true" :toolbar-title="'智能荐股'" :show-time="true"
-                                :timestamp="message.timestamp">
-                                <template #toolbar-actions>
-                                    <button @click="refreshRecommendation(message)" class="mobile-refresh-btn">
-                                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none">
-                                            <path
-                                                d="M23 4v6h-6M1 20v-6h6M20.49 9A9 9 0 0 0 5.64 5.64L1 10m22 4l-4.64 4.36A9 9 0 0 1 3.51 15"
-                                                stroke="currentColor" stroke-width="2" fill="none" />
-                                        </svg>
-                                    </button>
-                                </template>
-                            </MobileStockList>
+                        <!-- AI消息操作按钮（放在消息气泡外面） -->
+                        <div v-if="message.role === 'assistant' && message.content && !message.isGenerating"
+                            class="message-actions-external">
+                            <div class="action-buttons">
+                                <el-button size="small" text @click="handleCopyMessage(message)"
+                                    class="action-btn copy-btn" :title="getCopyButtonText(message)">
+                                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none">
+                                        <rect x="9" y="9" width="13" height="13" rx="2" ry="2" stroke="currentColor"
+                                            stroke-width="2" />
+                                        <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"
+                                            stroke="currentColor" stroke-width="2" />
+                                    </svg>
+                                    <span class="action-text">{{ getCopyButtonText(message) }}</span>
+                                </el-button>
+                                <el-button size="small" text @click="handleRegenerateMessage(message)"
+                                    class="action-btn regenerate-btn" title="重新生成">
+                                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none">
+                                        <path
+                                            d="M23 4v6h-6M1 20v-6h6M20.49 9A9 9 0 0 0 5.64 5.64L1 10m22 4l-4.64 4.36A9 9 0 0 1 3.51 15"
+                                            stroke="currentColor" stroke-width="2" fill="none" />
+                                    </svg>
+                                    <span class="action-text">重新生成</span>
+                                </el-button>
+                            </div>
                         </div>
                     </div>
 
-                    <!-- AI消息操作按钮（放在消息气泡外面） -->
-                    <div v-if="message.role === 'assistant' && message.content && !message.isGenerating"
-                        class="message-actions-external">
-                        <div class="action-buttons">
-                            <el-button size="small" text @click="handleCopyMessage(message)" class="action-btn copy-btn"
-                                :title="getCopyButtonText(message)">
-                                <svg width="14" height="14" viewBox="0 0 24 24" fill="none">
-                                    <rect x="9" y="9" width="13" height="13" rx="2" ry="2" stroke="currentColor"
-                                        stroke-width="2" />
-                                    <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"
-                                        stroke="currentColor" stroke-width="2" />
-                                </svg>
-                                <span class="action-text">{{ getCopyButtonText(message) }}</span>
-                            </el-button>
-                            <el-button size="small" text @click="handleRegenerateMessage(message)"
-                                class="action-btn regenerate-btn" title="重新生成">
-                                <svg width="14" height="14" viewBox="0 0 24 24" fill="none">
-                                    <path
-                                        d="M23 4v6h-6M1 20v-6h6M20.49 9A9 9 0 0 0 5.64 5.64L1 10m22 4l-4.64 4.36A9 9 0 0 1 3.51 15"
-                                        stroke="currentColor" stroke-width="2" fill="none" />
-                                </svg>
-                                <span class="action-text">重新生成</span>
-                            </el-button>
+
+
+                    <!-- 移动端聊天历史底部占位元素，防止被新建聊天按钮遮挡 -->
+                    <div class="mobile-chat-spacer" v-if="isMobileView"></div>
+                </template>
+
+                <!-- 当消息数量较多时使用虚拟滚动（预留，暂未实现） -->
+                <template v-else>
+                    <!-- TODO: 实现虚拟滚动组件 -->
+                    <div v-for="(message, idx) in chatHistory" :key="idx" :class="['chat-message', message.role]">
+                        <div class="chat-message-content">
+                            <div class="message-text">
+                                <MarkdownRenderer :content="message.content" />
+                            </div>
                         </div>
                     </div>
-                </div>
-
-
-
-                <!-- 移动端聊天历史底部占位元素，防止被新建聊天按钮遮挡 -->
-                <div class="mobile-chat-spacer" v-if="isMobileView"></div>
+                </template>
             </div>
 
             <!-- 底部输入区域（仅在聊天状态显示） -->
@@ -569,6 +591,7 @@ import { getStockListConfig } from '../config/stockListConfig';
 import { getStockActionConfig } from '../config/stockActionConfig';
 import { api } from '@/api/api';
 import { authFetchEventSource } from '@/utils/request';
+import { eventListenerManager, timerManager, chatHistoryManager, performanceOptimizer } from '@/utils/performanceOptimizer';
 import { useMobileAdaptation } from '../composables/useMobileAdaptation';
 import { useChatManager } from '../composables/useChatManager';
 import { useVoiceInput } from '../composables/useVoiceInput';
@@ -1495,10 +1518,14 @@ const handleWatchlistView = async () => {
         isChatMode.value = true;
 
         // 添加用户消息和处理中消息
-        chatHistory.value.push(
+        const newMessages = [
             { role: 'user', content: '查看我的自选股列表' },
             { role: 'assistant', content: '', isGenerating: true }
-        );
+        ];
+
+        // 使用chatHistoryManager限制消息数量
+        chatHistory.value.push(...newMessages);
+        chatHistory.value = chatHistoryManager.limitChatMessages(chatHistory.value);
 
         // 再次检查是否被中断
         if (!isGenerating.value) {
@@ -1691,10 +1718,14 @@ const handleSidebarInteraction = async (data) => {
 
     // 发送消息
     const res = await mockApi.sendMessage(message);
-    chatHistory.value.push(
+    const newMessages = [
         { role: 'user', content: message },
         res.data
-    );
+    ];
+
+    // 使用chatHistoryManager限制消息数量
+    chatHistory.value.push(...newMessages);
+    chatHistory.value = chatHistoryManager.limitChatMessages(chatHistory.value);
 
     await nextTick();
     scrollToBottom();
@@ -1767,15 +1798,17 @@ const continueAnalysis = async (stockInfo, isPaid = false) => {
     const conversationId = chatHistoryStore.currentChatId;
     console.log('当前聊天ID:', conversationId);
 
-    chatHistory.value.push(
-        {
-            role: 'assistant',
-            content: '',
-            isGenerating: true,
-            hasStockInfo: false,
-            stockInfo: stockInfo
-        },
-    );
+    const newMessage = {
+        role: 'assistant',
+        content: '',
+        isGenerating: true,
+        hasStockInfo: false,
+        stockInfo: stockInfo
+    };
+
+    // 使用chatHistoryManager限制消息数量
+    chatHistory.value.push(newMessage);
+    chatHistory.value = chatHistoryManager.limitChatMessages(chatHistory.value);
 
     try {
         let aiContent = '';
@@ -1922,11 +1955,16 @@ const getChatStockActions = (message) => {
 // 投资偏好组件事件处理
 const handlePreferencesCompleted = (preferences) => {
     // 显示欢迎消息
-    setTimeout(() => {
-        chatHistory.value.push({
+    timerManager.create('welcome-message', () => {
+        const welcomeMessage = {
             role: 'assistant',
             content: `欢迎使用智投小助！根据您的投资偏好（${getRiskLevelText(preferences.riskLevel)}），我将为您提供个性化的投资建议。您可以问我任何关于投资的问题。`
-        });
+        };
+
+        // 使用chatHistoryManager限制消息数量
+        chatHistory.value.push(welcomeMessage);
+        chatHistory.value = chatHistoryManager.limitChatMessages(chatHistory.value);
+
         nextTick(() => {
             scrollToBottom();
         });
@@ -1947,21 +1985,29 @@ const showGuide = (type) => {
 
 
 
-// 窗口大小变化处理函数 - 简化处理
+// 窗口大小变化处理函数 - 优化版本，使用防抖
 const handleResize = () => {
-    mobileAdaptation.checkMobileView();
-    updateChatHistoryHeight();
-    // 移动端聊天模式下的处理
-    if (isMobileView.value && isChatMode.value) {
-        setTimeout(() => {
-            mobileAdaptation.fixMobileChatBox(isChatMode.value); // 确保输入框不被遮挡
-            scrollToBottom();
-        }, 100);
-    }
+    // 使用防抖优化，避免频繁调用
+    timerManager.clear('resize-debounce');
+    timerManager.create('resize-debounce', () => {
+        mobileAdaptation.checkMobileView();
+        updateChatHistoryHeight();
+        // 移动端聊天模式下的处理
+        if (isMobileView.value && isChatMode.value) {
+            timerManager.create('mobile-chat-resize', () => {
+                mobileAdaptation.fixMobileChatBox(isChatMode.value);
+                scrollToBottom();
+            }, 100);
+        }
+    }, 150);
 };
 
 onMounted(() => {
     scrollToBottom();
+
+    // 暴露chatHistory到全局，供性能优化器使用
+    window.chatHistory = chatHistory;
+    window.chatHistoryManager = chatHistoryManager;
 
     // 检查是否需要显示引导流程（页面刷新时恢复状态）
     if (userStore.isLoggedIn && userStore.shouldShowOnboarding()) {
@@ -2000,67 +2046,79 @@ onMounted(() => {
     mobileAdaptation.preventZoom();
 
 
-    // 如果有当前聊天ID，恢复聊天记录
+    // 如果有当前聊天ID，恢复聊天记录（限制消息数量）
     if (chatHistoryStore.currentChatId) {
         const currentChat = chatHistoryStore.getCurrentChat;
         if (currentChat) {
-            chatHistory.value = [...currentChat.messages];
+            // 使用聊天历史管理器限制消息数量，防止内存过度占用
+            const limitedMessages = chatHistoryManager.limitChatMessages(currentChat.messages);
+            chatHistory.value = [...limitedMessages];
             isChatMode.value = chatHistory.value.length > 0;
         }
     }
 
-    // 添加窗口大小变化监听
-    window.addEventListener('resize', handleResize);
+    // 使用事件监听器管理器添加窗口大小变化监听
+    eventListenerManager.add(window, 'resize', handleResize);
 
-    // 添加滚动事件监听
+    // 添加滚动事件监听 - 优化版本
     nextTick(() => {
         if (chatHistoryRef.value && !chatHistoryRef.value.hasScrollListener) {
-            chatHistoryRef.value.addEventListener('scroll', handleScroll, { passive: true });
+            eventListenerManager.add(chatHistoryRef.value, 'scroll', handleScroll, { passive: true });
             chatHistoryRef.value.hasScrollListener = true;
         }
     });
 
-    // 移动端聊天框修复
+    // 移动端聊天框修复 - 优化版本，避免重复调用
     if (isMobileView.value) {
-        // 初始状态也需要调用修复函数，确保主界面AI卡片正确显示
+        // 初始状态修复
         mobileAdaptation.resetMobileLayout(isChatMode.value, scrollToTop);
         mobileAdaptation.handleMobileKeyboard(scrollToBottom);
 
-        // 延迟调用修复函数，确保DOM完全渲染
-        setTimeout(() => {
+        // 使用定时器管理器，避免重复调用
+        timerManager.create('mobile-fix-initial', () => {
             mobileAdaptation.fixMobileChatBox(isChatMode.value);
-            // 额外检查：确保精确上移效果正确应用
             mobileAdaptation.ensureMobileFixApplied(isChatMode.value);
         }, 100);
-
-        // 再次延迟调用，确保修复完全生效
-        setTimeout(() => {
-            console.log('二次检查移动端修复效果');
-            mobileAdaptation.fixMobileChatBox(isChatMode.value);
-            mobileAdaptation.ensureMobileFixApplied(isChatMode.value);
-        }, 500);
 
         // 设置移动端视口监听器
         mobileAdaptation.setupMobileViewportListeners(scrollToBottom);
     }
+
+    // 定期清理聊天历史数据，防止内存过度占用
+    timerManager.create('cleanup-chat-history', () => {
+        if (chatHistoryStore.chatHistoryList.length > 50) {
+            const cleanedList = chatHistoryManager.limitChatHistory(chatHistoryStore.chatHistoryList);
+            chatHistoryStore.chatHistoryList = cleanedList;
+            chatHistoryStore.saveChatHistory();
+            console.log('🧹 已清理聊天历史数据，保留最近50条记录');
+        }
+    }, 5 * 60 * 1000, true); // 每5分钟检查一次
 });
 
-// 组件卸载时清理
+// 组件卸载时清理 - 完善版本
 onUnmounted(() => {
-    if (chatHistoryRef.value) {
-        chatHistoryRef.value.removeEventListener('scroll', handleScroll);
-    }
+    // 清理所有事件监听器
+    eventListenerManager.cleanup();
+
+    // 清理所有定时器
+    timerManager.clearAll();
+
     // 清理语音识别资源
     cleanupVoice();
-    // 清理窗口大小监听
-    window.removeEventListener('resize', handleResize);
 
-    // 清理移动端视口监听
-    if (window.visualViewport) {
-        window.visualViewport.removeEventListener('resize', () => { });
-        window.visualViewport.removeEventListener('scroll', () => { });
+    // 输出性能报告（仅在开发环境）
+    if (process.env.NODE_ENV === 'development') {
+        const report = performanceOptimizer.getPerformanceReport();
+        console.group('📊 主页组件卸载时的性能报告');
+        console.log('内存使用:', report.memoryUsage);
+        console.log('渲染性能:', report.renderPerformance);
+        console.log('事件监听器:', report.eventListeners);
+        console.log('活跃定时器:', report.activeTimers);
+        if (report.suggestions.length > 0) {
+            console.warn('优化建议:', report.suggestions);
+        }
+        console.groupEnd();
     }
-    window.removeEventListener('orientationchange', () => { });
 });
 
 const closeUserProfile = () => {
@@ -2203,10 +2261,14 @@ ${message.interactionData.newsItems.map(news => `- ${news.title}: ${news.summary
     if (analysisPrompt) {
         // 发送分析请求
         const res = await mockApi.sendMessage(analysisPrompt);
-        chatHistory.value.push(
+        const newMessages = [
             { role: 'user', content: action.description || analysisPrompt },
             res.data
-        );
+        ];
+
+        // 使用chatHistoryManager限制消息数量
+        chatHistory.value.push(...newMessages);
+        chatHistory.value = chatHistoryManager.limitChatMessages(chatHistory.value);
 
         await nextTick();
         scrollToBottom();
@@ -2218,13 +2280,10 @@ ${message.interactionData.newsItems.map(news => `- ${news.title}: ${news.summary
 const onOnboardingComplete = (data) => {
     showOnboarding.value = false;
 
-    // 根据用户偏好显示欢迎消息
+    // 根据用户偏好显示简单的欢迎消息
     if (data && data.profile) {
-        setTimeout(() => {
-            chatHistory.value.push({
-                role: 'assistant',
-                content: `🎉 欢迎使用智投小助！根据您的投资风格（${data.profile.riskLabel}），我将为您提供个性化的投资建议。\n\n您可以随时问我关于投资的任何问题，我会基于您的偏好为您量身定制答案。`
-            });
+        timerManager.create('onboarding-welcome', () => {
+            ElMessage.success(`🎉 投资画像生成完成！欢迎使用智投小助手，根据您的${data.profile.riskLabel}投资风格，我将为您提供个性化服务。`);
         }, 500);
     }
 };
@@ -2234,7 +2293,7 @@ const handleAnalyzeStock = (stock) => {
     showOnboarding.value = false;
     isChatMode.value = true;
 
-    setTimeout(() => {
+    timerManager.create('analyze-stock', () => {
         const message = `请详细分析一下${stock.name}(${stock.code})这只股票，包括基本面分析、技术面分析、投资建议和风险提示。`;
         inputMessage.value = message;
         sendMessage();

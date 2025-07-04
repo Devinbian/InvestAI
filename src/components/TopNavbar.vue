@@ -89,18 +89,15 @@ const handleCommand = async (command) => {
                 );
 
                 // 用户确认退出，执行退出操作
-                userStore.logout();
+                // 如果用户未完成引导流程，保留引导状态
+                const shouldClearOnboarding = userStore.onboardingStatus.completed;
+                userStore.logout(shouldClearOnboarding);
 
                 // 显示退出成功提示
                 ElMessage.success('已成功退出登录');
 
                 // 跳转到主页面（初始状态）
                 await router.push('/');
-
-                // 页面刷新，确保完全重置状态
-                setTimeout(() => {
-                    window.location.reload();
-                }, 500);
 
             } catch (error) {
                 // 用户取消退出，不执行任何操作

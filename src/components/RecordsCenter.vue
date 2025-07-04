@@ -27,7 +27,7 @@
                     </div>
                     <div class="header-info">
                         <h2>记录中心</h2>
-                        <p>管理您的分析报告、消费记录和交易记录</p>
+                        <p>管理您的分析报告、消费记录和各类交易记录</p>
                     </div>
                 </div>
             </div>
@@ -60,6 +60,17 @@
                         AI委托交易记录
                         <span v-if="tradingRecordsCount > 0" class="count-badge">{{ tradingRecordsCount }}</span>
                     </div>
+                    <div class="tab-item" :class="{ active: activeTab === 'userTrading' }"
+                        @click="activeTab = 'userTrading'">
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none">
+                            <path
+                                d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6"
+                                stroke="currentColor" stroke-width="2" fill="none" />
+                        </svg>
+                        用户自助交易记录
+                        <span v-if="userTradingRecordsCount > 0" class="count-badge">{{ userTradingRecordsCount
+                        }}</span>
+                    </div>
                 </div>
             </div>
 
@@ -79,6 +90,11 @@
                 <div v-show="activeTab === 'trading'" class="tab-panel">
                     <AITradingRecords />
                 </div>
+
+                <!-- 用户自助交易记录 -->
+                <div v-show="activeTab === 'userTrading'" class="tab-panel">
+                    <UserTradingRecords />
+                </div>
             </div>
         </div>
     </div>
@@ -97,7 +113,7 @@
                         </el-icon>
                     </button>
                 </div>
-                <p class="header-subtitle">管理您的分析报告、消费记录和交易记录</p>
+                <p class="header-subtitle">管理您的分析报告、消费记录和各类交易记录</p>
             </div>
 
             <!-- 移动端Tab导航 -->
@@ -134,8 +150,21 @@
                                     stroke="currentColor" stroke-width="2" />
                             </svg>
                         </div>
-                        <span class="tab-text">交易记录</span>
+                        <span class="tab-text">AI交易</span>
                         <span v-if="tradingRecordsCount > 0" class="mobile-count-badge">{{ tradingRecordsCount }}</span>
+                    </div>
+                    <div class="mobile-tab-item" :class="{ active: activeTab === 'userTrading' }"
+                        @click="activeTab = 'userTrading'">
+                        <div class="tab-icon">
+                            <svg width="14" height="14" viewBox="0 0 24 24" fill="none">
+                                <path
+                                    d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6"
+                                    stroke="currentColor" stroke-width="2" fill="none" />
+                            </svg>
+                        </div>
+                        <span class="tab-text">自助交易</span>
+                        <span v-if="userTradingRecordsCount > 0" class="mobile-count-badge">{{ userTradingRecordsCount
+                        }}</span>
                     </div>
                 </div>
             </div>
@@ -164,6 +193,11 @@
                 <div v-show="activeTab === 'trading'" class="mobile-tab-panel">
                     <AITradingRecords />
                 </div>
+
+                <!-- 用户自助交易记录 -->
+                <div v-show="activeTab === 'userTrading'" class="mobile-tab-panel">
+                    <UserTradingRecords />
+                </div>
             </div>
         </div>
     </div>
@@ -176,6 +210,7 @@ import { Close } from '@element-plus/icons-vue';
 import QuantAnalysisReports from './QuantAnalysisReports.vue';
 import SmartPointsRecords from './SmartPointsRecords.vue';
 import AITradingRecords from './AITradingRecords.vue';
+import UserTradingRecords from './UserTradingRecords.vue';
 
 // 定义emit事件
 const emit = defineEmits(['close']);
@@ -205,6 +240,7 @@ const toggleFilters = () => {
 const reportsCount = computed(() => userStore.quantAnalysisReports?.length || 0);
 const pointsRecordsCount = computed(() => userStore.smartPointsTransactions?.length || 0);
 const tradingRecordsCount = computed(() => userStore.aiTradingRecords?.length || 0);
+const userTradingRecordsCount = computed(() => userStore.userTradingRecords?.length || 0);
 </script>
 
 <style scoped>
@@ -1278,7 +1314,7 @@ const tradingRecordsCount = computed(() => userStore.aiTradingRecords?.length ||
 
 .mobile-records-container :deep(.stat-item) {
     display: flex !important;
-    flex-direction: column !important;
+    flex-direction: row !important;
     align-items: center !important;
     padding: 8px !important;
     background: white !important;

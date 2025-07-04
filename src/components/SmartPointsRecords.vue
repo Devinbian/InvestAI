@@ -226,29 +226,17 @@ const resetFilters = () => {
 // 格式化时间
 const formatTime = (createdAt) => {
     const date = new Date(createdAt);
-    const now = new Date();
-    const diffTime = now - date;
-    const diffDays = Math.floor(diffTime / (1000 * 60 * 60 * 24));
 
-    if (diffDays === 0) {
-        return date.toLocaleTimeString('zh-CN', {
-            hour: '2-digit',
-            minute: '2-digit'
-        });
-    } else if (diffDays === 1) {
-        return '昨天 ' + date.toLocaleTimeString('zh-CN', {
-            hour: '2-digit',
-            minute: '2-digit'
-        });
-    } else if (diffDays < 7) {
-        return diffDays + '天前';
-    } else {
-        return date.toLocaleDateString('zh-CN', {
-            year: 'numeric',
-            month: '2-digit',
-            day: '2-digit'
-        });
-    }
+    // 格式化为完整的日期时间：YYYY-MM-DD HH:mm:ss
+    return date.toLocaleString('zh-CN', {
+        year: 'numeric',
+        month: '2-digit',
+        day: '2-digit',
+        hour: '2-digit',
+        minute: '2-digit',
+        second: '2-digit',
+        hour12: false
+    });
 };
 </script>
 
@@ -425,6 +413,10 @@ const formatTime = (createdAt) => {
 
 .stat-item {
     text-align: center;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
 }
 
 .stat-label {
@@ -548,17 +540,18 @@ const formatTime = (createdAt) => {
         gap: 8px;
     }
 
-    .stat-item {
-        display: flex;
-        justify-content: space-between;
-        align-items: center;
-        text-align: left;
+    /* 移动端左右布局样式 */
+    .records-stats .stat-item {
+        display: flex !important;
+        flex-direction: row !important;
+        justify-content: space-between !important;
+        align-items: center !important;
+        text-align: left !important;
     }
 
     .stat-label {
         margin-bottom: 0;
     }
-
 
     .filters-row {
         display: flex;
@@ -651,47 +644,51 @@ const formatTime = (createdAt) => {
     }
 
     .records-stats {
-        margin: 12px 16px;
-        padding: 0;
-        background: transparent;
-        border: none;
-        box-shadow: none;
-        display: flex;
-        flex-direction: row;
-        overflow-x: auto;
-        gap: 6px;
-        -webkit-overflow-scrolling: touch;
+        margin: 0.1rem 1rem !important;
+        padding: 0 !important;
+        background: transparent !important;
+        border: none !important;
+        box-shadow: none !important;
+        display: flex !important;
+        flex-direction: row !important;
+        overflow-x: auto !important;
+        gap: 0.1rem !important;
+        -webkit-overflow-scrolling: touch !important;
+        grid-template-columns: none !important;
     }
 
     .stat-item {
-        flex: 0 0 auto;
-        min-width: 68px;
-        background: white;
-        border: 1px solid #e5e7eb;
-        border-radius: 6px;
-        padding: 6px 8px;
-        text-align: center;
-        box-shadow: 0 1px 2px rgba(0, 0, 0, 0.03);
-        display: flex;
-        flex-direction: column;
-        justify-content: center;
-        align-items: center;
+        flex: 0 0 auto !important;
+        min-width: 4.5rem !important;
+        min-height: 1.2rem !important;
+        background: rgba(255, 255, 255, 0.9) !important;
+        border: 1px solid rgba(229, 231, 235, 0.7) !important;
+        border-radius: 0.25rem !important;
+        padding: 0.15rem 0.3rem !important;
+        text-align: left !important;
+        display: flex !important;
+        flex-direction: row !important;
+        justify-content: space-between !important;
+        align-items: center !important;
     }
 
     .stat-label {
-        font-size: 9px;
-        color: #6b7280;
-        margin-bottom: 1px;
-        white-space: nowrap;
-        line-height: 1.2;
+        font-size: 0.6rem !important;
+        color: #6b7280 !important;
+        margin-bottom: 0 !important;
+        white-space: nowrap !important;
+        line-height: 1.0 !important;
+        font-weight: 500 !important;
+        flex-shrink: 0 !important;
     }
 
     .stat-value {
-        font-size: 11px;
-        font-weight: 600;
-        color: #374151;
-        white-space: nowrap;
-        line-height: 1.2;
+        font-size: 0.7rem !important;
+        font-weight: 600 !important;
+        color: #374151 !important;
+        white-space: nowrap !important;
+        line-height: 1.0 !important;
+        text-align: right !important;
     }
 
     .records-pagination {

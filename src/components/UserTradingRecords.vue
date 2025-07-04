@@ -1,5 +1,5 @@
 <template>
-    <div class="ai-trading-records">
+    <div class="user-trading-records">
         <!-- 筛选器 -->
         <div class="trading-filters">
             <div class="filters-row">
@@ -25,18 +25,18 @@
                     <el-select v-if="!isMobile" v-model="filterStatus" placeholder="交易状态" clearable size="small"
                         class="filter-select">
                         <el-option label="全部状态" value="" />
-                        <el-option label="待成交" value="pending" />
-                        <el-option label="已成交" value="completed" />
-                        <el-option label="已撤单" value="cancelled" />
-                        <el-option label="交易失败" value="failed" />
+                        <el-option label="已完成" value="completed" />
+                        <el-option label="进行中" value="pending" />
+                        <el-option label="已取消" value="cancelled" />
+                        <el-option label="失败" value="failed" />
                     </el-select>
                     <!-- 移动端使用原生控件 -->
                     <select v-else v-model="filterStatus" class="mobile-select">
                         <option value="">全部状态</option>
-                        <option value="pending">待成交</option>
-                        <option value="completed">已成交</option>
-                        <option value="cancelled">已撤单</option>
-                        <option value="failed">交易失败</option>
+                        <option value="completed">已完成</option>
+                        <option value="pending">进行中</option>
+                        <option value="cancelled">已取消</option>
+                        <option value="failed">失败</option>
                     </select>
                 </div>
                 <div class="filter-group">
@@ -91,7 +91,7 @@
                                     <el-dropdown-menu>
                                         <el-dropdown-item command="view">查看详情</el-dropdown-item>
                                         <el-dropdown-item v-if="record.status === 'pending'" command="cancel"
-                                            divided>撤单</el-dropdown-item>
+                                            divided>取消交易</el-dropdown-item>
                                     </el-dropdown-menu>
                                 </template>
                             </el-dropdown>
@@ -99,29 +99,27 @@
                     </div>
 
                     <div class="record-content">
-                        <h4 class="record-title">{{ record.stockInfo.name }}({{ record.stockInfo.code }})</h4>
+                        <h4 class="record-title">{{ record.stockName }}({{ record.stockCode }})</h4>
                         <div class="record-info">
                             <div class="info-item">
                                 <span class="label">数量：</span>
                                 <span class="value">{{ record.quantity }}股</span>
                             </div>
                             <div class="info-item">
-                                <span class="label">预期价格：</span>
-                                <span class="value">¥{{ record.expectedPrice }}</span>
+                                <span class="label">成交价格：</span>
+                                <span class="value">¥{{ record.price.toFixed(2) }}</span>
                             </div>
                             <div class="info-item">
-                                <span class="label">总金额：</span>
+                                <span class="label">交易金额：</span>
                                 <span class="value amount">¥{{ record.totalAmount.toLocaleString() }}</span>
                             </div>
-                            <div v-if="record.profit !== undefined" class="info-item">
-                                <span class="label">盈亏：</span>
-                                <span class="value" :class="{ 'profit': record.profit > 0, 'loss': record.profit < 0 }">
-                                    {{ record.profit > 0 ? '+' : '' }}¥{{ record.profit }}
-                                </span>
+                            <div class="info-item">
+                                <span class="label">手续费：</span>
+                                <span class="value">¥{{ record.fee.toFixed(2) }}</span>
                             </div>
                         </div>
-                        <div v-if="record.analysis" class="record-summary">
-                            {{ record.analysis }}
+                        <div v-if="record.note" class="record-summary">
+                            {{ record.note }}
                         </div>
                     </div>
 
@@ -135,7 +133,7 @@
                             </el-icon>
                             {{ getStatusText(record.status) }}
                         </div>
-                        <div class="record-time">{{ formatTime(record.createdAt) }}</div>
+                        <div class="record-time">{{ formatTime(record.executedAt) }}</div>
                     </div>
                 </div>
             </div>
@@ -156,8 +154,8 @@
                 </svg>
             </div>
             <div class="empty-text">
-                <h3>{{ allRecords.length === 0 ? '暂无AI委托交易记录' : '暂无符合条件的记录' }}</h3>
-                <p>{{ allRecords.length === 0 ? '您的AI委托交易记录将在这里显示' : '请尝试调整筛选条件' }}</p>
+                <h3>{{ allRecords.length === 0 ? '暂无自助交易记录' : '暂无符合条件的记录' }}</h3>
+                <p>{{ allRecords.length === 0 ? '您的自助交易记录将在这里显示' : '请尝试调整筛选条件' }}</p>
             </div>
         </div>
 
@@ -168,23 +166,25 @@
                 <div class="stat-value">{{ filteredRecords.length }}</div>
             </div>
             <div class="stat-item">
-                <div class="stat-label">成功交易</div>
-                <div class="stat-value">{{ filteredCompletedCount }}</div>
+                <div class="stat-label">买入次数</div>
+                <div class="stat-value">{{ filteredBuyCount }}</div>
             </div>
             <div class="stat-item">
-                <div class="stat-label">待成交</div>
-                <div class="stat-value">{{ filteredPendingCount }}</div>
+                <div class="stat-label">卖出次数</div>
+                <div class="stat-value">{{ filteredSellCount }}</div>
             </div>
             <div class="stat-item">
-                <div class="stat-label">总盈亏</div>
-                <div class="stat-value" :class="{ 'profit': filteredTotalProfit > 0, 'loss': filteredTotalProfit < 0 }">
-                    {{ filteredTotalProfit > 0 ? '+' : '' }}¥{{ filteredTotalProfit.toFixed(2) }}
-                </div>
+                <div class="stat-label">总交易金额</div>
+                <div class="stat-value">¥{{ filteredTotalAmount.toFixed(2) }}</div>
+            </div>
+            <div class="stat-item">
+                <div class="stat-label">总手续费</div>
+                <div class="stat-value">¥{{ filteredTotalFee.toFixed(2) }}</div>
             </div>
         </div>
 
         <!-- 交易详情弹窗 -->
-        <TradingRecordDetailModal v-model:visible="detailModalVisible" :record="selectedRecord" record-type="ai"
+        <TradingRecordDetailModal v-model:visible="detailModalVisible" :record="selectedRecord" record-type="user"
             @cancel-record="handleCancelRecord" />
     </div>
 </template>
@@ -192,7 +192,7 @@
 <script setup>
 import { ref, computed, watch } from 'vue';
 import { useUserStore } from '../store/user';
-import { ElButton, ElMessage } from 'element-plus';
+import { ElButton, ElSelect, ElOption, ElDatePicker, ElInput, ElPagination, ElMessage, ElTag, ElDropdown, ElDropdownMenu, ElDropdownItem, ElIcon } from 'element-plus';
 import { Search, More, CircleCheck, Clock, CircleClose, Warning } from '@element-plus/icons-vue';
 import TradingRecordDetailModal from './TradingRecordDetailModal.vue';
 
@@ -229,54 +229,42 @@ watch([startDate, endDate], ([start, end]) => {
     }
 });
 
-// 监听filterDateRange变化，同步到移动端日期
-watch(filterDateRange, (newVal) => {
-    if (newVal && newVal.length === 2) {
-        startDate.value = newVal[0];
-        endDate.value = newVal[1];
-    } else {
-        startDate.value = '';
-        endDate.value = '';
-    }
-});
-
-// 获取AI交易记录
-const allRecords = computed(() => userStore.aiTradingRecords || []);
+// 获取交易记录
+const allRecords = computed(() => userStore.getUserTradingRecords());
 
 // 筛选后的记录
 const filteredRecords = computed(() => {
-    let filtered = allRecords.value;
+    let records = [...allRecords.value];
 
-    // 按交易类型筛选
+    // 交易类型筛选
     if (filterType.value) {
-        filtered = filtered.filter(record => record.type === filterType.value);
+        records = records.filter(record => record.type === filterType.value);
     }
 
-    // 按交易状态筛选
+    // 状态筛选
     if (filterStatus.value) {
-        filtered = filtered.filter(record => record.status === filterStatus.value);
+        records = records.filter(record => record.status === filterStatus.value);
     }
 
-    // 按日期范围筛选
+    // 日期范围筛选
     if (filterDateRange.value && filterDateRange.value.length === 2) {
         const [startDate, endDate] = filterDateRange.value;
-        filtered = filtered.filter(record => {
-            const recordDate = new Date(record.createdAt).toISOString().split('T')[0];
+        records = records.filter(record => {
+            const recordDate = new Date(record.executedAt).toISOString().split('T')[0];
             return recordDate >= startDate && recordDate <= endDate;
         });
     }
 
-    // 按关键词筛选
+    // 关键词搜索
     if (filterKeyword.value) {
         const keyword = filterKeyword.value.toLowerCase();
-        filtered = filtered.filter(record =>
-            record.stockInfo.name.toLowerCase().includes(keyword) ||
-            record.stockInfo.code.toLowerCase().includes(keyword)
+        records = records.filter(record =>
+            record.stockName.toLowerCase().includes(keyword) ||
+            record.stockCode.toLowerCase().includes(keyword)
         );
     }
 
-    // 按创建时间倒序排列
-    return filtered.sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
+    return records;
 });
 
 // 分页后的记录
@@ -286,19 +274,21 @@ const paginatedRecords = computed(() => {
     return filteredRecords.value.slice(start, end);
 });
 
-// 计算筛选后的统计数据
-const filteredCompletedCount = computed(() =>
-    filteredRecords.value.filter(record => record.status === 'completed').length
+// 统计数据
+const filteredBuyCount = computed(() =>
+    filteredRecords.value.filter(record => record.type === 'buy').length
 );
 
-const filteredPendingCount = computed(() =>
-    filteredRecords.value.filter(record => record.status === 'pending').length
+const filteredSellCount = computed(() =>
+    filteredRecords.value.filter(record => record.type === 'sell').length
 );
 
-const filteredTotalProfit = computed(() => {
-    return filteredRecords.value
-        .filter(record => record.profit !== undefined)
-        .reduce((total, record) => total + record.profit, 0);
+const filteredTotalAmount = computed(() => {
+    return filteredRecords.value.reduce((total, record) => total + record.totalAmount, 0);
+});
+
+const filteredTotalFee = computed(() => {
+    return filteredRecords.value.reduce((total, record) => total + record.fee, 0);
 });
 
 // 重置筛选条件
@@ -307,33 +297,50 @@ const resetFilters = () => {
     filterStatus.value = '';
     filterDateRange.value = null;
     filterKeyword.value = '';
+    startDate.value = '';
+    endDate.value = '';
     currentPage.value = 1;
 };
 
 // 获取状态文本
 const getStatusText = (status) => {
     const statusMap = {
-        'pending': '待成交',
-        'completed': '已成交',
-        'cancelled': '已撤单',
-        'failed': '交易失败'
+        'completed': '已完成',
+        'pending': '进行中',
+        'cancelled': '已取消',
+        'failed': '失败'
     };
     return statusMap[status] || status;
 };
 
-// 格式化时间 - 显示完整的日期时分秒
+// 格式化时间
 const formatTime = (dateString) => {
-    if (!dateString) return '-';
     const date = new Date(dateString);
-    return date.toLocaleString('zh-CN', {
-        year: 'numeric',
-        month: '2-digit',
-        day: '2-digit',
-        hour: '2-digit',
-        minute: '2-digit',
-        second: '2-digit',
-        hour12: false
-    });
+    const now = new Date();
+    const diffTime = now - date;
+    const diffDays = Math.floor(diffTime / (1000 * 60 * 60 * 24));
+
+    if (diffDays === 0) {
+        return '今天 ' + date.toLocaleTimeString('zh-CN', {
+            hour: '2-digit',
+            minute: '2-digit'
+        });
+    } else if (diffDays === 1) {
+        return '昨天 ' + date.toLocaleTimeString('zh-CN', {
+            hour: '2-digit',
+            minute: '2-digit'
+        });
+    } else if (diffDays < 7) {
+        return diffDays + '天前';
+    } else {
+        return date.toLocaleDateString('zh-CN', {
+            year: 'numeric',
+            month: '2-digit',
+            day: '2-digit',
+            hour: '2-digit',
+            minute: '2-digit'
+        });
+    }
 };
 
 // 查看记录详情
@@ -349,30 +356,37 @@ const handleRecordAction = async (command, record) => {
             viewRecord(record);
             break;
         case 'cancel':
-            await cancelOrder(record.id);
+            await cancelTransaction(record.id);
             break;
     }
 };
 
-// 撤单操作
-const cancelOrder = (tradeId) => {
-    const success = userStore.cancelAITradingOrder(tradeId);
-    if (success) {
-        ElMessage.success('撤单成功');
-    } else {
-        ElMessage.error('撤单失败');
-    }
+// 取消交易操作
+const cancelTransaction = (recordId) => {
+    // 这里可以实现取消交易的逻辑
+    console.log('取消交易:', recordId);
+    ElMessage.info('取消交易功能开发中...');
 };
 
 // 处理详情弹窗中的取消记录操作
 const handleCancelRecord = (record) => {
-    cancelOrder(record.id);
+    cancelTransaction(record.id);
     detailModalVisible.value = false;
 };
+
+// 分页处理
+const handlePageChange = (page) => {
+    currentPage.value = page;
+};
+
+// 监听筛选条件变化，重置分页
+watch([filterType, filterStatus, filterDateRange, filterKeyword], () => {
+    currentPage.value = 1;
+});
 </script>
 
 <style scoped>
-.ai-trading-records {
+.user-trading-records {
     padding: 24px;
     height: 100%;
     display: flex;
@@ -487,7 +501,7 @@ const handleCancelRecord = (record) => {
 
 .info-item .label {
     color: #6b7280;
-    min-width: 60px;
+    min-width: 80px;
 }
 
 .info-item .value {
@@ -496,16 +510,6 @@ const handleCancelRecord = (record) => {
 
 .info-item .value.amount {
     color: #374151;
-    font-weight: 600;
-}
-
-.info-item .value.profit {
-    color: #059669;
-    font-weight: 600;
-}
-
-.info-item .value.loss {
-    color: #dc2626;
     font-weight: 600;
 }
 
@@ -625,14 +629,6 @@ const handleCancelRecord = (record) => {
     color: #1e293b;
 }
 
-.stat-value.profit {
-    color: #059669;
-}
-
-.stat-value.loss {
-    color: #dc2626;
-}
-
 /* PC端按钮样式 */
 .pc-filter-btn {
     padding: 8px 16px;
@@ -651,20 +647,6 @@ const handleCancelRecord = (record) => {
     border-color: #cbd5e1;
     color: #334155;
     transform: translateY(-1px);
-}
-
-.pc-cancel-btn {
-    padding: 6px 12px;
-    font-size: 0.875rem;
-    font-weight: 500;
-    border-radius: 6px;
-    height: auto;
-    transition: all 0.2s ease;
-}
-
-.pc-cancel-btn:hover {
-    transform: translateY(-1px);
-    box-shadow: 0 2px 8px rgba(239, 68, 68, 0.3);
 }
 
 /* 响应式设计 */
@@ -694,8 +676,8 @@ const handleCancelRecord = (record) => {
 }
 
 @media (max-width: 768px) {
-    .ai-trading-records {
-        padding: 16px;
+    .user-trading-records {
+        padding: 0;
     }
 
     .filters-row {
@@ -739,16 +721,6 @@ const handleCancelRecord = (record) => {
         font-weight: 600;
     }
 
-    .record-card .info-item .value.profit {
-        color: #059669;
-        font-weight: 600;
-    }
-
-    .record-card .info-item .value.loss {
-        color: #dc2626;
-        font-weight: 600;
-    }
-
     .record-card .record-summary {
         font-size: 0.7rem;
         color: #6b7280;
@@ -771,16 +743,15 @@ const handleCancelRecord = (record) => {
     }
 
     .records-stats {
-        margin: 0.25rem 1rem !important;
-        padding: 0.5rem !important;
-        background: rgba(248, 250, 252, 0.8) !important;
-        border: 1px solid rgba(226, 232, 240, 0.6) !important;
-        border-radius: 0.5rem !important;
-        box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1) !important;
+        margin: 0.1rem 1rem !important;
+        padding: 0 !important;
+        background: transparent !important;
+        border: none !important;
+        box-shadow: none !important;
         display: flex !important;
         flex-direction: row !important;
         overflow-x: auto !important;
-        gap: 0.25rem !important;
+        gap: 0.1rem !important;
         -webkit-overflow-scrolling: touch !important;
         grid-template-columns: none !important;
     }
@@ -789,8 +760,8 @@ const handleCancelRecord = (record) => {
         flex: 0 0 auto !important;
         min-width: 4.5rem !important;
         min-height: 1.2rem !important;
-        background: rgba(255, 255, 255, 0.95) !important;
-        border: 1px solid rgba(229, 231, 235, 0.8) !important;
+        background: rgba(255, 255, 255, 0.9) !important;
+        border: 1px solid rgba(229, 231, 235, 0.7) !important;
         border-radius: 0.25rem !important;
         padding: 0.15rem 0.3rem !important;
         text-align: left !important;
@@ -818,15 +789,6 @@ const handleCancelRecord = (record) => {
         line-height: 1.0 !important;
         text-align: right !important;
     }
-
-    .stat-value.profit {
-        color: #059669;
-    }
-
-    .stat-value.loss {
-        color: #dc2626;
-    }
-
 
     .filters-row {
         display: flex;
@@ -941,16 +903,6 @@ const handleCancelRecord = (record) => {
 
     .record-card .info-item .value.amount {
         color: #374151;
-        font-weight: 600;
-    }
-
-    .record-card .info-item .value.profit {
-        color: #059669;
-        font-weight: 600;
-    }
-
-    .record-card .info-item .value.loss {
-        color: #dc2626;
         font-weight: 600;
     }
 

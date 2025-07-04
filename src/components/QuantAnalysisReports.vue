@@ -145,8 +145,70 @@
                 layout="total, prev, pager, next, jumper" small />
         </div>
 
-        <!-- 报告详情对话框 -->
-        <el-dialog v-model="showReportDetail" :title="selectedReport?.title" width="800px" class="report-detail-dialog">
+        <!-- 移动端底部弹起样式 -->
+        <div v-if="isMobile && showReportDetail" class="mobile-modal-overlay" @click="showReportDetail = false">
+            <div class="mobile-modal-container" @click.stop>
+                <div class="mobile-modal-header">
+                    <div class="header-drag-handle"></div>
+                    <div class="header-title-bar">
+                        <h3>{{ selectedReport?.title }}</h3>
+                        <button class="mobile-close-btn" @click="showReportDetail = false">
+                            <el-icon>
+                                <Close />
+                            </el-icon>
+                        </button>
+                    </div>
+                </div>
+                <div class="mobile-modal-content">
+                    <div v-if="selectedReport" class="report-detail">
+                        <div class="detail-header">
+                            <div class="detail-info">
+                                <div class="info-row">
+                                    <span class="label">股票：</span>
+                                    <span class="value">{{ selectedReport.stockName }}({{ selectedReport.stockCode
+                                    }})</span>
+                                </div>
+                                <div class="info-row">
+                                    <span class="label">报告类型：</span>
+                                    <el-tag :type="getReportTypeColor(selectedReport.type)" size="small">
+                                        {{ getReportTypeName(selectedReport.type) }}
+                                    </el-tag>
+                                </div>
+                                <div class="info-row">
+                                    <span class="label">生成时间：</span>
+                                    <span class="value">{{ formatDateTime(selectedReport.createdAt) }}</span>
+                                </div>
+                                <div class="info-row">
+                                    <span class="label">分析费用：</span>
+                                    <span class="value cost">{{ selectedReport.cost }}智点</span>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="detail-content">
+                            <h4>报告摘要</h4>
+                            <p>{{ selectedReport.summary }}</p>
+
+                            <h4>详细内容</h4>
+                            <div class="report-content-text" v-html="selectedReport.content"></div>
+                        </div>
+                    </div>
+                </div>
+                <div class="mobile-modal-footer">
+                    <el-button @click="showReportDetail = false">关闭</el-button>
+                    <el-button type="primary" @click="downloadReport(selectedReport)">
+                        <el-icon>
+                            <Download />
+                        </el-icon>
+                        下载PDF
+                    </el-button>
+                </div>
+            </div>
+        </div>
+
+        <!-- PC端标准对话框 -->
+        <el-dialog v-else v-model="showReportDetail" :title="selectedReport?.title" width="800px"
+            class="report-detail-dialog">
             <div v-if="selectedReport" class="report-detail">
                 <div class="detail-header">
                     <div class="detail-info">
@@ -197,7 +259,7 @@
 import { ref, computed, onMounted, watch } from 'vue';
 import { useUserStore } from '../store/user';
 import { ElMessage, ElMessageBox } from 'element-plus';
-import { Download, Search, More, CircleCheck } from '@element-plus/icons-vue';
+import { Download, Search, More, CircleCheck, Close } from '@element-plus/icons-vue';
 
 const userStore = useUserStore();
 
@@ -857,6 +919,192 @@ const exportAllReports = () => {
         padding: 24px 16px;
         height: 200px;
     }
+}
+
+/* 移动端底部弹起样式 */
+.mobile-modal-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: rgba(0, 0, 0, 0.5);
+    z-index: 2000;
+    display: flex;
+    align-items: flex-end;
+    justify-content: center;
+}
+
+.mobile-modal-container {
+    width: 100%;
+    max-height: 95vh;
+    background: #ffffff;
+    border-radius: 16px 16px 0 0;
+    overflow: hidden;
+    box-shadow: 0 -4px 20px rgba(0, 0, 0, 0.15);
+    animation: slideUpModal 0.3s ease-out;
+    display: flex;
+    flex-direction: column;
+}
+
+@keyframes slideUpModal {
+    from {
+        opacity: 0;
+        transform: translateY(100%);
+    }
+
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+.mobile-modal-header {
+    flex-shrink: 0;
+    padding: 12px 20px 16px 20px;
+    background: #ffffff;
+    border-bottom: 1px solid #f1f5f9;
+}
+
+.header-drag-handle {
+    width: 40px;
+    height: 4px;
+    background: #d1d5db;
+    border-radius: 2px;
+    margin: 0 auto 16px auto;
+}
+
+.header-title-bar {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+}
+
+.header-title-bar h3 {
+    font-size: 15px;
+    font-weight: 600;
+    color: #18181b;
+    margin: 0;
+    line-height: 1.2;
+    max-width: calc(100% - 40px);
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.mobile-close-btn {
+    width: 28px;
+    height: 28px;
+    border-radius: 50%;
+    background: #f8fafc;
+    border: none;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: #6b7280;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    flex-shrink: 0;
+}
+
+.mobile-close-btn:active {
+    background: #f1f5f9;
+    transform: scale(0.95);
+}
+
+.mobile-modal-content {
+    flex: 1;
+    overflow-y: auto;
+    padding: 0 16px;
+    -webkit-overflow-scrolling: touch;
+}
+
+.mobile-modal-footer {
+    flex-shrink: 0;
+    padding: 12px 16px;
+    background: #fafafa;
+    border-top: 1px solid #f1f5f9;
+    display: flex;
+    gap: 8px;
+    justify-content: flex-end;
+}
+
+.mobile-modal-footer .el-button {
+    padding: 8px 16px;
+    border-radius: 4px;
+    font-size: 13px;
+    font-weight: 500;
+}
+
+/* 移动端报告详情样式优化 */
+.mobile-modal-container .report-detail {
+    padding: 16px 0;
+}
+
+.mobile-modal-container .detail-header {
+    margin-bottom: 16px;
+    padding-bottom: 12px;
+    border-bottom: 1px solid #e5e7eb;
+}
+
+.mobile-modal-container .detail-info {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 6px;
+}
+
+.mobile-modal-container .info-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 6px 8px;
+    background: rgba(255, 255, 255, 0.7);
+    border-radius: 4px;
+    border: 1px solid rgba(229, 231, 235, 0.5);
+    min-height: 32px;
+}
+
+.mobile-modal-container .info-row .label {
+    font-size: 11px;
+    color: #6b7280;
+    font-weight: 500;
+    line-height: 1.2;
+}
+
+.mobile-modal-container .info-row .value {
+    font-size: 12px;
+    color: #374151;
+    font-weight: 600;
+    line-height: 1.2;
+}
+
+.mobile-modal-container .info-row .value.cost {
+    color: #dc2626;
+    font-weight: 600;
+}
+
+.mobile-modal-container .detail-content h4 {
+    margin: 16px 0 8px 0;
+    font-size: 13px;
+    font-weight: 600;
+    color: #18181b;
+}
+
+.mobile-modal-container .detail-content p {
+    margin: 0 0 12px 0;
+    line-height: 1.4;
+    color: #374151;
+    font-size: 12px;
+}
+
+.mobile-modal-container .report-content-text {
+    background: #f8fafc;
+    border-radius: 6px;
+    padding: 10px 12px;
+    line-height: 1.4;
+    color: #374151;
+    white-space: pre-wrap;
+    font-size: 12px;
 }
 
 /* 确保弹窗在移动端侧边栏上方显示 */

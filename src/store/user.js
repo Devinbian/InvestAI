@@ -22,6 +22,9 @@ export const useUserStore = defineStore("user", {
     aiTradingRecords: JSON.parse(
       localStorage.getItem("aiTradingRecords") || "[]",
     ), // AI委托交易记录
+    userTradingRecords: JSON.parse(
+      localStorage.getItem("userTradingRecords") || "[]",
+    ), // 用户自助交易记录
 
     // 委托单管理
     pendingOrders: JSON.parse(localStorage.getItem("pendingOrders") || "[]"), // 待成交委托单
@@ -71,6 +74,7 @@ export const useUserStore = defineStore("user", {
       this.quantAnalysisReports = [];
       this.smartPointsTransactions = [];
       this.aiTradingRecords = [];
+      this.userTradingRecords = [];
       localStorage.removeItem("token");
       localStorage.removeItem("userInfo");
       localStorage.removeItem("watchlist");
@@ -80,6 +84,7 @@ export const useUserStore = defineStore("user", {
       localStorage.removeItem("quantAnalysisReports");
       localStorage.removeItem("smartPointsTransactions");
       localStorage.removeItem("aiTradingRecords");
+      localStorage.removeItem("userTradingRecords");
       localStorage.removeItem("pendingOrders");
 
       // 引导状态处理逻辑：
@@ -161,6 +166,19 @@ export const useUserStore = defineStore("user", {
       // 扣除余额
       this.balance -= totalCost;
 
+      // 记录交易记录
+      this.addUserTradingRecord({
+        type: "buy",
+        stockCode: stock.code,
+        stockName: stock.name,
+        quantity: quantity,
+        price: price,
+        totalAmount: totalCost,
+        fee: totalCost * 0.0003, // 假设手续费为0.03%
+        status: "completed",
+        executedAt: new Date().toISOString(),
+      });
+
       // 保存到本地存储
       localStorage.setItem("portfolio", JSON.stringify(this.portfolio));
       localStorage.setItem("balance", this.balance.toString());
@@ -197,6 +215,19 @@ export const useUserStore = defineStore("user", {
 
       // 增加余额
       this.balance += totalRevenue;
+
+      // 记录交易记录
+      this.addUserTradingRecord({
+        type: "sell",
+        stockCode: stockCode,
+        stockName: position.name,
+        quantity: quantity,
+        price: price,
+        totalAmount: totalRevenue,
+        fee: totalRevenue * 0.0003, // 假设手续费为0.03%
+        status: "completed",
+        executedAt: new Date().toISOString(),
+      });
 
       // 保存到本地存储
       localStorage.setItem("portfolio", JSON.stringify(this.portfolio));
@@ -424,6 +455,42 @@ export const useUserStore = defineStore("user", {
       });
     },
 
+    // 用户自助交易记录管理
+    addUserTradingRecord(record) {
+      const recordData = {
+        id: `USER_TRADE_${Date.now()}`,
+        ...record,
+        createdAt: new Date().toISOString(),
+      };
+
+      this.userTradingRecords.unshift(recordData);
+      localStorage.setItem(
+        "userTradingRecords",
+        JSON.stringify(this.userTradingRecords),
+      );
+
+      return recordData;
+    },
+
+    getUserTradingRecords() {
+      return this.userTradingRecords;
+    },
+
+    deleteUserTradingRecord(recordId) {
+      const index = this.userTradingRecords.findIndex(
+        (record) => record.id === recordId,
+      );
+      if (index > -1) {
+        this.userTradingRecords.splice(index, 1);
+        localStorage.setItem(
+          "userTradingRecords",
+          JSON.stringify(this.userTradingRecords),
+        );
+        return true;
+      }
+      return false;
+    },
+
     // 模拟生成一些测试数据
     generateMockRecords() {
       // 生成量化分析报告测试数据
@@ -499,6 +566,77 @@ export const useUserStore = defineStore("user", {
       ];
 
       mockTrades.forEach((trade) => this.addAITradingRecord(trade));
+
+      // 生成用户自助交易记录测试数据
+      const mockUserTrades = [
+        {
+          type: "buy",
+          stockCode: "000001",
+          stockName: "平安银行",
+          quantity: 1000,
+          price: 12.18,
+          totalAmount: 12180,
+          fee: 3.65,
+          status: "completed",
+          executedAt: new Date(
+            Date.now() - 1 * 24 * 60 * 60 * 1000,
+          ).toISOString(),
+        },
+        {
+          type: "sell",
+          stockCode: "600519",
+          stockName: "贵州茅台",
+          quantity: 100,
+          price: 1685.0,
+          totalAmount: 168500,
+          fee: 50.55,
+          status: "completed",
+          executedAt: new Date(
+            Date.now() - 2 * 24 * 60 * 60 * 1000,
+          ).toISOString(),
+        },
+        {
+          type: "buy",
+          stockCode: "000002",
+          stockName: "万科A",
+          quantity: 2000,
+          price: 8.45,
+          totalAmount: 16900,
+          fee: 5.07,
+          status: "completed",
+          executedAt: new Date(
+            Date.now() - 3 * 24 * 60 * 60 * 1000,
+          ).toISOString(),
+        },
+        {
+          type: "sell",
+          stockCode: "000858",
+          stockName: "五粮液",
+          quantity: 300,
+          price: 128.5,
+          totalAmount: 38550,
+          fee: 11.57,
+          status: "completed",
+          executedAt: new Date(
+            Date.now() - 5 * 24 * 60 * 60 * 1000,
+          ).toISOString(),
+        },
+        {
+          type: "buy",
+          stockCode: "300750",
+          stockName: "宁德时代",
+          quantity: 200,
+          price: 185.6,
+          totalAmount: 37120,
+          fee: 11.14,
+          status: "completed",
+          executedAt: new Date(
+            Date.now() - 7 * 24 * 60 * 60 * 1000,
+          ).toISOString(),
+        },
+      ];
+
+      mockUserTrades.forEach((trade) => this.addUserTradingRecord(trade));
 
       // 生成委托单测试数据
       if (this.pendingOrders.length === 0) {

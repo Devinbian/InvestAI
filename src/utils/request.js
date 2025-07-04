@@ -135,7 +135,8 @@ export const authFetchEventSource = async (url, options = {}) => {
       onerror(err) {
         // 网络错误处理
         err.message = handleNetworkError(err);
-        return options.onerror(err);
+        options.onerror(err);
+        throw err;
       },
     });
   } catch (err) {

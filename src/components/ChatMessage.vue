@@ -53,10 +53,7 @@
             <div v-if="message.hasStockInfo && message.stockInfo" class="stock-actions">
                 <StockActionButtons :stock="message.stockInfo" :actions="getChatStockActions(message)"
                     :is-mobile="isMobileView" :mode="message.isBuyMode ? 'minimal' : 'compact'"
-                    @action-click="handleChatStockAction" @add-watchlist="(stock) => $emit('add-to-watchlist', stock)"
-                    @remove-watchlist="(stock) => $emit('remove-from-watchlist', stock.code)"
-                    @show-buy-dialog="(stock) => $emit('show-buy-dialog', stock)"
-                    @show-ai-trading-dialog="(stock) => $emit('show-quant-analysis-dialog', stock)" />
+                    @action-click="handleChatStockAction" />
 
                 <!-- 设置提醒按钮（仅在量化分析消息中显示） -->
                 <el-button v-if="message.isQuantAnalysis" size="small"
@@ -453,10 +450,19 @@ const handleChatStockAction = (event) => {
         case 'buy':
             emit('show-buy-dialog', event.stock);
             break;
+        case 'sell':
+            emit('show-buy-dialog', event.stock);
+            break;
+        case 'analysis':
+        case 'paidAnalysis':
+            emit('show-analysis-dialog', event.stock);
+            break;
         case 'aiTrading':
         case 'quantAnalysis':
             emit('show-quant-analysis-dialog', event.stock);
             break;
+        default:
+            console.warn('未处理的股票操作:', event.action);
     }
 };
 

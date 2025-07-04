@@ -133,10 +133,7 @@
                             <div v-if="message.hasStockInfo && message.stockInfo" class="stock-actions">
                                 <StockActionButtons :stock="message.stockInfo" :actions="getChatStockActions(message)"
                                     :is-mobile="isMobileView" :mode="message.isBuyMode ? 'minimal' : 'compact'"
-                                    @action-click="handleChatStockAction" @add-watchlist="addToWatchlist"
-                                    @remove-watchlist="(stock) => removeFromWatchlist(stock.code)"
-                                    @show-buy-dialog="showBuyDialog"
-                                    @show-ai-trading-dialog="showQuantAnalysisDialog" />
+                                    @action-click="handleChatStockAction" />
 
                                 <!-- 设置提醒按钮（仅在量化分析消息中显示） -->
                                 <el-button v-if="message.isQuantAnalysis" size="small"
@@ -1899,7 +1896,9 @@ const handleStockAction = ({ action, stock }) => {
         addWatchlist: () => addToWatchlist(stock),
         removeWatchlist: () => removeFromWatchlist(stock.code),
         analysis: () => showPaidAnalysisDialog(stock, userStore, continueAnalysis),
+        paidAnalysis: () => showPaidAnalysisDialog(stock, userStore, continueAnalysis),
         aiTrading: () => showQuantAnalysisDialog(stock),
+        quantAnalysis: () => showQuantAnalysisDialog(stock),
         buy: () => showBuyDialog(stock, 'buy'),
         addPosition: () => showBuyDialog(stock, 'buy'),
         sell: () => showBuyDialog(stock, 'sell')

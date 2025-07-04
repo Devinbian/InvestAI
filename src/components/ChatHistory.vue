@@ -595,7 +595,7 @@ onUnmounted(() => {
 
 .history-item {
     @include flex-between;
-    padding: 12px;
+    padding: 4px 10px;
     margin: 2px 0;
     border-radius: 8px;
     position: relative;

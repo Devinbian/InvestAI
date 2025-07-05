@@ -207,8 +207,8 @@ const handleLogin = async () => {
                     let majorCategories = [];
                     let subCategories = [];
                     sectors.forEach(item => {
-                        majorCategories.push({ value: item.value, label: item.label });
-                        subCategories = subCategories.concat(item.children);
+                        majorCategories.push(item.value);
+                        subCategories = subCategories.concat(item.children.map(subItem => subItem.value));
                     });
 
                     // 对于新用户，不设置preferences，让他们进入引导流程
@@ -248,6 +248,11 @@ const handleLogin = async () => {
                     };
                     userStore.setUserInfo(userInfo);
                     userStore.setToken(res.data.data.token);
+                    if(preferences && preferences.completed) {
+                        localStorage.setItem('onboardingCompleted', 'true');
+                    }else {
+                        localStorage.setItem('onboardingCompleted', 'false');
+                    }
 
                     closeDialog();
 

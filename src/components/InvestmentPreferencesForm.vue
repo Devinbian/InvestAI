@@ -499,16 +499,12 @@ function handleNext() {
 
 // 检查投资经验是否选中
 function isExperienceSelected(option) {
-    // 支持字符串和数字格式的匹配
-    return localPreferencesForm.experience === option.id ||
-        localPreferencesForm.experience === option.value;
+    return localPreferencesForm.experience === option.id;
 }
 
 // 检查风险偏好是否选中
 function isRiskLevelSelected(option) {
-    // 支持字符串和数字格式的匹配
-    return localPreferencesForm.riskLevel === option.value ||
-        localPreferencesForm.riskLevel === option.riskLevel;
+    return localPreferencesForm.riskLevel === option.riskLevel;
 }
 
 function handleExperienceSelect(experienceId) {
@@ -624,11 +620,11 @@ const handlePreferencesSubmit = async () => {
     let res = await updateUserPortrait(portraitData);
 
     if (res && res.data && res.data.success) {
-        // 确保保存到用户信息中的数据格式正确（字符串格式）
+        // 确保保存到用户信息中的数据格式正确（一定不要使用字符串格式）
         const finalPreferences = {
             ...preferences,
-            riskLevel: convertRiskLevelToString(preferences.riskLevel),
-            experience: convertExperienceToString(preferences.experience)
+            riskLevel: preferences.riskLevel,
+            experience: preferences.experience
         };
 
         const currentUser = userStore.userInfo;

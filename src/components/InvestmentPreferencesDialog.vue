@@ -237,7 +237,8 @@ const localPreferences = reactive({
     },
     sectors: {
         majorCategories: [],
-        subCategories: []
+        subCategories: [],
+        categories: []
     }
 });
 
@@ -267,146 +268,45 @@ watch(currentStep, () => {
 
 // Initialize with existing user preferences when dialog opens
 const initializePreferences = async () => {
+    let res = await getUserPortrait();
+    if (res && res.data && res.data.success) {
+        let userPortrait = res.data.data || {};
+        // 关注板块
+        let sectors = JSON.parse(userPortrait?.focusIndustry || null) || [];
+        let majorCategories = [];
+        let subCategories = [];
+        sectors.forEach(item => {
+            majorCategories.push(item.value);
+            subCategories = subCategories.concat(item.children.map(subItem => subItem.value));
+        });
+        let preferences = {
+            experience: userPortrait.investExperience, // 投资经验
+            riskLevel: userPortrait.investStyle, // 投资风格
+            userTraits: {
+                active_participation: userPortrait.involveLevel,
+                innovation_trial: userPortrait.innovationAcceptance,
+                learning_willingness: userPortrait.learnIntention,
+                risk_tolerance: userPortrait.riskTolerance,
+                strategy_dependency: userPortrait.strategyComplexity,
+                trading_frequency: userPortrait.tradeFrequency,
+            },
+            sectors: {
+                majorCategories: majorCategories,
+                subCategories: subCategories,
+                categories: sectors
+            },
+            completed: userPortrait.completeUserPortraitFlag, // 用户画像是否完成设置
+            currentStep: userPortrait.userPortraitStep, // 用户画像设置阶段，取值为0-4，0-未开始设置，4-全部完成设置
+        };
 
-
-    // 按优先级获取偏好设置数据
-    let preferences = null;
-
-    // 1. 优先从userStore.userInfo.preferences获取（引导完成后的数据）
-    if (userStore.userInfo?.preferences?.riskLevel) {
-        preferences = userStore.userInfo.preferences;
-
-    }
-    // 2. 如果没有，尝试从引导状态中获取（引导过程中的数据）
-    else if (userStore.onboardingStatus?.preferences?.riskLevel) {
-        preferences = userStore.onboardingStatus.preferences;
-
-    }
-    // 3. 如果本地都没有，才从API获取（服务器端数据）
-    else {
-        console.log('❌ 本地没有偏好设置，尝试从API获取...');
-        try {
-            preferences = await getUserPortraitDetail();
-            if (preferences) {
-                console.log('✅ 从API获取偏好设置:', preferences);
-            } else {
-                console.log('❌ API也没有返回偏好设置');
-            }
-        } catch (error) {
-            console.error('从API获取偏好设置失败:', error);
-        }
-    }
-
-    if (preferences) {
-        // 确保数据结构完整性
-        let userTraits = preferences.userTraits || {};
-        userTraits.risk_tolerance = userTraits.risk_tolerance || 3;
-        userTraits.active_participation = userTraits.active_participation || 3;
-        userTraits.learning_willingness = userTraits.learning_willingness || 3;
-        userTraits.innovation_trial = userTraits.innovation_trial || 3;
-        userTraits.strategy_dependency = userTraits.strategy_dependency || 2;
-        userTraits.trading_frequency = userTraits.trading_frequency || 2;
-        preferences.userTraits = userTraits;
-
-        // 确保sectors结构完整性
-        if (!preferences.sectors) {
-            preferences.sectors = {
-                majorCategories: [],
-                subCategories: [],
-                categories: []
-            };
-        }
-
+        userStore.setUserPortrait(preferences);
         Object.assign(localPreferences, preferences);
 
     } else {
-        console.log('❌ 没有找到任何偏好设置数据');
-
-        // 检查用户是否应该先完成引导流程
-        if (userStore.shouldShowOnboarding()) {
-            console.log('❌ 用户应该先完成引导流程');
-            ElMessage.warning('请先完成投资偏好引导流程');
-            visible.value = false;
-            return;
-        }
-
-        // 如果所有来源都没有数据，使用默认值
-        Object.assign(localPreferences, {
-            riskLevel: null,
-            experience: null,
-            userTraits: {
-                risk_tolerance: 3,
-                active_participation: 3,
-                learning_willingness: 3,
-                strategy_dependency: 2,
-                trading_frequency: 2,
-                innovation_trial: 3
-            },
-            sectors: {
-                majorCategories: [],
-                subCategories: [],
-                categories: []
-            }
-        });
-        console.log('✅ 使用默认偏好设置:', localPreferences);
+      //  ElMessage.error('加载用户偏好失败，请稍后重试');
     }
 };
 
-const getUserPortraitDetail = async () => {
-    try {
-        let res = await getUserPortrait();
-
-        if (res && res.data && res.data.success) {
-            let userPortrait = res.data.data || {};
-
-            // 检查是否有有效的偏好设置数据
-            if (!userPortrait.investExperience && !userPortrait.investStyle) {
-                return null;
-            }
-
-            // 关注板块
-            let sectors = JSON.parse(res.data.data?.focusIndustry || null) || [];
-
-            let majorCategories = [];
-            let subCategories = [];
-            sectors.forEach(parentNode => {
-                // 添加父级value
-                majorCategories.push(parentNode.value);
-
-                // 添加所有子级value
-                parentNode.children.forEach(childNode => {
-                    subCategories.push(childNode.value);
-                });
-            });
-
-            let preferences = {
-                experience: userPortrait.investExperience, // 投资经验
-                riskLevel: userPortrait.investStyle, // 投资风格
-                userTraits: {
-                    active_participation: userPortrait.involveLevel,
-                    innovation_trial: userPortrait.innovationAcceptance,
-                    learning_willingness: userPortrait.learnIntention,
-                    risk_tolerance: userPortrait.riskTolerance,
-                    strategy_dependency: userPortrait.strategyComplexity,
-                    trading_frequency: userPortrait.tradeFrequency,
-                },
-                sectors: {
-                    majorCategories: majorCategories,
-                    subCategories: subCategories,
-                    categories: sectors
-                }
-            };
-
-            userStore.setUserPortrait(preferences);
-            return preferences;
-        } else {
-            return null;
-        }
-    } catch (error) {
-        console.error('获取用户画像API调用失败:', error);
-        return null;
-    }
-};
 
 function handlePreferencesUpdate(newPrefs) {
     Object.assign(localPreferences, newPrefs);
@@ -489,75 +389,24 @@ const handlePreferencesSubmit = async () => {
         completedAt: new Date().toISOString()
     };
 
-    // 将数值格式转换为字符串格式（API需要）
-    const convertRiskLevelToString = (riskLevel) => {
-        const riskLevelMap = {
-            1: 'conservative',
-            2: 'stable',
-            3: 'balanced',
-            4: 'growth',
-            5: 'aggressive'
-        };
-        return riskLevelMap[riskLevel] || 'balanced';
-    };
-
-    const convertExperienceToString = (experience) => {
-        const experienceMap = {
-            1: 'beginner',
-            2: 'experienced'
-        };
-        return experienceMap[experience] || 'beginner';
-    };
-
-    // 将字符串格式转换为数值格式（API需要）
-    const convertRiskLevelToNumber = (riskLevel) => {
-        if (typeof riskLevel === 'number') return riskLevel;
-        const riskLevelMap = {
-            'conservative': 1,
-            'stable': 2,
-            'balanced': 3,
-            'growth': 4,
-            'aggressive': 5
-        };
-        return riskLevelMap[riskLevel] || 3;
-    };
-
-    const convertExperienceToNumber = (experience) => {
-        if (typeof experience === 'number') return experience;
-        const experienceMap = {
-            'beginner': 1,
-            'experienced': 2
-        };
-        return experienceMap[experience] || 1;
-    };
-
     // 准备API请求数据 - 修复：investStyle和investExperience传递数值
     const portraitData = {
-        investStyle: convertRiskLevelToNumber(preferences.riskLevel),
-        investExperience: convertExperienceToNumber(preferences.experience),
-        riskTolerance: parseInt(preferences.userTraits?.risk_tolerance || 3),
-        involveLevel: parseInt(preferences.userTraits?.active_participation || 3),
-        learnIntention: parseInt(preferences.userTraits?.learning_willingness || 3),
-        strategyComplexity: parseInt(preferences.userTraits?.strategy_dependency || 2),
-        tradeFrequency: parseInt(preferences.userTraits?.trading_frequency || 2),
-        innovationAcceptance: parseInt(preferences.userTraits?.innovation_trial || 3),
+        investStyle: preferences.riskLevel,
+        investExperience: preferences.experience,
+        riskTolerance: preferences.userTraits?.risk_tolerance || 3,
+        involveLevel: preferences.userTraits?.active_participation || 3,
+        learnIntention: preferences.userTraits?.learning_willingness || 3,
+        strategyComplexity: preferences.userTraits?.strategy_dependency || 2,
+        tradeFrequency: preferences.userTraits?.trading_frequency || 2,
+        innovationAcceptance: preferences.userTraits?.innovation_trial || 3,
         focusIndustry: '[]', // 默认空数组的JSON字符串
     };
 
     // 处理关注板块
     let subCategories = preferences.sectors?.subCategories || [];
-    if (subCategories.length > 0) {
-        try {
-            let focusIndustry = formatSectorTree(subCategories);
-            portraitData.focusIndustry = JSON.stringify(focusIndustry);
-            preferences.sectors.categories = focusIndustry;
-        } catch (sectorError) {
-            console.warn('处理关注板块时出错:', sectorError);
-            portraitData.focusIndustry = '[]'; // 出错时使用空数组
-        }
-    } else {
-        portraitData.focusIndustry = '[]'; // 没有选择板块时使用空数组
-    }
+    let focusIndustry = formatSectorTree(subCategories);
+    portraitData.focusIndustry = JSON.stringify(focusIndustry);
+    preferences.sectors.categories = focusIndustry;
 
     let res = await updateUserPortrait(portraitData);
 
@@ -565,8 +414,6 @@ const handlePreferencesSubmit = async () => {
         // 确保保存到用户信息中的数据格式正确（字符串格式）
         const finalPreferences = {
             ...preferences,
-            riskLevel: typeof preferences.riskLevel === 'number' ? convertRiskLevelToString(preferences.riskLevel) : preferences.riskLevel,
-            experience: typeof preferences.experience === 'number' ? convertExperienceToString(preferences.experience) : preferences.experience
         };
 
         const currentUser = userStore.userInfo;
@@ -608,17 +455,17 @@ const skipPreferences = () => {
 };
 
 // Watch for dialog open/close
-watch(visible, (newValue) => {
-    if (newValue) {
-        // Dialog is opening - load existing preferences
-        initializePreferences();
-    } else {
-        // Dialog is closing - reset step
-        setTimeout(() => {
-            currentStep.value = 0;
-        }, 200); // Delay to allow fade-out animation
-    }
-});
+// watch(visible, (newValue) => {
+//     if (newValue) {
+//         // Dialog is opening - load existing preferences
+//         initializePreferences();
+//     } else {
+//         // Dialog is closing - reset step
+//         setTimeout(() => {
+//             currentStep.value = 0;
+//         }, 200); // Delay to allow fade-out animation
+//     }
+// });
 </script>
 
 <style scoped>

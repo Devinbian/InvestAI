@@ -7,6 +7,8 @@ const api = {
   registerApi: "/register",
   logoutApi: "/logout",
 
+  getUserInfoApi: "/user/info", // 获取用户信息
+
   // user portrait
   getUserPortraitApi: "/user-portrait/detail",
   updateUserPortraitApi: "/user-portrait/update", 
@@ -48,4 +50,7 @@ export const recommendStock = (params) => request.get(api.recommendStockApi, {
 
 // 创建会话
 export const createConversation = () => request.post(api.createConversationApi);
+
+// 获取用户信息
+export const getUserInfo = () => request.get(api.getUserInfoApi);
 

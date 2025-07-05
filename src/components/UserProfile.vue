@@ -1348,6 +1348,7 @@ import { ref, reactive, computed, onMounted } from 'vue';
 import { useUserStore } from '../store/user';
 import { ElMessage } from 'element-plus';
 import { Edit, Close, CircleCheck, Warning, TrendCharts, Star, Plus, Switch, List, Bell, Lock, QuestionFilled, ArrowRight, Phone, Message, UserFilled, VideoPlay, ChatDotSquare, EditPen, View, Hide } from '@element-plus/icons-vue';
+import { getUserInfo } from '@/api/api';
 
 // 定义emit事件
 const emit = defineEmits(['close']);
@@ -1780,8 +1781,20 @@ const isFieldValid = () => {
     return currentFieldValue.value.trim() && !fieldError.value;
 };
 
+const initUserInfo = async () => {
+    let res = await getUserInfo();
+    if (res && res.data && res.data.success) {
+        userStore.setBalance(res.data.data.user.balance);
+        userStore.setSmartPointsBalance(res.data.data.user.point);
+    }else{
+        userStore.setBalance(0);
+        userStore.setSmartPointsBalance(0);
+    }
+}
+
 onMounted(() => {
     initEditForm();
+    initUserInfo();
 });
 </script>
 

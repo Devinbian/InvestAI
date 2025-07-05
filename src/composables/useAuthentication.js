@@ -45,8 +45,6 @@ export function useAuthentication() {
     onShowOnboarding,
     onDismissGuide,
   ) => {
-    // 为用户设置初始余额和智点（如果没有的话）
-    initializeUserBalances();
 
     // 生成一些模拟数据（测试数据）
     userStore.generateMockRecords();
@@ -78,23 +76,6 @@ export function useAuthentication() {
         }
         ElMessage.success("欢迎回来！");
       }
-    }
-  };
-
-  /**
-   * 初始化用户余额和智点
-   */
-  const initializeUserBalances = () => {
-    if (userStore.balance <= 0) {
-      // 设置初始资金余额：100万元用于股票交易
-      userStore.addBalance(1000000);
-      console.log("已为用户设置初始资金余额：100万元");
-    }
-
-    if (userStore.smartPointsBalance <= 0) {
-      // 设置初始智点余额：10智点用于AI功能
-      userStore.addSmartPoints(10);
-      console.log("已为用户设置初始智点余额：10智点");
     }
   };
 
@@ -260,6 +241,5 @@ export function useAuthentication() {
     checkRouteParams,
     checkAuthStatus,
     getAuthState,
-    initializeUserBalances,
   };
 }

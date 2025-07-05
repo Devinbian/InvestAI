@@ -18,7 +18,6 @@
 
 - `showLogin(isRegister)`: 显示登录对话框
 - `handleLoginSuccess(data, onShowOnboarding, onDismissGuide)`: 处理登录成功事件
-- `initializeUserBalances()`: 初始化用户余额和智点
 
 #### 登出相关
 

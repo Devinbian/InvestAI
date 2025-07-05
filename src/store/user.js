@@ -272,6 +272,18 @@ export const useUserStore = defineStore("user", {
       localStorage.setItem("balance", this.balance.toString());
     },
 
+    // 设置余额
+    setBalance(amount) {
+      this.balance = parseFloat(amount);
+      localStorage.setItem("balance", this.balance.toString());
+    },
+
+    //设置点数
+    setSmartPointsBalance(amount) {
+      this.smartPointsBalance = amount;
+      localStorage.setItem("smartPointsBalance", this.smartPointsBalance.toString());
+    },
+
     // 智点账户管理
     deductSmartPoints(amount) {
       if (this.smartPointsBalance >= amount) {

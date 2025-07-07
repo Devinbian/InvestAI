@@ -2357,7 +2357,7 @@ const handleShortcutClick = (shortcut) => {
                 'smart_review': () => setSuggestionAndSend(`智能复盘：请帮我进行全面的智能投资复盘分析，包括：\n\n1. 市场整体走势分析（主要指数表现、板块轮动）\n2. 我的投资组合表现分析和风险评估\n3. 基于AI算法的策略优化建议\n4. 市场情绪和技术指标综合分析\n5. 个性化的下一步操作建议\n6. 风险预警和机会识别\n7. 智能资产配置优化方案\n\n请结合我的投资风格和市场大数据，给出专业的智能化复盘建议。`),
                 'watchlist': handleWatchlistView,
                 'smart_recommendation': handleSmartRecommendation,
-                'news_update': handleNewsUpdate,
+                'news_update': () => setSuggestionAndSend(`最新财经资讯`),
                 'asset_analysis': handleAssetAnalysis
             };
 

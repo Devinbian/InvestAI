@@ -34,6 +34,8 @@
 </template>
 
 <script setup>
+import {getRecommendStocks} from '@/api/api';
+
 import { ref, computed, onMounted, onUnmounted } from 'vue';
 import { ElMessage, ElMessageBox } from 'element-plus';
 import { useUserStore } from '../store/user';
@@ -69,84 +71,28 @@ const updateTime = computed(() => {
     });
 });
 
-const recommendations = ref([
-    {
-        code: '000001',
-        name: '平安银行',
-        price: '12.45',
-        change: 0.28,
-        changePercent: 2.3,
-        recommendIndex: 4.2,
-        recommendLevel: '推荐',
-        targetPrice: '15.80',
-        expectedReturn: '+26.9%',
-        riskLevel: '中等',
-        industry: '银行',
-        reason: '业绩稳健增长，ROE持续提升，估值处于历史低位，具备较好的投资价值。'
-    },
-    {
-        code: '000858',
-        name: '五粮液',
-        price: '168.90',
-        change: -2.05,
-        changePercent: -1.2,
-        recommendIndex: 4.6,
-        recommendLevel: '强烈推荐',
-        targetPrice: '195.00',
-        expectedReturn: '+15.5%',
-        riskLevel: '中等',
-        industry: '食品饮料',
-        reason: '白酒龙头企业，品牌价值突出，渠道优势明显，长期成长性确定。'
-    },
-    {
-        code: '000002',
-        name: '万科A',
-        price: '18.76',
-        change: 0.15,
-        changePercent: 0.8,
-        recommendIndex: 3.9,
-        recommendLevel: '推荐',
-        targetPrice: '22.50',
-        expectedReturn: '+19.9%',
-        riskLevel: '中等',
-        industry: '房地产',
-        reason: '房地产行业回暖，公司财务稳健，土地储备充足，估值合理。'
-    },
-    {
-        code: '300750',
-        name: '宁德时代',
-        price: '198.50',
-        change: 6.72,
-        changePercent: 3.5,
-        recommendIndex: 4.5,
-        recommendLevel: '强烈推荐',
-        targetPrice: '245.00',
-        expectedReturn: '+23.4%',
-        riskLevel: '较高',
-        industry: '电池',
-        reason: '新能源汽车产业链核心标的，技术领先，市场份额稳固，成长空间巨大。'
-    }
-]);
+const recommendations = ref([]);
 
 // 转换推荐数据为StockList组件需要的格式
 const formattedRecommendations = computed(() => {
     return recommendations.value.map(stock => ({
         code: stock.code,
         name: stock.name,
-        price: parseFloat(stock.price),
+        price: stock.latestPrice,
         change: stock.change,
-        changePercent: stock.changePercent,
+        changePercent: stock.rise+"%",
         recommendIndex: stock.recommendIndex,
         recommendLevel: stock.recommendLevel,
         targetPrice: stock.targetPrice,
-        expectedReturn: stock.expectedReturn,
+        expectedReturn: stock.expectedBenefits,
         riskLevel: stock.riskLevel,
         industry: stock.industry,
-        reason: stock.reason
+        reason: stock.recommendReason
     }));
 });
 
 const refreshRecommendations = () => {
+    loadRecommendStocks();
     ElMessage.success('推荐列表已更新');
     // 这里可以调用API刷新数据
 };
@@ -163,8 +109,18 @@ const handleActionClick = ({ action, stock }) => {
 
 // 生命周期
 onMounted(() => {
+    loadRecommendStocks();
     // 移动端检测由useMobileDetection自动处理
 });
+
+//获取推荐股票
+const loadRecommendStocks=()=>{
+    getRecommendStocks().then((res)=>{
+        if(res.data.success){
+            recommendations.value=res.data.data;
+        }
+    })
+}
 
 onUnmounted(() => {
     // 清理工作由useMobileDetection自动处理

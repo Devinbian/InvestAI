@@ -49,7 +49,7 @@
                             <div class="index-code">{{ index.code }}</div>
                         </div>
                         <div class="index-price-section">
-                            <div class="index-price" :key="index.price">{{ index.price }}</div>
+                            <div class="index-price" :key="index.value">{{ index.value }}</div>
                         </div>
                     </div>
 
@@ -57,7 +57,7 @@
                     <div class="change-section">
                         <div class="change-info">
                             <span class="change-value">{{ index.change > 0 ? '+' : '' }}{{ index.change }}</span>
-                            <span class="change-percent">({{ index.changePercent > 0 ? '+' : '' }}{{ index.changePercent
+                            <span class="change-percent">({{ index.rise > 0 ? '+' : '' }}{{ index.rise
                             }}%)</span>
                         </div>
 
@@ -65,7 +65,7 @@
                         <div class="change-progress">
                             <div class="progress-bar">
                                 <div class="progress-fill" :style="{
-                                    width: Math.min(Math.abs(index.changePercent) * 10, 100) + '%',
+                                    width: Math.min(Math.abs(index.rise) * 10, 100) + '%',
                                     backgroundColor: index.change > 0 ? '#ef4444' : index.change < 0 ? '#10b981' : '#6b7280'
                                 }"></div>
                             </div>
@@ -73,13 +73,13 @@
                     </div>
 
                     <!-- 迷你趋势图 -->
-                    <div class="mini-chart">
+                    <!-- <div class="mini-chart">
                         <svg width="100%" height="24" class="trend-line">
                             <path :d="generateTrendPath(index)"
                                 :stroke="index.change > 0 ? '#ef4444' : index.change < 0 ? '#10b981' : '#6b7280'"
                                 stroke-width="1.5" fill="none" />
                         </svg>
-                    </div>
+                    </div> -->
                 </div>
 
                 <!-- 悬停效果装饰 -->
@@ -90,46 +90,14 @@
 </template>
 
 <script setup>
+import {getMarketIndices} from '@/api/api.js'
 import { ref, onMounted, onUnmounted, computed } from 'vue';
 
 // 定义emit
 const emit = defineEmits(['send-to-chat']);
 
 const updateTime = ref('');
-const marketIndexes = ref([
-    {
-        code: 'SH000001',
-        name: '上证指数',
-        price: '3245.68',
-        change: 12.45,
-        changePercent: 0.38,
-        trendData: [3233, 3238, 3241, 3245, 3248, 3246, 3245]
-    },
-    {
-        code: 'SZ399001',
-        name: '深证成指',
-        price: '10856.32',
-        change: -23.67,
-        changePercent: -0.22,
-        trendData: [10880, 10875, 10870, 10865, 10860, 10858, 10856]
-    },
-    {
-        code: 'SZ399006',
-        name: '创业板指',
-        price: '2134.89',
-        change: 8.92,
-        changePercent: 0.42,
-        trendData: [2126, 2128, 2130, 2132, 2134, 2135, 2135]
-    },
-    {
-        code: 'SH000300',
-        name: '沪深300',
-        price: '3876.54',
-        change: 15.23,
-        changePercent: 0.39,
-        trendData: [3861, 3865, 3870, 3873, 3875, 3876, 3877]
-    }
-]);
+const marketIndexes = ref([]);
 
 // 计算整体市场趋势
 const marketTrend = computed(() => {
@@ -165,23 +133,9 @@ const generateTrendPath = (index) => {
 };
 
 const updateData = () => {
-    // 模拟数据更新
-    marketIndexes.value.forEach(index => {
-        const randomChange = (Math.random() - 0.5) * 20;
-        const randomPercent = (Math.random() - 0.5) * 2;
-
-        index.change = parseFloat(randomChange.toFixed(2));
-        index.changePercent = parseFloat(randomPercent.toFixed(2));
-
-        // 根据涨跌更新价格
-        const basePrice = parseFloat(index.price);
-        const newPrice = basePrice + randomChange;
-        index.price = newPrice.toFixed(2);
-
-        // 更新趋势数据
-        if (index.trendData) {
-            index.trendData.shift();
-            index.trendData.push(newPrice);
+    getMarketIndices().then((res) => {
+        if (res.data.success) {
+            marketIndexes.value = res.data.data;
         }
     });
 

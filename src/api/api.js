@@ -20,6 +20,10 @@ const api = {
 
   createConversationApi: "/conversation/create", // 创建会话
   chatStreamApi: "/chat/stream", // 聊天流式接口
+
+  // sidebar
+  marketIndicesApi: "/market/indices", // 获取大盘指数
+  recommendStocksApi: "/stock/recommend", // 获取推荐股票
   
 };
 
@@ -53,4 +57,10 @@ export const createConversation = () => request.post(api.createConversationApi);
 
 // 获取用户信息
 export const getUserInfo = () => request.get(api.getUserInfoApi);
+
+// 获取大盘指数
+export const getMarketIndices = () => request.get(api.marketIndicesApi);
+
+// 获取推荐股票
+export const getRecommendStocks = () => request.get(api.recommendStocksApi);
 

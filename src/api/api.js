@@ -16,6 +16,10 @@ const api = {
   // stock
   recommendStockApi: "/chat/recommendStock", // 智能荐股
   analyzeStockApi: "/chat/analyzeStock", // 量化分析股票
+  stockRealtimeDataApi: "/stock/realtime-data", // 获取股票实时数据
+  buyStockApi: "/stock/buy", // 买入股票
+  sellStockApi: "/stock/sell", // 卖出股票
+  cancelStockOrderApi: "/stock/cancel-order", // 撤销订单
 
 
   createConversationApi: "/conversation/create", // 创建会话
@@ -58,6 +62,19 @@ export const createConversation = () => request.post(api.createConversationApi);
 // 获取用户信息
 export const getUserInfo = () => request.get(api.getUserInfoApi);
 
+// 股票实时数据
+export const getStockRealtimeData = (params) => request.get(api.stockRealtimeDataApi, {
+  params
+});
+
+// 买入股票
+export const buyStock = (params) => request.post(api.buyStockApi, params);
+
+// 卖出股票
+export const sellStock = (params) => request.post(api.sellStockApi, params);
+
+// 撤销订单
+export const cancelStockOrder = (params) => request.post(api.cancelStockOrderApi, params);
 // 获取大盘指数
 export const getMarketIndices = () => request.get(api.marketIndicesApi);
 

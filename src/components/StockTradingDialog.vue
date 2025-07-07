@@ -9,8 +9,8 @@
                     <div class="stock-basic-info">
                         <div class="stock-title-row">
                             <div class="stock-name-group">
-                                <h2 class="buy-dialog-stock-name">{{ stock.name }}</h2>
-                                <span class="buy-dialog-stock-code">{{ stock.code }}</span>
+                                <h2 class="buy-dialog-stock-name">{{ stockInfo.name }}</h2>
+                                <span class="buy-dialog-stock-code">{{ stockInfo.code }}</span>
                             </div>
                             <div class="stock-tags">
                                 <span class="tag-item">A股</span>
@@ -20,26 +20,25 @@
 
                         <div class="stock-price-row">
                             <div class="price-main">
-                                <span class="buy-dialog-current-price">¥{{ stock.price }}</span>
-                                <div :class="['price-change-group', stock.change >= 0 ? 'up' : 'down']">
-                                    <span class="change-amount">{{ stock.change >= 0 ? '+' : '' }}{{ stock.change
+                                <span class="buy-dialog-current-price" :class="{'price-up': stockInfo.change > 0, 'price-down': stockInfo.change < 0}">¥{{ stockInfo.price }}</span>
+                                <div :class="['price-change-group', stockInfo.change >= 0 ? 'up' : 'down']">
+                                    <span class="change-amount">{{ stockInfo.change >= 0 ? '+' : '' }}{{ stockInfo.change
                                         }}</span>
-                                    <span class="change-percent">({{ formatChangePercent(stock.changePercent) }})</span>
+                                    <span class="change-percent">({{ formatChangePercent(stockInfo.changePercent) }})</span>
                                 </div>
                             </div>
                             <div class="price-stats">
                                 <div class="stat-item">
                                     <span class="stat-label">今开</span>
-                                    <span class="stat-value">{{ (parseFloat(stock.price) - 2.5).toFixed(2) }}</span>
+                                    <span class="stat-value" :class="{'price-up': stockInfo.openPrice > stockInfo.closePrice, 'price-down': stockInfo.openPrice < stockInfo.closePrice}">{{ stockInfo.openPrice }}</span>
                                 </div>
                                 <div class="stat-item">
                                     <span class="stat-label">昨收</span>
-                                    <span class="stat-value">{{ (parseFloat(stock.price) -
-                                        parseFloat(stock.change)).toFixed(2) }}</span>
+                                    <span class="stat-value">{{ stockInfo.closePrice }}</span>
                                 </div>
                                 <div class="stat-item">
                                     <span class="stat-label">成交量</span>
-                                    <span class="stat-value">1.2万手</span>
+                                    <span class="stat-value">{{ formatDecimal(stockInfo.volume /10000, 2) }}万手</span>
                                 </div>
                             </div>
                         </div>
@@ -49,10 +48,11 @@
                     <div class="header-actions">
                         <div class="market-status-card">
                             <div class="status-indicator">
-                                <span class="status-dot"></span>
-                                <span class="status-text">交易中</span>
+                                <span class="status-dot" :class="{'status-dot-red': stockInfo.marketStatus === false}"></span>
+                                <span class="status-text">{{ stockInfo.marketStatus ? '交易中' : '休市中' }}</span>
                             </div>
-                            <div class="trading-time">09:30-15:00</div>
+                            <div class="trading-time">09:30-11:30</div>
+                            <div class="trading-time">13:00-15:00</div>
                         </div>
 
                         <div class="action-buttons">
@@ -89,27 +89,27 @@
                 <div class="header-info-bar">
                     <div class="info-item">
                         <span class="info-label">涨停</span>
-                        <span class="info-value up">{{ (parseFloat(stock.price) * 1.1).toFixed(2) }}</span>
+                        <span class="info-value up">{{ stockInfo.limitUp }}</span>
                     </div>
                     <div class="info-item">
                         <span class="info-label">跌停</span>
-                        <span class="info-value down">{{ (parseFloat(stock.price) * 0.9).toFixed(2) }}</span>
+                        <span class="info-value down">{{ stockInfo.limitDown }}</span>
                     </div>
                     <div class="info-item">
                         <span class="info-label">总市值</span>
-                        <span class="info-value">1,234.56亿</span>
+                        <span class="info-value">{{ formatDecimal(stockInfo.marketValue / (1e9), 2) }}亿</span>
                     </div>
                     <div class="info-item">
                         <span class="info-label">流通市值</span>
-                        <span class="info-value">987.65亿</span>
+                        <span class="info-value">{{ formatDecimal(stockInfo.circulationMarketValue / (1e9), 2) }}亿</span>
                     </div>
                     <div class="info-item">
-                        <span class="info-label">市盈率</span>
-                        <span class="info-value">15.6</span>
+                        <span class="info-label">最高价</span>
+                        <span class="info-value price-up">{{ stockInfo.highPrice }}</span>
                     </div>
                     <div class="info-item">
-                        <span class="info-label">市净率</span>
-                        <span class="info-value">2.3</span>
+                        <span class="info-label">最低价</span>
+                        <span class="info-value price-down">{{ stockInfo.lowPrice }}</span>
                     </div>
                 </div>
             </div>
@@ -202,7 +202,7 @@
                                 <div class="market-order-info" v-if="tradingForm.orderType === 'market'">
                                     <div class="info-row">
                                         <span class="info-icon">ℹ️</span>
-                                        <span class="info-text">市价委托将以当前市场价格 ¥{{ stock.price }} 执行交易</span>
+                                        <span class="info-text">市价委托将以当前市场价格 ¥{{ stockInfo.price }} 执行交易</span>
                                     </div>
                                 </div>
 
@@ -279,7 +279,7 @@
                     <div class="market-depth">
                         <div class="depth-header">
                             <span>五档行情</span>
-                            <span class="refresh-time">{{ getCurrentTime() }}</span>
+                            <span class="refresh-time">{{ stockInfo.time }}</span>
                         </div>
                         <div class="depth-content">
                             <div class="depth-table">
@@ -292,8 +292,8 @@
                                 <!-- 卖盘 -->
                                 <div class="sell-orders">
                                     <div v-for="(order, index) in sellOrders" :key="index" class="order-row sell">
-                                        <span class="order-label">卖{{ 5 - index }}</span>
-                                        <span class="order-price">{{ order.price }}</span>
+                                        <span class="order-label">{{ order.label }}</span>
+                                        <span class="order-price" :class="{'price-up': order.price > stockInfo.closePrice, 'price-down': order.price < stockInfo.closePrice}">{{ order.price }}</span>
                                         <span class="order-volume">{{ order.volume }}</span>
                                     </div>
                                 </div>
@@ -301,19 +301,19 @@
                                 <!-- 当前价格 -->
                                 <div class="current-price-row">
                                     <span class="current-label">现价</span>
-                                    <span :class="['current-value', stock.change >= 0 ? 'up' : 'down']">
-                                        {{ stock.price }}
+                                    <span :class="['current-value', stockInfo.change >= 0 ? 'up' : 'down']">
+                                        {{ stockInfo.price }}
                                     </span>
                                     <span class="current-change">
-                                        {{ formatChangePercent(stock.changePercent) }}
+                                        {{ formatChangePercent(stockInfo.changePercent) }}
                                     </span>
                                 </div>
 
                                 <!-- 买盘 -->
                                 <div class="buy-orders">
                                     <div v-for="(order, index) in buyOrders" :key="index" class="order-row buy">
-                                        <span class="order-label">买{{ index + 1 }}</span>
-                                        <span class="order-price">{{ order.price }}</span>
+                                        <span class="order-label">{{ order.label }}</span>
+                                        <span class="order-price" :class="{'price-up': order.price > stockInfo.closePrice, 'price-down': order.price < stockInfo.closePrice}">{{ order.price }}</span>
                                         <span class="order-volume">{{ order.volume }}</span>
                                     </div>
                                 </div>
@@ -337,6 +337,7 @@
 import { ref, reactive, computed, watch, nextTick } from 'vue';
 import { ElMessage, ElMessageBox } from 'element-plus';
 import { useUserStore } from '@/store/user';
+import { getStockRealtimeData, buyStock, sellStock, cancelStockOrder } from '@/api/api';
 
 // Props
 const props = defineProps({
@@ -372,11 +373,34 @@ const tradeType = ref(props.tradeType);
 const sellOrders = ref([]);
 const buyOrders = ref([]);
 
+// 实时数据查询定时器
+let realtimeTimer = null;
+
 // 交易表单
 const tradingForm = reactive({
     orderType: 'limit',
     price: '',
     quantity: 100
+});
+
+// 股票实时数据表单
+const stockInfo = reactive({
+    marketStatus: false,
+    name: '',
+    code: '',
+    price: '',
+    change: '',
+    changePercent: '',
+    openPrice: '',
+    closePrice: '',
+    volume: '',
+    limitUp: '',
+    limitDown: '',
+    marketValue: '',
+    circulationMarketValue: '',
+    highPrice: '',
+    lowPrice: '',
+    time: ''
 });
 
 // 计算属性
@@ -458,10 +482,132 @@ const currentStockPendingOrders = computed(() => {
     return userStore.getPendingOrdersByStock(props.stock.code);
 });
 
-// 方法
-const getCurrentTime = () => {
-    return new Date().toLocaleTimeString('zh-CN', { hour12: false });
+
+// 初始化数据
+const initStockRealtimeData = async () => {
+    if (!props.stock) return;
+    const res = await getStockRealtimeData({ code: props.stock.code });
+    if(res && res.data && res.data.success){
+        const data = res.data.data;
+        // 更新props.stock相关响应式数据
+        props.stock.price = data.latestPrice;
+        props.stock.change = data.change;
+        props.stock.changePercent = data.rise + '%';
+        // 更新页面数据
+        stockInfo.name = data.name;
+        stockInfo.code = data.code;
+        stockInfo.price = data.latestPrice;
+        stockInfo.change = data.change;
+        stockInfo.changePercent = data.rise + '%';
+        stockInfo.openPrice = data.openPrice;
+        stockInfo.closePrice = data.closePrice;
+        stockInfo.volume = data.volume;
+        stockInfo.limitUp = data.limitUp;
+        stockInfo.limitDown = data.limitDown;
+        stockInfo.marketValue = data.marketValue;
+        stockInfo.circulationMarketValue = data.circulationMarketValue;
+        stockInfo.highPrice = data.highPrice;
+        stockInfo.lowPrice = data.lowPrice;
+        stockInfo.time = formatDateTime(data.timestamp);
+        // 更新五档行情
+        updateMarketDepth(data);
+    }
 };
+
+//更新五档行情
+const updateMarketDepth = (data) => {
+    sellOrders.value = []
+    buyOrders.value = [];
+    sellOrders.value.push(
+        { price: data.sellPrice5, volume: data.sellVolume5, label: '卖5' },
+        { price: data.sellPrice4, volume: data.sellVolume4, label: '卖4' },
+        { price: data.sellPrice3, volume: data.sellVolume3, label: '卖3' },
+        { price: data.sellPrice2, volume: data.sellVolume2, label: '卖2' },
+        { price: data.sellPrice1, volume: data.sellVolume1, label: '卖1' }
+    );
+    buyOrders.value.push(
+        { price: data.buyPrice1, volume: data.buyVolume1, label: '买1' },
+        { price: data.buyPrice2, volume: data.buyVolume2, label: '买2' },
+        { price: data.buyPrice3, volume: data.buyVolume3, label: '买3' },
+        { price: data.buyPrice4, volume: data.buyVolume4, label: '买4' },
+        { price: data.buyPrice5, volume: data.buyVolume5, label: '买5' }
+    );
+};
+
+// 定时刷新实时数据
+const startRealtimeTimer = () => {
+    if (realtimeTimer) {
+        clearInterval(realtimeTimer);
+    }
+    // 交易时间内才执行定时查询
+    const currentTime = new Date();
+    if(isMarketOpen()){
+        realtimeTimer = setInterval(() => {
+            initStockRealtimeData();
+        }, 5000); // 每5秒刷新一次
+    }
+};
+
+// 判断当前时间是否在交易时间内
+const isMarketOpen = () => {
+  const now = new Date();
+  const hours = now.getHours();
+  const minutes = now.getMinutes();
+  const day = now.getDay(); // 0=周日, 1=周一,...,6=周六
+  // 排除周末
+  if (day === 0 || day === 6) {
+    return false
+  };
+  // 上午交易时段: 9:30-11:30
+  const isMorning = (hours === 9 && minutes >= 30) || 
+                   (hours === 10) || 
+                   (hours === 11 && minutes <= 30);
+  // 下午交易时段: 13:00-15:00
+  const isAfternoon = (hours === 13 || hours === 14) || 
+                     (hours === 15 && minutes === 0);
+  return isMorning || isAfternoon;
+};
+
+const stopRealtimeTimer = () => {
+    if (realtimeTimer) {
+        clearInterval(realtimeTimer);
+        realtimeTimer = null;
+    }
+};
+
+const formatDateTime = (timestamp) =>{
+  const date = new Date(Number(timestamp));
+  
+  const year = date.getFullYear();
+  const month = String(date.getMonth() + 1).padStart(2, '0'); // 月份 0~11 → 补零
+  const day = String(date.getDate()).padStart(2, '0');
+  const hours = String(date.getHours()).padStart(2, '0');
+  const minutes = String(date.getMinutes()).padStart(2, '0');
+  const seconds = String(date.getSeconds()).padStart(2, '0');
+
+  return `${year}-${month}-${day} ${hours}:${minutes}:${seconds}`;
+}
+
+/**
+ * 精度运算
+ * 
+ * @param {number|string} value - 原始数据
+ * @param {number} precision - 保留的小数位数
+ * @returns {number|string} - 处理后的值
+ */
+const formatDecimal = (value, precision) =>{
+  // 1. 转换为数字并检查有效性
+  const numericValue = Number(value);
+
+  // 2. 四舍五入到指定精度
+  const roundedValue = numericValue.toFixed(precision);
+
+  // 3. 去掉末尾的0和小数点（如 "3.00" → "3"）
+  const optimizedValue = roundedValue.replace(/\.?0+$/, '');
+
+  return optimizedValue;
+}
+
 
 const formatChangePercent = (changePercent) => {
     if (!changePercent) return '0.00%';
@@ -497,31 +643,6 @@ const setQuantityByPercent = (percent) => {
         const availableFunds = userStore.balance * percent / 100;
         const targetQuantity = Math.floor(availableFunds / price / 100) * 100;
         tradingForm.quantity = Math.max(100, targetQuantity);
-    }
-};
-
-const generateMarketData = () => {
-    if (!props.stock) return;
-
-    const basePrice = parseFloat(props.stock.price);
-
-    sellOrders.value = [];
-    buyOrders.value = [];
-
-    // 生成卖盘数据（5档）- 从高到低排序（卖5最高，卖1最低）
-    for (let i = 0; i < 5; i++) {
-        sellOrders.value.push({
-            price: (basePrice + (5 - i) * 0.05).toFixed(2), // 卖5价格最高，卖1价格最低
-            volume: Math.floor(Math.random() * 500 + 100) + '手'
-        });
-    }
-
-    // 生成买盘数据（5档）- 从高到低排序（买1最高，买5最低）
-    for (let i = 0; i < 5; i++) {
-        buyOrders.value.push({
-            price: (basePrice - (i + 1) * 0.05).toFixed(2),
-            volume: Math.floor(Math.random() * 500 + 100) + '手'
-        });
     }
 };
 
@@ -688,7 +809,6 @@ watch(() => props.stock, (newStock) => {
     if (newStock) {
         tradingForm.price = newStock.price;
         tradingForm.quantity = 100;
-        generateMarketData();
     }
 }, { immediate: true });
 
@@ -704,11 +824,15 @@ watch(visible, (newVisible) => {
         if (!tradingForm.orderType) {
             tradingForm.orderType = 'limit';
         }
-        nextTick(() => {
-            generateMarketData();
-        });
+        // 打开弹窗时启动定时器和拉取一次数据
+        initStockRealtimeData();
+        startRealtimeTimer();
+    } else if (!newVisible) {
+        // 关闭弹窗时停止定时器
+        stopRealtimeTimer();
     }
 });
+
 </script>
 
 <style scoped>
@@ -847,11 +971,19 @@ watch(visible, (newVisible) => {
 }
 
 .price-change-group.up {
-    color: #10b981;
+    color: #ef4444;
 }
 
 .price-change-group.down {
-    color: #ef4444;
+    color: #10b981;
+}
+
+.price-up {
+  color: #ef4444 !important;
+}
+
+.price-down {
+  color: #10b981 !important;
 }
 
 .change-amount {
@@ -1022,11 +1154,11 @@ watch(visible, (newVisible) => {
 }
 
 .info-value.up {
-    color: #10b981;
+    color: #ef4444;
 }
 
 .info-value.down {
-    color: #ef4444;
+    color: #10b981;
 }
 
 .status-dot {
@@ -1036,6 +1168,10 @@ watch(visible, (newVisible) => {
     border-radius: 50%;
     animation: pulse-dot 2s infinite;
     box-shadow: 0 0 0 0 rgba(16, 185, 129, 0.7);
+}
+
+.status-dot-red {
+    background: #ef4444 !important;
 }
 
 @keyframes pulse-dot {
@@ -1170,14 +1306,6 @@ watch(visible, (newVisible) => {
     text-align: center;
 }
 
-.order-row.sell .order-price {
-    color: #ef4444;
-}
-
-.order-row.buy .order-price {
-    color: #10b981;
-}
-
 .order-volume {
     color: #606266;
     text-align: right;
@@ -1208,11 +1336,11 @@ watch(visible, (newVisible) => {
 }
 
 .current-value.up {
-    color: #10b981;
+    color: #ef4444;
 }
 
 .current-value.down {
-    color: #ef4444;
+    color: #10b981;
 }
 
 .current-change {

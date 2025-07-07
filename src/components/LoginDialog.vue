@@ -254,6 +254,8 @@ const handleLogin = async () => {
                         localStorage.setItem('onboardingCompleted', 'false');
                     }
                     const user = res.data.data.user;
+                    userStore.setBalance(user?.balance || 0);
+                    userStore.setSmartPointsBalance(user?.point || 0);
                     localStorage.setItem("balance", user?.balance || 0);
                     localStorage.setItem("smartPointsBalance", user?.point || 0);
 

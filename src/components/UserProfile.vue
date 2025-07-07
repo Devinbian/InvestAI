@@ -1424,6 +1424,18 @@ const notificationSettings = reactive({
     frequency: 'realtime'   // 推送频率：realtime/hourly/daily
 });
 
+const userInfo = reactive({
+    nickname: '',
+    phone: '',
+    email: '',
+    userLevel: '',
+    registrationDate: '',
+    lastLoginTime: '',
+    balance: 0,
+    watchlist: [],
+    portfolio: []
+});
+
 // 编辑表单
 const editForm = reactive({
     nickname: '',
@@ -1481,11 +1493,11 @@ const getUserLevelText = () => {
 };
 
 const getRegistrationDate = () => {
-    return '2024年1月1日';
+    return userInfo.registrationDate;
 };
 
 const getLastLoginTime = () => {
-    return '2024年1月15日 14:30';
+    return userInfo.lastLoginTime;
 };
 
 // 查看自选股
@@ -1786,6 +1798,10 @@ const initUserInfo = async () => {
     if (res && res.data && res.data.success) {
         userStore.setBalance(res.data.data.user.balance);
         userStore.setSmartPointsBalance(res.data.data.user.point);
+        userInfo.nickname = res.data.data.nickname || '';
+        userInfo.phone = res.data.data.phone || '';
+        userInfo.registrationDate = res.data.data?.registerTime.substring(0, 10) || '';
+        userInfo.lastLoginTime = res.data.data?.lastLoginTime.substring(0, 10) || '';
     }else{
         userStore.setBalance(0);
         userStore.setSmartPointsBalance(0);

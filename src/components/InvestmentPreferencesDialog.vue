@@ -17,14 +17,24 @@
 
                 <!-- 步骤指示器 -->
                 <div class="step-indicator">
-                    <div v-for="(step, index) in totalSteps" :key="index" class="step-dot" :class="{
-                        active: currentStep === index,
-                        completed: currentStep > index,
-                    }">
-                        <span v-if="currentStep > index">✓</span>
+                    <button
+                        v-for="(step, index) in stepList"
+                        :key="index"
+                        class="step-dot"
+                        :class="{
+                            active: currentStep === index,
+                            completed: stepStatus[index],
+                            clickable: canClickStep(index)
+                        }"
+                        @click="handleStepClick(index)"
+                        :disabled="!canClickStep(index)"
+                        type="button"
+                    >
+                        <span v-if="stepStatus[index]">✓</span>
                         <span v-else>{{ index + 1 }}</span>
-                    </div>
+                    </button>
                 </div>
+                <div class="step-title-indicator">{{ stepList[currentStep].title }}</div>
             </div>
 
             <!-- 表单内容区域 -->
@@ -75,14 +85,24 @@
 
                 <!-- 步骤指示器 -->
                 <div class="mobile-step-indicator">
-                    <div v-for="(step, index) in totalSteps" :key="index" class="mobile-step-dot" :class="{
-                        active: currentStep === index,
-                        completed: currentStep > index,
-                    }">
-                        <span v-if="currentStep > index">✓</span>
+                    <button
+                        v-for="(step, index) in stepList"
+                        :key="index"
+                        class="mobile-step-dot"
+                        :class="{
+                            active: currentStep === index,
+                            completed: stepStatus[index],
+                            clickable: canClickStep(index)
+                        }"
+                        @click="handleStepClick(index)"
+                        :disabled="!canClickStep(index)"
+                        type="button"
+                    >
+                        <span v-if="stepStatus[index]">✓</span>
                         <span v-else>{{ index + 1 }}</span>
-                    </div>
+                    </button>
                 </div>
+                <div class="mobile-step-title-indicator">{{ stepList[currentStep].title }}</div>
             </div>
 
             <!-- 移动端表单内容区域 -->
@@ -205,6 +225,38 @@ onUnmounted(() => {
 const preferencesLoading = ref(false);
 const currentStep = ref(0);
 const totalSteps = 4; // Total number of steps in the form
+
+// 步骤标题数组
+const stepList = [
+    { title: '投资经验' },
+    { title: '选择投资风格' },
+    { title: '用户特征' },
+    { title: '关注板块' }
+];
+
+// 步骤完成状态
+const stepStatus = computed(() => [
+    !!localPreferences.experience, // 第一步
+    !!localPreferences.riskLevel,  // 第二步
+    true,                         // 第三步（如有校验可加条件）
+    localPreferences.sectors.subCategories.length > 0 // 第四步
+]);
+
+// 步骤跳转逻辑
+function canClickStep(index) {
+    // 允许跳转到已完成、当前、下一个未完成步骤
+    if (index === currentStep.value) return false;
+    if (stepStatus.value[index]) return true;
+    // 允许跳到下一个未完成步骤
+    if (index === stepStatus.value.findIndex(done => !done)) return true;
+    return false;
+}
+
+function handleStepClick(index) {
+    if (canClickStep(index)) {
+        currentStep.value = index;
+    }
+}
 
 // 监听弹窗显示状态
 watch(visible, (newValue) => {
@@ -747,8 +799,8 @@ const skipPreferences = () => {
 }
 
 .step-dot.completed {
-    background: #374151;
-    border-color: #374151;
+    background: #10b981;
+    border-color: #10b981;
     color: white;
 }
 
@@ -951,8 +1003,8 @@ const skipPreferences = () => {
 }
 
 .mobile-step-dot.completed {
-    background: #374151 !important;
-    border-color: #374151 !important;
+    background: #10b981 !important;
+    border-color: #10b981 !important;
     color: white !important;
 }
 

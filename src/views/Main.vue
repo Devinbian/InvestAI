@@ -3516,7 +3516,7 @@ body.onboarding-mode {
     padding: 20px 0;
     /* 移除左右padding，让聊天历史区域的视觉边界与AI卡片的边界完全一致 */
     overflow-y: auto;
-    height: calc(100vh - 56px - var(--input-area-height, 200px));
+    height: calc(100vh - 56px - var(--input-area-height, 320px));
     /* 页面高度 - 导航栏高度 - 输入区域高度(动态调整) */
     scrollbar-width: thin;
     /* Firefox */

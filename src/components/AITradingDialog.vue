@@ -45,88 +45,77 @@
                         </div>
                     </div>
 
-                    <!-- 风控设置 -->
+                    <!-- 委托价格设置 -->
                     <div class="form-section compact">
-                        <h4 class="section-title">风控设置</h4>
-
-                        <div class="risk-controls">
-                            <div class="risk-item">
-                                <el-checkbox v-model="form.enableStopLoss" class="risk-checkbox">
-                                    止损保护
-                                </el-checkbox>
-                                <div v-if="form.enableStopLoss" class="risk-input">
-                                    <el-input-number v-model="form.stopLossPercentage" :min="1" :max="20"
-                                        class="risk-number" controls-position="right" />
-                                    <span class="risk-unit">%</span>
+                        <h4 class="section-title">委托价格</h4>
+                        <div class="price-controls">
+                            <div class="price-item">
+                                <label class="param-label">当前价格</label>
+                                <div class="current-price-display">
+                                    <span class="price-value">¥{{ stock.price || stock.currentPrice }}</span>
                                 </div>
                             </div>
-
-                            <div class="risk-item">
-                                <el-checkbox v-model="form.enableTakeProfit" class="risk-checkbox">
-                                    止盈目标
-                                </el-checkbox>
-                                <div v-if="form.enableTakeProfit" class="risk-input">
-                                    <el-input-number v-model="form.takeProfitPercentage" :min="1" :max="50"
-                                        class="risk-number" controls-position="right" />
-                                    <span class="risk-unit">%</span>
+                            <div class="price-item">
+                                <label class="param-label">浮动空间</label>
+                                <div class="price-range">
+                                    <el-input-number v-model="form.priceFloatPercentage" :min="0.1" :max="10" 
+                                        :step="0.1" :precision="1" class="price-input" controls-position="right" />
+                                    <span class="price-unit">%</span>
                                 </div>
                             </div>
-                        </div>
-
-                        <!-- AI策略预览 -->
-                        <div class="strategy-preview">
-                            <div class="strategy-info">
-                                <span class="strategy-label">AI策略：</span>
-                                <span class="strategy-value">{{ getStrategyText(form.strategy) }}</span>
-                                <span class="strategy-risk">({{ getRiskLevelText(form.riskLevel) }})</span>
-                            </div>
-                            <div class="strategy-desc">
-                                根据您的投资偏好自动配置，AI将24小时智能监控并执行最佳交易时机
-                            </div>
-                        </div>
-                    </div>
-
-                    <!-- 高级设置（可折叠） -->
-                    <div class="form-section compact" v-if="form.showAdvanced">
-                        <h4 class="section-title">高级设置</h4>
-
-                        <div class="advanced-simple">
-                            <div class="advanced-row">
-                                <label class="param-label">委托类型</label>
-                                <el-select v-model="form.orderType" class="param-input-small">
-                                    <el-option label="限价单" value="limit" />
-                                    <el-option label="市价单" value="market" />
-                                </el-select>
-                            </div>
-
-                            <div class="advanced-row">
-                                <label class="param-label">委托时效</label>
-                                <el-select v-model="form.timeInForce" class="param-input-small">
-                                    <el-option label="好价成交" value="GTC" />
-                                    <el-option label="当日有效" value="DAY" />
-                                </el-select>
-                            </div>
-
-                            <div class="advanced-row">
-                                <label class="param-label">最大亏损</label>
-                                <div class="input-with-unit-small">
-                                    <el-input-number v-model="form.maxLossAmount" :min="100" class="param-input-small"
-                                        controls-position="right" />
-                                    <span class="input-unit">元</span>
+                            <div class="price-range-display">
+                                <div class="price-range-info">
+                                    <span class="range-label">价格区间：</span>
+                                    <span class="range-value">¥{{ getPriceRangeText() }}</span>
+                                </div>
+                                <div class="range-desc">
+                                    AI将在此价格区间内寻找最佳交易时机
                                 </div>
                             </div>
                         </div>
                     </div>
 
-                    <!-- 高级设置切换 -->
-                    <div class="advanced-toggle">
-                        <el-button link @click="form.showAdvanced = !form.showAdvanced">
-                            {{ form.showAdvanced ? '收起高级设置' : '展开高级设置' }}
-                            <el-icon>
-                                <ArrowDown v-if="!form.showAdvanced" />
-                                <ArrowUp v-else />
-                            </el-icon>
-                        </el-button>
+                    <!-- 委托设置 -->
+                    <div class="form-section compact">
+                        <h4 class="section-title">委托设置</h4>
+                        <div class="order-settings">
+                            <div class="order-item">
+                                <label class="param-label">委托时效选择</label>
+                                <div class="time-option-selector">
+                                    <el-radio-group v-model="form.timeInForceType" class="time-options">
+                                        <el-radio value="DAY" class="time-option">
+                                            <div class="option-content">
+                                                <span class="option-title">当日有效</span>
+                                                <span class="option-time">{{ getTodayEndTime() }}</span>
+                                            </div>
+                                        </el-radio>
+                                        <el-radio value="QUANT" class="time-option">
+                                            <div class="option-content">
+                                                <span class="option-title">量化有效期内</span>
+                                                <span class="option-time">{{ getQuantValidityTime() }}</span>
+                                            </div>
+                                        </el-radio>
+                                    </el-radio-group>
+                                </div>
+                                
+                                <!-- 实际有效期显示 -->
+                                <div class="actual-validity-display">
+                                    <div class="actual-validity-info">
+                                        <span class="actual-label">实际有效期：</span>
+                                        <span class="actual-time">{{ getActualValidityTime() }}</span>
+                                        <span class="actual-reason">({{ getValidityReason() }})</span>
+                                    </div>
+                                    <div class="validity-note">
+                                        <el-alert 
+                                            :title="getValidityDescription()"
+                                            type="info"
+                                            :closable="false"
+                                            show-icon
+                                        />
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
                     </div>
 
 
@@ -197,52 +186,37 @@ const form = reactive({
     action: 'buy', // buy, sell
     quantity: 100,
 
-    // 风控参数（简化，只保留最重要的）
-    enableStopLoss: true,
-    stopLossPercentage: 5, // 止损百分比
-    enableTakeProfit: true,
-    takeProfitPercentage: 10, // 止盈百分比
+    // 委托价格设置
+    priceFloatPercentage: 2.0, // 价格浮动百分比，默认2%
 
-    // 高级选项（默认折叠，从用户偏好获取）
-    showAdvanced: false,
-    orderType: 'limit', // 从用户偏好获取
-    timeInForce: 'GTC', // 从用户偏好获取
-    maxLossAmount: 1000, // 从用户偏好和余额计算
-    strategy: 'balanced', // 从用户偏好获取
-    riskLevel: 'medium' // 从用户偏好获取
+    // 委托设置
+    timeInForce: 'DAY', // 固定为当日有效
+    timeInForceType: 'DAY', // 用户选择的委托时效类型：DAY(当日有效) 或 QUANT(量化有效期内)
+    orderType: 'limit', // 固定为限价单
+    
+    // 量化分析有效期（从消息中获取）
+    quantValidityEndTime: null,
 });
 
 // 从用户偏好初始化AI交易参数
 const initAITradingFromPreferences = () => {
     const preferences = userStore.userInfo?.preferences;
     if (preferences) {
-        // 根据用户风险偏好设置默认参数
+        // 根据用户风险偏好设置默认价格浮动空间
         switch (preferences.riskLevel) {
             case 'conservative':
-                form.stopLossPercentage = 3;
-                form.takeProfitPercentage = 6;
-                form.strategy = 'conservative';
-                form.riskLevel = 'low';
-                form.maxLossAmount = Math.min(500, userStore.balance * 0.05);
+                form.priceFloatPercentage = 1.0; // 保守型用户，较小的价格浮动
                 break;
             case 'moderate':
-                form.stopLossPercentage = 5;
-                form.takeProfitPercentage = 10;
-                form.strategy = 'balanced';
-                form.riskLevel = 'medium';
-                form.maxLossAmount = Math.min(1000, userStore.balance * 0.1);
+                form.priceFloatPercentage = 2.0; // 稳健型用户，中等价格浮动
                 break;
             case 'aggressive':
-                form.stopLossPercentage = 8;
-                form.takeProfitPercentage = 15;
-                form.strategy = 'aggressive';
-                form.riskLevel = 'high';
-                form.maxLossAmount = Math.min(2000, userStore.balance * 0.15);
+                form.priceFloatPercentage = 3.0; // 激进型用户，较大的价格浮动
+                break;
+            default:
+                form.priceFloatPercentage = 2.0; // 默认2%
                 break;
         }
-
-        // 根据用户经验设置委托类型
-        form.orderType = preferences.experience === 'beginner' ? 'market' : 'limit';
     }
 };
 
@@ -283,14 +257,17 @@ const getRiskLevelText = (level) => {
     return '未设置';
 };
 
-// 获取策略文本
-const getStrategyText = (strategy) => {
-    const strategyMap = {
-        'conservative': '保守策略',
-        'balanced': '平衡策略',
-        'aggressive': '激进策略'
-    };
-    return strategyMap[strategy] || '平衡策略';
+// 获取价格区间文本
+const getPriceRangeText = () => {
+    if (!props.stock || !props.stock.price) return '0 - 0';
+    
+    const currentPrice = parseFloat(props.stock.price || props.stock.currentPrice);
+    const floatPercentage = form.priceFloatPercentage / 100;
+    
+    const minPrice = (currentPrice * (1 - floatPercentage)).toFixed(2);
+    const maxPrice = (currentPrice * (1 + floatPercentage)).toFixed(2);
+    
+    return `${minPrice} - ${maxPrice}`;
 };
 
 // 获取委托时效文本
@@ -302,6 +279,127 @@ const getTimeInForceText = (timeInForce) => {
         'GTD': '指定日期'
     };
     return timeInForceMap[timeInForce] || timeInForce;
+};
+
+// 获取当日收盘时间
+const getTodayEndTime = () => {
+    const today = new Date();
+    const todayEnd = new Date(today);
+    todayEnd.setHours(15, 0, 0, 0); // 设置为当日15:00收盘
+    return todayEnd.toLocaleString('zh-CN', {
+        month: '2-digit',
+        day: '2-digit',
+        hour: '2-digit',
+        minute: '2-digit'
+    });
+};
+
+// 获取量化分析有效期时间
+const getQuantValidityTime = () => {
+    if (form.quantValidityEndTime) {
+        const endTime = new Date(form.quantValidityEndTime);
+        return endTime.toLocaleString('zh-CN', {
+            month: '2-digit',
+            day: '2-digit',
+            hour: '2-digit',
+            minute: '2-digit'
+        });
+    }
+    // 默认3天后
+    const defaultEnd = new Date();
+    defaultEnd.setDate(defaultEnd.getDate() + 3);
+    defaultEnd.setHours(23, 59, 59, 999);
+    return defaultEnd.toLocaleString('zh-CN', {
+        month: '2-digit',
+        day: '2-digit',
+        hour: '2-digit',
+        minute: '2-digit'
+    });
+};
+
+// 获取实际有效期时间（取两者较短时间）
+const getActualValidityTime = () => {
+    const today = new Date();
+    const todayEnd = new Date(today);
+    todayEnd.setHours(15, 0, 0, 0); // 当日15:00收盘
+    
+    let quantEnd;
+    if (form.quantValidityEndTime) {
+        quantEnd = new Date(form.quantValidityEndTime);
+    } else {
+        // 默认3天后
+        quantEnd = new Date();
+        quantEnd.setDate(quantEnd.getDate() + 3);
+        quantEnd.setHours(23, 59, 59, 999);
+    }
+    
+    // 取较短时间
+    const actualEnd = todayEnd < quantEnd ? todayEnd : quantEnd;
+    return actualEnd.toLocaleString('zh-CN', {
+        month: '2-digit',
+        day: '2-digit',
+        hour: '2-digit',
+        minute: '2-digit'
+    });
+};
+
+// 获取有效期描述
+const getValidityDescription = () => {
+    const today = new Date();
+    const todayEnd = new Date(today);
+    todayEnd.setHours(15, 0, 0, 0); // 当日15:00收盘
+    
+    let quantEnd;
+    if (form.quantValidityEndTime) {
+        quantEnd = new Date(form.quantValidityEndTime);
+    } else {
+        // 默认3天后
+        quantEnd = new Date();
+        quantEnd.setDate(quantEnd.getDate() + 3);
+        quantEnd.setHours(23, 59, 59, 999);
+    }
+    
+    const userChoice = form.timeInForceType;
+    const actualIsTodayEnd = todayEnd < quantEnd;
+    
+    if (userChoice === 'DAY') {
+        if (actualIsTodayEnd) {
+            return '您选择当日有效，委托将在今日收盘前有效';
+        } else {
+            return '您选择当日有效，但量化分析有效期更短，委托将在量化有效期结束时失效';
+        }
+    } else { // QUANT
+        if (actualIsTodayEnd) {
+            return '您选择量化有效期内有效，但今日收盘时间更短，委托将在今日收盘前失效';
+        } else {
+            return '您选择量化有效期内有效，委托将在量化分析有效期结束时失效';
+        }
+    }
+};
+
+// 获取有效期原因
+const getValidityReason = () => {
+    const today = new Date();
+    const todayEnd = new Date(today);
+    todayEnd.setHours(15, 0, 0, 0); // 当日15:00收盘
+    
+    let quantEnd;
+    if (form.quantValidityEndTime) {
+        quantEnd = new Date(form.quantValidityEndTime);
+    } else {
+        // 默认3天后
+        quantEnd = new Date();
+        quantEnd.setDate(quantEnd.getDate() + 3);
+        quantEnd.setHours(23, 59, 59, 999);
+    }
+    
+    if (todayEnd < quantEnd) {
+        return '取当日收盘时间';
+    } else if (todayEnd > quantEnd) {
+        return '取量化有效期时间';
+    } else {
+        return '两者时间相同';
+    }
 };
 
 // 处理取消
@@ -346,51 +444,21 @@ const handleConfirm = async () => {
         return;
     }
 
-    // 构建AI委托交易参数
-    const tradingParams = {
-        stock: props.stock,
-        action: form.action,
-        quantity: form.quantity,
-        orderType: form.orderType,
-        timeInForce: form.timeInForce,
-        validUntil: form.validUntil,
-
-        // 止损止盈设置
-        stopLoss: form.enableStopLoss ? {
-            type: form.stopLossType,
-            percentage: form.stopLossPercentage,
-            price: form.stopLossPrice
-        } : null,
-
-        takeProfit: form.enableTakeProfit ? {
-            type: form.takeProfitType,
-            percentage: form.takeProfitPercentage,
-            price: form.takeProfitPrice
-        } : null,
-
-        trailingStop: form.enableTrailingStop ? {
-            amount: form.trailingStopAmount
-        } : null,
-
-        // 风控参数
-        riskControl: {
-            maxLossAmount: form.maxLossAmount,
-            maxPositionSize: form.maxPositionSize
-        },
-
-        // AI策略
-        aiStrategy: {
-            strategy: form.strategy,
-            riskLevel: form.riskLevel
-        },
-
-        // 监控设置
-        monitoring: {
-            priceAlert: form.priceAlert,
-            volumeAlert: form.volumeAlert,
-            newsAlert: form.newsAlert
-        }
-    };
+            // 构建AI委托交易参数
+        const tradingParams = {
+            stock: props.stock,
+            action: form.action,
+            quantity: form.quantity,
+            orderType: form.orderType,
+            timeInForce: form.timeInForce,
+            
+            // 委托价格设置
+            priceSettings: {
+                floatPercentage: form.priceFloatPercentage,
+                currentPrice: parseFloat(props.stock.price || props.stock.currentPrice),
+                priceRange: getPriceRangeText()
+            }
+        };
 
     try {
         loading.value = true;
@@ -424,26 +492,16 @@ const handleConfirm = async () => {
 🎯 **交易参数**
 • 交易方向：${form.action === 'buy' ? '买入' : '卖出'}
 • 交易数量：${form.quantity}股
-• 委托类型：${form.orderType === 'limit' ? '限价单' : '市价单'}
-• 委托时效：${getTimeInForceText(form.timeInForce)}
+• 委托类型：限价单
+• 委托时效：当日有效（量化分析有效期内）
 
-🛡️ **风控设置**
-${form.enableStopLoss ? `• 止损：${form.stopLossType === 'percentage' ? form.stopLossPercentage + '%' : '¥' + form.stopLossPrice}` : ''}
-${form.enableTakeProfit ? `• 止盈：${form.takeProfitType === 'percentage' ? form.takeProfitPercentage + '%' : '¥' + form.takeProfitPrice}` : ''}
-${form.enableTrailingStop ? `• 追踪止损：¥${form.trailingStopAmount}` : ''}
-• 最大亏损：¥${form.maxLossAmount}
-• 最大仓位：${form.maxPositionSize}%
+💰 **价格设置**
+• 当前价格：¥${props.stock.price || props.stock.currentPrice}
+• 浮动空间：±${form.priceFloatPercentage}%
+• 价格区间：¥${getPriceRangeText()}
 
-🤖 **AI策略**
-• 交易策略：${getStrategyText(form.strategy)}
-• 风险等级：${getRiskLevelText(form.riskLevel)}
-
-📊 **监控预警**
-${form.priceAlert ? '• ✅ 价格预警已启用' : ''}
-${form.volumeAlert ? '• ✅ 成交量预警已启用' : ''}
-${form.newsAlert ? '• ✅ 新闻预警已启用' : ''}
-
-AI将根据您的设置参数，24小时智能监控市场，在最佳时机自动执行交易，并及时发送预警通知。`;
+🤖 **AI智能交易**
+AI将在设定的价格区间内，24小时智能监控市场，在最佳时机自动执行交易，确保您获得最优的交易价格。`;
 
         // 发送事件给父组件
         emit('ai-trading-confirmed', {
@@ -517,6 +575,12 @@ const fixWechatScroll = () => {
 watch(() => props.modelValue, (newVal) => {
     if (newVal && props.stock) {
         initAITradingFromPreferences();
+        
+        // 初始化量化分析有效期（默认3天）
+        const quantEnd = new Date();
+        quantEnd.setDate(quantEnd.getDate() + 3);
+        quantEnd.setHours(23, 59, 59, 999);
+        form.quantValidityEndTime = quantEnd.toISOString();
 
         // 延迟应用微信浏览器滚动修复
         setTimeout(() => {
@@ -736,74 +800,218 @@ watch(() => props.modelValue, (newVal) => {
     width: 100%;
 }
 
-/* 风控设置 */
-.risk-controls {
+/* 委托价格设置 */
+.price-controls {
     display: flex;
     flex-direction: column;
     gap: 16px;
 }
 
-.risk-item {
+.price-item {
     display: flex;
-    align-items: center;
-    gap: 16px;
+    flex-direction: column;
+    gap: 8px;
 }
 
-.risk-checkbox {
-    font-size: 14px;
-    color: #1e293b;
+.current-price-display {
+    padding: 8px 12px;
+    background: #f1f5f9;
+    border-radius: 6px;
+    border: 1px solid #e2e8f0;
 }
 
-.risk-input {
+.price-value {
+    font-size: 16px;
+    font-weight: 600;
+    color: #dc2626;
+}
+
+.price-range {
     display: flex;
     align-items: center;
     gap: 8px;
 }
 
-.risk-number {
+.price-input {
     width: 120px;
 }
 
-.risk-unit {
+.price-unit {
     font-size: 14px;
     color: #64748b;
 }
 
-/* AI策略预览 */
-.strategy-preview {
-    margin-top: 16px;
-    padding: 16px;
-    background: #f1f5f9;
-    border-radius: 8px;
+.price-range-display {
+    margin-top: 8px;
+    padding: 12px;
+    background: #f8fafc;
+    border-radius: 6px;
+    border: 1px solid #e2e8f0;
 }
 
-.strategy-info {
+.price-range-info {
     display: flex;
     align-items: center;
     gap: 8px;
-    margin-bottom: 8px;
+    margin-bottom: 4px;
 }
 
-.strategy-label {
+.range-label {
     font-size: 14px;
     color: #64748b;
 }
 
-.strategy-value {
+.range-value {
     font-size: 14px;
     font-weight: 600;
     color: #1e293b;
 }
 
-.strategy-risk {
-    font-size: 12px;
-    color: #64748b;
-}
-
-.strategy-desc {
+.range-desc {
     font-size: 12px;
     color: #64748b;
     line-height: 1.5;
+}
+
+/* 委托设置 */
+.order-settings {
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+}
+
+.order-item {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+}
+
+.time-option-selector {
+    padding: 8px;
+    background: #f8fafc;
+    border-radius: 8px;
+    border: 1px solid #e2e8f0;
+}
+
+.time-options {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+
+.time-option {
+    margin: 0 !important;
+    padding: 0 !important;
+    background: transparent !important;
+    border: none !important;
+    width: 100% !important;
+    height: auto !important;
+    position: relative;
+    display: flex;
+    align-items: flex-start;
+    gap: 12px;
+}
+
+.time-option :deep(.el-radio__input) {
+    position: absolute;
+    left: 16px;
+    top: 50%;
+    transform: translateY(-50%);
+    z-index: 2;
+    margin: 0;
+}
+
+.time-option :deep(.el-radio__label) {
+    padding-left: 0;
+    width: 100%;
+    margin-left: 0;
+}
+
+.time-option :deep(.el-radio__inner) {
+    width: 16px;
+    height: 16px;
+    border-width: 2px;
+}
+
+.time-option :deep(.el-radio__inner::after) {
+    width: 6px;
+    height: 6px;
+}
+
+.option-content {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+    padding: 12px;
+    padding-left: 48px;
+    background: white;
+    border-radius: 6px;
+    border: 1px solid #e2e8f0;
+    transition: all 0.2s ease;
+    cursor: pointer;
+    width: 100%;
+    position: relative;
+}
+
+.time-option:hover .option-content {
+    border-color: #3b82f6;
+    background: #f0f9ff;
+}
+
+.time-option.is-checked .option-content {
+    border-color: #3b82f6;
+    background: linear-gradient(135deg, #dbeafe 0%, #bfdbfe 100%);
+    box-shadow: 0 0 0 1px #3b82f6;
+}
+
+.option-title {
+    font-size: 14px;
+    font-weight: 600;
+    color: #374151;
+}
+
+.option-time {
+    font-size: 12px;
+    color: #dc2626;
+    font-weight: 500;
+}
+
+.actual-validity-display {
+    margin-top: 16px;
+    padding: 12px;
+    background: #f0f9ff;
+    border-radius: 8px;
+    border: 1px solid #bfdbfe;
+}
+
+.actual-validity-info {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    margin-bottom: 8px;
+    flex-wrap: wrap;
+}
+
+.actual-label {
+    font-size: 14px;
+    font-weight: 600;
+    color: #1e40af;
+}
+
+.actual-time {
+    font-size: 14px;
+    color: #dc2626;
+    font-weight: 600;
+}
+
+.actual-reason {
+    font-size: 12px;
+    color: #64748b;
+    font-style: italic;
+}
+
+.validity-note {
+    margin-top: 8px;
 }
 
 /* 高级设置 */
@@ -1015,35 +1223,100 @@ watch(() => props.modelValue, (newVal) => {
         font-size: 13px;
     }
 
-    .risk-controls {
+    .price-controls {
         gap: 10px;
     }
 
-    .risk-item {
-        gap: 8px;
-    }
-
-    .risk-checkbox {
-        font-size: 13px;
-    }
-
-    .risk-number {
-        width: 100px;
-    }
-
-    .strategy-preview {
-        padding: 10px;
-        margin-top: 10px;
-    }
-
-    .strategy-info {
+    .price-item {
         gap: 6px;
     }
 
-    .strategy-label,
-    .strategy-value,
-    .strategy-desc {
+    .current-price-display {
+        padding: 6px 10px;
+    }
+
+    .price-value {
+        font-size: 14px;
+    }
+
+    .price-range {
+        gap: 6px;
+    }
+
+    .price-input {
+        width: 100px;
+    }
+
+    .price-range-display {
+        padding: 10px;
+        margin-top: 6px;
+    }
+
+    .range-label,
+    .range-value,
+    .range-desc {
         font-size: 12px;
+    }
+
+
+
+    .order-settings {
+        gap: 10px;
+    }
+
+    .order-item {
+        gap: 8px;
+    }
+
+    .time-option-selector {
+        padding: 6px;
+    }
+
+    .time-options {
+        gap: 6px;
+    }
+
+    .time-option :deep(.el-radio__input) {
+        left: 12px;
+    }
+
+    .option-content {
+        padding: 10px;
+        gap: 1px;
+        padding-left: 40px;
+    }
+
+    .option-title {
+        font-size: 13px;
+    }
+
+    .option-time {
+        font-size: 11px;
+    }
+
+    .actual-validity-display {
+        margin-top: 12px;
+        padding: 10px;
+    }
+
+    .actual-validity-info {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 4px;
+        margin-bottom: 6px;
+    }
+
+    .actual-label,
+    .actual-time {
+        font-size: 12px;
+    }
+
+    .actual-reason {
+        font-size: 11px;
+    }
+
+    .validity-note {
+        margin-top: 6px;
     }
 
     .advanced-simple {
@@ -1200,12 +1473,39 @@ watch(() => props.modelValue, (newVal) => {
         font-size: 12px;
     }
 
-    .risk-checkbox {
+    .price-input {
+        width: 90px;
+    }
+
+    .current-price-display {
+        padding: 6px 8px;
+    }
+
+    .price-value {
+        font-size: 13px;
+    }
+
+    .price-range-display {
+        padding: 8px;
+        margin-top: 6px;
+    }
+
+    .range-label,
+    .range-value,
+    .range-desc {
+        font-size: 11px;
+    }
+
+    .order-validity {
+        padding: 6px 8px;
+    }
+
+    .validity-text {
         font-size: 12px;
     }
 
-    .risk-number {
-        width: 90px;
+    .validity-desc {
+        font-size: 10px;
     }
 
     .advanced-simple {
@@ -1337,12 +1637,39 @@ watch(() => props.modelValue, (newVal) => {
         font-size: 11px;
     }
 
-    .risk-checkbox {
+    .price-input {
+        width: 80px;
+    }
+
+    .current-price-display {
+        padding: 4px 6px;
+    }
+
+    .price-value {
+        font-size: 12px;
+    }
+
+    .price-range-display {
+        padding: 6px;
+        margin-top: 4px;
+    }
+
+    .range-label,
+    .range-value,
+    .range-desc {
+        font-size: 10px;
+    }
+
+    .order-validity {
+        padding: 4px 6px;
+    }
+
+    .validity-text {
         font-size: 11px;
     }
 
-    .risk-number {
-        width: 80px;
+    .validity-desc {
+        font-size: 9px;
     }
 
     .advanced-simple {
@@ -1573,9 +1900,40 @@ watch(() => props.modelValue, (newVal) => {
     font-size: 14px !important;
 }
 
-.mobile-dialog .risk-number {
-    width: 100px !important;
-}
+    .mobile-dialog .price-input {
+        width: 100px !important;
+    }
+
+    .mobile-dialog .current-price-display {
+        padding: 8px 10px !important;
+    }
+
+    .mobile-dialog .price-value {
+        font-size: 14px !important;
+    }
+
+    .mobile-dialog .price-range-display {
+        padding: 10px !important;
+        margin-top: 8px !important;
+    }
+
+    .mobile-dialog .range-label,
+    .mobile-dialog .range-value,
+    .mobile-dialog .range-desc {
+        font-size: 12px !important;
+    }
+
+    .mobile-dialog .order-validity {
+        padding: 8px 10px !important;
+    }
+
+    .mobile-dialog .validity-text {
+        font-size: 13px !important;
+    }
+
+    .mobile-dialog .validity-desc {
+        font-size: 11px !important;
+    }
 
 .mobile-dialog .dialog-footer {
     flex-shrink: 0 !important;
@@ -1682,11 +2040,13 @@ watch(() => props.modelValue, (newVal) => {
 @media (max-width: 768px) {
 
     /* 数字输入框样式优化 */
-    .mobile-dialog .param-input-small :deep(.el-input-number) {
+    .mobile-dialog .param-input-small :deep(.el-input-number),
+    .mobile-dialog .price-input :deep(.el-input-number) {
         width: 100% !important;
     }
 
-    .mobile-dialog .param-input-small :deep(.el-input__inner) {
+    .mobile-dialog .param-input-small :deep(.el-input__inner),
+    .mobile-dialog .price-input :deep(.el-input__inner) {
         height: 36px !important;
         font-size: 14px !important;
         padding: 0 32px 0 12px !important;
@@ -1694,7 +2054,9 @@ watch(() => props.modelValue, (newVal) => {
     }
 
     .mobile-dialog .param-input-small :deep(.el-input-number__increase),
-    .mobile-dialog .param-input-small :deep(.el-input-number__decrease) {
+    .mobile-dialog .param-input-small :deep(.el-input-number__decrease),
+    .mobile-dialog .price-input :deep(.el-input-number__increase),
+    .mobile-dialog .price-input :deep(.el-input-number__decrease) {
         width: 28px !important;
         height: 18px !important;
         line-height: 18px !important;
@@ -1707,14 +2069,16 @@ watch(() => props.modelValue, (newVal) => {
         border-left: 1px solid #dcdfe6 !important;
     }
 
-    .mobile-dialog .param-input-small :deep(.el-input-number__increase) {
+    .mobile-dialog .param-input-small :deep(.el-input-number__increase),
+    .mobile-dialog .price-input :deep(.el-input-number__increase) {
         top: 1px !important;
         right: 1px !important;
         border-radius: 0 5px 0 0 !important;
         border-bottom: 1px solid #dcdfe6 !important;
     }
 
-    .mobile-dialog .param-input-small :deep(.el-input-number__decrease) {
+    .mobile-dialog .param-input-small :deep(.el-input-number__decrease),
+    .mobile-dialog .price-input :deep(.el-input-number__decrease) {
         bottom: 1px !important;
         right: 1px !important;
         border-radius: 0 0 5px 0 !important;
@@ -1722,7 +2086,9 @@ watch(() => props.modelValue, (newVal) => {
     }
 
     .mobile-dialog .param-input-small :deep(.el-input-number__increase):hover,
-    .mobile-dialog .param-input-small :deep(.el-input-number__decrease):hover {
+    .mobile-dialog .param-input-small :deep(.el-input-number__decrease):hover,
+    .mobile-dialog .price-input :deep(.el-input-number__increase):hover,
+    .mobile-dialog .price-input :deep(.el-input-number__decrease):hover {
         background: #e6e6e6 !important;
         color: #333 !important;
     }

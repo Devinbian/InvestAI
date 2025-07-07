@@ -417,19 +417,25 @@ const getMessageStatusClass = (content) => {
 
 // 聊天消息中的股票操作配置
 const getChatStockActions = (message) => {
+    let actions;
     if (message.isBuyMode) {
         // 购买模式：优先显示购买按钮
-        return getStockActionConfig('chatCompact', {
+        actions = getStockActionConfig('chatCompact', {
             isMobile: props.isMobileView,
             maxButtons: 2
         });
     } else {
         // 普通模式：显示完整操作
-        return getStockActionConfig('chatFull', {
+        actions = getStockActionConfig('chatFull', {
             isMobile: props.isMobileView,
             maxButtons: props.isMobileView ? 3 : 4
         });
     }
+    // 量化分析内容不显示量化分析按钮
+    if (message.isQuantAnalysis) {
+        actions = actions.filter(a => a.key !== 'paidAnalysis');
+    }
+    return actions;
 };
 
 // 聊天股票操作事件处理
@@ -530,6 +536,62 @@ const handleRegenerateMessage = () => {
 // 计算属性
 const smartRecommendationConfig = computed(() => {
     if (!props.message) return {};
+    
+    // 基础操作按钮
+    const baseActions = [
+        {
+            key: 'addWatchlist',
+            text: '加入自选',
+            icon: '⭐',
+            type: 'primary',
+            class: 'add-watchlist-btn'
+        },
+        {
+            key: 'removeWatchlist',
+            text: '已加自选',
+            icon: '⭐',
+            type: 'success',
+            class: 'remove-watchlist-btn'
+        }
+    ];
+    
+    // 如果不是量化分析内容，则添加量化分析按钮
+    if (!props.message.isQuantAnalysis) {
+        baseActions.push({
+            key: 'paidAnalysis',
+            text: '量化分析',
+            icon: '🎯',
+            type: 'default',
+            class: 'paid-analysis-btn',
+            priceTag: {
+                original: '2智点',
+                promo: '1智点'
+            }
+        });
+    }
+    
+    // 添加其他操作按钮
+    baseActions.push(
+        {
+            key: 'quantAnalysis',
+            text: 'AI委托交易',
+            icon: '🤖',
+            type: 'default',
+            class: 'quant-analysis-btn',
+            priceTag: {
+                original: '3智点',
+                promo: '1智点'
+            }
+        },
+        {
+            key: 'buy',
+            text: '购买',
+            icon: 'M12 2v20M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6',
+            type: 'default',
+            class: 'buy-stock-btn-secondary'
+        }
+    );
+    
     return {
         showRecommendIndex: true,
         showRecommendTooltip: true,
@@ -539,51 +601,7 @@ const smartRecommendationConfig = computed(() => {
         timestamp: props.message.timestamp,
         toolbarTitle: '智能荐股',
         showToolbar: true,
-        actions: [
-            {
-                key: 'addWatchlist',
-                text: '加入自选',
-                icon: '⭐',
-                type: 'primary',
-                class: 'add-watchlist-btn'
-            },
-            {
-                key: 'removeWatchlist',
-                text: '已加自选',
-                icon: '⭐',
-                type: 'success',
-                class: 'remove-watchlist-btn'
-            },
-            {
-                key: 'paidAnalysis',
-                text: '量化分析',
-                icon: '🎯',
-                type: 'default',
-                class: 'paid-analysis-btn',
-                priceTag: {
-                    original: '2智点',
-                    promo: '1智点'
-                }
-            },
-            {
-                key: 'quantAnalysis',
-                text: 'AI委托交易',
-                icon: '🤖',
-                type: 'default',
-                class: 'quant-analysis-btn',
-                priceTag: {
-                    original: '3智点',
-                    promo: '1智点'
-                }
-            },
-            {
-                key: 'buy',
-                text: '购买',
-                icon: 'M12 2v20M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6',
-                type: 'default',
-                class: 'buy-stock-btn-secondary'
-            }
-        ]
+        actions: baseActions
     };
 });
 
@@ -601,6 +619,61 @@ const mobileSmartRecommendationConfig = computed(() => {
         });
     }
 
+    // 基础操作按钮
+    const baseActions = [
+        {
+            key: 'addWatchlist',
+            text: '加入自选',
+            icon: '⭐',
+            type: 'primary',
+            class: 'add-watchlist-btn'
+        },
+        {
+            key: 'removeWatchlist',
+            text: '已加自选',
+            icon: '⭐',
+            type: 'success',
+            class: 'remove-watchlist-btn'
+        }
+    ];
+    
+    // 如果不是量化分析内容，则添加量化分析按钮
+    if (!props.message.isQuantAnalysis) {
+        baseActions.push({
+            key: 'paidAnalysis',
+            text: '量化分析',
+            icon: '🎯',
+            type: 'default',
+            class: 'paid-analysis-btn',
+            priceTag: {
+                original: '2智点',
+                promo: '1智点'
+            }
+        });
+    }
+    
+    // 添加其他操作按钮
+    baseActions.push(
+        {
+            key: 'quantAnalysis',
+            text: 'AI委托交易',
+            icon: '🤖',
+            type: 'default',
+            class: 'quant-analysis-btn',
+            priceTag: {
+                original: '3智点',
+                promo: '1智点'
+            }
+        },
+        {
+            key: 'buy',
+            text: '购买',
+            icon: 'M12 2v20M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6',
+            type: 'default',
+            class: 'buy-stock-btn-secondary'
+        }
+    );
+
     return {
         showRecommendIndex: true,
         showRecommendTooltip: true,
@@ -610,51 +683,7 @@ const mobileSmartRecommendationConfig = computed(() => {
         timestamp: props.message.timestamp,
         toolbarTitle: '智能荐股',
         showToolbar: true,
-        actions: [
-            {
-                key: 'addWatchlist',
-                text: '加入自选',
-                icon: '⭐',
-                type: 'primary',
-                class: 'add-watchlist-btn'
-            },
-            {
-                key: 'removeWatchlist',
-                text: '已加自选',
-                icon: '⭐',
-                type: 'success',
-                class: 'remove-watchlist-btn'
-            },
-            {
-                key: 'paidAnalysis',
-                text: '量化分析',
-                icon: '🎯',
-                type: 'default',
-                class: 'paid-analysis-btn',
-                priceTag: {
-                    original: '2智点',
-                    promo: '1智点'
-                }
-            },
-            {
-                key: 'quantAnalysis',
-                text: 'AI委托交易',
-                icon: '🤖',
-                type: 'default',
-                class: 'quant-analysis-btn',
-                priceTag: {
-                    original: '3智点',
-                    promo: '1智点'
-                }
-            },
-            {
-                key: 'buy',
-                text: '购买',
-                icon: 'M12 2v20M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6',
-                type: 'default',
-                class: 'buy-stock-btn-secondary'
-            }
-        ]
+        actions: baseActions
     };
 });
 </script>

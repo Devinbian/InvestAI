@@ -42,13 +42,7 @@
                     <!-- 录音计时显示 -->
                     <div v-if="isRecording" class="recording-timer">{{ recordingDuration }}s</div>
                 </div>
-                <el-button v-if="!showChatShortcuts && isLoggedIn && isChatMode"
-                    class="ai-func-btn shortcuts-toggle-btn" circle @click="$emit('toggle-chat-shortcuts')">
-                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none">
-                        <path d="M12 5v14m-7-7h14" stroke="#888" stroke-width="2" stroke-linecap="round"
-                            stroke-linejoin="round" />
-                    </svg>
-                </el-button>
+
                 <el-button class="ai-send-btn" :class="{ 'generating': isGenerating }"
                     :type="isGenerating ? 'danger' : 'primary'" circle @mousedown="handleSendButtonMouseDown"
                     @touchstart="handleSendButtonTouchStart" @click="handleSendButtonClick"
@@ -114,11 +108,7 @@ export default {
             type: Boolean,
             default: false
         },
-        // 是否显示聊天快捷操作
-        showChatShortcuts: {
-            type: Boolean,
-            default: false
-        },
+
         // 是否已登录
         isLoggedIn: {
             type: Boolean,
@@ -135,8 +125,7 @@ export default {
         'send-message',
         'toggle-chat-history',
         'voice-click',
-        'stop-generation',
-        'toggle-chat-shortcuts'
+        'stop-generation'
     ],
     computed: {
         inputMessage: {

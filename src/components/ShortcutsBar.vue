@@ -15,115 +15,11 @@
             </div>
         </div>
 
-        <!-- 移动端初始模式隐藏占位元素 - 确保组件始终被渲染 -->
-        <div v-if="mode === 'initial' && isMobileView" style="display: none;" class="mobile-placeholder">
-            <!-- 隐藏的占位元素，确保移动端组件能被正确渲染和引用 -->
-        </div>
 
-        <!-- PC端快捷操作栏（聊天模式下显示在输入框上方） -->
-        <div class="chat-shortcuts pc-shortcuts" v-if="mode === 'chat' && showChatShortcuts && !isMobileView">
-            <div class="shortcuts-grid" :style="{
-                display: 'grid !important',
-                gridTemplateColumns: 'repeat(5, 1fr) !important',
-                gap: '6px !important',
-                width: '100% !important',
-                maxWidth: 'none !important',
-                margin: '0 !important',
-                padding: '0 !important',
-                boxSizing: 'border-box !important'
-            }">
-                <el-button v-for="shortcut in activeShortcuts" :key="shortcut.id" class="chat-shortcut-btn"
-                    @click="handleShortcutClick(shortcut)" :style="{
-                        width: '100%',
-                        height: '40px',
-                        minWidth: '0',
-                        maxWidth: 'none',
-                        margin: '0',
-                        padding: '4px 2px',
-                        boxSizing: 'border-box',
-                        display: 'flex',
-                        flexDirection: 'column',
-                        alignItems: 'center',
-                        justifyContent: 'center',
-                        gap: '1px',
-                        fontSize: '12px'
-                    }">
-                    <span class="btn-icon" :style="{ fontSize: '14px', lineHeight: '1' }">{{ shortcut.icon }}</span>
-                    <span class="btn-text" :style="{ fontSize: '10px', lineHeight: '1.2', fontWeight: '500' }">{{
-                        shortcut.shortTitle || shortcut.title }}</span>
-                </el-button>
-                <el-button class="chat-shortcut-btn customize-btn-chat" @click="openCustomizeDialog" :style="{
-                    width: '100%',
-                    height: '40px',
-                    minWidth: '0',
-                    maxWidth: 'none',
-                    margin: '0',
-                    padding: '6px 8px',
-                    boxSizing: 'border-box',
-                    display: 'flex',
-                    flexDirection: 'column',
-                    alignItems: 'center',
-                    justifyContent: 'center',
-                    gap: '1px',
-                    fontSize: '12px'
-                }">
-                    <span class="btn-icon" :style="{ fontSize: '14px', lineHeight: '1' }">⚙️</span>
-                    <span class="btn-text" :style="{ fontSize: '10px', lineHeight: '1.2', fontWeight: '500' }">设置</span>
-                </el-button>
-                <el-button class="chat-shortcut-btn close-btn" @click="toggleChatShortcuts" :style="{
-                    width: '100%',
-                    height: '40px',
-                    minWidth: '0',
-                    maxWidth: 'none',
-                    margin: '0',
-                    padding: '6px 8px',
-                    boxSizing: 'border-box',
-                    display: 'flex',
-                    flexDirection: 'column',
-                    alignItems: 'center',
-                    justifyContent: 'center',
-                    gap: '1px',
-                    fontSize: '12px'
-                }">
-                    <span class="btn-icon" :style="{ fontSize: '14px', lineHeight: '1' }">✕</span>
-                    <span class="btn-text" :style="{ fontSize: '10px', lineHeight: '1.2', fontWeight: '500' }">收起</span>
-                </el-button>
-            </div>
-        </div>
 
-        <!-- 移动端快捷操作栏（原生设计） -->
-        <div class="mobile-shortcuts-overlay" v-if="showChatShortcuts && isMobileView" @click="toggleChatShortcuts">
-            <div class="mobile-shortcuts-container" @click.stop>
-                <!-- 顶部拖拽指示器 -->
-                <div class="drag-indicator"></div>
 
-                <!-- 标题区域 -->
-                <div class="shortcuts-header">
-                    <h3 class="shortcuts-title">快捷操作</h3>
-                    <button class="close-btn-header" @click="toggleChatShortcuts">
-                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none">
-                            <path d="M18 6L6 18M6 6l12 12" stroke="currentColor" stroke-width="2"
-                                stroke-linecap="round" />
-                        </svg>
-                    </button>
-                </div>
 
-                <!-- 快捷操作网格 -->
-                <div class="shortcuts-grid-mobile">
-                    <div v-for="shortcut in activeShortcuts" :key="shortcut.id" class="shortcut-item-mobile"
-                        @click="handleShortcutClick(shortcut)">
-                        <div class="shortcut-icon">{{ shortcut.icon }}</div>
-                        <div class="shortcut-text">{{ shortcut.shortTitle || shortcut.title }}</div>
-                    </div>
 
-                    <!-- 自定义按钮 -->
-                    <div class="shortcut-item-mobile add-shortcut" @click="openCustomizeDialog">
-                        <div class="shortcut-icon add-icon">+</div>
-                        <div class="shortcut-text">自定义</div>
-                    </div>
-                </div>
-            </div>
-        </div>
     </div>
 </template>
 
@@ -144,11 +40,7 @@ const props = defineProps({
         type: Boolean,
         default: true
     },
-    // 是否显示聊天快捷操作（仅在chat模式下有效）
-    showChatShortcuts: {
-        type: Boolean,
-        default: false
-    },
+
     // 是否为移动端视图
     isMobileView: {
         type: Boolean,
@@ -165,7 +57,6 @@ const props = defineProps({
 const emit = defineEmits([
     'shortcut-click',
     'customize-dialog-open',
-    'toggle-chat-shortcuts',
     'shortcuts-updated'
 ]);
 
@@ -280,10 +171,7 @@ const openCustomizeDialog = () => {
     emit('customize-dialog-open');
 };
 
-// 切换聊天快捷操作显示状态
-const toggleChatShortcuts = () => {
-    emit('toggle-chat-shortcuts');
-};
+
 
 // 处理快捷操作更新
 const handleShortcutsUpdated = () => {
@@ -302,13 +190,7 @@ const handleShortcutsUpdated = () => {
 // 监听props变化，重新初始化快捷操作
 watch(() => props.isLoggedIn, initializeShortcuts, { immediate: false });
 
-// 监听移动端快捷操作弹窗显示状态
-watch(() => props.showChatShortcuts, (newVal, oldVal) => {
-    if (newVal && props.isMobileView && !oldVal) {
-        console.log('📱 ShortcutsBar - 移动端快捷操作弹窗打开，重新初始化数据');
-        initializeShortcuts();
-    }
-}, { immediate: false });
+
 
 // 组件挂载时初始化
 onMounted(() => {
@@ -332,55 +214,10 @@ defineExpose({
 /* 引入共享的快捷操作样式 */
 @import '@/styles/components/shortcuts.scss';
 
-/* 移动端隐藏占位元素 */
-.mobile-placeholder {
-    display: none;
-}
-
 @media (max-width: 480px) {
     .ai-suggestion-btn {
         min-width: auto;
         flex: 1;
-    }
-
-    /* 超小屏幕优化移动端弹窗 */
-    .shortcuts-grid-mobile {
-        grid-template-columns: repeat(3, 1fr);
-        padding: 16px 12px 12px;
-    }
-
-    .shortcut-item-mobile {
-        padding: 12px 6px;
-        min-height: 72px;
-    }
-
-    .shortcut-icon {
-        width: 40px;
-        height: 40px;
-        font-size: 18px;
-        margin-bottom: 6px;
-    }
-
-    .shortcut-text {
-        font-size: 11px;
-    }
-
-    .shortcuts-header {
-        padding: 12px 16px 8px;
-    }
-
-    .shortcuts-title {
-        font-size: 15px;
-    }
-
-    .close-btn-header {
-        width: 28px;
-        height: 28px;
-    }
-
-    .close-btn-header svg {
-        width: 16px;
-        height: 16px;
     }
 }
 </style>

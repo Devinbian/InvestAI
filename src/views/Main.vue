@@ -46,16 +46,16 @@
                     <AIInputCard v-model="inputMessage" :show-history-button="userStore.isLoggedIn && !showChatHistory"
                         :is-chat-mode="false" :is-mobile-view="isMobileView" :is-recording="isRecording"
                         :recording-duration="recordingDuration" :is-generating="isGenerating"
-                        :show-chat-shortcuts="showChatShortcuts" :is-logged-in="userStore.isLoggedIn"
+                        :show-chat-shortcuts="false" :is-logged-in="userStore.isLoggedIn"
                         :show-chat-history="showChatHistory" @send-message="sendMessage"
                         @toggle-chat-history="toggleChatHistory" @voice-click="onVoiceClick"
-                        @stop-generation="stopGeneration" @toggle-chat-shortcuts="toggleChatShortcuts" />
+                        @stop-generation="stopGeneration" />
 
                     <!-- 快捷操作栏组件 -->
-                    <ShortcutsBar mode="initial" :show-shortcuts="true" :show-chat-shortcuts="showChatShortcuts"
+                    <ShortcutsBar mode="initial" :show-shortcuts="true" :show-chat-shortcuts="false"
                         :is-mobile-view="isMobileView" :is-logged-in="userStore.isLoggedIn"
                         @shortcut-click="handleShortcutClick" @customize-dialog-open="openCustomizeDialog"
-                        @toggle-chat-shortcuts="toggleChatShortcuts" ref="shortcutsBarRef" />
+                        ref="shortcutsBarRef" />
                 </div>
 
                 <!-- PC端输入区域 - 保持原有布局 -->
@@ -63,16 +63,16 @@
                     <AIInputCard v-model="inputMessage" :show-history-button="userStore.isLoggedIn && !showChatHistory"
                         :is-chat-mode="false" :is-mobile-view="isMobileView" :is-recording="isRecording"
                         :recording-duration="recordingDuration" :is-generating="isGenerating"
-                        :show-chat-shortcuts="showChatShortcuts" :is-logged-in="userStore.isLoggedIn"
+                        :show-chat-shortcuts="false" :is-logged-in="userStore.isLoggedIn"
                         :show-chat-history="showChatHistory" @send-message="sendMessage"
                         @toggle-chat-history="toggleChatHistory" @voice-click="onVoiceClick"
-                        @stop-generation="stopGeneration" @toggle-chat-shortcuts="toggleChatShortcuts" />
+                        @stop-generation="stopGeneration" />
 
                     <!-- 快捷操作栏组件 -->
-                    <ShortcutsBar mode="initial" :show-shortcuts="true" :show-chat-shortcuts="showChatShortcuts"
+                    <ShortcutsBar mode="initial" :show-shortcuts="true" :show-chat-shortcuts="false"
                         :is-mobile-view="isMobileView" :is-logged-in="userStore.isLoggedIn"
                         @shortcut-click="handleShortcutClick" @customize-dialog-open="openCustomizeDialog"
-                        @toggle-chat-shortcuts="toggleChatShortcuts" ref="shortcutsBarRef" />
+                        ref="shortcutsBarRef" />
                 </template>
             </div>
 
@@ -455,19 +455,19 @@
                     </div>
                 </div>
 
-                <!-- 聊天模式快捷操作栏组件 -->
-                <ShortcutsBar mode="chat" :show-shortcuts="true" :show-chat-shortcuts="showChatShortcuts"
-                    :is-mobile-view="isMobileView" :is-logged-in="userStore.isLoggedIn"
-                    @shortcut-click="handleShortcutClick" @customize-dialog-open="openCustomizeDialog"
-                    @toggle-chat-shortcuts="toggleChatShortcuts" ref="chatShortcutsBarRef" />
-
                 <AIInputCard v-model="inputMessage" :show-history-button="userStore.isLoggedIn && !showChatHistory"
                     :is-chat-mode="true" :is-mobile-view="isMobileView" :is-recording="isRecording"
                     :recording-duration="recordingDuration" :is-generating="isGenerating"
-                    :show-chat-shortcuts="showChatShortcuts" :is-logged-in="userStore.isLoggedIn"
+                    :show-chat-shortcuts="false" :is-logged-in="userStore.isLoggedIn"
                     :show-chat-history="showChatHistory" @send-message="sendMessage"
                     @toggle-chat-history="toggleChatHistory" @voice-click="onVoiceClick"
-                    @stop-generation="stopGeneration" @toggle-chat-shortcuts="toggleChatShortcuts" />
+                    @stop-generation="stopGeneration" />
+
+                <!-- 聊天模式快捷操作栏组件 - 直接显示在输入框下方 -->
+                <ShortcutsBar mode="initial" :show-shortcuts="true" :show-chat-shortcuts="false"
+                    :is-mobile-view="isMobileView" :is-logged-in="userStore.isLoggedIn"
+                    @shortcut-click="handleShortcutClick" @customize-dialog-open="openCustomizeDialog"
+                    ref="chatShortcutsBarRef" />
             </div>
         </main>
 
@@ -644,7 +644,7 @@ const {
 const showUserProfile = ref(false); // 控制是否显示个人中心
 const showRecordsCenter = ref(false); // 控制是否显示记录中心
 // 量化分析提醒相关状态已移至 useStockOperations
-const showChatShortcuts = ref(false); // 控制聊天模式下的快捷操作显示
+const showChatShortcuts = ref(false); // 已废弃，快捷操作按钮现在直接显示
 
 // 使用移动端适配composable（重构版）
 const mobileAdaptation = useMobileAdaptation();
@@ -998,20 +998,10 @@ const onVoiceClick = () => {
     voiceOnClick(inputMessage);
 };
 
-// 切换聊天快捷操作显示
+// 切换聊天快捷操作显示（已废弃，快捷操作按钮现在直接显示）
 const toggleChatShortcuts = () => {
-    showChatShortcuts.value = !showChatShortcuts.value;
-    console.log('toggleChatShortcuts:', {
-        showChatShortcuts: showChatShortcuts.value,
-        userLoggedIn: userStore.isLoggedIn,
-        activeShortcuts: activeShortcuts.value.length,
-        isMobileView: isMobileView.value
-    });
-
-    // PC端动态调整聊天历史区域高度
-    if (!isMobileView.value) {
-        updateChatHistoryHeight();
-    }
+    // 快捷操作按钮现在直接显示，不再需要切换
+    console.log('toggleChatShortcuts: 快捷操作按钮现在直接显示，无需切换');
 };
 
 // 移动端侧边栏状态管理
@@ -1051,10 +1041,7 @@ const setSuggestionAndSend = async (suggestion) => {
         isChatMode.value = true;
     }
 
-    // 使用快捷操作后自动收起快捷操作面板
-    if (showChatShortcuts.value) {
-        showChatShortcuts.value = false;
-    }
+
 
     // 立即设置生成状态，让发送按钮进入"生成中"状态
     console.log('🔄 设置 isGenerating = true');
@@ -1393,7 +1380,6 @@ const handleSmartRecommendation = async () => {
             chatHistory,
             isChatMode,
             scrollToBottom,
-            showChatShortcuts,
             showGuide,
             () => isGenerating.value // 传递中断检查函数
         );
@@ -1448,7 +1434,6 @@ const handleNewsUpdate = async () => {
             chatHistory,
             isChatMode,
             scrollToBottom,
-            showChatShortcuts,
             showGuide,
             () => isGenerating.value // 传递中断检查函数
         );
@@ -1485,7 +1470,6 @@ const handleAssetAnalysis = async () => {
             chatHistory,
             isChatMode,
             scrollToBottom,
-            showChatShortcuts,
             showGuide,
             () => isGenerating.value // 传递中断检查函数
         );
@@ -1608,12 +1592,7 @@ const handleWatchlistView = async () => {
         scrollToBottom();
         ElMessage.success('已显示您的自选股列表');
 
-        // 使用快捷操作后自动收起
-        if (showChatShortcuts.value) {
-            setTimeout(() => {
-                showChatShortcuts.value = false;
-            }, 300);
-        }
+
     } finally {
         // 完成后重置生成状态
         console.log('🚀 自选股查看 - 重置生成状态');
@@ -2398,14 +2377,7 @@ const handleShortcutsUpdated = () => {
     console.log('🔄 快捷操作更新事件触发');
     notifyShortcutsBarComponents('handleShortcutsUpdated');
 
-    // 移动端特殊处理：如果快捷操作弹窗正在显示，强制刷新
-    if (isMobileView.value && showChatShortcuts.value) {
-        console.log('📱 移动端快捷操作弹窗刷新');
-        showChatShortcuts.value = false;
-        nextTick(() => {
-            showChatShortcuts.value = true;
-        });
-    }
+
 };
 
 
@@ -8818,7 +8790,7 @@ body {
     /* 移动端浏览器环境下欢迎区域优化 - 仅在主界面模式下整体上移避免与输入框重叠 */
     body:not(.wechat-browser) .modern-content:not(.chatting) .welcome-section {
         transform: translateY(-40px) !important;
-        /* 非微信环境下，仅在主界面模式让欢迎区域整体上移40px */
+        /* 非微信环境下，仅在主界面模式下让欢迎区域整体上移40px */
         margin-bottom: 0px !important;
         /* 重置底部间距，避免挤压输入框 */
         transition: transform 0.3s ease !important;

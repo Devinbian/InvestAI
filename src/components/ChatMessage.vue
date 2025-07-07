@@ -315,8 +315,39 @@
                     </svg>
                     <span class="action-text">重新生成</span>
                 </el-button>
+                <el-button size="small" text @click="handleShareMessage" class="action-btn share-btn"
+                    title="分享" :loading="isGeneratingImage" :disabled="isGeneratingImage">
+                    <svg v-if="!isGeneratingImage" width="14" height="14" viewBox="0 0 24 24" fill="none">
+                        <path
+                            d="M18 16.08c-.76 0-1.44.3-1.96.77L8.91 12.7c.05-.23.09-.46.09-.7s-.04-.47-.09-.7l7.05-4.11c.54.5 1.25.81 2.04.81 1.66 0 3-1.34 3-3s-1.34-3-3-3-3 1.34-3 3c0 .24.04.47.09.7L8.04 9.81C7.5 9.31 6.79 9 6 9c-1.66 0-3 1.34-3 3s1.34 3 3 3c.79 0 1.5-.31 2.04-.81l7.12 4.16c-.05.21-.08.43-.08.65 0 1.61 1.31 2.92 2.92 2.92s2.92-1.31 2.92-2.92-1.31-2.92-2.92-2.92z"
+                            stroke="currentColor" stroke-width="2" fill="none" />
+                    </svg>
+                    <span class="action-text">{{ isGeneratingImage ? '生成中...' : '分享' }}</span>
+                </el-button>
             </div>
         </div>
+        
+        <!-- 图片预览弹框 - 适中尺寸 -->
+        <el-dialog v-model="showImagePreview" title="分享预览" width="600px" 
+                   :show-close="true" @close="closePreview" class="image-preview-dialog"
+                   :modal="true" :append-to-body="true" :close-on-click-modal="true">
+            <div class="preview-container">
+                <div class="preview-image-wrapper">
+                    <img v-if="previewImageUrl" :src="previewImageUrl" alt="分享预览" class="preview-image" />
+                </div>
+                <div class="preview-actions">
+                    <el-button @click="closePreview" size="default">取消</el-button>
+                    <el-button type="primary" @click="downloadImage" size="default">
+                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" style="margin-right: 4px;">
+                            <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" stroke="currentColor" stroke-width="2"/>
+                            <polyline points="7,10 12,15 17,10" stroke="currentColor" stroke-width="2"/>
+                            <line x1="12" y1="15" x2="12" y2="3" stroke="currentColor" stroke-width="2"/>
+                        </svg>
+                        下载图片
+                    </el-button>
+                </div>
+            </div>
+        </el-dialog>
     </div>
 </template>
 
@@ -373,6 +404,19 @@ const props = defineProps({
     isStreamPaused: {
         type: Boolean,
         default: false
+    },
+    // 新增props用于分享功能
+    sessionTitle: {
+        type: String,
+        default: 'AI 智能分析'
+    },
+    chatHistory: {
+        type: Array,
+        default: () => []
+    },
+    messageIndex: {
+        type: Number,
+        default: 0
     }
 });
 
@@ -390,13 +434,17 @@ const emit = defineEmits([
     'stock-action-click',
     'refresh-recommendation',
     'copy-message',
-    'regenerate-message'
+    'regenerate-message',
+    'share-message'
 ]);
 
 // 本地状态
 const localActiveTab = ref('portfolio');
 const copyButtonText = ref('复制');
 const isCopying = ref(false);
+const showImagePreview = ref(false);
+const previewImageUrl = ref('');
+const isGeneratingImage = ref(false);
 
 // 获取消息状态类
 const getMessageStatusClass = (content) => {
@@ -530,6 +578,425 @@ const handleRegenerateMessage = () => {
     emit('regenerate-message', {
         message: props.message,
         messageId: props.message.id || props.message.timestamp
+    });
+};
+
+// 获取前一条用户消息
+const getPreviousUserMessage = () => {
+    if (!props.chatHistory || props.chatHistory.length === 0) {
+        return '用户提问';
+    }
+    
+    // 从当前消息索引向前查找最近的用户消息
+    for (let i = props.messageIndex - 1; i >= 0; i--) {
+        const message = props.chatHistory[i];
+        if (message && message.role === 'user' && message.content) {
+            return message.content;
+        }
+    }
+    
+    // 如果没有找到用户消息，返回默认值
+    return '用户提问';
+};
+
+// 分享消息为图片 - 生成预览
+const handleShareMessage = async () => {
+    if (isGeneratingImage.value) return;
+    
+    try {
+        isGeneratingImage.value = true;
+        
+        const canvas = document.createElement('canvas');
+        const ctx = canvas.getContext('2d');
+        
+        // 设置画布尺寸 - 按照图片比例
+        const width = 750;
+        const height = 1000;
+        canvas.width = width;
+        canvas.height = height;
+        
+        // 设置高质量渲染
+        ctx.imageSmoothingEnabled = true;
+        ctx.imageSmoothingQuality = 'high';
+        
+        // 纯白背景
+        ctx.fillStyle = '#ffffff';
+        ctx.fillRect(0, 0, width, height);
+        
+        // 绘制顶部标题区域
+        const headerY = 60;
+        ctx.fillStyle = '#333333';
+        ctx.font = 'bold 24px -apple-system, BlinkMacSystemFont, "PingFang SC", sans-serif';
+        ctx.textAlign = 'left';
+        
+        // 使用会话标题
+        const title = props.sessionTitle || 'AI 智能分析';
+        ctx.fillText(title, 40, headerY);
+        
+        // 绘制时间和来源信息
+        ctx.fillStyle = '#999999';
+        ctx.font = '14px -apple-system, BlinkMacSystemFont, "PingFang SC", sans-serif';
+        const timeText = new Date().toLocaleString('zh-CN', {
+            year: 'numeric',
+            month: 'numeric',
+            day: 'numeric',
+            hour: '2-digit',
+            minute: '2-digit'
+        });
+        ctx.fillText(`${timeText} · 内容由 AI 生成，不能完全保障准确性`, 40, headerY + 30);
+        
+        // 绘制分割线
+        ctx.strokeStyle = '#e5e5e5';
+        ctx.lineWidth = 1;
+        ctx.beginPath();
+        ctx.moveTo(40, headerY + 50);
+        ctx.lineTo(width - 40, headerY + 50);
+        ctx.stroke();
+        
+        // 用户输入气泡（右侧）- 参照当前聊天气泡样式
+        const userBubbleY = headerY + 80;
+        let userBubbleWidth = 200;
+        const userBubbleHeight = 50;
+        
+        // 获取前一条用户消息
+        const userInput = getPreviousUserMessage();
+        
+        // 测量文字宽度，动态调整气泡宽度
+        ctx.font = '16px -apple-system, BlinkMacSystemFont, "PingFang SC", sans-serif';
+        const textWidth = ctx.measureText(userInput).width;
+        userBubbleWidth = Math.max(textWidth + 40, 120); // 最小宽度120px
+        const userBubbleX = width - 40 - userBubbleWidth;
+        
+        // 绘制用户输入气泡 - 参照聊天气泡样式（右上角有小圆角）
+        ctx.fillStyle = '#007AFF';
+        ctx.beginPath();
+        // 手动绘制圆角矩形，模拟 18px 18px 4px 18px 的效果
+        const r1 = 18, r2 = 4; // 大圆角和小圆角
+        ctx.moveTo(userBubbleX + r1, userBubbleY);
+        ctx.lineTo(userBubbleX + userBubbleWidth - r1, userBubbleY);
+        ctx.arcTo(userBubbleX + userBubbleWidth, userBubbleY, userBubbleX + userBubbleWidth, userBubbleY + r1, r1);
+        ctx.lineTo(userBubbleX + userBubbleWidth, userBubbleY + userBubbleHeight - r2);
+        ctx.arcTo(userBubbleX + userBubbleWidth, userBubbleY + userBubbleHeight, userBubbleX + userBubbleWidth - r2, userBubbleY + userBubbleHeight, r2);
+        ctx.lineTo(userBubbleX + r1, userBubbleY + userBubbleHeight);
+        ctx.arcTo(userBubbleX, userBubbleY + userBubbleHeight, userBubbleX, userBubbleY + userBubbleHeight - r1, r1);
+        ctx.lineTo(userBubbleX, userBubbleY + r1);
+        ctx.arcTo(userBubbleX, userBubbleY, userBubbleX + r1, userBubbleY, r1);
+        ctx.closePath();
+        ctx.fill();
+        
+        // 用户输入文字
+        ctx.fillStyle = '#ffffff';
+        ctx.textAlign = 'center';
+        ctx.fillText(userInput, userBubbleX + userBubbleWidth / 2, userBubbleY + 30);
+        
+        // AI回复区域（左侧）- 参照当前聊天气泡样式，铺满屏幕宽度
+        const aiReplyY = userBubbleY + 80;
+        const aiReplyBubbleX = 40; // 从左边距开始
+        const aiReplyBubbleWidth = width - 80; // 铺满屏幕宽度，左右各留40px边距
+        const messageContent = props.message.content || '暂无内容';
+        
+        // 设置字体用于测量 - 与聊天界面保持一致
+        ctx.font = '16px -apple-system, BlinkMacSystemFont, "PingFang SC", "Microsoft YaHei", sans-serif';
+        
+        // 计算AI回复内容的换行和高度 - 确保有足够的边距
+        const textMaxWidth = aiReplyBubbleWidth - 40; // 减去左右padding (20px * 2)
+        console.log('🔍 文本换行调试信息:', {
+            aiReplyBubbleWidth,
+            textMaxWidth,
+            messageContentLength: messageContent.length,
+            messageContentPreview: messageContent.substring(0, 100) + '...',
+            hasBoldMarkers: messageContent.includes('**'),
+            boldMatches: messageContent.match(/\*\*(.*?)\*\*/g)
+        });
+        
+        const lines = wrapTextWithFormat(ctx, messageContent, textMaxWidth);
+        console.log('🔍 换行结果:', {
+            linesCount: lines.length,
+            lines: lines.slice(0, 3).map(line => ({
+                text: line.text,
+                partsCount: line.parts.length,
+                hasBold: line.parts.some(part => part.bold)
+            })), // 只显示前3行
+            maxLineLength: Math.max(...lines.map(line => line.text.length))
+        });
+        
+        const lineHeight = 24; // 与聊天界面的line-height: 1.5保持一致
+        const padding = 20; // 与聊天界面的padding保持一致
+        const aiReplyBubbleHeight = Math.max(50, lines.length * lineHeight + padding * 2);
+        
+        // 绘制AI回复气泡 - 参照聊天气泡样式（左下角有小圆角）
+        ctx.fillStyle = '#f1f3f4'; // 与聊天界面的背景色保持一致
+        ctx.beginPath();
+        // 手动绘制圆角矩形，模拟 18px 18px 18px 4px 的效果
+        const ar1 = 18, ar2 = 4; // 大圆角和小圆角
+        ctx.moveTo(aiReplyBubbleX + ar1, aiReplyY);
+        ctx.lineTo(aiReplyBubbleX + aiReplyBubbleWidth - ar1, aiReplyY);
+        ctx.arcTo(aiReplyBubbleX + aiReplyBubbleWidth, aiReplyY, aiReplyBubbleX + aiReplyBubbleWidth, aiReplyY + ar1, ar1);
+        ctx.lineTo(aiReplyBubbleX + aiReplyBubbleWidth, aiReplyY + aiReplyBubbleHeight - ar1);
+        ctx.arcTo(aiReplyBubbleX + aiReplyBubbleWidth, aiReplyY + aiReplyBubbleHeight, aiReplyBubbleX + aiReplyBubbleWidth - ar1, aiReplyY + aiReplyBubbleHeight, ar1);
+        ctx.lineTo(aiReplyBubbleX + ar2, aiReplyY + aiReplyBubbleHeight);
+        ctx.arcTo(aiReplyBubbleX, aiReplyY + aiReplyBubbleHeight, aiReplyBubbleX, aiReplyY + aiReplyBubbleHeight - ar2, ar2);
+        ctx.lineTo(aiReplyBubbleX, aiReplyY + ar1);
+        ctx.arcTo(aiReplyBubbleX, aiReplyY, aiReplyBubbleX + ar1, aiReplyY, ar1);
+        ctx.closePath();
+        ctx.fill();
+        
+        // AI回复文字 - 支持格式化文本渲染
+        ctx.fillStyle = '#18181b'; // 与聊天界面的文字颜色保持一致
+        ctx.textAlign = 'left';
+        
+        let currentY = aiReplyY + padding + 16; // 16px是字体的基线偏移
+        lines.forEach((line) => {
+            renderFormattedLine(ctx, line, aiReplyBubbleX + padding, currentY);
+            currentY += lineHeight;
+        });
+        
+        // 底部区域
+        const footerY = height - 150;
+        
+        // 绘制AI助手信息
+        ctx.fillStyle = '#333333';
+        ctx.font = 'bold 16px -apple-system, BlinkMacSystemFont, "PingFang SC", sans-serif';
+        ctx.textAlign = 'left';
+        ctx.fillText('InvestAI', 40, footerY);
+        
+        ctx.fillStyle = '#999999';
+        ctx.font = '14px -apple-system, BlinkMacSystemFont, "PingFang SC", sans-serif';
+        ctx.fillText('你的AI投资助手，助力智能投资决策', 40, footerY + 25);
+        
+        // 绘制二维码区域（简化为方框）
+        const qrSize = 80;
+        const qrX = width - 40 - qrSize;
+        const qrY = footerY - 20;
+        
+        // 二维码背景
+        ctx.fillStyle = '#f8f9fa';
+        ctx.beginPath();
+        ctx.roundRect(qrX, qrY, qrSize, qrSize, 8);
+        ctx.fill();
+        
+        // 二维码边框
+        ctx.strokeStyle = '#e9ecef';
+        ctx.lineWidth = 1;
+        ctx.stroke();
+        
+        // 二维码内容（简化的网格图案）
+        ctx.fillStyle = '#333333';
+        const cellSize = 4;
+        const gridSize = 16;
+        const startX = qrX + (qrSize - gridSize * cellSize) / 2;
+        const startY = qrY + (qrSize - gridSize * cellSize) / 2;
+        
+        // 绘制简化的二维码图案
+        for (let i = 0; i < gridSize; i++) {
+            for (let j = 0; j < gridSize; j++) {
+                // 简单的棋盘图案
+                if ((i + j) % 3 === 0 || (i === 0 || i === gridSize - 1 || j === 0 || j === gridSize - 1)) {
+                    ctx.fillRect(startX + i * cellSize, startY + j * cellSize, cellSize, cellSize);
+                }
+            }
+        }
+        
+        // 项目Logo
+        ctx.fillStyle = '#ffffff';
+        ctx.beginPath();
+        ctx.roundRect(qrX + qrSize / 2 - 15, qrY + qrSize / 2 - 15, 30, 30, 6);
+        ctx.fill();
+        
+        // 绘制InvestAI Logo
+        ctx.fillStyle = '#007AFF';
+        ctx.font = 'bold 12px -apple-system, BlinkMacSystemFont, "PingFang SC", "Microsoft YaHei", sans-serif';
+        ctx.textAlign = 'center';
+        ctx.fillText('AI', qrX + qrSize / 2, qrY + qrSize / 2 + 4);
+        
+        // 绘制Logo边框
+        ctx.strokeStyle = '#007AFF';
+        ctx.lineWidth = 1;
+        ctx.beginPath();
+        ctx.roundRect(qrX + qrSize / 2 - 15, qrY + qrSize / 2 - 15, 30, 30, 6);
+        ctx.stroke();
+        
+        // 转换为图片URL并显示预览
+        canvas.toBlob((blob) => {
+            previewImageUrl.value = URL.createObjectURL(blob);
+            showImagePreview.value = true;
+            isGeneratingImage.value = false;
+        }, 'image/png', 0.95);
+        
+        // 发送分享事件
+        emit('share-message', {
+            message: props.message,
+            messageId: props.message.id || props.message.timestamp
+        });
+        
+    } catch (error) {
+        console.error('分享图片生成失败:', error);
+        isGeneratingImage.value = false;
+    }
+};
+
+// 下载图片
+const downloadImage = () => {
+    if (!previewImageUrl.value) return;
+    
+    const a = document.createElement('a');
+    a.href = previewImageUrl.value;
+    a.download = `InvestAI-分享-${new Date().getTime()}.png`;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+};
+
+// 关闭预览
+const closePreview = () => {
+    showImagePreview.value = false;
+    if (previewImageUrl.value) {
+        URL.revokeObjectURL(previewImageUrl.value);
+        previewImageUrl.value = '';
+    }
+};
+
+// 解析文本中的格式化标记
+const parseTextWithFormat = (text) => {
+    const parts = [];
+    let currentIndex = 0;
+    
+    // 匹配加粗文本 **text**
+    const boldRegex = /\*\*(.*?)\*\*/g;
+    let match;
+    
+    while ((match = boldRegex.exec(text)) !== null) {
+        // 添加普通文本部分
+        if (match.index > currentIndex) {
+            parts.push({
+                text: text.substring(currentIndex, match.index),
+                bold: false
+            });
+        }
+        
+        // 添加加粗文本部分
+        parts.push({
+            text: match[1],
+            bold: true
+        });
+        
+        currentIndex = match.index + match[0].length;
+    }
+    
+    // 添加剩余的普通文本
+    if (currentIndex < text.length) {
+        parts.push({
+            text: text.substring(currentIndex),
+            bold: false
+        });
+    }
+    
+    return parts;
+};
+
+// 文本换行处理函数 - 支持格式化文本
+const wrapTextWithFormat = (ctx, text, maxWidth) => {
+    // 清理文本但保留加粗标记
+    const cleanText = text
+        .replace(/\*(.*?)\*/g, '$1')      // 移除斜体
+        .replace(/`(.*?)`/g, '$1')        // 移除代码块
+        .replace(/#{1,6}\s/g, '')         // 移除标题
+        .replace(/>\s/g, '')              // 移除引用
+        .replace(/\n\s*\n/g, '\n')        // 合并多个换行
+        .trim();
+    
+    const paragraphs = cleanText.split('\n');
+    const lines = [];
+    
+    paragraphs.forEach(paragraph => {
+        if (!paragraph.trim()) return;
+        
+        // 解析段落中的格式化文本
+        const parts = parseTextWithFormat(paragraph);
+        let currentLine = { text: '', parts: [] };
+        
+        parts.forEach(part => {
+            if (!part.text) return;
+            
+            // 逐字符处理每个部分
+            for (let i = 0; i < part.text.length; i++) {
+                const char = part.text[i];
+                
+                                 // 设置字体以测量宽度
+                 if (part.bold) {
+                     ctx.font = 'bold 16px -apple-system, BlinkMacSystemFont, "PingFang SC", "Microsoft YaHei", sans-serif';
+                 } else {
+                     ctx.font = '16px -apple-system, BlinkMacSystemFont, "PingFang SC", "Microsoft YaHei", sans-serif';
+                 }
+                
+                const testText = currentLine.text + char;
+                const metrics = ctx.measureText(testText);
+                
+                if (metrics.width > maxWidth && currentLine.text) {
+                    // 换行
+                    lines.push(currentLine);
+                    currentLine = { 
+                        text: char, 
+                        parts: [{ text: char, bold: part.bold }] 
+                    };
+                } else {
+                    // 添加到当前行
+                    currentLine.text += char;
+                    
+                    // 更新parts数组
+                    if (currentLine.parts.length > 0 && 
+                        currentLine.parts[currentLine.parts.length - 1].bold === part.bold) {
+                        // 如果格式相同，合并到最后一个part
+                        currentLine.parts[currentLine.parts.length - 1].text += char;
+                    } else {
+                        // 如果格式不同，创建新的part
+                        currentLine.parts.push({ text: char, bold: part.bold });
+                    }
+                }
+            }
+        });
+        
+        // 添加最后一行
+        if (currentLine.text.trim()) {
+            lines.push(currentLine);
+        }
+    });
+    
+    return lines;
+};
+
+// 渲染带格式的文本行
+const renderFormattedLine = (ctx, line, x, y) => {
+    let currentX = x;
+    
+    line.parts.forEach(part => {
+        if (!part.text) return;
+        
+                          // 设置字体
+         if (part.bold) {
+             ctx.font = 'bold 16px -apple-system, BlinkMacSystemFont, "PingFang SC", "Microsoft YaHei", sans-serif';
+             // 额外设置字体权重确保加粗效果
+             ctx.save();
+             ctx.shadowColor = 'rgba(0,0,0,0.1)';
+             ctx.shadowOffsetX = 0.5;
+             ctx.shadowOffsetY = 0;
+             ctx.shadowBlur = 0;
+         } else {
+             ctx.font = '16px -apple-system, BlinkMacSystemFont, "PingFang SC", "Microsoft YaHei", sans-serif';
+         }
+         
+         // 绘制文本
+         ctx.fillText(part.text, currentX, y);
+         
+         // 如果是加粗文本，再次绘制以增强效果
+         if (part.bold) {
+             ctx.fillText(part.text, currentX + 0.5, y);
+             ctx.restore();
+         }
+        
+        // 更新x位置
+        const metrics = ctx.measureText(part.text);
+        currentX += metrics.width;
     });
 };
 
@@ -906,8 +1373,8 @@ const mobileSmartRecommendationConfig = computed(() => {
 /* 生成中状态样式 */
 .generating-message {
     padding: 16px 20px;
-    background: linear-gradient(135deg, #f8f9ff 0%, #f0f2ff 100%);
-    border: 1px solid #e1e4ff;
+    /* background: linear-gradient(135deg, #f8f9ff 0%, #f0f2ff 100%);
+    border: 1px solid #e1e4ff; */
     border-radius: 12px;
     margin-bottom: 12px;
 }
@@ -1089,6 +1556,12 @@ const mobileSmartRecommendationConfig = computed(() => {
     color: #10b981 !important;
     background: rgba(16, 185, 129, 0.1) !important;
     border-color: rgba(16, 185, 129, 0.2) !important;
+}
+
+.share-btn:hover {
+    color: #f59e0b !important;
+    background: rgba(245, 158, 11, 0.1) !important;
+    border-color: rgba(245, 158, 11, 0.2) !important;
 }
 
 /* 移动端适配 */
@@ -2322,6 +2795,126 @@ const mobileSmartRecommendationConfig = computed(() => {
 
 .mobile-refresh-btn:hover {
     background: rgba(64, 158, 255, 0.1);
+}
+
+/* 图片预览弹框样式 - 适中尺寸 */
+.image-preview-dialog :deep(.el-dialog) {
+    max-width: 90vw;
+    max-height: 90vh;
+    border-radius: 12px;
+}
+
+.image-preview-dialog :deep(.el-dialog__header) {
+    background: #f8f9fa;
+    padding: 16px 20px;
+    border-bottom: 1px solid #e9ecef;
+}
+
+.image-preview-dialog :deep(.el-dialog__title) {
+    font-size: 16px;
+    font-weight: 600;
+    color: #333;
+}
+
+.image-preview-dialog :deep(.el-dialog__body) {
+    padding: 0;
+    max-height: 70vh;
+    overflow: hidden;
+}
+
+.preview-container {
+    display: flex;
+    flex-direction: column;
+    background: #f8f9fa;
+}
+
+.preview-image-wrapper {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    padding: 20px;
+    background: #f8f9fa;
+    max-height: 60vh;
+    overflow: auto;
+}
+
+.preview-image {
+    max-width: 100%;
+    max-height: 60vh;
+    border-radius: 8px;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+    background: white;
+    object-fit: contain;
+}
+
+.preview-actions {
+    display: flex;
+    justify-content: space-between;
+    padding: 16px 20px;
+    background: white;
+    border-top: 1px solid #e9ecef;
+    gap: 12px;
+}
+
+.preview-actions .el-button {
+    flex: 1;
+    height: 36px;
+    font-size: 14px;
+    font-weight: 500;
+    border-radius: 6px;
+}
+
+.preview-actions .el-button:first-child {
+    background: #f8f9fa;
+    border-color: #e9ecef;
+    color: #666;
+}
+
+.preview-actions .el-button:first-child:hover {
+    background: #e9ecef;
+    border-color: #dee2e6;
+}
+
+.preview-actions .el-button[type="primary"] {
+    background: #007AFF;
+    border-color: #007AFF;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.preview-actions .el-button[type="primary"]:hover {
+    background: #0056CC;
+    border-color: #0056CC;
+}
+
+/* 移动端预览弹框适配 */
+@media (max-width: 768px) {
+    .image-preview-dialog :deep(.el-dialog) {
+        max-width: 95vw;
+        max-height: 85vh;
+        margin: 5vh auto;
+    }
+    
+    .preview-image-wrapper {
+        max-height: 50vh;
+        padding: 16px;
+    }
+    
+    .preview-image {
+        max-height: 50vh;
+    }
+    
+    .preview-actions {
+        padding: 12px 16px;
+        background: white;
+        border-top: 1px solid #e9ecef;
+    }
+    
+    .preview-actions .el-button {
+        height: 34px;
+        font-size: 13px;
+    }
 }
 
 /* 移动端适配 */

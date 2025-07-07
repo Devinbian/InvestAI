@@ -609,9 +609,9 @@ const handleShareMessage = async () => {
         const canvas = document.createElement('canvas');
         const ctx = canvas.getContext('2d');
         
-        // 设置画布尺寸 - 按照图片比例
+        // 设置画布尺寸 - 动态计算高度
         const width = 750;
-        const height = 1000;
+        let height = 1000; // 初始高度，后面会根据内容调整
         canvas.width = width;
         canvas.height = height;
         
@@ -724,6 +724,79 @@ const handleShareMessage = async () => {
         const padding = 20; // 与聊天界面的padding保持一致
         const aiReplyBubbleHeight = Math.max(50, lines.length * lineHeight + padding * 2);
         
+        // 计算实际需要的总高度
+        const headerHeight = 120; // 标题区域高度
+        // const userBubbleHeight = 50; // 用户气泡高度（固定）
+        const bubbleSpacing = 80; // 气泡间距
+        const footerHeight = 150; // 底部区域高度
+        const actualHeight = headerHeight + userBubbleHeight + bubbleSpacing + aiReplyBubbleHeight + footerHeight;
+        
+        // 如果实际高度超过初始高度，重新设置画布尺寸
+        if (actualHeight > height) {
+            height = actualHeight + 50; // 额外添加50px底部边距
+            canvas.height = height;
+            
+            // 重新填充背景色（因为画布尺寸改变了）
+            ctx.fillStyle = '#ffffff';
+            ctx.fillRect(0, 0, width, height);
+            
+            // 重新绘制标题和时间信息
+            ctx.fillStyle = '#333333';
+            ctx.font = 'bold 24px -apple-system, BlinkMacSystemFont, "PingFang SC", "Microsoft YaHei", sans-serif';
+            ctx.textAlign = 'left';
+            const title = props.sessionTitle || 'AI 智能分析';
+            ctx.fillText(title, 40, headerY);
+            
+            ctx.fillStyle = '#999999';
+            ctx.font = '14px -apple-system, BlinkMacSystemFont, "PingFang SC", "Microsoft YaHei", sans-serif';
+            const timeText = new Date().toLocaleString('zh-CN', {
+                year: 'numeric',
+                month: 'numeric',
+                day: 'numeric',
+                hour: '2-digit',
+                minute: '2-digit'
+            });
+            ctx.fillText(`${timeText} · 内容由 AI 生成，不能完全保障准确性`, 40, headerY + 30);
+            
+            // 重新绘制分割线
+            ctx.strokeStyle = '#e5e5e5';
+            ctx.lineWidth = 1;
+            ctx.beginPath();
+            ctx.moveTo(40, headerY + 50);
+            ctx.lineTo(width - 40, headerY + 50);
+            ctx.stroke();
+            
+            // 重新绘制用户气泡
+            ctx.fillStyle = '#007AFF';
+            ctx.beginPath();
+            const r1 = 18, r2 = 4;
+            ctx.moveTo(userBubbleX + r1, userBubbleY);
+            ctx.lineTo(userBubbleX + userBubbleWidth - r1, userBubbleY);
+            ctx.arcTo(userBubbleX + userBubbleWidth, userBubbleY, userBubbleX + userBubbleWidth, userBubbleY + r1, r1);
+            ctx.lineTo(userBubbleX + userBubbleWidth, userBubbleY + userBubbleHeight - r2);
+            ctx.arcTo(userBubbleX + userBubbleWidth, userBubbleY + userBubbleHeight, userBubbleX + userBubbleWidth - r2, userBubbleY + userBubbleHeight, r2);
+            ctx.lineTo(userBubbleX + r1, userBubbleY + userBubbleHeight);
+            ctx.arcTo(userBubbleX, userBubbleY + userBubbleHeight, userBubbleX, userBubbleY + userBubbleHeight - r1, r1);
+            ctx.lineTo(userBubbleX, userBubbleY + r1);
+            ctx.arcTo(userBubbleX, userBubbleY, userBubbleX + r1, userBubbleY, r1);
+            ctx.closePath();
+            ctx.fill();
+            
+            // 重新绘制用户文字
+            ctx.fillStyle = '#ffffff';
+            ctx.font = '16px -apple-system, BlinkMacSystemFont, "PingFang SC", "Microsoft YaHei", sans-serif';
+            ctx.textAlign = 'center';
+            ctx.fillText(userInput, userBubbleX + userBubbleWidth / 2, userBubbleY + 30);
+        }
+        
+        console.log('🔍 画布尺寸调整:', {
+            originalHeight: 1000,
+            actualHeight,
+            finalHeight: height,
+            aiReplyBubbleHeight,
+            linesCount: lines.length
+        });
+        
         // 绘制AI回复气泡 - 参照聊天气泡样式（左下角有小圆角）
         ctx.fillStyle = '#f1f3f4'; // 与聊天界面的背景色保持一致
         ctx.beginPath();
@@ -751,7 +824,7 @@ const handleShareMessage = async () => {
             currentY += lineHeight;
         });
         
-        // 底部区域
+        // 底部区域 - 根据实际高度调整位置
         const footerY = height - 150;
         
         // 绘制AI助手信息
@@ -764,64 +837,64 @@ const handleShareMessage = async () => {
         ctx.font = '14px -apple-system, BlinkMacSystemFont, "PingFang SC", sans-serif';
         ctx.fillText('你的AI投资助手，助力智能投资决策', 40, footerY + 25);
         
-        // 绘制二维码区域（简化为方框）
-        const qrSize = 80;
-        const qrX = width - 40 - qrSize;
-        const qrY = footerY - 20;
+        // 绘制Logo区域
+        const logoSize = 80;
+        const logoX = width - 40 - logoSize;
+        const logoY = footerY - 20;
         
-        // 二维码背景
-        ctx.fillStyle = '#f8f9fa';
-        ctx.beginPath();
-        ctx.roundRect(qrX, qrY, qrSize, qrSize, 8);
-        ctx.fill();
+        // 加载并绘制项目Logo
+        const logoImg = new Image();
+        logoImg.onload = () => {
+            // Logo背景（圆角白色背景）
+            ctx.fillStyle = '#ffffff';
+            ctx.beginPath();
+            ctx.roundRect(logoX, logoY, logoSize, logoSize, 8);
+            ctx.fill();
+            
+            // Logo边框
+            ctx.strokeStyle = '#e9ecef';
+            ctx.lineWidth = 1;
+            ctx.stroke();
+            
+            // 绘制Logo图片（留8px边距）
+            ctx.drawImage(logoImg, logoX + 8, logoY + 8, logoSize - 16, logoSize - 16);
+            
+            // 转换为图片URL并显示预览
+            canvas.toBlob((blob) => {
+                previewImageUrl.value = URL.createObjectURL(blob);
+                showImagePreview.value = true;
+                isGeneratingImage.value = false;
+            }, 'image/png', 0.95);
+        };
         
-        // 二维码边框
-        ctx.strokeStyle = '#e9ecef';
-        ctx.lineWidth = 1;
-        ctx.stroke();
+        logoImg.onerror = () => {
+            console.warn('Logo图片加载失败，使用备用方案');
+            // 备用方案：绘制文字Logo
+            ctx.fillStyle = '#f8f9fa';
+            ctx.beginPath();
+            ctx.roundRect(logoX, logoY, logoSize, logoSize, 8);
+            ctx.fill();
+            
+            ctx.strokeStyle = '#e9ecef';
+            ctx.lineWidth = 1;
+            ctx.stroke();
+            
+            // 绘制InvestAI文字Logo
+            ctx.fillStyle = '#007AFF';
+            ctx.font = 'bold 14px -apple-system, BlinkMacSystemFont, "PingFang SC", "Microsoft YaHei", sans-serif';
+            ctx.textAlign = 'center';
+            ctx.fillText('InvestAI', logoX + logoSize / 2, logoY + logoSize / 2 + 5);
+            
+            // 转换为图片URL并显示预览
+            canvas.toBlob((blob) => {
+                previewImageUrl.value = URL.createObjectURL(blob);
+                showImagePreview.value = true;
+                isGeneratingImage.value = false;
+            }, 'image/png', 0.95);
+        };
         
-        // 二维码内容（简化的网格图案）
-        ctx.fillStyle = '#333333';
-        const cellSize = 4;
-        const gridSize = 16;
-        const startX = qrX + (qrSize - gridSize * cellSize) / 2;
-        const startY = qrY + (qrSize - gridSize * cellSize) / 2;
-        
-        // 绘制简化的二维码图案
-        for (let i = 0; i < gridSize; i++) {
-            for (let j = 0; j < gridSize; j++) {
-                // 简单的棋盘图案
-                if ((i + j) % 3 === 0 || (i === 0 || i === gridSize - 1 || j === 0 || j === gridSize - 1)) {
-                    ctx.fillRect(startX + i * cellSize, startY + j * cellSize, cellSize, cellSize);
-                }
-            }
-        }
-        
-        // 项目Logo
-        ctx.fillStyle = '#ffffff';
-        ctx.beginPath();
-        ctx.roundRect(qrX + qrSize / 2 - 15, qrY + qrSize / 2 - 15, 30, 30, 6);
-        ctx.fill();
-        
-        // 绘制InvestAI Logo
-        ctx.fillStyle = '#007AFF';
-        ctx.font = 'bold 12px -apple-system, BlinkMacSystemFont, "PingFang SC", "Microsoft YaHei", sans-serif';
-        ctx.textAlign = 'center';
-        ctx.fillText('AI', qrX + qrSize / 2, qrY + qrSize / 2 + 4);
-        
-        // 绘制Logo边框
-        ctx.strokeStyle = '#007AFF';
-        ctx.lineWidth = 1;
-        ctx.beginPath();
-        ctx.roundRect(qrX + qrSize / 2 - 15, qrY + qrSize / 2 - 15, 30, 30, 6);
-        ctx.stroke();
-        
-        // 转换为图片URL并显示预览
-        canvas.toBlob((blob) => {
-            previewImageUrl.value = URL.createObjectURL(blob);
-            showImagePreview.value = true;
-            isGeneratingImage.value = false;
-        }, 'image/png', 0.95);
+        // 设置图片源，开始加载
+        logoImg.src = '/logo.png';
         
         // 发送分享事件
         emit('share-message', {
@@ -2831,16 +2904,16 @@ const mobileSmartRecommendationConfig = computed(() => {
 .preview-image-wrapper {
     display: flex;
     justify-content: center;
-    align-items: center;
+    align-items: flex-start;
     padding: 20px;
     background: #f8f9fa;
-    max-height: 60vh;
+    max-height: 70vh;
     overflow: auto;
 }
 
 .preview-image {
     max-width: 100%;
-    max-height: 60vh;
+    max-height: none;
     border-radius: 8px;
     box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
     background: white;
@@ -2897,12 +2970,12 @@ const mobileSmartRecommendationConfig = computed(() => {
     }
     
     .preview-image-wrapper {
-        max-height: 50vh;
+        max-height: 60vh;
         padding: 16px;
     }
     
     .preview-image {
-        max-height: 50vh;
+        max-height: none;
     }
     
     .preview-actions {

@@ -1503,7 +1503,9 @@ const continueAnalysis = async (stockInfo, isPaid = false) => {
         content: '',
         isGenerating: true,
         hasStockInfo: false,
-        stockInfo: stockInfo
+        stockInfo: stockInfo,
+        isQuantAnalysis: true, // 标识这是量化分析消息
+        analysis: true, // 标识这是量化分析消息
     };
 
     // 使用chatHistoryManager限制消息数量
@@ -1550,8 +1552,6 @@ const continueAnalysis = async (stockInfo, isPaid = false) => {
             onclose: () => {
                 // 显示购买等按钮
                 chatHistory.value[chatHistory.value.length - 1].hasStockInfo = true;
-                // 标识这是量化分析消息，用于显示设置提醒按钮
-                chatHistory.value[chatHistory.value.length - 1].isQuantAnalysis = true;
                 console.log('连接关闭');
             },
             onerror: (err) => {

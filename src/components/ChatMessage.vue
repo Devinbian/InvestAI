@@ -481,7 +481,7 @@ const getChatStockActions = (message) => {
     }
     // 量化分析内容不显示量化分析按钮
     if (message.isQuantAnalysis) {
-        actions = actions.filter(a => a.key !== 'paidAnalysis');
+        actions = actions.filter(a => a.key !== 'paidAnalysis' && a.key !== 'analysis');
     }
     return actions;
 };

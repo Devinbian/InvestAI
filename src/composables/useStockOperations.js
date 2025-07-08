@@ -145,9 +145,6 @@ export function useStockOperations() {
     const conversationId = chatHistoryStore.currentChatId;
     console.log("当前聊天ID:", conversationId);
 
-    // 获取 mock 数据作为备用内容
-    const mockRes = await mockApi.sendMessage(message);
-
     // 在API调用后再次检查是否被中断
     if (isStillGenerating && !isStillGenerating()) {
       console.log("🚀 智能荐股 - 在API调用后被中断");
@@ -179,14 +176,12 @@ export function useStockOperations() {
 
       // 检查响应是否有效
       if (!response) {
-        console.warn("API响应为空，使用mock数据");
-        throw new Error("API响应为空");
+        throw new Error("服务器响应为空，请稍后重试");
       }
 
       // 检查是否有错误信息
       if (response.code && response.code !== "B0001") {
-        console.warn("API返回错误码:", response.code, response.message);
-        throw new Error(response.message || "API调用失败");
+        throw new Error(response.message || "智能荐股服务暂时不可用");
       }
 
       // 处理不同的响应格式
@@ -213,61 +208,62 @@ export function useStockOperations() {
         apiData = response.data;
       }
 
-      if (apiData && Array.isArray(apiData) && apiData.length > 0) {
-        // 处理API数据
-        apiData.forEach((item) => {
-          stockList.push({
-            name: item.name || item.stockName,
-            code: item.code || item.stockCode,
-            recommendIndex: item.recommendScore || item.score || 4.0,
-            recommendLevel: item.recommendLevel || item.level || "推荐",
-            price: item.latestPrice || item.price || item.currentPrice,
-            change: item.change || 0,
-            changePercent: item.rise
-              ? item.rise + "%"
-              : item.changePercent || "0%",
-            targetPrice: item.targetPrice || item.target,
-            expectedReturn:
-              item.expectedReturn ||
-              item.expectedBenefits ||
-              item.expected_return,
-            riskLevel: item.riskLevel || item.risk || "中等",
-            industry: item.industry || item.sector || "未分类",
-            reason: item.recommendReason || item.reason || "基于AI算法推荐",
-          });
+      if (!apiData || !Array.isArray(apiData) || apiData.length === 0) {
+        throw new Error("暂无推荐股票数据，请稍后重试");
+      }
+
+      // 处理API数据
+      apiData.forEach((item) => {
+        stockList.push({
+          name: item.name || item.stockName,
+          code: item.code || item.stockCode,
+          recommendIndex: item.recommendScore || item.score || 4.0,
+          recommendLevel: item.recommendLevel || item.level || "推荐",
+          price: item.latestPrice || item.price || item.currentPrice,
+          change: item.change || 0,
+          changePercent: item.rise
+            ? item.rise + "%"
+            : item.changePercent || "0%",
+          targetPrice: item.targetPrice || item.target,
+          expectedReturn:
+            item.expectedReturn ||
+            item.expectedBenefits ||
+            item.expected_return,
+          riskLevel: item.riskLevel || item.risk || "中等",
+          industry: item.industry || item.sector || "未分类",
+          reason: item.recommendReason || item.reason || "基于AI算法推荐",
         });
-        stockList.sort((a, b) => b.recommendIndex - a.recommendIndex);
+      });
+      stockList.sort((a, b) => b.recommendIndex - a.recommendIndex);
 
-        console.log("✅ 智能荐股API处理成功:", stockList);
+      console.log("✅ 智能荐股API处理成功:", stockList);
 
-        // 更新最后一条AI消息为荐股结果
-        const lastMessage = chatHistory.value[chatHistory.value.length - 1];
-        if (lastMessage && lastMessage.role === "assistant") {
-          lastMessage.content = mockRes.data.content;
-          lastMessage.isGenerating = false;
-          lastMessage.hasStockInfo = true;
-          lastMessage.isRecommendation = true;
-          lastMessage.stockList = stockList;
-          lastMessage.isPersistent = true;
-          lastMessage.messageId = `recommendation-${Date.now()}`;
-          lastMessage.timestamp = new Date().toISOString();
-          chatHistory.value = [...chatHistory.value];
-        }
+      // 获取推荐内容文本
+      const mockRes = await mockApi.sendMessage(message);
 
-        await nextTick();
-        scrollToBottom();
-        ElMessage.success("已为您生成个性化股票推荐");
+      // 更新最后一条AI消息为荐股结果
+      const lastMessage = chatHistory.value[chatHistory.value.length - 1];
+      if (lastMessage && lastMessage.role === "assistant") {
+        lastMessage.content = mockRes.data.content;
+        lastMessage.isGenerating = false;
+        lastMessage.hasStockInfo = true;
+        lastMessage.isRecommendation = true;
+        lastMessage.stockList = stockList;
+        lastMessage.isPersistent = true;
+        lastMessage.messageId = `recommendation-${Date.now()}`;
+        lastMessage.timestamp = new Date().toISOString();
+        chatHistory.value = [...chatHistory.value];
+      }
 
-        // 使用快捷操作后自动收起
-        if (showChatShortcuts.value) {
-          setTimeout(() => {
-            showChatShortcuts.value = false;
-          }, 300);
-        }
-      } else {
-        // API返回但无有效数据，使用mock数据作为降级
-        console.warn("API返回但无有效数据，使用mock数据作为降级");
-        throw new Error("API返回数据格式不正确");
+      await nextTick();
+      scrollToBottom();
+      ElMessage.success("已为您生成个性化股票推荐");
+
+      // 使用快捷操作后自动收起
+      if (showChatShortcuts.value) {
+        setTimeout(() => {
+          showChatShortcuts.value = false;
+        }, 300);
       }
     } catch (err) {
       console.error("智能荐股API调用失败:", err);
@@ -478,56 +474,16 @@ export function useStockOperations() {
       return;
     }
 
-    // 如果用户没有持仓，添加一些示例数据用于演示
-    if (userStore.portfolio.length === 0) {
-      // 添加示例持仓数据
-      const samplePortfolio = [
-        {
-          code: "000001",
-          name: "平安银行",
-          quantity: 1000,
-          avgPrice: 11.5,
-          industry: "银行",
-          buyTime: "2024-01-10T09:30:00.000Z",
-        },
-        {
-          code: "600036",
-          name: "招商银行",
-          quantity: 500,
-          avgPrice: 34.2,
-          industry: "银行",
-          buyTime: "2024-01-08T10:15:00.000Z",
-        },
-        {
-          code: "000858",
-          name: "五粮液",
-          quantity: 200,
-          avgPrice: 155.8,
-          industry: "食品饮料",
-          buyTime: "2024-01-05T14:20:00.000Z",
-        },
-        {
-          code: "300750",
-          name: "宁德时代",
-          quantity: 100,
-          avgPrice: 180.5,
-          industry: "新能源",
-          buyTime: "2024-01-03T11:45:00.000Z",
-        },
-      ];
-
-      userStore.portfolio.push(...samplePortfolio);
-      localStorage.setItem("portfolio", JSON.stringify(userStore.portfolio));
-      ElMessage.info("已为您添加示例持仓数据");
-    }
+    // 只使用用户的真实持仓数据，不使用mock数据
+    const portfolioForAnalysis = [...userStore.portfolio];
 
     // 构建资产分析消息，包含用户的实际资产数据
     const totalAssets = userStore.getTotalAssets();
-    const portfolioCount = userStore.portfolio.length;
+    const portfolioCount = portfolioForAnalysis.length;
     const watchlistCount = userStore.watchlist.length;
 
     // 计算持仓盈亏
-    const portfolioData = userStore.portfolio.map((position) => {
+    const portfolioData = portfolioForAnalysis.map((position) => {
       const currentPrice = getCurrentStockPrice(position.code); // 获取当前价格
       const marketValue = position.quantity * currentPrice;
       const costValue = position.quantity * position.avgPrice;
@@ -564,30 +520,17 @@ export function useStockOperations() {
       0,
     );
 
-    // 构建资产分析消息
-    const message = `资产分析：请分析我的投资组合表现
-        
-持仓概况：
-- 持仓股票数量：${portfolioCount}只
-- 持仓总市值：¥${portfolioValue.toLocaleString()}
-- 持仓成本：¥${totalCostValue.toLocaleString()}
-- 总盈亏：¥${totalProfit.toLocaleString()} (${totalProfitPercent}%)
-- 自选股数量：${watchlistCount}只
-
-请提供投资组合优化建议和风险评估。`;
-
-    const res = await mockApi.sendMessage(message);
-
-    // 在API调用后再次检查是否被中断
+    // 检查是否被中断
     if (isStillGenerating && !isStillGenerating()) {
-      console.log("🚀 资产分析 - API调用后被中断");
+      console.log("🚀 资产分析 - 生成过程中被中断");
       return;
     }
 
     // 更新最后一条AI消息
     const lastMessage = chatHistory.value[chatHistory.value.length - 1];
     if (lastMessage && lastMessage.role === "assistant") {
-      lastMessage.content = res.data.content;
+      // 资产分析不需要文本内容，只显示数据卡片
+      lastMessage.content = '';
       lastMessage.isGenerating = false; // 取消生成状态
       lastMessage.hasAssetInfo = true;
       lastMessage.assetData = {

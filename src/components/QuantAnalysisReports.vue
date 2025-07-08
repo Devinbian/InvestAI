@@ -120,6 +120,12 @@
                                 <span class="label">费用：</span>
                                 <span class="value cost">{{ report.cost }}智点</span>
                             </div>
+                            <div class="info-item">
+                                <span class="label">有效期：</span>
+                                <span class="value" :class="getExpiryStatusClass(report.expiryDate)">
+                                    {{ formatExpiryDate(report.expiryDate) }}
+                                </span>
+                            </div>
                         </div>
                         <div class="report-summary">
                             {{ report.summary }}
@@ -182,6 +188,12 @@
                                     <span class="label">分析费用：</span>
                                     <span class="value cost">{{ selectedReport.cost }}智点</span>
                                 </div>
+                                <div class="info-row">
+                                    <span class="label">有效期：</span>
+                                    <span class="value" :class="getExpiryStatusClass(selectedReport.expiryDate)">
+                                        {{ formatExpiryDate(selectedReport.expiryDate) }}
+                                    </span>
+                                </div>
                             </div>
                         </div>
 
@@ -229,6 +241,12 @@
                         <div class="info-row">
                             <span class="label">分析费用：</span>
                             <span class="value cost">{{ selectedReport.cost }}智点</span>
+                        </div>
+                        <div class="info-row">
+                            <span class="label">有效期：</span>
+                            <span class="value" :class="getExpiryStatusClass(selectedReport.expiryDate)">
+                                {{ formatExpiryDate(selectedReport.expiryDate) }}
+                            </span>
                         </div>
                     </div>
                 </div>
@@ -304,7 +322,11 @@ watch(filterDateRange, (newVal) => {
 });
 
 // 计算属性
-const reports = computed(() => userStore.quantAnalysisReports || []);
+const reports = computed(() => {
+    // 执行数据迁移（仅在需要时）
+    userStore.migrateQuantAnalysisReports();
+    return userStore.quantAnalysisReports || [];
+});
 
 const filteredReports = computed(() => {
     let filtered = reports.value;
@@ -368,6 +390,50 @@ const formatDate = (dateTime) => {
 
 const formatDateTime = (dateTime) => {
     return dateTime.replace('T', ' ').substring(0, 19);
+};
+
+// 格式化有效期显示
+const formatExpiryDate = (expiryDate) => {
+    if (!expiryDate) return '永久有效';
+    
+    const expiry = new Date(expiryDate);
+    const now = new Date();
+    const diffTime = expiry - now;
+    const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+    
+    if (diffDays < 0) {
+        return '已过期';
+    } else if (diffDays === 0) {
+        return '今日过期';
+    } else if (diffDays === 1) {
+        return '明日过期';
+    } else if (diffDays <= 7) {
+        return `${diffDays}天后过期`;
+    } else {
+        return expiry.toLocaleDateString('zh-CN', {
+            year: 'numeric',
+            month: 'short',
+            day: 'numeric'
+        }) + '过期';
+    }
+};
+
+// 获取有效期状态样式类
+const getExpiryStatusClass = (expiryDate) => {
+    if (!expiryDate) return '';
+    
+    const expiry = new Date(expiryDate);
+    const now = new Date();
+    const diffTime = expiry - now;
+    const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+    
+    if (diffDays < 0) {
+        return 'expired';
+    } else if (diffDays <= 7) {
+        return 'expiring-soon';
+    } else {
+        return 'valid';
+    }
 };
 
 const resetFilters = () => {
@@ -1105,6 +1171,21 @@ const exportAllReports = () => {
     color: #374151;
     white-space: pre-wrap;
     font-size: 12px;
+}
+
+/* 有效期状态样式 */
+.value.valid {
+    color: #16a34a;
+}
+
+.value.expiring-soon {
+    color: #d97706;
+    font-weight: 600;
+}
+
+.value.expired {
+    color: #dc2626;
+    font-weight: 600;
 }
 
 /* 确保弹窗在移动端侧边栏上方显示 */

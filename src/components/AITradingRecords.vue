@@ -64,7 +64,9 @@
                     </el-input>
                 </div>
                 <div class="filter-group">
-                    <el-button @click="resetFilters" class="pc-filter-btn">重置</el-button>
+                    <el-button type="primary" @click="resetFilters" class="pc-filter-btn">
+                        重置
+                    </el-button>
                 </div>
             </div>
         </div>
@@ -119,6 +121,12 @@
                                     {{ record.profit > 0 ? '+' : '' }}¥{{ record.profit }}
                                 </span>
                             </div>
+                            <div v-if="record.status === 'pending' && record.validityDate" class="info-item">
+                                <span class="label">委托时效：</span>
+                                <span class="value" :class="getValidityStatusClass(record.validityDate)">
+                                    {{ formatValidityDate(record.validityDate) }}
+                                </span>
+                            </div>
                         </div>
                         <div v-if="record.analysis" class="record-summary">
                             {{ record.analysis }}
@@ -135,7 +143,25 @@
                             </el-icon>
                             {{ getStatusText(record.status) }}
                         </div>
-                        <div class="record-time">{{ formatTime(record.createdAt) }}</div>
+                        <div class="record-actions-footer">
+                            <div class="record-time">
+                                <div v-if="record.status === 'cancelled' && record.cancelledAt">
+                                    撤销时间：{{ formatTime(record.cancelledAt) }}
+                                </div>
+                                <div v-else>
+                                    {{ formatTime(record.createdAt) }}
+                                </div>
+                            </div>
+                            <el-button 
+                                v-if="record.status === 'pending'" 
+                                type="danger" 
+                                size="small" 
+                                plain
+                                @click.stop="handleCancelOrder(record)"
+                                class="cancel-order-btn">
+                                撤销委托
+                            </el-button>
+                        </div>
                     </div>
                 </div>
             </div>
@@ -192,7 +218,7 @@
 <script setup>
 import { ref, computed, watch } from 'vue';
 import { useUserStore } from '../store/user';
-import { ElButton, ElMessage } from 'element-plus';
+import { ElButton, ElMessage, ElMessageBox } from 'element-plus';
 import { Search, More, CircleCheck, Clock, CircleClose, Warning } from '@element-plus/icons-vue';
 import TradingRecordDetailModal from './TradingRecordDetailModal.vue';
 
@@ -241,7 +267,14 @@ watch(filterDateRange, (newVal) => {
 });
 
 // 获取AI交易记录
-const allRecords = computed(() => userStore.aiTradingRecords || []);
+const allRecords = computed(() => {
+    // 执行数据迁移（仅在需要时）
+    userStore.migrateAITradingRecords();
+    
+    const records = userStore.aiTradingRecords || [];
+    
+    return records;
+});
 
 // 筛选后的记录
 const filteredRecords = computed(() => {
@@ -310,6 +343,10 @@ const resetFilters = () => {
     currentPage.value = 1;
 };
 
+
+
+
+
 // 获取状态文本
 const getStatusText = (status) => {
     const statusMap = {
@@ -336,6 +373,51 @@ const formatTime = (dateString) => {
     });
 };
 
+// 格式化委托时效显示
+const formatValidityDate = (validityDate) => {
+    if (!validityDate) return '无期限';
+    
+    const validity = new Date(validityDate);
+    const now = new Date();
+    const diffTime = validity - now;
+    const diffHours = Math.floor(diffTime / (1000 * 60 * 60));
+    const diffMinutes = Math.floor((diffTime % (1000 * 60 * 60)) / (1000 * 60));
+    
+    if (diffTime < 0) {
+        return '已过期';
+    } else if (diffHours === 0) {
+        if (diffMinutes <= 0) {
+            return '即将过期';
+        } else {
+            return `${diffMinutes}分钟后过期`;
+        }
+    } else if (diffHours < 24) {
+        return `${diffHours}小时${diffMinutes}分钟后过期`;
+    } else {
+        const diffDays = Math.floor(diffHours / 24);
+        const remainingHours = diffHours % 24;
+        return `${diffDays}天${remainingHours}小时后过期`;
+    }
+};
+
+// 获取委托时效状态样式类
+const getValidityStatusClass = (validityDate) => {
+    if (!validityDate) return '';
+    
+    const validity = new Date(validityDate);
+    const now = new Date();
+    const diffTime = validity - now;
+    const diffHours = Math.floor(diffTime / (1000 * 60 * 60));
+    
+    if (diffTime < 0) {
+        return 'expired';
+    } else if (diffHours <= 2) {
+        return 'expiring-soon';
+    } else {
+        return 'valid';
+    }
+};
+
 // 查看记录详情
 const viewRecord = (record) => {
     selectedRecord.value = record;
@@ -357,10 +439,31 @@ const handleRecordAction = async (command, record) => {
 // 撤单操作
 const cancelOrder = (tradeId) => {
     const success = userStore.cancelAITradingOrder(tradeId);
+    
     if (success) {
         ElMessage.success('撤单成功');
     } else {
         ElMessage.error('撤单失败');
+    }
+};
+
+// 处理撤销委托按钮点击
+const handleCancelOrder = async (record) => {
+    try {
+        await ElMessageBox.confirm(
+            `确定要撤销这笔委托吗？\n\n股票：${record.stockInfo.name}(${record.stockInfo.code})\n类型：${record.type === 'buy' ? '买入' : '卖出'}\n数量：${record.quantity}股\n价格：¥${record.expectedPrice}`,
+            '撤销委托确认',
+            {
+                confirmButtonText: '确定撤销',
+                cancelButtonText: '取消',
+                type: 'warning',
+                dangerouslyUseHTMLString: false
+            }
+        );
+        
+        cancelOrder(record.id);
+    } catch (error) {
+        // 用户取消操作
     }
 };
 
@@ -973,6 +1076,80 @@ const handleCancelRecord = (record) => {
         margin: 0 16px;
         padding: 24px 16px;
         height: 200px;
+    }
+}
+
+/* 委托时效状态样式 */
+.value.valid {
+    color: #16a34a;
+}
+
+.value.expiring-soon {
+    color: #d97706;
+    font-weight: 600;
+}
+
+.value.expired {
+    color: #dc2626;
+    font-weight: 600;
+}
+
+/* 记录卡片底部操作区域样式 */
+.record-footer {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 12px 16px;
+    background: #f8fafc;
+    border-top: 1px solid #e2e8f0;
+    border-radius: 0 0 8px 8px;
+}
+
+.record-actions-footer {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+}
+
+.record-time {
+    font-size: 0.75rem;
+    color: #6b7280;
+}
+
+.cancel-order-btn {
+    font-size: 0.75rem;
+    padding: 4px 8px;
+    height: 28px;
+    border-radius: 4px;
+    border: 1px solid #ef4444;
+    color: #ef4444;
+    background: transparent;
+    transition: all 0.2s ease;
+}
+
+.cancel-order-btn:hover {
+    background: #ef4444;
+    color: white;
+}
+
+.cancel-order-btn:active {
+    transform: scale(0.95);
+}
+
+/* 移动端撤销按钮样式调整 */
+@media (max-width: 480px) {
+    .cancel-order-btn {
+        font-size: 0.6rem;
+        padding: 2px 6px;
+        height: 24px;
+    }
+    
+    .record-actions-footer {
+        gap: 8px;
+    }
+    
+    .record-time {
+        font-size: 0.65rem;
     }
 }
 </style>

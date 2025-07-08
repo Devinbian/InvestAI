@@ -259,6 +259,11 @@
 
                     <!-- 股票列表（智能荐股等场景） -->
         <div v-if="message.hasStockInfo && message.stockList" class="stock-list">
+            <!-- 调试信息 -->
+            <div v-if="false" style="background: #f0f0f0; padding: 10px; margin: 10px 0; font-size: 12px; color: #666;">
+                调试信息: hasStockInfo={{ message.hasStockInfo }}, stockList长度={{ message.stockList?.length }}, 
+                isRecommendation={{ message.isRecommendation }}, isMobileView={{ isMobileView }}
+            </div>
 
 
                 <StockList v-if="!isMobileView" :stocks="message.stockList" v-bind="smartRecommendationConfig"

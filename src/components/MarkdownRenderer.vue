@@ -15,40 +15,48 @@ const props = defineProps({
 });
 
 // 配置 marked 选项
-marked.setOptions({
+const markedOptions = {
     breaks: true, // 支持换行符转换为 <br>
     gfm: true, // 支持 GitHub Flavored Markdown
     sanitize: false, // 我们使用 DOMPurify 来清理
     pedantic: false,
     smartLists: true,
-    smartypants: false
-});
+    smartypants: false,
+    headerIds: false, // 禁用标题ID生成
+    mangle: false // 禁用邮箱地址混淆
+};
 
 // 创建自定义渲染器
-const renderer = new marked.Renderer();
-
-// 自定义链接渲染（添加安全属性）
-renderer.link = function (href, title, text) {
-    const titleAttr = title ? ` title="${title}"` : '';
-    return `<a href="${href}" target="_blank" rel="noopener noreferrer"${titleAttr}>${text}</a>`;
+const renderer = {
+    heading(text, level) {
+        return `<h${level}>${text}</h${level}>`;
+    },
+    link(href, title, text) {
+        const titleAttr = title ? ` title="${title}"` : '';
+        return `<a href="${href}" target="_blank" rel="noopener noreferrer"${titleAttr}>${text}</a>`;
+    },
+    code(code, language) {
+        const validLanguage = language && language.match(/^[a-zA-Z0-9_+-]*$/) ? language : '';
+        return `<pre class="code-block"><code class="language-${validLanguage}">${code}</code></pre>`;
+    },
+    codespan(code) {
+        return `<code class="inline-code">${code}</code>`;
+    }
 };
 
-// 自定义代码块渲染
-renderer.code = function (code, language) {
-    const validLanguage = language && language.match(/^[a-zA-Z0-9_+-]*$/) ? language : '';
-    return `<pre class="code-block"><code class="language-${validLanguage}">${code}</code></pre>`;
-};
-
-// 自定义内联代码渲染
-renderer.codespan = function (code) {
-    return `<code class="inline-code">${code}</code>`;
-};
+// 设置marked配置
+marked.setOptions(markedOptions);
+marked.use({ renderer });
 
 // 检测是否为智能复盘消息
 const isRecapMessage = computed(() => {
     if (!props.content) return false;
     const contentStr = typeof props.content === 'string' ? props.content : String(props.content);
-    return contentStr.includes('智能复盘') || contentStr.includes('请帮我进行全面的智能投资复盘分析');
+    return contentStr.includes('智能复盘') || 
+           contentStr.includes('请帮我进行全面的智能投资复盘分析') ||
+           contentStr.includes('昨日市场复盘分析') ||
+           contentStr.includes('昨日复盘') ||
+           contentStr.includes('复盘分析');
 });
 
 // 计算渲染后的内容
@@ -56,15 +64,51 @@ const renderedContent = computed(() => {
     if (!props.content) return '';
 
     // 确保content是字符串类型
-    const contentStr = typeof props.content === 'string' ? props.content : String(props.content);
+    let contentStr = typeof props.content === 'string' ? props.content : String(props.content);
 
-    // console.log('Original Content:', contentStr);
+    // 添加调试信息
+    if (process.env.NODE_ENV === 'development') {
+        console.log('原始内容:', contentStr.substring(0, 200) + '...');
+    }
+
+    // 简化预处理：专注于标题语法修复
+    contentStr = contentStr
+        // 确保标题语法前有换行符（除非是第一行或已经有换行符）
+        .replace(/([^\n])(#{1,6}\s)/g, '$1\n$2')
+        // 清理多余的空白字符
+        .replace(/\s+$/gm, '') // 移除行尾空白
+        // 处理连续的多个换行符
+        .replace(/\n{3,}/g, '\n\n')
+        // 确保列表项格式正确
+        .replace(/^-([^\s])/gm, '- $1')
+        .replace(/\n-([^\s])/g, '\n- $1');
+
+    // 添加调试信息
+    if (process.env.NODE_ENV === 'development') {
+        console.log('预处理后内容:', contentStr.substring(0, 200) + '...');
+        
+        // 测试简单的标题解析
+        const testTitle = '### 测试标题';
+        const testResult = marked(testTitle);
+        console.log('测试标题解析:', testTitle, '->', testResult);
+        
+        // 测试实际内容中的标题
+        const titleMatch = contentStr.match(/#{1,6}\s.*$/m);
+        if (titleMatch) {
+            console.log('找到标题:', titleMatch[0]);
+            const titleTestResult = marked(titleMatch[0]);
+            console.log('标题解析结果:', titleTestResult);
+        }
+    }
 
     try {
-        // 使用 marked 解析 markdown，使用自定义渲染器
-        const parsed = marked(contentStr, { renderer });
+        // 使用 marked 解析 markdown
+        const parsed = marked(contentStr);
 
-        // console.log('Parsed Markdown:', parsed);
+        // 添加调试信息
+        if (process.env.NODE_ENV === 'development') {
+            console.log('解析后的HTML:', parsed.substring(0, 300) + '...');
+        }
 
         // 使用 DOMPurify 清理 HTML，防止 XSS 攻击
         const result = DOMPurify.sanitize(parsed, {
@@ -131,6 +175,7 @@ const renderedContent = computed(() => {
     margin: 16px 0 8px 0;
     font-weight: 600;
     line-height: 1.4;
+    color: #2c3e50;
 }
 
 .markdown-content :deep(h1) {
@@ -145,12 +190,14 @@ const renderedContent = computed(() => {
 
 .markdown-content :deep(h3) {
     font-size: 1.2em;
+    color: #34495e;
 }
 
 .markdown-content :deep(h4),
 .markdown-content :deep(h5),
 .markdown-content :deep(h6) {
     font-size: 1.1em;
+    color: #34495e;
 }
 
 /* 段落样式 */
@@ -272,8 +319,8 @@ const renderedContent = computed(() => {
 
 /* 智能复盘消息的紧凑样式 */
 .markdown-content.compact-recap :deep(p) {
-    margin: 2px 0;
-    line-height: 1.3;
+    margin: 4px 0;
+    line-height: 1.4;
 }
 
 .markdown-content.compact-recap :deep(p:last-child) {
@@ -284,26 +331,55 @@ const renderedContent = computed(() => {
     margin-top: 0;
 }
 
-.markdown-content.compact-recap :deep(ol) {
-    margin: 0;
-    padding-left: 18px;
-    line-height: 0.6;
+.markdown-content.compact-recap :deep(h1),
+.markdown-content.compact-recap :deep(h2),
+.markdown-content.compact-recap :deep(h3),
+.markdown-content.compact-recap :deep(h4),
+.markdown-content.compact-recap :deep(h5),
+.markdown-content.compact-recap :deep(h6) {
+    margin: 12px 0 6px 0;
+    font-weight: 600;
+    line-height: 1.3;
 }
 
+.markdown-content.compact-recap :deep(h3) {
+    font-size: 1.1em;
+    color: #2c3e50;
+    margin: 10px 0 4px 0;
+}
+
+.markdown-content.compact-recap :deep(h4) {
+    font-size: 1.05em;
+    color: #34495e;
+    margin: 8px 0 4px 0;
+}
+
+.markdown-content.compact-recap :deep(ul),
+.markdown-content.compact-recap :deep(ol) {
+    margin: 4px 0;
+    padding-left: 20px;
+}
+
+.markdown-content.compact-recap :deep(ul:last-child),
 .markdown-content.compact-recap :deep(ol:last-child) {
     margin-bottom: 0;
 }
 
-.markdown-content.compact-recap :deep(ol li) {
-    margin: 0;
+.markdown-content.compact-recap :deep(li) {
+    margin: 2px 0;
     padding: 0;
-    line-height: 1.2;
+    line-height: 1.4;
     display: list-item;
     list-style-position: outside;
 }
 
+.markdown-content.compact-recap :deep(strong) {
+    font-weight: 600;
+    color: #2c3e50;
+}
+
 .markdown-content.compact-recap {
-    line-height: 1.3;
+    line-height: 1.4;
 }
 
 /* 任务列表样式 */

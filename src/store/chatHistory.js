@@ -101,6 +101,16 @@ export const useChatHistoryStore = defineStore("chatHistory", {
       this.chatHistoryList = limitedChatList;
     },
 
+    // 保存到localStorage - 不限制消息数量的版本（用于重新生成时）
+    saveChatHistoryWithoutLimit() {
+      // 只限制聊天历史数量，不限制消息数量
+      const limitedChatList = chatHistoryManager.limitChatHistory(this.chatHistoryList);
+      localStorage.setItem("chatHistoryList", JSON.stringify(limitedChatList));
+      
+      // 更新内存中的数据
+      this.chatHistoryList = limitedChatList;
+    },
+
     // 生成聊天标题
     generateChatTitle(messages) {
       // 从第一条用户消息生成标题
@@ -196,6 +206,32 @@ export const useChatHistoryStore = defineStore("chatHistory", {
           }
 
           this.saveChatHistory();
+        }
+      }
+    },
+
+    // 更新当前聊天消息 - 不限制消息数量的版本（用于重新生成时）
+    updateCurrentChatMessagesWithoutLimit(messages) {
+      this.currentChatMessages = [...messages];
+
+      if (this.currentChatId) {
+        const chatIndex = this.chatHistoryList.findIndex(
+          (chat) => chat.id === this.currentChatId,
+        );
+        if (chatIndex > -1) {
+          this.chatHistoryList[chatIndex].messages = [...messages];
+          this.chatHistoryList[chatIndex].lastMessage = Date.now();
+
+          // 如果是第一次添加消息，更新标题
+          if (
+            messages.length > 0 &&
+            this.chatHistoryList[chatIndex].title === "新对话"
+          ) {
+            this.chatHistoryList[chatIndex].title =
+              this.generateChatTitle(messages);
+          }
+
+          this.saveChatHistoryWithoutLimit();
         }
       }
     },

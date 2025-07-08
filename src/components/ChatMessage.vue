@@ -327,8 +327,8 @@
             </div>
         </div>
         
-        <!-- 图片预览弹框 - 适中尺寸 -->
-        <el-dialog v-model="showImagePreview" title="分享预览" width="600px" 
+        <!-- 图片预览弹框 - PC端 -->
+        <el-dialog v-if="!isMobileView" v-model="showImagePreview" title="分享预览" width="600px" 
                    :show-close="true" @close="closePreview" class="image-preview-dialog"
                    :modal="true" :append-to-body="true" :close-on-click-modal="true">
             <div class="preview-container">
@@ -348,6 +348,51 @@
                 </div>
             </div>
         </el-dialog>
+
+        <!-- 移动端分享弹窗 -->
+        <Teleport v-if="isMobileView && showImagePreview" to="body">
+            <div class="mobile-share-overlay" @click="closePreview">
+                <div class="mobile-share-dialog" @click.stop>
+                    <!-- 移动端拖拽指示器 -->
+                    <div class="mobile-drag-indicator" 
+                         @touchstart="handleShareTouchStart" 
+                         @touchmove="handleShareTouchMove" 
+                         @touchend="handleShareTouchEnd"></div>
+                    
+                    <!-- 移动端头部 -->
+                    <div class="mobile-share-header">
+                        <h3 class="mobile-share-title">分享预览</h3>
+                        <button class="mobile-close-btn" @click="closePreview">
+                            <svg width="20" height="20" viewBox="0 0 24 24" fill="none">
+                                <path d="M18 6L6 18M6 6l12 12" stroke="currentColor" stroke-width="2" />
+                            </svg>
+                        </button>
+                    </div>
+                    
+                    <!-- 移动端内容区域 -->
+                    <div class="mobile-share-content">
+                        <div class="mobile-image-wrapper">
+                            <img v-if="previewImageUrl" :src="previewImageUrl" alt="分享预览" class="mobile-preview-image" />
+                        </div>
+                    </div>
+                    
+                    <!-- 移动端底部操作区 -->
+                    <div class="mobile-share-actions">
+                        <button class="mobile-action-btn mobile-cancel-btn" @click="closePreview">
+                            取消
+                        </button>
+                        <button class="mobile-action-btn mobile-download-btn" @click="downloadImage">
+                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" style="margin-right: 6px;">
+                                <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" stroke="currentColor" stroke-width="2"/>
+                                <polyline points="7,10 12,15 17,10" stroke="currentColor" stroke-width="2"/>
+                                <line x1="12" y1="15" x2="12" y2="3" stroke="currentColor" stroke-width="2"/>
+                            </svg>
+                            下载图片
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </Teleport>
     </div>
 </template>
 
@@ -445,6 +490,10 @@ const isCopying = ref(false);
 const showImagePreview = ref(false);
 const previewImageUrl = ref('');
 const isGeneratingImage = ref(false);
+
+// 移动端分享弹窗拖拽状态
+const shareTouchStartY = ref(null);
+const shareTouchStartTime = ref(null);
 
 // 获取消息状态类
 const getMessageStatusClass = (content) => {
@@ -655,16 +704,27 @@ const handleShareMessage = async () => {
         
         // 用户输入气泡（右侧）- 参照当前聊天气泡样式
         const userBubbleY = headerY + 80;
-        let userBubbleWidth = 200;
-        const userBubbleHeight = 50;
         
         // 获取前一条用户消息
         const userInput = getPreviousUserMessage();
         
-        // 测量文字宽度，动态调整气泡宽度
+        // 处理用户消息的换行 - 使用简化的换行处理逻辑
         ctx.font = '16px -apple-system, BlinkMacSystemFont, "PingFang SC", sans-serif';
-        const textWidth = ctx.measureText(userInput).width;
-        userBubbleWidth = Math.max(textWidth + 40, 120); // 最小宽度120px
+        const userMaxWidth = 300; // 用户气泡最大宽度
+        const userLines = wrapUserMessage(ctx, userInput, userMaxWidth);
+        
+        // 计算用户气泡的实际尺寸
+        const userLineHeight = 20; // 用户气泡行高稍小一些
+        const userPadding = 16; // 用户气泡内边距
+        const userBubbleHeight = Math.max(40, userLines.length * userLineHeight + userPadding * 2);
+        
+        // 计算用户气泡的宽度 - 基于最长行的宽度
+        let maxLineWidth = 0;
+        userLines.forEach(line => {
+            const lineWidth = ctx.measureText(line.text).width;
+            maxLineWidth = Math.max(maxLineWidth, lineWidth);
+        });
+        const userBubbleWidth = Math.max(maxLineWidth + userPadding * 2, 120); // 最小宽度120px
         const userBubbleX = width - 40 - userBubbleWidth;
         
         // 绘制用户输入气泡 - 参照聊天气泡样式（右上角有小圆角）
@@ -684,13 +744,18 @@ const handleShareMessage = async () => {
         ctx.closePath();
         ctx.fill();
         
-        // 用户输入文字
+        // 用户输入文字 - 支持多行显示
         ctx.fillStyle = '#ffffff';
-        ctx.textAlign = 'center';
-        ctx.fillText(userInput, userBubbleX + userBubbleWidth / 2, userBubbleY + 30);
+        ctx.textAlign = 'left';
+        
+        let userCurrentY = userBubbleY + userPadding + 14; // 14px是字体的基线偏移
+        userLines.forEach((line) => {
+            renderFormattedLine(ctx, line, userBubbleX + userPadding, userCurrentY);
+            userCurrentY += userLineHeight;
+        });
         
         // AI回复区域（左侧）- 参照当前聊天气泡样式，铺满屏幕宽度
-        const aiReplyY = userBubbleY + 80;
+        const aiReplyY = userBubbleY + userBubbleHeight + 20; // 调整间距，基于用户气泡的实际高度
         const aiReplyBubbleX = 40; // 从左边距开始
         const aiReplyBubbleWidth = width - 80; // 铺满屏幕宽度，左右各留40px边距
         const messageContent = props.message.content || '暂无内容';
@@ -726,8 +791,7 @@ const handleShareMessage = async () => {
         
         // 计算实际需要的总高度
         const headerHeight = 120; // 标题区域高度
-        // const userBubbleHeight = 50; // 用户气泡高度（固定）
-        const bubbleSpacing = 80; // 气泡间距
+        const bubbleSpacing = 20; // 气泡间距（已调整）
         const footerHeight = 150; // 底部区域高度
         const actualHeight = headerHeight + userBubbleHeight + bubbleSpacing + aiReplyBubbleHeight + footerHeight;
         
@@ -782,11 +846,16 @@ const handleShareMessage = async () => {
             ctx.closePath();
             ctx.fill();
             
-            // 重新绘制用户文字
+            // 重新绘制用户文字 - 支持多行显示
             ctx.fillStyle = '#ffffff';
             ctx.font = '16px -apple-system, BlinkMacSystemFont, "PingFang SC", "Microsoft YaHei", sans-serif';
-            ctx.textAlign = 'center';
-            ctx.fillText(userInput, userBubbleX + userBubbleWidth / 2, userBubbleY + 30);
+            ctx.textAlign = 'left';
+            
+            let userCurrentY = userBubbleY + userPadding + 14; // 14px是字体的基线偏移
+            userLines.forEach((line) => {
+                renderFormattedLine(ctx, line, userBubbleX + userPadding, userCurrentY);
+                userCurrentY += userLineHeight;
+            });
         }
         
         console.log('🔍 画布尺寸调整:', {
@@ -929,6 +998,55 @@ const closePreview = () => {
     }
 };
 
+// 移动端分享弹窗拖拽处理
+const handleShareTouchStart = (e) => {
+    shareTouchStartY.value = e.touches[0].clientY;
+    shareTouchStartTime.value = Date.now();
+};
+
+const handleShareTouchMove = (e) => {
+    if (!shareTouchStartY.value) return;
+
+    const currentY = e.touches[0].clientY;
+    const deltaY = currentY - shareTouchStartY.value;
+
+    // 只允许向下拖拽关闭弹窗
+    if (deltaY > 0) {
+        e.preventDefault();
+        const dialog = document.querySelector('.mobile-share-dialog');
+        if (dialog) {
+            const translateY = Math.min(deltaY * 0.5, 100);
+            dialog.style.transform = `translateY(${translateY}px)`;
+            dialog.style.opacity = Math.max(1 - deltaY / 300, 0.5);
+        }
+    }
+};
+
+const handleShareTouchEnd = (e) => {
+    if (!shareTouchStartY.value) return;
+
+    const currentY = e.changedTouches[0].clientY;
+    const deltaY = currentY - shareTouchStartY.value;
+    const deltaTime = Date.now() - shareTouchStartTime.value;
+    const dialog = document.querySelector('.mobile-share-dialog');
+
+    // 重置样式
+    if (dialog) {
+        dialog.style.transform = '';
+        dialog.style.opacity = '';
+    }
+
+    // 判断是否应该关闭弹窗
+    const shouldClose = deltaY > 100 || (deltaY > 50 && deltaTime < 300);
+
+    if (shouldClose) {
+        closePreview();
+    }
+
+    shareTouchStartY.value = null;
+    shareTouchStartTime.value = null;
+};
+
 // 解析文本中的格式化标记
 const parseTextWithFormat = (text) => {
     const parts = [];
@@ -969,7 +1087,7 @@ const parseTextWithFormat = (text) => {
 
 // 文本换行处理函数 - 支持格式化文本
 const wrapTextWithFormat = (ctx, text, maxWidth) => {
-    // 清理文本但保留加粗标记
+    // 清理文本但保留加粗标记和换行符
     const cleanText = text
         .replace(/\*(.*?)\*/g, '$1')      // 移除斜体
         .replace(/`(.*?)`/g, '$1')        // 移除代码块
@@ -982,10 +1100,12 @@ const wrapTextWithFormat = (ctx, text, maxWidth) => {
     const lines = [];
     
     paragraphs.forEach(paragraph => {
-        if (!paragraph.trim()) return;
+        // 先清理段落首尾空格
+        const trimmedParagraph = paragraph.trim();
+        if (!trimmedParagraph) return;
         
         // 解析段落中的格式化文本
-        const parts = parseTextWithFormat(paragraph);
+        const parts = parseTextWithFormat(trimmedParagraph);
         let currentLine = { text: '', parts: [] };
         
         parts.forEach(part => {
@@ -995,22 +1115,25 @@ const wrapTextWithFormat = (ctx, text, maxWidth) => {
             for (let i = 0; i < part.text.length; i++) {
                 const char = part.text[i];
                 
-                                 // 设置字体以测量宽度
-                 if (part.bold) {
-                     ctx.font = 'bold 16px -apple-system, BlinkMacSystemFont, "PingFang SC", "Microsoft YaHei", sans-serif';
-                 } else {
-                     ctx.font = '16px -apple-system, BlinkMacSystemFont, "PingFang SC", "Microsoft YaHei", sans-serif';
-                 }
+                // 设置字体以测量宽度
+                if (part.bold) {
+                    ctx.font = 'bold 16px -apple-system, BlinkMacSystemFont, "PingFang SC", "Microsoft YaHei", sans-serif';
+                } else {
+                    ctx.font = '16px -apple-system, BlinkMacSystemFont, "PingFang SC", "Microsoft YaHei", sans-serif';
+                }
                 
                 const testText = currentLine.text + char;
                 const metrics = ctx.measureText(testText);
                 
-                if (metrics.width > maxWidth && currentLine.text) {
-                    // 换行
-                    lines.push(currentLine);
+                if (metrics.width > maxWidth && currentLine.text.trim()) {
+                    // 换行 - 确保当前行有实际内容才换行
+                    lines.push({
+                        text: currentLine.text.trim(), // 去除行尾空格
+                        parts: currentLine.parts.filter(p => p.text.trim()) // 过滤空白parts
+                    });
                     currentLine = { 
-                        text: char, 
-                        parts: [{ text: char, bold: part.bold }] 
+                        text: char.trim() ? char : '', // 如果新行首字符是空格，则忽略
+                        parts: char.trim() ? [{ text: char, bold: part.bold }] : []
                     };
                 } else {
                     // 添加到当前行
@@ -1029,9 +1152,15 @@ const wrapTextWithFormat = (ctx, text, maxWidth) => {
             }
         });
         
-        // 添加最后一行
+        // 添加最后一行 - 清理首尾空格
         if (currentLine.text.trim()) {
-            lines.push(currentLine);
+            lines.push({
+                text: currentLine.text.trim(),
+                parts: currentLine.parts.map(part => ({
+                    ...part,
+                    text: part.text.trim()
+                })).filter(part => part.text) // 过滤空白parts
+            });
         }
     });
     
@@ -1226,6 +1355,84 @@ const mobileSmartRecommendationConfig = computed(() => {
         actions: baseActions
     };
 });
+
+// 用户消息简化换行处理函数
+const wrapUserMessage = (ctx, text, maxWidth) => {
+    // 保留原始换行符，但清理多余空格
+    const cleanText = text
+        .replace(/[ \t]+/g, ' ')        // 将多个空格/制表符合并为一个空格
+        .replace(/\n[ \t]+/g, '\n')     // 去除换行后的空格/制表符
+        .replace(/[ \t]+\n/g, '\n')     // 去除换行前的空格/制表符
+        .trim();
+    
+    const paragraphs = cleanText.split('\n');
+    const lines = [];
+    
+    paragraphs.forEach(paragraph => {
+        const trimmedParagraph = paragraph.trim();
+        if (!trimmedParagraph) return;
+        
+        // 智能换行处理
+        let currentLine = '';
+        let lastSpaceIndex = -1;
+        
+        for (let i = 0; i < trimmedParagraph.length; i++) {
+            const char = trimmedParagraph[i];
+            const testText = currentLine + char;
+            
+            ctx.font = '16px -apple-system, BlinkMacSystemFont, "PingFang SC", sans-serif';
+            const metrics = ctx.measureText(testText);
+            
+            // 记录最后一个空格的位置
+            if (char === ' ') {
+                lastSpaceIndex = currentLine.length;
+            }
+            
+            if (metrics.width > maxWidth && currentLine.length > 0) {
+                // 需要换行
+                if (lastSpaceIndex > 0 && lastSpaceIndex < currentLine.length) {
+                    // 在最后一个空格处换行（智能换行）
+                    const lineToAdd = currentLine.substring(0, lastSpaceIndex).trim();
+                    const remainingText = currentLine.substring(lastSpaceIndex + 1) + char;
+                    
+                    if (lineToAdd) {
+                        lines.push({
+                            text: lineToAdd,
+                            parts: [{ text: lineToAdd, bold: false }]
+                        });
+                    }
+                    
+                    currentLine = remainingText;
+                    lastSpaceIndex = -1;
+                } else {
+                    // 强制换行（没有合适的空格位置）
+                    const lineToAdd = currentLine.trim();
+                    if (lineToAdd) {
+                        lines.push({
+                            text: lineToAdd,
+                            parts: [{ text: lineToAdd, bold: false }]
+                        });
+                    }
+                    
+                    currentLine = char === ' ' ? '' : char;
+                    lastSpaceIndex = -1;
+                }
+            } else {
+                currentLine += char;
+            }
+        }
+        
+        // 添加最后一行
+        if (currentLine.trim()) {
+            lines.push({
+                text: currentLine.trim(),
+                parts: [{ text: currentLine.trim(), bold: false }]
+            });
+        }
+    });
+    
+    return lines;
+};
 </script>
 
 <style scoped>
@@ -3036,6 +3243,191 @@ const mobileSmartRecommendationConfig = computed(() => {
     .tab-item.active {
         border-bottom-color: transparent;
         border-left: 3px solid #409eff;
+    }
+}
+
+/* 移动端分享弹窗样式 */
+.mobile-share-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: rgba(0, 0, 0, 0.6);
+    backdrop-filter: blur(8px);
+    z-index: 9999;
+    display: flex;
+    align-items: flex-end;
+    justify-content: center;
+    animation: mobile-fade-in 0.3s ease-out;
+}
+
+.mobile-share-dialog {
+    width: 100%;
+    max-height: 90vh;
+    background: white;
+    border-radius: 20px 20px 0 0;
+    overflow: hidden;
+    display: flex;
+    flex-direction: column;
+    animation: mobile-slide-up 0.3s ease-out;
+    box-shadow: 0 -8px 32px rgba(0, 0, 0, 0.15);
+}
+
+.mobile-drag-indicator {
+    width: 40px;
+    height: 4px;
+    background: #d1d5db;
+    border-radius: 2px;
+    margin: 12px auto 8px auto;
+    flex-shrink: 0;
+    position: relative;
+    cursor: pointer;
+    transition: background-color 0.2s ease;
+}
+
+.mobile-drag-indicator::before {
+    content: '';
+    position: absolute;
+    top: -12px;
+    left: -12px;
+    right: -12px;
+    bottom: -12px;
+    /* 增加触摸区域但不影响视觉显示 */
+}
+
+.mobile-drag-indicator:active {
+    background: #9ca3af;
+}
+
+.mobile-share-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 16px 20px;
+    border-bottom: 1px solid #f0f0f0;
+    background: #fafafa;
+    flex-shrink: 0;
+}
+
+.mobile-share-title {
+    font-size: 18px;
+    font-weight: 600;
+    color: #333;
+    margin: 0;
+}
+
+.mobile-close-btn {
+    width: 36px;
+    height: 36px;
+    border: none;
+    background: #f5f5f5;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: #666;
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+.mobile-close-btn:active {
+    background: #e0e0e0;
+    transform: scale(0.95);
+}
+
+.mobile-share-content {
+    flex: 1;
+    overflow-y: auto;
+    -webkit-overflow-scrolling: touch;
+    padding: 20px;
+    background: #f8f9fa;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    min-height: 300px;
+}
+
+.mobile-image-wrapper {
+    width: 100%;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
+
+.mobile-preview-image {
+    max-width: 100%;
+    max-height: 60vh;
+    border-radius: 12px;
+    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
+    background: white;
+    object-fit: contain;
+}
+
+.mobile-share-actions {
+    display: flex;
+    gap: 12px;
+    padding: 20px;
+    background: white;
+    border-top: 1px solid #e9ecef;
+    flex-shrink: 0;
+}
+
+.mobile-action-btn {
+    flex: 1;
+    height: 48px;
+    border: none;
+    border-radius: 12px;
+    font-size: 16px;
+    font-weight: 500;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 6px;
+}
+
+.mobile-cancel-btn {
+    background: #f8f9fa;
+    color: #666;
+    border: 1px solid #e9ecef;
+}
+
+.mobile-cancel-btn:active {
+    background: #e9ecef;
+    transform: scale(0.98);
+}
+
+.mobile-download-btn {
+    background: #007AFF;
+    color: white;
+    border: 1px solid #007AFF;
+}
+
+.mobile-download-btn:active {
+    background: #0056CC;
+    transform: scale(0.98);
+}
+
+/* 移动端分享弹窗动画 */
+@keyframes mobile-fade-in {
+    from {
+        opacity: 0;
+    }
+    to {
+        opacity: 1;
+    }
+}
+
+@keyframes mobile-slide-up {
+    from {
+        opacity: 0;
+        transform: translateY(100%);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
     }
 }
 </style>

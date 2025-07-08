@@ -222,6 +222,10 @@ export function useStockOperations() {
               ? item.rise + "%"
               : item.changePercent || "0%",
             targetPrice: item.targetPrice || item.target,
+            expectedReturn:
+              item.expectedReturn ||
+              item.expectedBenefits ||
+              item.expected_return,
             riskLevel: item.riskLevel || item.risk || "中等",
             industry: item.industry || item.sector || "未分类",
             reason: item.recommendReason || item.reason || "基于AI算法推荐",
@@ -318,6 +322,7 @@ export function useStockOperations() {
           change: 0.23,
           changePercent: "1.88%",
           targetPrice: "14.20",
+          expectedReturn: "14.1%",
           riskLevel: "中等",
           industry: "银行",
           reason: "估值合理，ROE持续提升，银行业复苏预期强烈",
@@ -331,6 +336,7 @@ export function useStockOperations() {
           change: -12.5,
           changePercent: "-0.74%",
           targetPrice: "1850.00",
+          expectedReturn: "10.2%",
           riskLevel: "较低",
           industry: "白酒",
           reason: "品牌价值稳固，消费复苏带动业绩增长",
@@ -344,6 +350,7 @@ export function useStockOperations() {
           change: 8.2,
           changePercent: "4.62%",
           targetPrice: "220.00",
+          expectedReturn: "18.6%",
           riskLevel: "较高",
           industry: "新能源",
           reason: "新能源车产业链核心，技术领先优势明显",

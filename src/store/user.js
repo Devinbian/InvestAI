@@ -12,6 +12,8 @@ export const useUserStore = defineStore("user", {
       localStorage.getItem("smartPointsBalance") || "0",
     ), // 智点账户余额
 
+    availableBalance: parseFloat(localStorage.getItem("availableBalance") || "0"), // 可用余额（用于计算可用资金）
+
     // 记录中心数据
     quantAnalysisReports: JSON.parse(
       localStorage.getItem("quantAnalysisReports") || "[]",
@@ -276,6 +278,12 @@ export const useUserStore = defineStore("user", {
     setBalance(amount) {
       this.balance = parseFloat(amount);
       localStorage.setItem("balance", this.balance.toString());
+    },
+
+    // 设置可用余额
+    setAvailableBalance(amount) {
+      this.availableBalance = parseFloat(amount);
+      localStorage.setItem("availableBalance", this.availableBalance.toString());
     },
 
     //设置点数

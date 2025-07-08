@@ -1797,6 +1797,7 @@ const initUserInfo = async () => {
     let res = await getUserInfo();
     if (res && res.data && res.data.success) {
         userStore.setBalance(res.data.data.user.balance);
+        userStore.setAvailableBalance(res.data.data.user.availableBalance);
         userStore.setSmartPointsBalance(res.data.data.user.point);
         userInfo.nickname = res.data.data.nickname || '';
         userInfo.phone = res.data.data.phone || '';
@@ -1804,6 +1805,7 @@ const initUserInfo = async () => {
         userInfo.lastLoginTime = res.data.data?.lastLoginTime.substring(0, 10) || '';
     }else{
         userStore.setBalance(0);
+        userStore.setAvailableBalance(0);
         userStore.setSmartPointsBalance(0);
     }
 }

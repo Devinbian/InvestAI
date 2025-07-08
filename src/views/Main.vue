@@ -43,6 +43,32 @@
 
                 <!-- 主页模式输入区域 - 移动端贴底显示 -->
                 <div class="home-input-area" v-if="isMobileView">
+                    <!-- 移动端主页快捷操作按钮 - 作为输入区域的一部分 -->
+                    <div class="mobile-home-shortcuts-wrapper" v-if="!isChatMode">
+                        <div class="mobile-home-shortcuts">
+                            <div class="shortcuts-container">
+                                <div class="shortcuts-scroll-wrapper">
+                                    <div class="shortcuts-list">
+                                        <!-- 快捷操作按钮 -->
+                                        <button v-for="shortcut in activeHomeShortcuts" :key="shortcut.id"
+                                            class="shortcut-btn" @click="handleShortcutClick(shortcut)"
+                                            :title="shortcut.description">
+                                            <span class="shortcut-icon">{{ shortcut.icon }}</span>
+                                            <span class="shortcut-text">{{ shortcut.title }}</span>
+                                        </button>
+
+                                        <!-- 自定义按钮 -->
+                                        <button class="shortcut-btn customize-btn" @click="openCustomizeDialog"
+                                            title="自定义快捷操作">
+                                            <span class="shortcut-icon">⚙️</span>
+                                            <span class="shortcut-text">自定义</span>
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
                     <AIInputCard v-model="inputMessage" :show-history-button="userStore.isLoggedIn && !showChatHistory"
                         :is-chat-mode="false" :is-mobile-view="isMobileView" :is-recording="isRecording"
                         :recording-duration="recordingDuration" :is-generating="isGenerating"
@@ -239,7 +265,7 @@
                 </div>
                 <div class="guide-actions">
                     <el-button type="primary" size="small" @click="handleGuideAction">{{ guideActionText
-                        }}</el-button>
+                    }}</el-button>
                     <el-button size="small" @click="dismissGuide">稍后</el-button>
                 </div>
             </div>
@@ -372,6 +398,203 @@ const {
     layout,
     menu
 } = mobileAdaptation;
+
+// 键盘状态监听 - 用于微信环境优化
+const isKeyboardVisible = computed(() => layout.isKeyboardVisible.value);
+
+// 添加调试信息
+const debugKeyboardState = () => {
+    console.log('=== 键盘状态调试信息 ===');
+    console.log('当前键盘状态:', isKeyboardVisible.value);
+    console.log('是否微信环境:', isWechatEnv.value);
+    console.log('视口高度:', window.innerHeight);
+    console.log('可视视口高度:', window.visualViewport ? window.visualViewport.height : 'N/A');
+    console.log('body类名:', document.body.className);
+    console.log('========================');
+};
+
+// 监听键盘状态变化，为微信环境添加CSS类
+watch(isKeyboardVisible, (newVal) => {
+    console.log('键盘状态变化:', newVal);
+    debugKeyboardState();
+
+    if (isWechatEnv.value) {
+        const body = document.body;
+        if (newVal) {
+            body.classList.add('keyboard-open');
+            console.log('✅ 微信环境：键盘打开，添加keyboard-open类');
+        } else {
+            body.classList.remove('keyboard-open');
+            console.log('✅ 微信环境：键盘关闭，移除keyboard-open类');
+        }
+
+        // 再次检查类名是否正确应用
+        setTimeout(() => {
+            const hasKeyboardClass = body.classList.contains('keyboard-open');
+            console.log('键盘类名检查:', hasKeyboardClass, '预期:', newVal);
+            if (hasKeyboardClass !== newVal) {
+                console.warn('⚠️ 键盘类名状态不匹配，尝试重新设置');
+                if (newVal) {
+                    body.classList.add('keyboard-open');
+                } else {
+                    body.classList.remove('keyboard-open');
+                }
+            }
+        }, 100);
+    }
+}, { immediate: true });
+
+// 添加手动键盘状态切换（用于调试）
+const toggleKeyboardState = () => {
+    layout.isKeyboardVisible.value = !layout.isKeyboardVisible.value;
+    console.log('手动切换键盘状态:', layout.isKeyboardVisible.value);
+};
+
+// 添加额外的键盘检测机制
+const setupAdditionalKeyboardDetection = () => {
+    if (!isWechatEnv.value) return;
+
+    console.log('🔧 设置额外的键盘检测机制（微信环境）');
+
+    // 手动强制检查键盘状态的函数
+    const forceCheckKeyboardState = () => {
+        let keyboardVisible = false;
+
+        // 检查输入框焦点状态
+        const activeElement = document.activeElement;
+        const isInputFocused = activeElement && (
+            activeElement.tagName === 'INPUT' ||
+            activeElement.tagName === 'TEXTAREA' ||
+            activeElement.contentEditable === 'true'
+        );
+
+        // 检查visualViewport
+        if (window.visualViewport) {
+            const heightDiff = window.innerHeight - window.visualViewport.height;
+            const viewportKeyboardVisible = heightDiff > 150;
+
+            console.log('🔍 强制检查键盘状态:', {
+                inputFocused: isInputFocused,
+                viewportKeyboardVisible,
+                heightDiff,
+                innerHeight: window.innerHeight,
+                visualHeight: window.visualViewport.height
+            });
+
+            // 如果输入框聚焦或视口检测到键盘，则认为键盘显示
+            keyboardVisible = isInputFocused || viewportKeyboardVisible;
+        } else {
+            // 降级：仅基于输入框焦点
+            keyboardVisible = isInputFocused;
+            console.log('🔍 降级检查键盘状态（无visualViewport）:', {
+                inputFocused: isInputFocused,
+                keyboardVisible
+            });
+        }
+
+        // 更新状态
+        if (keyboardVisible !== layout.isKeyboardVisible.value) {
+            layout.isKeyboardVisible.value = keyboardVisible;
+            console.log('🎹 强制更新键盘状态:', keyboardVisible);
+        }
+    };
+
+    // 监听输入框焦点事件（作为补充检测）
+    const handleFocusIn = (event) => {
+        const target = event.target;
+        if (target && (target.tagName === 'INPUT' || target.tagName === 'TEXTAREA' || target.contentEditable === 'true')) {
+            console.log('📱 Main.vue检测到输入框获得焦点:', target.tagName);
+            setTimeout(() => {
+                forceCheckKeyboardState();
+            }, 400); // 稍微延长延迟，确保键盘动画完成
+        }
+    };
+
+    const handleFocusOut = (event) => {
+        const target = event.target;
+        if (target && (target.tagName === 'INPUT' || target.tagName === 'TEXTAREA' || target.contentEditable === 'true')) {
+            console.log('📱 Main.vue检测到输入框失去焦点:', target.tagName);
+            setTimeout(() => {
+                forceCheckKeyboardState();
+            }, 400);
+        }
+    };
+
+    document.addEventListener('focusin', handleFocusIn);
+    document.addEventListener('focusout', handleFocusOut);
+
+    // 监听visualViewport变化（如果支持）
+    if (window.visualViewport) {
+        const handleVisualViewportChange = () => {
+            console.log('📱 Main.vue监听到visualViewport变化');
+            setTimeout(() => {
+                forceCheckKeyboardState();
+            }, 100);
+        };
+
+        window.visualViewport.addEventListener('resize', handleVisualViewportChange);
+
+        // 清理函数
+        onUnmounted(() => {
+            document.removeEventListener('focusin', handleFocusIn);
+            document.removeEventListener('focusout', handleFocusOut);
+            window.visualViewport.removeEventListener('resize', handleVisualViewportChange);
+        });
+    } else {
+        // 清理函数
+        onUnmounted(() => {
+            document.removeEventListener('focusin', handleFocusIn);
+            document.removeEventListener('focusout', handleFocusOut);
+        });
+    }
+
+    // 初始检查
+    setTimeout(() => {
+        forceCheckKeyboardState();
+    }, 500);
+};
+
+// 在组件挂载时设置额外的键盘检测
+onMounted(() => {
+    setupAdditionalKeyboardDetection();
+
+    // 定期检查键盘状态（仅在微信环境下，作为最后的保障）
+    if (isWechatEnv.value) {
+        const checkInterval = setInterval(() => {
+            const activeElement = document.activeElement;
+            const isInputFocused = activeElement && (
+                activeElement.tagName === 'INPUT' ||
+                activeElement.tagName === 'TEXTAREA' ||
+                activeElement.contentEditable === 'true'
+            );
+
+            // 获取视口信息
+            let viewportKeyboardVisible = false;
+            if (window.visualViewport) {
+                const heightDiff = window.innerHeight - window.visualViewport.height;
+                viewportKeyboardVisible = heightDiff > 150;
+            }
+
+            // 综合判断键盘状态
+            const shouldKeyboardVisible = isInputFocused || viewportKeyboardVisible;
+
+            if (shouldKeyboardVisible !== layout.isKeyboardVisible.value) {
+                console.log('🔄 定期检查发现键盘状态不匹配，更新状态:', {
+                    current: layout.isKeyboardVisible.value,
+                    expected: shouldKeyboardVisible,
+                    inputFocused: isInputFocused,
+                    viewportKeyboard: viewportKeyboardVisible
+                });
+                layout.isKeyboardVisible.value = shouldKeyboardVisible;
+            }
+        }, 2000); // 增加间隔到2秒，减少性能影响
+
+        // 清理定时器
+        onUnmounted(() => {
+            clearInterval(checkInterval);
+        });
+    }
+});
 
 // 使用语音输入组合式函数
 const voiceInput = useVoiceInput();
@@ -528,10 +751,114 @@ const notifyShortcutsBarComponents = (method) => {
     });
 };
 
+// 主页快捷操作数据
+const activeHomeShortcuts = ref([]);
+
+// 默认主页快捷操作配置
+const defaultHomeShortcuts = ref([
+    {
+        id: 'smart_review',
+        icon: '📊',
+        title: '智能复盘',
+        shortTitle: '复盘',
+        description: '智能分析市场表现和投资策略',
+        action: 'smart_review',
+        isDefault: true,
+        isActive: true
+    },
+    {
+        id: 'watchlist',
+        icon: '⭐',
+        title: '自选股',
+        shortTitle: '自选',
+        description: '查看和管理我的自选股票',
+        action: 'watchlist',
+        isDefault: true,
+        isActive: true
+    },
+    {
+        id: 'smart_recommendation',
+        icon: '📈',
+        title: '智能荐股',
+        shortTitle: '荐股',
+        description: '基于AI算法推荐优质股票',
+        action: 'smart_recommendation',
+        isDefault: true,
+        isActive: true
+    },
+    {
+        id: 'news_update',
+        icon: '📄',
+        title: '资讯推送',
+        shortTitle: '资讯',
+        description: '获取最新市场资讯和重要公告',
+        action: 'news_update',
+        isDefault: true,
+        isActive: true
+    },
+    {
+        id: 'asset_analysis',
+        icon: '💼',
+        title: '我的资产',
+        shortTitle: '资产',
+        description: '查看投资组合和账户分析',
+        action: 'asset_analysis',
+        isDefault: true,
+        isActive: true
+    }
+]);
+
+// 快捷操作数据管理类
+class HomeShortcutsManager {
+    static getDefaultStates() {
+        const saved = localStorage.getItem('defaultShortcutStates');
+        return saved ? JSON.parse(saved) : {};
+    }
+
+    static getCustomShortcuts() {
+        const saved = localStorage.getItem('customShortcuts');
+        return saved ? JSON.parse(saved) : [];
+    }
+
+    static loadActiveShortcuts(defaultShortcuts) {
+        const result = [];
+        const states = this.getDefaultStates();
+
+        // 添加激活的默认快捷操作
+        const activeDefaults = defaultShortcuts.filter(s => {
+            if (states.hasOwnProperty(s.id)) {
+                s.isActive = states[s.id];
+            }
+            return s.isActive;
+        });
+        result.push(...activeDefaults);
+
+        // 添加激活的自定义快捷操作
+        const customShortcuts = this.getCustomShortcuts();
+        const activeCustoms = customShortcuts
+            .filter(s => s.isActive)
+            .map(shortcut => ({ ...shortcut, action: 'custom' }));
+        result.push(...activeCustoms);
+
+        return result;
+    }
+}
+
+// 初始化主页快捷操作
+const initializeHomeShortcuts = () => {
+    console.log('🔄 初始化主页快捷操作');
+    console.log('🔍 默认快捷操作配置:', defaultHomeShortcuts.value);
+    activeHomeShortcuts.value = HomeShortcutsManager.loadActiveShortcuts(defaultHomeShortcuts.value);
+    console.log('✅ 主页快捷操作初始化完成，总数:', activeHomeShortcuts.value.length);
+    console.log('🔍 激活的快捷操作:', activeHomeShortcuts.value);
+};
+
 // 初始化快捷操作
 const initializeShortcuts = () => {
     console.log('🔄 初始化快捷操作');
     notifyShortcutsBarComponents('initializeShortcuts');
+    // 同时初始化主页快捷操作
+    initializeHomeShortcuts();
     console.log('✅ 快捷操作初始化完成');
 };
 
@@ -2113,8 +2440,11 @@ const mobileChatShortcutsRef = ref(null);
 const handleShortcutsUpdated = () => {
     console.log('🔄 快捷操作更新事件触发');
     notifyShortcutsBarComponents('handleShortcutsUpdated');
-
-
+    // 同时更新主页快捷操作
+    nextTick(() => {
+        initializeHomeShortcuts();
+        console.log('✅ 主页快捷操作更新完成');
+    });
 };
 
 
@@ -2211,8 +2541,194 @@ onMounted(() => {
 
     /* 主页模式下为内容区域添加底部间距，避免被输入框遮挡 */
     .modern-content:not(.chatting) {
-        padding-bottom: 180px !important;
-        /* 为贴底的输入框留出空间 */
+        padding-bottom: 220px !important;
+        /* 为贴底的输入框和快捷操作按钮留出更多空间 */
+    }
+
+    /* 移动端主页快捷操作按钮外层容器 */
+    .mobile-home-shortcuts-wrapper {
+        position: fixed !important;
+        left: 0 !important;
+        right: 0 !important;
+        bottom: 120px !important;
+        /* 基础位置：位于输入框上方 */
+        z-index: 999 !important;
+        /* 确保在输入框之上 */
+        pointer-events: none;
+        /* 允许点击穿透到下层元素 */
+        transform: translateY(0) !important;
+        /* 默认无偏移 */
+        transition: transform 0.3s ease !important;
+        /* 平滑过渡 */
+    }
+
+    /* 移动端主页快捷操作按钮样式 */
+    .mobile-home-shortcuts {
+        width: 100%;
+        // background: rgba(255, 255, 255, 0.95);
+        /* 添加半透明背景，确保可见性 */
+        // backdrop-filter: blur(10px);
+        /* 添加模糊效果 */
+        -webkit-backdrop-filter: blur(10px);
+        /* Safari兼容 */
+        padding: 12px 12px 8px 12px;
+        /* 增加顶部内边距 */
+        box-sizing: border-box;
+        // border-top: 1px solid rgba(0, 0, 0, 0.05);
+        /* 添加顶部边框 */
+        // box-shadow: 0 -2px 8px rgba(0, 0, 0, 0.05);
+        /* 添加阴影效果 */
+        /* 调试用：确保可见性 */
+        min-height: 50px;
+        /* 确保有足够高度 */
+        display: block !important;
+        /* 确保显示 */
+        pointer-events: auto;
+        /* 恢复按钮的点击事件 */
+    }
+
+    .mobile-home-shortcuts .shortcuts-container {
+        position: relative;
+        padding: 0;
+    }
+
+    .mobile-home-shortcuts .shortcuts-scroll-wrapper {
+        overflow: hidden;
+        position: relative;
+    }
+
+    .mobile-home-shortcuts .shortcuts-list {
+        display: flex;
+        gap: 8px;
+        padding: 0;
+        overflow-x: auto;
+        scroll-behavior: smooth;
+        -webkit-overflow-scrolling: touch;
+        scrollbar-width: none;
+        -ms-overflow-style: none;
+        flex: 1;
+    }
+
+    .mobile-home-shortcuts .shortcuts-list::-webkit-scrollbar {
+        display: none;
+    }
+
+    /* 移动端主页快捷操作按钮 */
+    .mobile-home-shortcuts .shortcut-btn {
+        border-radius: 12px;
+        background: #f5f7fa;
+        color: #18181b;
+        font-weight: 500;
+        border: 1px solid #e0e0e0;
+        box-shadow: none;
+        padding: 4px 12px;
+        transition: all 0.2s;
+        display: flex;
+        align-items: center;
+        gap: 4px;
+        font-size: 0.8rem;
+        height: 28px;
+        white-space: nowrap;
+        flex-shrink: 0;
+        min-width: auto;
+        flex-direction: row;
+        justify-content: center;
+        text-align: left;
+        cursor: pointer;
+    }
+
+    .mobile-home-shortcuts .shortcut-btn:hover {
+        background: #e6e8eb;
+        border-color: #d0d0d0;
+    }
+
+    .mobile-home-shortcuts .shortcut-btn:active {
+        background: #e6e8eb;
+        border-color: #d0d0d0;
+    }
+
+    .mobile-home-shortcuts .shortcut-icon {
+        font-size: 14px;
+        line-height: 1;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        flex-shrink: 0;
+    }
+
+    .mobile-home-shortcuts .shortcut-text {
+        font-size: 0.8rem;
+        line-height: 1.2;
+        text-align: left;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        flex: 1;
+    }
+
+    /* 自定义按钮样式 */
+    .mobile-home-shortcuts .customize-btn:hover {
+        background: #e6e8eb;
+        border-color: #d0d0d0;
+    }
+
+    .mobile-home-shortcuts .customize-btn:active {
+        background: #e6e8eb;
+        border-color: #d0d0d0;
+    }
+
+    /* 超小屏幕适配 */
+    @media (max-width: 375px) {
+        .mobile-home-shortcuts-wrapper {
+            bottom: 110px !important;
+            /* 超小屏幕调整位置 */
+        }
+
+        .mobile-home-shortcuts .shortcuts-list {
+            gap: 6px;
+        }
+
+        .mobile-home-shortcuts .shortcut-btn {
+            height: 26px;
+            padding: 3px 8px;
+            gap: 3px;
+            font-size: 0.7rem;
+        }
+
+        .mobile-home-shortcuts .shortcut-icon {
+            font-size: 12px;
+        }
+
+        .mobile-home-shortcuts .shortcut-text {
+            font-size: 0.7rem;
+        }
+    }
+
+    /* 大屏手机适配 */
+    @media (min-width: 414px) {
+        .mobile-home-shortcuts-wrapper {
+            bottom: 130px !important;
+            /* 大屏手机调整位置 */
+        }
+
+        .mobile-home-shortcuts .shortcuts-list {
+            gap: 10px;
+        }
+
+        .mobile-home-shortcuts .shortcut-btn {
+            height: 30px;
+            padding: 5px 12px;
+            gap: 5px;
+            font-size: 0.85rem;
+        }
+
+        .mobile-home-shortcuts .shortcut-icon {
+            font-size: 16px;
+        }
+
+        .mobile-home-shortcuts .shortcut-text {
+            font-size: 0.85rem;
+        }
     }
 
     /* 移动端增加welcome-section和AI卡片之间的间距 */
@@ -5062,8 +5578,8 @@ body.onboarding-mode {
         z-index: 1000 !important;
         background: transparent !important;
         /* 恢复透明背景 */
-        padding: 12px 0 0 0 !important;
-        /* 保持顶部内边距，增加与聊天区域的间隔 */
+        padding: 0 !important;
+        /* 移除顶部内边距，让快捷操作按钮能够正确显示 */
         margin: 0 !important;
         border: none !important;
         box-sizing: border-box !important;
@@ -8783,7 +9299,7 @@ body {
         margin-bottom: 12px;
     }
 
-    /* 微信环境下输入框强制贴底全宽 */
+    /* 微信环境下输入框使用固定定位 */
     body.wechat-browser .input-area,
     body.wechat-browser .home-input-area {
         position: fixed !important;
@@ -8796,6 +9312,34 @@ body {
         padding: 0 !important;
         z-index: 1000 !important;
         box-sizing: border-box !important;
+    }
+
+    /* 微信环境下键盘弹起时整个输入区域容器向上移动 */
+    body.wechat-browser.keyboard-open .input-area,
+    body.wechat-browser.keyboard-open .home-input-area {
+        bottom: 0 !important;
+        /* 键盘弹起时，整个容器向上移动，减少与键盘的间距 */
+        transition: bottom 0.3s ease !important;
+    }
+
+    /* 微信环境下主页快捷操作按钮在容器内部使用相对定位 */
+    body.wechat-browser .mobile-home-shortcuts-wrapper {
+        position: relative !important;
+        margin-bottom: 40px !important;
+        /* 与输入框保持80px的固定间距，减少初始间隔 */
+        z-index: 999 !important;
+    }
+
+    body.wechat-browser .mobile-home-shortcuts {
+        padding: 8px;
+        /* 微信环境下减少左右内边距 */
+
+    }
+
+    /* 微信环境下键盘弹起时整个输入区域容器向上移动 */
+    body.wechat-browser.keyboard-open .mobile-home-shortcuts-wrapper {
+        position: relative !important;
+        margin-bottom: 0 !important;
     }
 }
 

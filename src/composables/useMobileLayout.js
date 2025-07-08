@@ -176,21 +176,59 @@ export function useMobileLayout() {
     let initialViewportHeight = window.innerHeight;
     let keyboardHeight = 0;
 
-    const handleResize = () => {
-      const currentViewportHeight = window.innerHeight;
-      const heightDifference = initialViewportHeight - currentViewportHeight;
+    // 更精确的键盘状态检测
+    const checkKeyboardState = () => {
+      let keyboardVisible = false;
+      let heightDifference = 0;
 
-      // 判断键盘是否显示（高度变化超过150px认为是键盘）
-      const keyboardVisible = heightDifference > 150;
+      // 优先使用visualViewport API
+      if (window.visualViewport) {
+        heightDifference = window.innerHeight - window.visualViewport.height;
+        keyboardVisible = heightDifference > 150;
 
+        console.log("visualViewport检测:", {
+          innerHeight: window.innerHeight,
+          visualHeight: window.visualViewport.height,
+          diff: heightDifference,
+          keyboardVisible,
+        });
+      } else {
+        // 降级到window高度检测
+        const currentViewportHeight = window.innerHeight;
+        heightDifference = initialViewportHeight - currentViewportHeight;
+        keyboardVisible = heightDifference > 150;
+
+        console.log("window高度检测:", {
+          initial: initialViewportHeight,
+          current: currentViewportHeight,
+          diff: heightDifference,
+          keyboardVisible,
+        });
+      }
+
+      // 额外检查：如果有输入框聚焦，强制认为键盘显示
+      const activeElement = document.activeElement;
+      const isInputFocused =
+        activeElement &&
+        (activeElement.tagName === "INPUT" ||
+          activeElement.tagName === "TEXTAREA" ||
+          activeElement.contentEditable === "true");
+
+      if (isInputFocused && !keyboardVisible) {
+        console.log("输入框聚焦但高度检测无键盘，强制设置为键盘显示");
+        keyboardVisible = true;
+      }
+
+      // 更新状态
       if (keyboardVisible !== isKeyboardVisible.value) {
         isKeyboardVisible.value = keyboardVisible;
         keyboardHeight = keyboardVisible ? heightDifference : 0;
 
-        console.log("键盘状态变化:", {
+        console.log("🎹 键盘状态变化:", {
           visible: keyboardVisible,
           height: keyboardHeight,
-          viewportHeight: currentViewportHeight,
+          method: window.visualViewport ? "visualViewport" : "window",
+          inputFocused: isInputFocused,
         });
 
         // 更新视口高度变量
@@ -208,14 +246,8 @@ export function useMobileLayout() {
     // 使用visualViewport API（更准确）
     if (window.visualViewport) {
       const handleVisualViewportChange = () => {
-        const heightDifference =
-          window.innerHeight - window.visualViewport.height;
-        const keyboardVisible = heightDifference > 150;
-
-        if (keyboardVisible !== isKeyboardVisible.value) {
-          isKeyboardVisible.value = keyboardVisible;
-          setDynamicViewportHeight();
-        }
+        console.log("visualViewport resize事件触发");
+        checkKeyboardState();
       };
 
       window.visualViewport.addEventListener(
@@ -230,11 +262,62 @@ export function useMobileLayout() {
       });
     } else {
       // 降级到window resize
+      const handleResize = () => {
+        console.log("window resize事件触发");
+        checkKeyboardState();
+      };
+
       window.addEventListener("resize", handleResize, { passive: true });
       cleanupFunctions.push(() => {
         window.removeEventListener("resize", handleResize);
       });
     }
+
+    // 监听输入框焦点事件
+    const handleFocusIn = (event) => {
+      const target = event.target;
+      if (
+        target &&
+        (target.tagName === "INPUT" ||
+          target.tagName === "TEXTAREA" ||
+          target.contentEditable === "true")
+      ) {
+        console.log("输入框获得焦点:", target.tagName);
+        // 延迟检查，等待键盘动画完成
+        setTimeout(() => {
+          checkKeyboardState();
+        }, 300);
+      }
+    };
+
+    const handleFocusOut = (event) => {
+      const target = event.target;
+      if (
+        target &&
+        (target.tagName === "INPUT" ||
+          target.tagName === "TEXTAREA" ||
+          target.contentEditable === "true")
+      ) {
+        console.log("输入框失去焦点:", target.tagName);
+        // 延迟检查，等待键盘动画完成
+        setTimeout(() => {
+          checkKeyboardState();
+        }, 300);
+      }
+    };
+
+    document.addEventListener("focusin", handleFocusIn);
+    document.addEventListener("focusout", handleFocusOut);
+
+    cleanupFunctions.push(() => {
+      document.removeEventListener("focusin", handleFocusIn);
+      document.removeEventListener("focusout", handleFocusOut);
+    });
+
+    // 初始检查
+    setTimeout(() => {
+      checkKeyboardState();
+    }, 100);
   };
 
   /**

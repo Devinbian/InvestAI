@@ -80,38 +80,23 @@
             <div class="chat-history-area chat-area" v-if="isChatMode && chatHistory.length" ref="chatHistoryRef">
                 <!-- 当消息数量较少时使用普通渲染 -->
                 <template v-if="chatHistory.length <= 50">
-                    <ChatMessage 
-                        v-for="(message, idx) in chatHistory" 
-                        :key="idx" 
-                        :message="message"
-                        :is-generating="isGenerating"
-                        :is-last-message="idx === chatHistory.length - 1"
-                        :is-mobile-view="isMobileView"
-                        :watchlist-action-buttons="watchlistActionButtons"
+                    <ChatMessage v-for="(message, idx) in chatHistory" :key="idx" :message="message"
+                        :is-generating="isGenerating" :is-last-message="idx === chatHistory.length - 1"
+                        :is-mobile-view="isMobileView" :watchlist-action-buttons="watchlistActionButtons"
                         :portfolio-action-buttons="portfolioActionButtons"
                         :active-reminders-count="activeReminders.filter(r => r.isActive).length"
-                        :is-in-watchlist="isInWatchlist"
-                        :format-currency="formatCurrency"
-                        :format-recommendation-time="formatRecommendationTime"
-                        :is-stream-paused="isStreamPaused"
-                        :session-title="currentChatTitle"
-                        :chat-history="chatHistory"
-                        :message-index="idx"
-                        @interaction-action="handleInteractionAction"
-                        @show-buy-dialog="showBuyDialog"
-                        @add-to-watchlist="addToWatchlist"
-                        @remove-from-watchlist="removeFromWatchlist"
+                        :is-in-watchlist="isInWatchlist" :format-currency="formatCurrency"
+                        :format-recommendation-time="formatRecommendationTime" :is-stream-paused="isStreamPaused"
+                        :session-title="currentChatTitle" :chat-history="chatHistory" :message-index="idx"
+                        @interaction-action="handleInteractionAction" @show-buy-dialog="showBuyDialog"
+                        @add-to-watchlist="addToWatchlist" @remove-from-watchlist="removeFromWatchlist"
                         @show-quant-analysis-dialog="showQuantAnalysisDialog"
-                        @set-quant-analysis-reminder="setQuantAnalysisReminder"
-                                                    @stock-click="handleStockClick"
+                        @set-quant-analysis-reminder="setQuantAnalysisReminder" @stock-click="handleStockClick"
                         @watchlist-action-click="handleWatchlistActionClick"
                         @portfolio-action-click="handlePortfolioActionClick"
-                        @stock-action-click="handleStockActionClick"
-                        @refresh-recommendation="refreshRecommendation"
-                        @copy-message="handleCopyMessage"
-                        @regenerate-message="handleRegenerateMessage"
-                        @share-message="handleShareMessage"
-                    />
+                        @stock-action-click="handleStockActionClick" @refresh-recommendation="refreshRecommendation"
+                        @copy-message="handleCopyMessage" @regenerate-message="handleRegenerateMessage"
+                        @share-message="handleShareMessage" />
 
 
 
@@ -137,33 +122,59 @@
                 <!-- 新聊天按钮和快捷操作 -->
                 <div class="new-chat-section" v-if="chatHistory.length > 0">
                     <div class="chat-actions">
-                        <el-button class="new-chat-btn" @click="createNewChat">
-                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none">
-                                <path d="M12 5v14m-7-7h14" stroke="currentColor" stroke-width="2" stroke-linecap="round"
-                                    stroke-linejoin="round" />
-                            </svg>
-                            新建聊天
-                        </el-button>
+                        <!-- 移动端：快捷操作按钮和新建聊天按钮在同一行 -->
+                        <template v-if="isMobileView">
+                            <MobileChatShortcuts :show-shortcuts="true" :is-mobile-view="isMobileView"
+                                :is-logged-in="userStore.isLoggedIn" @shortcut-click="handleShortcutClick"
+                                @customize-dialog-open="openCustomizeDialog" ref="mobileChatShortcutsRef" />
 
-                        <!-- 快速跳转到荐股列表 -->
-                        <el-button v-if="hasRecommendationInHistory" class="goto-recommendation-btn"
-                            @click="scrollToRecommendation">
-                            🎯
-                            查看荐股
-                        </el-button>
+                            <div class="new-chat-buttons">
+                                <el-button class="new-chat-btn" @click="createNewChat">
+                                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none">
+                                        <path d="M12 5v14m-7-7h14" stroke="currentColor" stroke-width="2"
+                                            stroke-linecap="round" stroke-linejoin="round" />
+                                    </svg>
+                                    新建聊天
+                                </el-button>
+
+                                <!-- 快速跳转到荐股列表 -->
+                                <el-button v-if="hasRecommendationInHistory" class="goto-recommendation-btn"
+                                    @click="scrollToRecommendation">
+                                    🎯
+                                    查看荐股
+                                </el-button>
+                            </div>
+                        </template>
+
+                        <!-- PC端：保持原有布局 -->
+                        <template v-else>
+                            <el-button class="new-chat-btn" @click="createNewChat">
+                                <svg width="16" height="16" viewBox="0 0 24 24" fill="none">
+                                    <path d="M12 5v14m-7-7h14" stroke="currentColor" stroke-width="2"
+                                        stroke-linecap="round" stroke-linejoin="round" />
+                                </svg>
+                                新建聊天
+                            </el-button>
+
+                            <!-- 快速跳转到荐股列表 -->
+                            <el-button v-if="hasRecommendationInHistory" class="goto-recommendation-btn"
+                                @click="scrollToRecommendation">
+                                🎯
+                                查看荐股
+                            </el-button>
+                        </template>
                     </div>
                 </div>
 
                 <AIInputCard v-model="inputMessage" :show-history-button="userStore.isLoggedIn && !showChatHistory"
                     :is-chat-mode="true" :is-mobile-view="isMobileView" :is-recording="isRecording"
-                    :recording-duration="recordingDuration" :is-generating="isGenerating"
-                    :show-chat-shortcuts="false" :is-logged-in="userStore.isLoggedIn"
-                    :show-chat-history="showChatHistory" @send-message="sendMessage"
-                    @toggle-chat-history="toggleChatHistory" @voice-click="onVoiceClick"
+                    :recording-duration="recordingDuration" :is-generating="isGenerating" :show-chat-shortcuts="false"
+                    :is-logged-in="userStore.isLoggedIn" :show-chat-history="showChatHistory"
+                    @send-message="sendMessage" @toggle-chat-history="toggleChatHistory" @voice-click="onVoiceClick"
                     @stop-generation="stopGeneration" />
 
-                <!-- 聊天模式快捷操作栏组件 - 直接显示在输入框下方 -->
-                <ShortcutsBar mode="initial" :show-shortcuts="true" :show-chat-shortcuts="false"
+                <!-- PC端聊天模式快捷操作栏组件 - 直接显示在输入框下方 -->
+                <ShortcutsBar v-if="!isMobileView" mode="initial" :show-shortcuts="true" :show-chat-shortcuts="false"
                     :is-mobile-view="isMobileView" :is-logged-in="userStore.isLoggedIn"
                     @shortcut-click="handleShortcutClick" @customize-dialog-open="openCustomizeDialog"
                     ref="chatShortcutsBarRef" />
@@ -269,6 +280,7 @@ import MobileStockTradingDialog from '../components/MobileStockTradingDialog.vue
 import AITradingDialog from '../components/AITradingDialog.vue';
 import CustomizeShortcutsDialog from '../components/CustomizeShortcutsDialog.vue';
 import MobileShortcutsDialog from '../components/MobileShortcutsDialog.vue';
+import MobileChatShortcuts from '../components/MobileChatShortcuts.vue';
 import MobileUserMenu from '../components/MobileUserMenu.vue';
 import ChatHistory from '../components/ChatHistory.vue';
 import MarkdownRenderer from '../components/MarkdownRenderer.vue';
@@ -503,11 +515,12 @@ const activeTab = ref('portfolio'); // 默认显示持仓明细
 
 // 简化的ShortcutsBar组件操作函数
 const notifyShortcutsBarComponents = (method) => {
-    [shortcutsBarRef.value, chatShortcutsBarRef.value].forEach((ref, index) => {
+    [shortcutsBarRef.value, chatShortcutsBarRef.value, mobileChatShortcutsRef.value].forEach((ref, index) => {
         if (ref && typeof ref[method] === 'function') {
             try {
                 ref[method]();
-                console.log(`✅ 已通知${index === 0 ? '初始模式' : '聊天模式'}ShortcutsBar组件执行${method}`);
+                const componentName = index === 0 ? '初始模式' : index === 1 ? '聊天模式' : '移动端聊天';
+                console.log(`✅ 已通知${componentName}ShortcutsBar组件执行${method}`);
             } catch (error) {
                 console.warn(`⚠️ 通知ShortcutsBar执行${method}时出错:`, error);
             }
@@ -2094,6 +2107,7 @@ const openCustomizeDialog = () => {
 // ShortcutsBar组件引用
 const shortcutsBarRef = ref(null);
 const chatShortcutsBarRef = ref(null);
+const mobileChatShortcutsRef = ref(null);
 
 // 处理快捷操作更新事件
 const handleShortcutsUpdated = () => {
@@ -2262,8 +2276,8 @@ onMounted(() => {
 
     /* 移动端聊天历史区域完整重新定义 */
     .chat-history-area {
-        height: calc(100vh - 76px - 160px) !important;
-        /* 减少高度：76px(导航+间距) + 160px(输入框空间) */
+        height: calc(100vh - 76px - 200px) !important;
+        /* 减少高度：76px(导航+间距) + 200px(输入框空间+快捷操作栏) */
         padding: 0 12px 40px 12px !important;
         /* 顶部无padding，左右12px间距确保消息不贴边，底部40px避免遮挡 */
         margin: 0 !important;
@@ -3263,7 +3277,8 @@ body.onboarding-mode {
 
 /* 移动端聊天历史底部占位元素 */
 .mobile-chat-spacer {
-    height: 20px;
+    height: 60px;
+    /* 增加占位高度，确保有足够空间避免被输入区域遮挡 */
     /* 确保有足够空间避免被新建聊天按钮遮挡 */
     width: 100%;
     flex-shrink: 0;
@@ -4798,6 +4813,17 @@ body.onboarding-mode {
     justify-content: center !important;
     align-items: center !important;
     /* 确保内容垂直居中 */
+    overflow-x: auto;
+    /* 隐藏水平滚动条但保持滚动功能 */
+    scrollbar-width: none;
+    /* Firefox */
+    -ms-overflow-style: none;
+    /* IE and Edge */
+}
+
+.new-chat-section::-webkit-scrollbar {
+    display: none;
+    /* Chrome, Safari, Opera */
 }
 
 .chat-actions {
@@ -4810,6 +4836,17 @@ body.onboarding-mode {
     justify-content: center !important;
     width: 100% !important;
     /* 确保容器宽度充足 */
+    overflow-x: auto;
+    /* 隐藏水平滚动条但保持滚动功能 */
+    scrollbar-width: none;
+    /* Firefox */
+    -ms-overflow-style: none;
+    /* IE and Edge */
+}
+
+.chat-actions::-webkit-scrollbar {
+    display: none;
+    /* Chrome, Safari, Opera */
 }
 
 .new-chat-btn {
@@ -4835,8 +4872,12 @@ body.onboarding-mode {
     /* 防止文字换行 */
     flex-shrink: 0 !important;
     /* 防止按钮被压缩 */
-    min-width: auto !important;
-    /* 允许按钮根据内容自适应宽度 */
+    min-width: 80px !important;
+    /* 确保按钮有最小宽度 */
+    visibility: visible !important;
+    /* 确保按钮可见 */
+    opacity: 1 !important;
+    /* 确保按钮不透明 */
 }
 
 .new-chat-btn:hover {
@@ -5003,7 +5044,8 @@ body.onboarding-mode {
         flex: 1;
         display: flex;
         flex-direction: column;
-        padding-bottom: 80px;
+        padding-bottom: 100px;
+        /* 增加底部间距，为输入区域留出更多空间 */
         padding-top: 40px;
         /* 增加顶部间距 */
         /* 为底部聊天框留出空间 */
@@ -5019,7 +5061,9 @@ body.onboarding-mode {
         /* 移除重复的安全区域间距，让AIInputCard组件自己处理 */
         z-index: 1000 !important;
         background: transparent !important;
-        padding: 0 !important;
+        /* 恢复透明背景 */
+        padding: 12px 0 0 0 !important;
+        /* 保持顶部内边距，增加与聊天区域的间隔 */
         margin: 0 !important;
         border: none !important;
         box-sizing: border-box !important;
@@ -5038,6 +5082,47 @@ body.onboarding-mode {
         height: auto !important;
         min-height: auto !important;
         max-height: none !important;
+    }
+
+    /* 移动端聊天快捷操作栏样式 */
+    .mobile-chat-shortcuts {
+        background: transparent !important;
+        /* 在同一行显示时的样式 */
+        flex: 1 !important;
+        margin-right: 12px !important;
+        min-width: 0 !important;
+        /* 允许收缩 */
+        overflow: hidden !important;
+        /* 防止内容溢出 */
+    }
+
+    /* 移动端新建聊天按钮容器 */
+    .new-chat-buttons {
+        display: flex !important;
+        gap: 8px !important;
+        flex-shrink: 0 !important;
+        align-items: center !important;
+        min-width: 0 !important;
+        /* 确保按钮可见 */
+    }
+
+    /* 移动端聊天操作区域布局 */
+    .chat-actions {
+        display: flex !important;
+        align-items: center !important;
+        gap: 0 !important;
+        width: 100% !important;
+        overflow-x: auto !important;
+        /* 隐藏水平滚动条但保持滚动功能 */
+        scrollbar-width: none !important;
+        /* Firefox */
+        -ms-overflow-style: none !important;
+        /* IE and Edge */
+    }
+
+    .chat-actions::-webkit-scrollbar {
+        display: none !important;
+        /* Chrome, Safari, Opera */
     }
 
     /* iOS Safari 特殊处理 */
@@ -5088,11 +5173,12 @@ body.onboarding-mode {
 
     /* 超小屏幕聊天历史区域高度优化 */
     .chat-history-area {
-        height: calc(100vh - 76px - 140px) !important;
-        /* 超小屏幕减少高度，顶部76px包含导航和间距 */
-        padding: 0 0 28px 12px !important;
-        /* 移除顶部padding，左侧12px间距，增加底部padding确保间隔 */
-        margin: 0 !important;
+        height: calc(100vh - 76px - 200px) !important;
+        /* 超小屏幕减少高度，顶部76px包含导航和间距，底部200px包含快捷操作栏和输入框以及间隔 */
+        padding: 0 0 16px 12px !important;
+        /* 移除顶部padding，左侧12px间距，减少底部padding */
+        margin: 0 0 20px 0 !important;
+        /* 增加底部间隔 */
         width: 100% !important;
         max-width: none !important;
     }
@@ -5105,7 +5191,8 @@ body.onboarding-mode {
     }
 
     .chat-area {
-        padding-bottom: 70px;
+        padding-bottom: 90px;
+        /* 增加底部间距，确保与输入区域有足够间隔 */
         /* 调整底部间距 */
     }
 
@@ -5119,8 +5206,9 @@ body.onboarding-mode {
 
 .new-chat-btn,
 .goto-recommendation-btn {
-    width: 100%;
-    max-width: 100px;
+    min-width: 80px;
+    max-width: 120px;
+    flex-shrink: 0;
 }
 
 .dialog-footer {
@@ -8805,9 +8893,10 @@ body {
 
     /* 7. 聊天历史区域 */
     .chat-history-area {
-        height: calc(var(--vh, 1vh) * 100 - 76px - 160px);
-        padding: 16px 8px 30px 8px;
-        margin: 0;
+        height: calc(var(--vh, 1vh) * 100 - 76px - 180px);
+        padding: 16px 8px 16px 8px;
+        margin: 0 0 20px 0;
+        /* 增加底部间隔 */
         width: 100%;
         box-sizing: border-box;
         overflow-y: auto;
@@ -8828,7 +8917,8 @@ body {
     }
 
     .chat-message:last-child {
-        margin-bottom: 20px;
+        margin-bottom: 30px;
+        /* 增加最后一条消息的底部间距 */
     }
 
     /* 9. 快捷按钮样式 */

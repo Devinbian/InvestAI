@@ -7,6 +7,7 @@ import {
   getExperienceText,
   getFocusIndustryText,
 } from "@/utils/userPortraitHelpers";
+import { generateMessageId } from "@/utils/formatters";
 
 export function useStockOperations() {
   // 股票相关状态
@@ -117,13 +118,17 @@ export function useStockOperations() {
 
     // 先显示初始消息
     const processingMessage = {
+      id: generateMessageId(),
       role: "user",
       content: message.concat(userPreferencesText),
+      timestamp: Date.now(),
     };
     const processingMessage1 = {
+      id: generateMessageId(),
       role: "assistant",
       content: "",
       isGenerating: true,
+      timestamp: Date.now(),
     };
     chatHistory.value.push(processingMessage, processingMessage1);
 
@@ -265,18 +270,29 @@ export function useStockOperations() {
         throw new Error("API返回数据格式不正确");
       }
     } catch (err) {
-      console.error("智能荐股API调用失败，使用mock数据作为降级:", err);
+      console.error("智能荐股API调用失败:", err);
 
-      // 使用mock数据作为降级处理
+      // 不使用mock数据，而是返回失败提示
       const lastMessage = chatHistory.value[chatHistory.value.length - 1];
       if (lastMessage && lastMessage.role === "assistant") {
-        lastMessage.content = mockRes.data.content;
+        // 根据错误类型提供不同的提示信息
+        let errorMessage = "抱歉，智能荐股服务暂时不可用。";
+        
+        if (err.message && err.message.includes("500")) {
+          errorMessage = "服务器繁忙，请稍后再试。";
+        } else if (err.message && err.message.includes("网络")) {
+          errorMessage = "网络连接异常，请检查网络后重试。";
+        } else if (err.message && err.message.includes("timeout")) {
+          errorMessage = "请求超时，请稍后再试。";
+        }
+        
+        lastMessage.content = `❌ ${errorMessage}\n\n您可以稍后重试，或者：\n• 查看市场指数了解大盘走势\n• 浏览推荐股票获取投资灵感\n• 设置投资偏好获得更精准推荐`;
         lastMessage.isGenerating = false;
-        lastMessage.hasStockInfo = mockRes.data.hasStockInfo;
-        lastMessage.isRecommendation = mockRes.data.isRecommendation;
-        lastMessage.stockList = mockRes.data.stockList || [];
-        lastMessage.isPersistent = true;
-        lastMessage.messageId = `recommendation-${Date.now()}`;
+        lastMessage.hasStockInfo = false;
+        lastMessage.isRecommendation = false;
+        lastMessage.stockList = [];
+        lastMessage.isPersistent = false;
+        lastMessage.messageId = `error-${Date.now()}`;
         lastMessage.timestamp = new Date().toISOString();
         chatHistory.value = [...chatHistory.value];
       }
@@ -286,11 +302,11 @@ export function useStockOperations() {
 
       // 根据错误类型提供不同的提示
       if (err.message && err.message.includes("500")) {
-        ElMessage.warning("服务器繁忙，已为您提供示例推荐");
+        ElMessage.error("服务器繁忙，请稍后再试");
       } else if (err.message && err.message.includes("网络")) {
-        ElMessage.warning("网络连接问题，已为您提供示例推荐");
+        ElMessage.error("网络连接异常，请检查网络后重试");
       } else {
-        ElMessage.warning("智能推荐服务暂时不可用，已为您提供示例推荐");
+        ElMessage.error("智能荐股服务暂时不可用，请稍后再试");
       }
 
       // 使用快捷操作后自动收起
@@ -301,67 +317,24 @@ export function useStockOperations() {
       }
     }
 
-    // 最终安全检查：确保消息有股票数据
+    // 移除最终安全检查中的默认数据添加逻辑
     await nextTick();
     const finalMessage = chatHistory.value[chatHistory.value.length - 1];
     if (
       finalMessage &&
       finalMessage.role === "assistant" &&
-      !finalMessage.stockList
+      !finalMessage.stockList &&
+      finalMessage.hasStockInfo !== false // 只有当hasStockInfo不是false时才需要检查
     ) {
-      console.warn("最终安全检查：消息缺少股票数据，添加默认数据");
-
-      // 提供基本的示例股票数据
-      const defaultStockList = [
-        {
-          name: "平安银行",
-          code: "000001",
-          recommendIndex: 4.2,
-          recommendLevel: "推荐",
-          price: 12.45,
-          change: 0.23,
-          changePercent: "1.88%",
-          targetPrice: "14.20",
-          expectedReturn: "14.1%",
-          riskLevel: "中等",
-          industry: "银行",
-          reason: "估值合理，ROE持续提升，银行业复苏预期强烈",
-        },
-        {
-          name: "贵州茅台",
-          code: "600519",
-          recommendIndex: 4.6,
-          recommendLevel: "强烈推荐",
-          price: 1678.9,
-          change: -12.5,
-          changePercent: "-0.74%",
-          targetPrice: "1850.00",
-          expectedReturn: "10.2%",
-          riskLevel: "较低",
-          industry: "白酒",
-          reason: "品牌价值稳固，消费复苏带动业绩增长",
-        },
-        {
-          name: "宁德时代",
-          code: "300750",
-          recommendIndex: 4.0,
-          recommendLevel: "推荐",
-          price: 185.5,
-          change: 8.2,
-          changePercent: "4.62%",
-          targetPrice: "220.00",
-          expectedReturn: "18.6%",
-          riskLevel: "较高",
-          industry: "新能源",
-          reason: "新能源车产业链核心，技术领先优势明显",
-        },
-      ];
-
-      finalMessage.hasStockInfo = true;
-      finalMessage.isRecommendation = true;
-      finalMessage.stockList = defaultStockList;
-      finalMessage.isPersistent = true;
-      finalMessage.messageId = `recommendation-${Date.now()}`;
+      console.warn("最终安全检查：消息缺少股票数据，但API调用成功，这可能是数据格式问题");
+      
+      // 如果是API调用成功但数据格式有问题，提供友好提示
+      finalMessage.content = "❌ 智能荐股数据格式异常，请稍后再试。\n\n您可以稍后重试，或者：\n• 查看市场指数了解大盘走势\n• 浏览推荐股票获取投资灵感\n• 设置投资偏好获得更精准推荐";
+      finalMessage.hasStockInfo = false;
+      finalMessage.isRecommendation = false;
+      finalMessage.stockList = [];
+      finalMessage.isPersistent = false;
+      finalMessage.messageId = `format-error-${Date.now()}`;
       finalMessage.timestamp = new Date().toISOString();
       chatHistory.value = [...chatHistory.value];
     }
@@ -386,8 +359,8 @@ export function useStockOperations() {
 
     // 添加用户消息和处理中的AI消息
     chatHistory.value.push(
-      { role: "user", content: userMessage },
-      { role: "assistant", content: "", isGenerating: true },
+      { id: generateMessageId(), role: "user", content: userMessage, timestamp: Date.now() },
+      { id: generateMessageId(), role: "assistant", content: "", isGenerating: true, timestamp: Date.now() },
     );
 
     // 检查是否被中断
@@ -495,8 +468,8 @@ export function useStockOperations() {
     const userMessage = "我的资产分析";
 
     chatHistory.value.push(
-      { role: "user", content: userMessage },
-      { role: "assistant", content: "", isGenerating: true },
+      { id: generateMessageId(), role: "user", content: userMessage, timestamp: Date.now() },
+      { id: generateMessageId(), role: "assistant", content: "", isGenerating: true, timestamp: Date.now() },
     );
 
     // 检查是否被中断
@@ -666,23 +639,117 @@ export function useStockOperations() {
     }
 
     try {
-      const res = await mockApi.sendMessage(requestMessage);
+      // 调用真实的荐股API而不是mock
+      const response = await recommendStock({
+        pageNo: 1,
+        pageSize: 3,
+        conversationId: message.conversationId || 'refresh-' + Date.now(),
+      });
 
-      // 更新现有的荐股消息
+      // 检查响应是否有效
+      if (!response) {
+        throw new Error("API响应为空");
+      }
+
+      // 检查是否有错误信息
+      if (response.code && response.code !== "B0001") {
+        throw new Error(response.message || "API调用失败");
+      }
+
+      // 处理不同的响应格式
+      let stockList = [];
+      let apiData = null;
+
+      // 尝试多种响应格式
+      if (response && response.data && response.data.success && response.data.data) {
+        apiData = response.data.data;
+      } else if (response && response.data && Array.isArray(response.data)) {
+        apiData = response.data;
+      } else if (response && Array.isArray(response)) {
+        apiData = response;
+      } else if (response && response.success && response.data) {
+        apiData = response.data;
+      }
+
+      if (apiData && Array.isArray(apiData) && apiData.length > 0) {
+        // 处理API数据
+        apiData.forEach((item) => {
+          stockList.push({
+            name: item.name || item.stockName,
+            code: item.code || item.stockCode,
+            recommendIndex: item.recommendScore || item.score || 4.0,
+            recommendLevel: item.recommendLevel || item.level || "推荐",
+            price: item.latestPrice || item.price || item.currentPrice,
+            change: item.change || 0,
+            changePercent: item.rise
+              ? item.rise + "%"
+              : item.changePercent || "0%",
+            targetPrice: item.targetPrice || item.target,
+            expectedReturn:
+              item.expectedReturn ||
+              item.expectedBenefits ||
+              item.expected_return,
+            riskLevel: item.riskLevel || item.risk || "中等",
+            industry: item.industry || item.sector || "未分类",
+            reason: item.recommendReason || item.reason || "基于AI算法推荐",
+          });
+        });
+        stockList.sort((a, b) => b.recommendIndex - a.recommendIndex);
+
+        // 更新现有的荐股消息
+        const messageIndex = chatHistory.value.findIndex(
+          (msg) => msg.messageId === message.messageId,
+        );
+        if (messageIndex !== -1) {
+          // 获取mock内容作为文本描述
+          const mockRes = await mockApi.sendMessage(requestMessage);
+          
+          chatHistory.value[messageIndex] = {
+            ...chatHistory.value[messageIndex],
+            content: mockRes.data.content,
+            hasStockInfo: true,
+            isRecommendation: true,
+            stockList: stockList,
+            isPersistent: true,
+            messageId: message.messageId, // 保持原有ID
+            timestamp: new Date().toISOString(), // 更新时间戳为刷新时间
+          };
+        }
+
+        ElMessage.success("荐股列表已刷新");
+      } else {
+        throw new Error("API返回数据格式不正确或无数据");
+      }
+    } catch (error) {
+      console.error("刷新荐股列表失败:", error);
+      
+      // 更新消息为错误状态
       const messageIndex = chatHistory.value.findIndex(
         (msg) => msg.messageId === message.messageId,
       );
       if (messageIndex !== -1) {
+        let errorMessage = "抱歉，刷新荐股列表失败。";
+        
+        if (error.message && error.message.includes("500")) {
+          errorMessage = "服务器繁忙，请稍后再试。";
+        } else if (error.message && error.message.includes("网络")) {
+          errorMessage = "网络连接异常，请检查网络后重试。";
+        } else if (error.message && error.message.includes("timeout")) {
+          errorMessage = "请求超时，请稍后再试。";
+        }
+        
         chatHistory.value[messageIndex] = {
-          ...res.data,
-          isPersistent: true,
+          ...chatHistory.value[messageIndex],
+          content: `❌ ${errorMessage}\n\n您可以稍后重试，或者：\n• 查看市场指数了解大盘走势\n• 浏览推荐股票获取投资灵感\n• 设置投资偏好获得更精准推荐`,
+          hasStockInfo: false,
+          isRecommendation: false,
+          stockList: [],
+          isPersistent: false,
           messageId: message.messageId, // 保持原有ID
-          timestamp: message.timestamp, // 保持原始荐股生成时间
+          timestamp: new Date().toISOString(),
         };
       }
-
-      ElMessage.success("荐股列表已刷新");
-    } catch (error) {
+      
       ElMessage.error("刷新失败，请稍后重试");
     }
   };

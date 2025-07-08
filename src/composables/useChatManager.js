@@ -3,6 +3,7 @@ import { ElMessage } from "element-plus";
 import { useChatHistoryStore } from "../store/chatHistory";
 import { authFetchEventSource } from "@/utils/request";
 import { api } from "@/api/api";
+import { generateMessageId } from "@/utils/formatters";
 
 export function useChatManager() {
   const chatHistoryStore = useChatHistoryStore();
@@ -56,6 +57,7 @@ export function useChatManager() {
 
     // 添加用户消息到聊天历史
     chatHistory.value.push({
+      id: generateMessageId(),
       role: "user",
       content: message,
       timestamp: Date.now(),
@@ -78,6 +80,7 @@ export function useChatManager() {
 
     // 添加空的AI消息占位符，使用isGenerating标志
     chatHistory.value.push({
+      id: generateMessageId(),
       role: "assistant",
       content: "",
       isGenerating: true,

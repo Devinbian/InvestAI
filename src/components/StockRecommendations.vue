@@ -116,12 +116,30 @@ onMounted(() => {
 });
 
 //获取推荐股票
-const loadRecommendStocks=()=>{
-    getRecommendStocks().then((res)=>{
-        if(res.data.success){
-            recommendations.value=res.data.data;
+const loadRecommendStocks = () => {
+    getRecommendStocks().then((res) => {
+        if (res.data.success) {
+            recommendations.value = res.data.data;
+        } else {
+            // API调用成功但返回失败状态
+            console.warn('获取推荐股票失败:', res.data.message);
+            recommendations.value = [];
+            ElMessage.warning('获取推荐股票失败，请稍后重试');
         }
-    })
+    }).catch((error) => {
+        // API调用失败
+        console.error('获取推荐股票API调用失败:', error);
+        recommendations.value = [];
+        
+        // 根据错误类型提供不同的提示
+        if (error.message && error.message.includes("500")) {
+            ElMessage.error("服务器繁忙，请稍后再试");
+        } else if (error.message && error.message.includes("网络")) {
+            ElMessage.error("网络连接异常，请检查网络后重试");
+        } else {
+            ElMessage.error("获取推荐股票失败，请稍后重试");
+        }
+    });
 }
 
 onUnmounted(() => {

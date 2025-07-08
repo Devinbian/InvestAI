@@ -1,4 +1,5 @@
 import Mock from "mockjs";
+import { generateMessageId } from '@/utils/formatters';
 
 // 模拟股票数据
 const stockList = Mock.mock({
@@ -21,6 +22,7 @@ const stockList = Mock.mock({
 // 模拟对话历史
 const chatHistory = [
   {
+    id: generateMessageId(),
     role: "assistant",
     content:
       "您好！我是您的智能投资助手。我可以帮您分析股票、提供投资建议，以及回答您的投资相关问题。请问有什么我可以帮您的吗？",
@@ -125,6 +127,7 @@ export const mockApi = {
     if (isReviewQuery) {
       // 昨日复盘响应 - 优先级最高
       response = {
+        id: generateMessageId(),
         role: "assistant",
         content: `📊 **昨日市场复盘分析**
 
@@ -282,6 +285,7 @@ export const mockApi = {
       ];
 
       response = {
+        id: generateMessageId(),
         role: "assistant",
         content: `🎯 **智能荐股推荐**
 
@@ -309,6 +313,7 @@ export const mockApi = {
       const stockCode = stockMatch ? stockMatch[2] : "";
 
       response = {
+        id: generateMessageId(),
         role: "assistant",
         content: `🔍 **${stockName}(${stockCode}) 深度分析报告**
 
@@ -353,6 +358,7 @@ export const mockApi = {
       const stockCode = stockMatch ? stockMatch[2] : "";
 
       response = {
+        id: generateMessageId(),
         role: "assistant",
         content: `⚡ **${stockName}(${stockCode}) 量化分析报告**
 
@@ -445,6 +451,7 @@ ${news.summary}`,
         .join("\n\n");
 
       response = {
+        id: generateMessageId(),
         role: "assistant",
         content: `📰 **今日财经资讯**
 
@@ -496,6 +503,7 @@ ${newsContent}
     } else if (isAssetAnalysis) {
       // 我的资产分析响应
       response = {
+        id: generateMessageId(),
         role: "assistant",
         content: `💰 **资产配置分析报告**
 
@@ -549,6 +557,7 @@ ${
       };
 
       response = {
+        id: generateMessageId(),
         role: "assistant",
         content: `我为您找到了${stockInfo.name}(${stockInfo.code})的交易信息：
 
@@ -836,6 +845,7 @@ ${
       }
 
       response = {
+        id: generateMessageId(),
         role: "assistant",
         content: quantContent,
         hasStockInfo: false,
@@ -862,6 +872,7 @@ ${
       };
 
       response = {
+        id: generateMessageId(),
         role: "assistant",
         content: `根据您的查询，我为您分析了${stockInfo.name}(${stockInfo.code})：
 
@@ -890,6 +901,7 @@ ${
     ) {
       // Markdown语法测试响应
       response = {
+        id: generateMessageId(),
         role: "assistant",
         content: `# Markdown语法测试
 
@@ -984,13 +996,14 @@ def analyze_stock(data):
       ];
 
       response = {
+        id: generateMessageId(),
         role: "assistant",
         content: responses[Math.floor(Math.random() * responses.length)],
         hasStockInfo: false,
       };
     }
 
-    chatHistory.push({ role: "user", content: message }, response);
+    chatHistory.push({ id: generateMessageId(), role: "user", content: message }, response);
 
     return Promise.resolve({
       code: 200,

@@ -106,10 +106,10 @@ export function useStockOperations() {
     let message = "智能荐股：根据我的投资偏好推荐优质股票\n";
     let userPreferencesText = "";
     if (userPreferences && userPreferences.riskLevel) {
-      userPreferencesText += `我的投资偏好：
-            - 风险偏好：${getRiskLevelText(userPreferences.riskLevel)} 
-            - 投资经验：${getExperienceText(userPreferences.experience)} 
-            - 关注板块：${getFocusIndustryText(userPreferences.sectors?.categories)}`;
+      userPreferencesText += `\n\n我的投资偏好：
+- 风险偏好：${getRiskLevelText(userPreferences.riskLevel)}
+- 投资经验：${getExperienceText(userPreferences.experience)}
+- 关注板块：${getFocusIndustryText(userPreferences.sectors?.categories)}`;
     } else {
       // 如果没有偏好设置，提示用户先设置偏好
       userPreferencesText =

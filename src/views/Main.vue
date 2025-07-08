@@ -265,7 +265,7 @@
                 </div>
                 <div class="guide-actions">
                     <el-button type="primary" size="small" @click="handleGuideAction">{{ guideActionText
-                    }}</el-button>
+                        }}</el-button>
                     <el-button size="small" @click="dismissGuide">稍后</el-button>
                 </div>
             </div>
@@ -9391,7 +9391,7 @@ body {
     body.wechat-browser .mobile-home-shortcuts-wrapper {
         position: relative !important;
         margin-bottom: 40px !important;
-        /* 与输入框保持80px的固定间距，减少初始间隔 */
+        /* 与输入框保持40px的固定间距，减少初始间隔 */
         z-index: 999 !important;
     }
 

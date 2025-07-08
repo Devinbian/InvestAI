@@ -388,7 +388,7 @@
                                     <div class="account-balance">
                                         <div class="balance-amount points-balance">
                                             <span class="amount">{{ (userStore.smartPointsBalance || 0).toFixed(0)
-                                            }}</span>
+                                                }}</span>
                                             <span class="currency">智点</span>
                                         </div>
                                         <div class="balance-actions">
@@ -856,7 +856,7 @@
                             <div class="summary-row">
                                 <span>充值后余额</span>
                                 <span class="amount">¥{{ ((userStore.balance || 0) + getFinalAmount()).toFixed(2)
-                                }}</span>
+                                    }}</span>
                             </div>
                         </div>
                     </div>
@@ -937,7 +937,7 @@
                             <span>购买后余额：</span>
                             <span class="amount">{{ ((userStore.smartPointsBalance || 0) +
                                 getSmartPointsFinalAmount()).toFixed(0)
-                                }}智点</span>
+                            }}智点</span>
                         </div>
                     </div>
                 </div>
@@ -972,7 +972,7 @@
                             <div class="balance-row">
                                 <span class="balance-label">当前智点</span>
                                 <span class="balance-value">{{ (userStore.smartPointsBalance || 0).toFixed(0)
-                                }}智点</span>
+                                    }}智点</span>
                             </div>
                             <div class="balance-row">
                                 <span class="balance-label">账户余额</span>
@@ -1802,11 +1802,11 @@ const initUserInfo = async () => {
         userInfo.phone = res.data.data.phone || '';
         userInfo.registrationDate = res.data.data?.registerTime.substring(0, 10) || '';
         userInfo.lastLoginTime = res.data.data?.lastLoginTime.substring(0, 10) || '';
-    }else{
+    } else {
         userStore.setBalance(0);
         userStore.setSmartPointsBalance(0);
     }
-}
+};
 
 onMounted(() => {
     initEditForm();

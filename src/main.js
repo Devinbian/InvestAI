@@ -196,17 +196,74 @@ function detectEnvironment() {
       { passive: false },
     );
 
-    // 防止长按菜单 - 但保留输入框的原生操作功能
+    // 防止长按菜单 - 但保留输入框和聊天消息的原生操作功能
     document.addEventListener("contextmenu", function (e) {
-      // 检查是否是输入相关元素
+      // 检查是否是输入相关元素或聊天消息内容
       const isInputElement =
         e.target.matches('input, textarea, [contenteditable="true"]') ||
         e.target.closest(".el-input, .el-textarea");
 
-      // 如果不是输入元素，则阻止右键菜单
-      if (!isInputElement) {
+      const isChatMessage = e.target.closest(
+        ".chat-message-content, .message-text, .markdown-content",
+      );
+
+      // 如果不是输入元素或聊天消息，则阻止右键菜单
+      if (!isInputElement && !isChatMessage) {
         e.preventDefault();
       }
+    });
+
+    // 确保聊天消息文本可以被选择
+    const ensureChatTextSelectable = () => {
+      const chatMessages = document.querySelectorAll(
+        ".chat-message-content, .message-text, .markdown-content",
+      );
+      chatMessages.forEach((element) => {
+        element.style.userSelect = "text";
+        element.style.webkitUserSelect = "text";
+        element.style.mozUserSelect = "text";
+        element.style.msUserSelect = "text";
+        element.style.webkitTouchCallout = "default";
+
+        // 对所有子元素也设置文本选择
+        const children = element.querySelectorAll("*");
+        children.forEach((child) => {
+          child.style.userSelect = "text";
+          child.style.webkitUserSelect = "text";
+          child.style.mozUserSelect = "text";
+          child.style.msUserSelect = "text";
+          child.style.webkitTouchCallout = "default";
+        });
+      });
+    };
+
+    // 页面加载完成后确保文本可选择
+    setTimeout(ensureChatTextSelectable, 1000);
+
+    // 监听DOM变化，确保新添加的聊天消息也可以选择文本
+    const observer = new MutationObserver((mutations) => {
+      mutations.forEach((mutation) => {
+        if (mutation.type === "childList") {
+          mutation.addedNodes.forEach((node) => {
+            if (node.nodeType === 1) {
+              // 元素节点
+              const chatElements =
+                node.querySelectorAll &&
+                node.querySelectorAll(
+                  ".chat-message-content, .message-text, .markdown-content",
+                );
+              if (chatElements && chatElements.length > 0) {
+                setTimeout(ensureChatTextSelectable, 100);
+              }
+            }
+          });
+        }
+      });
+    });
+
+    observer.observe(document.body, {
+      childList: true,
+      subtree: true,
     });
 
     // 强制隐藏微信底部工具栏

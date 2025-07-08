@@ -53,12 +53,6 @@
 
                 <!-- 推荐指数（星级评分）- 与推荐标签融合显示 -->
                 <div v-if="showRecommendIndex && stock.recommendIndex" class="recommend-rating-integrated">
-                    <!-- 推荐等级标签（移到这里与星级同行） -->
-                    <div v-if="stock.recommendLevel" class="recommend-badge-inline"
-                        :class="getRecommendLevelClass(stock.recommendLevel)">
-                        {{ stock.recommendLevel }}
-                    </div>
-
                     <div class="rating-content-inline">
                         <div class="rating-stars">
                             <span v-for="i in 5" :key="i" :class="['star', i <= Math.floor(getRecommendIndexNumber(stock.recommendIndex)) ? 'filled' :
@@ -74,6 +68,11 @@
                                     stroke-linecap="round" stroke-linejoin="round" fill="none" />
                                 <circle cx="12" cy="17" r="1" fill="currentColor" />
                             </svg>
+                        </div>
+                        <!-- 推荐等级标签（移到"?"按钮后面） -->
+                        <div v-if="stock.recommendLevel" class="recommend-badge-inline"
+                            :class="getRecommendLevelClass(stock.recommendLevel)">
+                            {{ stock.recommendLevel }}
                         </div>
                     </div>
                 </div>

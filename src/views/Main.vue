@@ -43,6 +43,32 @@
 
                 <!-- 主页模式输入区域 - 移动端贴底显示 -->
                 <div class="home-input-area" v-if="isMobileView">
+                    <!-- 移动端主页快捷操作按钮 - 作为输入区域的一部分 -->
+                    <div class="mobile-home-shortcuts-wrapper" v-if="!isChatMode">
+                        <div class="mobile-home-shortcuts">
+                            <div class="shortcuts-container">
+                                <div class="shortcuts-scroll-wrapper">
+                                    <div class="shortcuts-list">
+                                        <!-- 快捷操作按钮 -->
+                                        <button v-for="shortcut in activeHomeShortcuts" :key="shortcut.id"
+                                            class="shortcut-btn" @click="handleShortcutClick(shortcut)"
+                                            :title="shortcut.description">
+                                            <span class="shortcut-icon">{{ shortcut.icon }}</span>
+                                            <span class="shortcut-text">{{ shortcut.title }}</span>
+                                        </button>
+
+                                        <!-- 自定义按钮 -->
+                                        <button class="shortcut-btn customize-btn" @click="openCustomizeDialog"
+                                            title="自定义快捷操作">
+                                            <span class="shortcut-icon">⚙️</span>
+                                            <span class="shortcut-text">自定义</span>
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
                     <AIInputCard v-model="inputMessage" :show-history-button="userStore.isLoggedIn && !showChatHistory"
                         :is-chat-mode="false" :is-mobile-view="isMobileView" :is-recording="isRecording"
                         :recording-duration="recordingDuration" :is-generating="isGenerating"
@@ -80,38 +106,23 @@
             <div class="chat-history-area chat-area" v-if="isChatMode && chatHistory.length" ref="chatHistoryRef">
                 <!-- 当消息数量较少时使用普通渲染 -->
                 <template v-if="chatHistory.length <= 50">
-                    <ChatMessage 
-                        v-for="(message, idx) in chatHistory" 
-                        :key="idx" 
-                        :message="message"
-                        :is-generating="isGenerating"
-                        :is-last-message="idx === chatHistory.length - 1"
-                        :is-mobile-view="isMobileView"
-                        :watchlist-action-buttons="watchlistActionButtons"
+                    <ChatMessage v-for="(message, idx) in chatHistory" :key="idx" :message="message"
+                        :is-generating="isGenerating" :is-last-message="idx === chatHistory.length - 1"
+                        :is-mobile-view="isMobileView" :watchlist-action-buttons="watchlistActionButtons"
                         :portfolio-action-buttons="portfolioActionButtons"
                         :active-reminders-count="activeReminders.filter(r => r.isActive).length"
-                        :is-in-watchlist="isInWatchlist"
-                        :format-currency="formatCurrency"
-                        :format-recommendation-time="formatRecommendationTime"
-                        :is-stream-paused="isStreamPaused"
-                        :session-title="currentChatTitle"
-                        :chat-history="chatHistory"
-                        :message-index="idx"
-                        @interaction-action="handleInteractionAction"
-                        @show-buy-dialog="showBuyDialog"
-                        @add-to-watchlist="addToWatchlist"
-                        @remove-from-watchlist="removeFromWatchlist"
+                        :is-in-watchlist="isInWatchlist" :format-currency="formatCurrency"
+                        :format-recommendation-time="formatRecommendationTime" :is-stream-paused="isStreamPaused"
+                        :session-title="currentChatTitle" :chat-history="chatHistory" :message-index="idx"
+                        @interaction-action="handleInteractionAction" @show-buy-dialog="showBuyDialog"
+                        @add-to-watchlist="addToWatchlist" @remove-from-watchlist="removeFromWatchlist"
                         @show-quant-analysis-dialog="showQuantAnalysisDialog"
-                        @set-quant-analysis-reminder="setQuantAnalysisReminder"
-                                                    @stock-click="handleStockClick"
+                        @set-quant-analysis-reminder="setQuantAnalysisReminder" @stock-click="handleStockClick"
                         @watchlist-action-click="handleWatchlistActionClick"
                         @portfolio-action-click="handlePortfolioActionClick"
-                        @stock-action-click="handleStockActionClick"
-                        @refresh-recommendation="refreshRecommendation"
-                        @copy-message="handleCopyMessage"
-                        @regenerate-message="handleRegenerateMessage"
-                        @share-message="handleShareMessage"
-                    />
+                        @stock-action-click="handleStockActionClick" @refresh-recommendation="refreshRecommendation"
+                        @copy-message="handleCopyMessage" @regenerate-message="handleRegenerateMessage"
+                        @share-message="handleShareMessage" />
 
 
 
@@ -137,33 +148,59 @@
                 <!-- 新聊天按钮和快捷操作 -->
                 <div class="new-chat-section" v-if="chatHistory.length > 0">
                     <div class="chat-actions">
-                        <el-button class="new-chat-btn" @click="createNewChat">
-                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none">
-                                <path d="M12 5v14m-7-7h14" stroke="currentColor" stroke-width="2" stroke-linecap="round"
-                                    stroke-linejoin="round" />
-                            </svg>
-                            新建聊天
-                        </el-button>
+                        <!-- 移动端：快捷操作按钮和新建聊天按钮在同一行 -->
+                        <template v-if="isMobileView">
+                            <MobileChatShortcuts :show-shortcuts="true" :is-mobile-view="isMobileView"
+                                :is-logged-in="userStore.isLoggedIn" @shortcut-click="handleShortcutClick"
+                                @customize-dialog-open="openCustomizeDialog" ref="mobileChatShortcutsRef" />
 
-                        <!-- 快速跳转到荐股列表 -->
-                        <el-button v-if="hasRecommendationInHistory" class="goto-recommendation-btn"
-                            @click="scrollToRecommendation">
-                            🎯
-                            查看荐股
-                        </el-button>
+                            <div class="new-chat-buttons">
+                                <el-button class="new-chat-btn" @click="createNewChat">
+                                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none">
+                                        <path d="M12 5v14m-7-7h14" stroke="currentColor" stroke-width="2"
+                                            stroke-linecap="round" stroke-linejoin="round" />
+                                    </svg>
+                                    新建聊天
+                                </el-button>
+
+                                <!-- 快速跳转到荐股列表 -->
+                                <el-button v-if="hasRecommendationInHistory" class="goto-recommendation-btn"
+                                    @click="scrollToRecommendation">
+                                    🎯
+                                    查看荐股
+                                </el-button>
+                            </div>
+                        </template>
+
+                        <!-- PC端：保持原有布局 -->
+                        <template v-else>
+                            <el-button class="new-chat-btn" @click="createNewChat">
+                                <svg width="16" height="16" viewBox="0 0 24 24" fill="none">
+                                    <path d="M12 5v14m-7-7h14" stroke="currentColor" stroke-width="2"
+                                        stroke-linecap="round" stroke-linejoin="round" />
+                                </svg>
+                                新建聊天
+                            </el-button>
+
+                            <!-- 快速跳转到荐股列表 -->
+                            <el-button v-if="hasRecommendationInHistory" class="goto-recommendation-btn"
+                                @click="scrollToRecommendation">
+                                🎯
+                                查看荐股
+                            </el-button>
+                        </template>
                     </div>
                 </div>
 
                 <AIInputCard v-model="inputMessage" :show-history-button="userStore.isLoggedIn && !showChatHistory"
                     :is-chat-mode="true" :is-mobile-view="isMobileView" :is-recording="isRecording"
-                    :recording-duration="recordingDuration" :is-generating="isGenerating"
-                    :show-chat-shortcuts="false" :is-logged-in="userStore.isLoggedIn"
-                    :show-chat-history="showChatHistory" @send-message="sendMessage"
-                    @toggle-chat-history="toggleChatHistory" @voice-click="onVoiceClick"
+                    :recording-duration="recordingDuration" :is-generating="isGenerating" :show-chat-shortcuts="false"
+                    :is-logged-in="userStore.isLoggedIn" :show-chat-history="showChatHistory"
+                    @send-message="sendMessage" @toggle-chat-history="toggleChatHistory" @voice-click="onVoiceClick"
                     @stop-generation="stopGeneration" />
 
-                <!-- 聊天模式快捷操作栏组件 - 直接显示在输入框下方 -->
-                <ShortcutsBar mode="initial" :show-shortcuts="true" :show-chat-shortcuts="false"
+                <!-- PC端聊天模式快捷操作栏组件 - 直接显示在输入框下方 -->
+                <ShortcutsBar v-if="!isMobileView" mode="initial" :show-shortcuts="true" :show-chat-shortcuts="false"
                     :is-mobile-view="isMobileView" :is-logged-in="userStore.isLoggedIn"
                     @shortcut-click="handleShortcutClick" @customize-dialog-open="openCustomizeDialog"
                     ref="chatShortcutsBarRef" />
@@ -269,6 +306,7 @@ import MobileStockTradingDialog from '../components/MobileStockTradingDialog.vue
 import AITradingDialog from '../components/AITradingDialog.vue';
 import CustomizeShortcutsDialog from '../components/CustomizeShortcutsDialog.vue';
 import MobileShortcutsDialog from '../components/MobileShortcutsDialog.vue';
+import MobileChatShortcuts from '../components/MobileChatShortcuts.vue';
 import MobileUserMenu from '../components/MobileUserMenu.vue';
 import ChatHistory from '../components/ChatHistory.vue';
 import MarkdownRenderer from '../components/MarkdownRenderer.vue';
@@ -360,6 +398,203 @@ const {
     layout,
     menu
 } = mobileAdaptation;
+
+// 键盘状态监听 - 用于微信环境优化
+const isKeyboardVisible = computed(() => layout.isKeyboardVisible.value);
+
+// 添加调试信息
+const debugKeyboardState = () => {
+    console.log('=== 键盘状态调试信息 ===');
+    console.log('当前键盘状态:', isKeyboardVisible.value);
+    console.log('是否微信环境:', isWechatEnv.value);
+    console.log('视口高度:', window.innerHeight);
+    console.log('可视视口高度:', window.visualViewport ? window.visualViewport.height : 'N/A');
+    console.log('body类名:', document.body.className);
+    console.log('========================');
+};
+
+// 监听键盘状态变化，为微信环境添加CSS类
+watch(isKeyboardVisible, (newVal) => {
+    console.log('键盘状态变化:', newVal);
+    debugKeyboardState();
+
+    if (isWechatEnv.value) {
+        const body = document.body;
+        if (newVal) {
+            body.classList.add('keyboard-open');
+            console.log('✅ 微信环境：键盘打开，添加keyboard-open类');
+        } else {
+            body.classList.remove('keyboard-open');
+            console.log('✅ 微信环境：键盘关闭，移除keyboard-open类');
+        }
+
+        // 再次检查类名是否正确应用
+        setTimeout(() => {
+            const hasKeyboardClass = body.classList.contains('keyboard-open');
+            console.log('键盘类名检查:', hasKeyboardClass, '预期:', newVal);
+            if (hasKeyboardClass !== newVal) {
+                console.warn('⚠️ 键盘类名状态不匹配，尝试重新设置');
+                if (newVal) {
+                    body.classList.add('keyboard-open');
+                } else {
+                    body.classList.remove('keyboard-open');
+                }
+            }
+        }, 100);
+    }
+}, { immediate: true });
+
+// 添加手动键盘状态切换（用于调试）
+const toggleKeyboardState = () => {
+    layout.isKeyboardVisible.value = !layout.isKeyboardVisible.value;
+    console.log('手动切换键盘状态:', layout.isKeyboardVisible.value);
+};
+
+// 添加额外的键盘检测机制
+const setupAdditionalKeyboardDetection = () => {
+    if (!isWechatEnv.value) return;
+
+    console.log('🔧 设置额外的键盘检测机制（微信环境）');
+
+    // 手动强制检查键盘状态的函数
+    const forceCheckKeyboardState = () => {
+        let keyboardVisible = false;
+
+        // 检查输入框焦点状态
+        const activeElement = document.activeElement;
+        const isInputFocused = activeElement && (
+            activeElement.tagName === 'INPUT' ||
+            activeElement.tagName === 'TEXTAREA' ||
+            activeElement.contentEditable === 'true'
+        );
+
+        // 检查visualViewport
+        if (window.visualViewport) {
+            const heightDiff = window.innerHeight - window.visualViewport.height;
+            const viewportKeyboardVisible = heightDiff > 150;
+
+            console.log('🔍 强制检查键盘状态:', {
+                inputFocused: isInputFocused,
+                viewportKeyboardVisible,
+                heightDiff,
+                innerHeight: window.innerHeight,
+                visualHeight: window.visualViewport.height
+            });
+
+            // 如果输入框聚焦或视口检测到键盘，则认为键盘显示
+            keyboardVisible = isInputFocused || viewportKeyboardVisible;
+        } else {
+            // 降级：仅基于输入框焦点
+            keyboardVisible = isInputFocused;
+            console.log('🔍 降级检查键盘状态（无visualViewport）:', {
+                inputFocused: isInputFocused,
+                keyboardVisible
+            });
+        }
+
+        // 更新状态
+        if (keyboardVisible !== layout.isKeyboardVisible.value) {
+            layout.isKeyboardVisible.value = keyboardVisible;
+            console.log('🎹 强制更新键盘状态:', keyboardVisible);
+        }
+    };
+
+    // 监听输入框焦点事件（作为补充检测）
+    const handleFocusIn = (event) => {
+        const target = event.target;
+        if (target && (target.tagName === 'INPUT' || target.tagName === 'TEXTAREA' || target.contentEditable === 'true')) {
+            console.log('📱 Main.vue检测到输入框获得焦点:', target.tagName);
+            setTimeout(() => {
+                forceCheckKeyboardState();
+            }, 400); // 稍微延长延迟，确保键盘动画完成
+        }
+    };
+
+    const handleFocusOut = (event) => {
+        const target = event.target;
+        if (target && (target.tagName === 'INPUT' || target.tagName === 'TEXTAREA' || target.contentEditable === 'true')) {
+            console.log('📱 Main.vue检测到输入框失去焦点:', target.tagName);
+            setTimeout(() => {
+                forceCheckKeyboardState();
+            }, 400);
+        }
+    };
+
+    document.addEventListener('focusin', handleFocusIn);
+    document.addEventListener('focusout', handleFocusOut);
+
+    // 监听visualViewport变化（如果支持）
+    if (window.visualViewport) {
+        const handleVisualViewportChange = () => {
+            console.log('📱 Main.vue监听到visualViewport变化');
+            setTimeout(() => {
+                forceCheckKeyboardState();
+            }, 100);
+        };
+
+        window.visualViewport.addEventListener('resize', handleVisualViewportChange);
+
+        // 清理函数
+        onUnmounted(() => {
+            document.removeEventListener('focusin', handleFocusIn);
+            document.removeEventListener('focusout', handleFocusOut);
+            window.visualViewport.removeEventListener('resize', handleVisualViewportChange);
+        });
+    } else {
+        // 清理函数
+        onUnmounted(() => {
+            document.removeEventListener('focusin', handleFocusIn);
+            document.removeEventListener('focusout', handleFocusOut);
+        });
+    }
+
+    // 初始检查
+    setTimeout(() => {
+        forceCheckKeyboardState();
+    }, 500);
+};
+
+// 在组件挂载时设置额外的键盘检测
+onMounted(() => {
+    setupAdditionalKeyboardDetection();
+
+    // 定期检查键盘状态（仅在微信环境下，作为最后的保障）
+    if (isWechatEnv.value) {
+        const checkInterval = setInterval(() => {
+            const activeElement = document.activeElement;
+            const isInputFocused = activeElement && (
+                activeElement.tagName === 'INPUT' ||
+                activeElement.tagName === 'TEXTAREA' ||
+                activeElement.contentEditable === 'true'
+            );
+
+            // 获取视口信息
+            let viewportKeyboardVisible = false;
+            if (window.visualViewport) {
+                const heightDiff = window.innerHeight - window.visualViewport.height;
+                viewportKeyboardVisible = heightDiff > 150;
+            }
+
+            // 综合判断键盘状态
+            const shouldKeyboardVisible = isInputFocused || viewportKeyboardVisible;
+
+            if (shouldKeyboardVisible !== layout.isKeyboardVisible.value) {
+                console.log('🔄 定期检查发现键盘状态不匹配，更新状态:', {
+                    current: layout.isKeyboardVisible.value,
+                    expected: shouldKeyboardVisible,
+                    inputFocused: isInputFocused,
+                    viewportKeyboard: viewportKeyboardVisible
+                });
+                layout.isKeyboardVisible.value = shouldKeyboardVisible;
+            }
+        }, 2000); // 增加间隔到2秒，减少性能影响
+
+        // 清理定时器
+        onUnmounted(() => {
+            clearInterval(checkInterval);
+        });
+    }
+});
 
 // 使用语音输入组合式函数
 const voiceInput = useVoiceInput();
@@ -503,11 +738,12 @@ const activeTab = ref('portfolio'); // 默认显示持仓明细
 
 // 简化的ShortcutsBar组件操作函数
 const notifyShortcutsBarComponents = (method) => {
-    [shortcutsBarRef.value, chatShortcutsBarRef.value].forEach((ref, index) => {
+    [shortcutsBarRef.value, chatShortcutsBarRef.value, mobileChatShortcutsRef.value].forEach((ref, index) => {
         if (ref && typeof ref[method] === 'function') {
             try {
                 ref[method]();
-                console.log(`✅ 已通知${index === 0 ? '初始模式' : '聊天模式'}ShortcutsBar组件执行${method}`);
+                const componentName = index === 0 ? '初始模式' : index === 1 ? '聊天模式' : '移动端聊天';
+                console.log(`✅ 已通知${componentName}ShortcutsBar组件执行${method}`);
             } catch (error) {
                 console.warn(`⚠️ 通知ShortcutsBar执行${method}时出错:`, error);
             }
@@ -515,10 +751,114 @@ const notifyShortcutsBarComponents = (method) => {
     });
 };
 
+// 主页快捷操作数据
+const activeHomeShortcuts = ref([]);
+
+// 默认主页快捷操作配置
+const defaultHomeShortcuts = ref([
+    {
+        id: 'smart_review',
+        icon: '📊',
+        title: '智能复盘',
+        shortTitle: '复盘',
+        description: '智能分析市场表现和投资策略',
+        action: 'smart_review',
+        isDefault: true,
+        isActive: true
+    },
+    {
+        id: 'watchlist',
+        icon: '⭐',
+        title: '自选股',
+        shortTitle: '自选',
+        description: '查看和管理我的自选股票',
+        action: 'watchlist',
+        isDefault: true,
+        isActive: true
+    },
+    {
+        id: 'smart_recommendation',
+        icon: '📈',
+        title: '智能荐股',
+        shortTitle: '荐股',
+        description: '基于AI算法推荐优质股票',
+        action: 'smart_recommendation',
+        isDefault: true,
+        isActive: true
+    },
+    {
+        id: 'news_update',
+        icon: '📄',
+        title: '资讯推送',
+        shortTitle: '资讯',
+        description: '获取最新市场资讯和重要公告',
+        action: 'news_update',
+        isDefault: true,
+        isActive: true
+    },
+    {
+        id: 'asset_analysis',
+        icon: '💼',
+        title: '我的资产',
+        shortTitle: '资产',
+        description: '查看投资组合和账户分析',
+        action: 'asset_analysis',
+        isDefault: true,
+        isActive: true
+    }
+]);
+
+// 快捷操作数据管理类
+class HomeShortcutsManager {
+    static getDefaultStates() {
+        const saved = localStorage.getItem('defaultShortcutStates');
+        return saved ? JSON.parse(saved) : {};
+    }
+
+    static getCustomShortcuts() {
+        const saved = localStorage.getItem('customShortcuts');
+        return saved ? JSON.parse(saved) : [];
+    }
+
+    static loadActiveShortcuts(defaultShortcuts) {
+        const result = [];
+        const states = this.getDefaultStates();
+
+        // 添加激活的默认快捷操作
+        const activeDefaults = defaultShortcuts.filter(s => {
+            if (states.hasOwnProperty(s.id)) {
+                s.isActive = states[s.id];
+            }
+            return s.isActive;
+        });
+        result.push(...activeDefaults);
+
+        // 添加激活的自定义快捷操作
+        const customShortcuts = this.getCustomShortcuts();
+        const activeCustoms = customShortcuts
+            .filter(s => s.isActive)
+            .map(shortcut => ({ ...shortcut, action: 'custom' }));
+        result.push(...activeCustoms);
+
+        return result;
+    }
+}
+
+// 初始化主页快捷操作
+const initializeHomeShortcuts = () => {
+    console.log('🔄 初始化主页快捷操作');
+    console.log('🔍 默认快捷操作配置:', defaultHomeShortcuts.value);
+    activeHomeShortcuts.value = HomeShortcutsManager.loadActiveShortcuts(defaultHomeShortcuts.value);
+    console.log('✅ 主页快捷操作初始化完成，总数:', activeHomeShortcuts.value.length);
+    console.log('🔍 激活的快捷操作:', activeHomeShortcuts.value);
+};
+
 // 初始化快捷操作
 const initializeShortcuts = () => {
     console.log('🔄 初始化快捷操作');
     notifyShortcutsBarComponents('initializeShortcuts');
+    // 同时初始化主页快捷操作
+    initializeHomeShortcuts();
     console.log('✅ 快捷操作初始化完成');
 };
 
@@ -2094,13 +2434,17 @@ const openCustomizeDialog = () => {
 // ShortcutsBar组件引用
 const shortcutsBarRef = ref(null);
 const chatShortcutsBarRef = ref(null);
+const mobileChatShortcutsRef = ref(null);
 
 // 处理快捷操作更新事件
 const handleShortcutsUpdated = () => {
     console.log('🔄 快捷操作更新事件触发');
     notifyShortcutsBarComponents('handleShortcutsUpdated');
-
-
+    // 同时更新主页快捷操作
+    nextTick(() => {
+        initializeHomeShortcuts();
+        console.log('✅ 主页快捷操作更新完成');
+    });
 };
 
 
@@ -2197,8 +2541,194 @@ onMounted(() => {
 
     /* 主页模式下为内容区域添加底部间距，避免被输入框遮挡 */
     .modern-content:not(.chatting) {
-        padding-bottom: 180px !important;
-        /* 为贴底的输入框留出空间 */
+        padding-bottom: 220px !important;
+        /* 为贴底的输入框和快捷操作按钮留出更多空间 */
+    }
+
+    /* 移动端主页快捷操作按钮外层容器 */
+    .mobile-home-shortcuts-wrapper {
+        position: fixed !important;
+        left: 0 !important;
+        right: 0 !important;
+        bottom: 120px !important;
+        /* 基础位置：位于输入框上方 */
+        z-index: 999 !important;
+        /* 确保在输入框之上 */
+        pointer-events: none;
+        /* 允许点击穿透到下层元素 */
+        transform: translateY(0) !important;
+        /* 默认无偏移 */
+        transition: transform 0.3s ease !important;
+        /* 平滑过渡 */
+    }
+
+    /* 移动端主页快捷操作按钮样式 */
+    .mobile-home-shortcuts {
+        width: 100%;
+        // background: rgba(255, 255, 255, 0.95);
+        /* 添加半透明背景，确保可见性 */
+        // backdrop-filter: blur(10px);
+        /* 添加模糊效果 */
+        -webkit-backdrop-filter: blur(10px);
+        /* Safari兼容 */
+        padding: 12px 12px 8px 12px;
+        /* 增加顶部内边距 */
+        box-sizing: border-box;
+        // border-top: 1px solid rgba(0, 0, 0, 0.05);
+        /* 添加顶部边框 */
+        // box-shadow: 0 -2px 8px rgba(0, 0, 0, 0.05);
+        /* 添加阴影效果 */
+        /* 调试用：确保可见性 */
+        min-height: 50px;
+        /* 确保有足够高度 */
+        display: block !important;
+        /* 确保显示 */
+        pointer-events: auto;
+        /* 恢复按钮的点击事件 */
+    }
+
+    .mobile-home-shortcuts .shortcuts-container {
+        position: relative;
+        padding: 0;
+    }
+
+    .mobile-home-shortcuts .shortcuts-scroll-wrapper {
+        overflow: hidden;
+        position: relative;
+    }
+
+    .mobile-home-shortcuts .shortcuts-list {
+        display: flex;
+        gap: 8px;
+        padding: 0;
+        overflow-x: auto;
+        scroll-behavior: smooth;
+        -webkit-overflow-scrolling: touch;
+        scrollbar-width: none;
+        -ms-overflow-style: none;
+        flex: 1;
+    }
+
+    .mobile-home-shortcuts .shortcuts-list::-webkit-scrollbar {
+        display: none;
+    }
+
+    /* 移动端主页快捷操作按钮 */
+    .mobile-home-shortcuts .shortcut-btn {
+        border-radius: 12px;
+        background: #f5f7fa;
+        color: #18181b;
+        font-weight: 500;
+        border: 1px solid #e0e0e0;
+        box-shadow: none;
+        padding: 4px 12px;
+        transition: all 0.2s;
+        display: flex;
+        align-items: center;
+        gap: 4px;
+        font-size: 0.8rem;
+        height: 28px;
+        white-space: nowrap;
+        flex-shrink: 0;
+        min-width: auto;
+        flex-direction: row;
+        justify-content: center;
+        text-align: left;
+        cursor: pointer;
+    }
+
+    .mobile-home-shortcuts .shortcut-btn:hover {
+        background: #e6e8eb;
+        border-color: #d0d0d0;
+    }
+
+    .mobile-home-shortcuts .shortcut-btn:active {
+        background: #e6e8eb;
+        border-color: #d0d0d0;
+    }
+
+    .mobile-home-shortcuts .shortcut-icon {
+        font-size: 14px;
+        line-height: 1;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        flex-shrink: 0;
+    }
+
+    .mobile-home-shortcuts .shortcut-text {
+        font-size: 0.8rem;
+        line-height: 1.2;
+        text-align: left;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        flex: 1;
+    }
+
+    /* 自定义按钮样式 */
+    .mobile-home-shortcuts .customize-btn:hover {
+        background: #e6e8eb;
+        border-color: #d0d0d0;
+    }
+
+    .mobile-home-shortcuts .customize-btn:active {
+        background: #e6e8eb;
+        border-color: #d0d0d0;
+    }
+
+    /* 超小屏幕适配 */
+    @media (max-width: 375px) {
+        .mobile-home-shortcuts-wrapper {
+            bottom: 110px !important;
+            /* 超小屏幕调整位置 */
+        }
+
+        .mobile-home-shortcuts .shortcuts-list {
+            gap: 6px;
+        }
+
+        .mobile-home-shortcuts .shortcut-btn {
+            height: 26px;
+            padding: 3px 8px;
+            gap: 3px;
+            font-size: 0.7rem;
+        }
+
+        .mobile-home-shortcuts .shortcut-icon {
+            font-size: 12px;
+        }
+
+        .mobile-home-shortcuts .shortcut-text {
+            font-size: 0.7rem;
+        }
+    }
+
+    /* 大屏手机适配 */
+    @media (min-width: 414px) {
+        .mobile-home-shortcuts-wrapper {
+            bottom: 130px !important;
+            /* 大屏手机调整位置 */
+        }
+
+        .mobile-home-shortcuts .shortcuts-list {
+            gap: 10px;
+        }
+
+        .mobile-home-shortcuts .shortcut-btn {
+            height: 30px;
+            padding: 5px 12px;
+            gap: 5px;
+            font-size: 0.85rem;
+        }
+
+        .mobile-home-shortcuts .shortcut-icon {
+            font-size: 16px;
+        }
+
+        .mobile-home-shortcuts .shortcut-text {
+            font-size: 0.85rem;
+        }
     }
 
     /* 移动端增加welcome-section和AI卡片之间的间距 */
@@ -2262,8 +2792,8 @@ onMounted(() => {
 
     /* 移动端聊天历史区域完整重新定义 */
     .chat-history-area {
-        height: calc(100vh - 76px - 160px) !important;
-        /* 减少高度：76px(导航+间距) + 160px(输入框空间) */
+        height: calc(100vh - 76px - 200px) !important;
+        /* 减少高度：76px(导航+间距) + 200px(输入框空间+快捷操作栏) */
         padding: 0 12px 40px 12px !important;
         /* 顶部无padding，左右12px间距确保消息不贴边，底部40px避免遮挡 */
         margin: 0 !important;
@@ -2817,15 +3347,84 @@ input,
 textarea,
 [contenteditable],
 .chat-message .message-text,
+.chat-message .message-text *,
 .chat-message .markdown-content,
 .chat-message .markdown-content *,
+.chat-message .chat-message-content,
+.chat-message .chat-message-content *,
 .chat-title,
-.chat-history-container .chat-info .chat-title {
+.chat-history-container .chat-info .chat-title,
+.markdown-content,
+.markdown-content *,
+.message-text,
+.message-text * {
     -webkit-user-select: text !important;
     -khtml-user-select: text !important;
     -moz-user-select: text !important;
     -ms-user-select: text !important;
     user-select: text !important;
+    -webkit-touch-callout: text !important;
+}
+
+/* 特别针对聊天消息内容的文本选择 */
+.chat-message-content,
+.chat-message-content *,
+.chat-message-content .message-text,
+.chat-message-content .message-text *,
+.chat-message-content .markdown-content,
+.chat-message-content .markdown-content * {
+    -webkit-user-select: text !important;
+    -khtml-user-select: text !important;
+    -moz-user-select: text !important;
+    -ms-user-select: text !important;
+    user-select: text !important;
+    -webkit-touch-callout: text !important;
+}
+
+/* 更强制的文本选择规则 - 确保覆盖所有可能的阻止规则 */
+.chat-message .chat-message-content,
+.chat-message .chat-message-content *,
+.chat-message .message-text,
+.chat-message .message-text *,
+.chat-message .markdown-content,
+.chat-message .markdown-content *,
+.chat-message .markdown-content p,
+.chat-message .markdown-content p *,
+.chat-message .markdown-content div,
+.chat-message .markdown-content div *,
+.chat-message .markdown-content span,
+.chat-message .markdown-content span *,
+.markdown-content,
+.markdown-content *,
+.markdown-content p,
+.markdown-content p *,
+.markdown-content div,
+.markdown-content div *,
+.markdown-content span,
+.markdown-content span * {
+    -webkit-user-select: text !important;
+    -khtml-user-select: text !important;
+    -moz-user-select: text !important;
+    -ms-user-select: text !important;
+    user-select: text !important;
+    -webkit-touch-callout: text !important;
+    cursor: text !important;
+}
+
+/* 确保文本选择在所有状态下都可用 */
+.chat-message:hover .chat-message-content,
+.chat-message:hover .chat-message-content *,
+.chat-message:active .chat-message-content,
+.chat-message:active .chat-message-content *,
+.chat-message:focus .chat-message-content,
+.chat-message:focus .chat-message-content * {
+    -webkit-user-select: text !important;
+    -khtml-user-select: text !important;
+    -moz-user-select: text !important;
+    -ms-user-select: text !important;
+    user-select: text !important;
+    -webkit-touch-callout: text !important;
+    cursor: text !important;
 }
 
 .main-modern {
@@ -3263,7 +3862,8 @@ body.onboarding-mode {
 
 /* 移动端聊天历史底部占位元素 */
 .mobile-chat-spacer {
-    height: 20px;
+    height: 60px;
+    /* 增加占位高度，确保有足够空间避免被输入区域遮挡 */
     /* 确保有足够空间避免被新建聊天按钮遮挡 */
     width: 100%;
     flex-shrink: 0;
@@ -3380,10 +3980,6 @@ body.onboarding-mode {
 /* 用户消息中的markdown段落间距优化 */
 .chat-message.user .chat-message-content .markdown-content :deep(p) {
     margin: 2px 0 !important;
-}
-
-.chat-message.user .chat-message-content .markdown-content :deep(p:first-child) {
-    margin-top: 0 !important;
 }
 
 .chat-message.user .chat-message-content .markdown-content :deep(p:last-child) {
@@ -4798,6 +5394,17 @@ body.onboarding-mode {
     justify-content: center !important;
     align-items: center !important;
     /* 确保内容垂直居中 */
+    overflow-x: auto;
+    /* 隐藏水平滚动条但保持滚动功能 */
+    scrollbar-width: none;
+    /* Firefox */
+    -ms-overflow-style: none;
+    /* IE and Edge */
+}
+
+.new-chat-section::-webkit-scrollbar {
+    display: none;
+    /* Chrome, Safari, Opera */
 }
 
 .chat-actions {
@@ -4810,6 +5417,17 @@ body.onboarding-mode {
     justify-content: center !important;
     width: 100% !important;
     /* 确保容器宽度充足 */
+    overflow-x: auto;
+    /* 隐藏水平滚动条但保持滚动功能 */
+    scrollbar-width: none;
+    /* Firefox */
+    -ms-overflow-style: none;
+    /* IE and Edge */
+}
+
+.chat-actions::-webkit-scrollbar {
+    display: none;
+    /* Chrome, Safari, Opera */
 }
 
 .new-chat-btn {
@@ -4835,8 +5453,12 @@ body.onboarding-mode {
     /* 防止文字换行 */
     flex-shrink: 0 !important;
     /* 防止按钮被压缩 */
-    min-width: auto !important;
-    /* 允许按钮根据内容自适应宽度 */
+    min-width: 80px !important;
+    /* 确保按钮有最小宽度 */
+    visibility: visible !important;
+    /* 确保按钮可见 */
+    opacity: 1 !important;
+    /* 确保按钮不透明 */
 }
 
 .new-chat-btn:hover {
@@ -5003,7 +5625,8 @@ body.onboarding-mode {
         flex: 1;
         display: flex;
         flex-direction: column;
-        padding-bottom: 80px;
+        padding-bottom: 100px;
+        /* 增加底部间距，为输入区域留出更多空间 */
         padding-top: 40px;
         /* 增加顶部间距 */
         /* 为底部聊天框留出空间 */
@@ -5019,7 +5642,9 @@ body.onboarding-mode {
         /* 移除重复的安全区域间距，让AIInputCard组件自己处理 */
         z-index: 1000 !important;
         background: transparent !important;
+        /* 恢复透明背景 */
         padding: 0 !important;
+        /* 移除顶部内边距，让快捷操作按钮能够正确显示 */
         margin: 0 !important;
         border: none !important;
         box-sizing: border-box !important;
@@ -5038,6 +5663,47 @@ body.onboarding-mode {
         height: auto !important;
         min-height: auto !important;
         max-height: none !important;
+    }
+
+    /* 移动端聊天快捷操作栏样式 */
+    .mobile-chat-shortcuts {
+        background: transparent !important;
+        /* 在同一行显示时的样式 */
+        flex: 1 !important;
+        margin-right: 12px !important;
+        min-width: 0 !important;
+        /* 允许收缩 */
+        overflow: hidden !important;
+        /* 防止内容溢出 */
+    }
+
+    /* 移动端新建聊天按钮容器 */
+    .new-chat-buttons {
+        display: flex !important;
+        gap: 8px !important;
+        flex-shrink: 0 !important;
+        align-items: center !important;
+        min-width: 0 !important;
+        /* 确保按钮可见 */
+    }
+
+    /* 移动端聊天操作区域布局 */
+    .chat-actions {
+        display: flex !important;
+        align-items: center !important;
+        gap: 0 !important;
+        width: 100% !important;
+        overflow-x: auto !important;
+        /* 隐藏水平滚动条但保持滚动功能 */
+        scrollbar-width: none !important;
+        /* Firefox */
+        -ms-overflow-style: none !important;
+        /* IE and Edge */
+    }
+
+    .chat-actions::-webkit-scrollbar {
+        display: none !important;
+        /* Chrome, Safari, Opera */
     }
 
     /* iOS Safari 特殊处理 */
@@ -5088,11 +5754,12 @@ body.onboarding-mode {
 
     /* 超小屏幕聊天历史区域高度优化 */
     .chat-history-area {
-        height: calc(100vh - 76px - 140px) !important;
-        /* 超小屏幕减少高度，顶部76px包含导航和间距 */
-        padding: 0 0 28px 12px !important;
-        /* 移除顶部padding，左侧12px间距，增加底部padding确保间隔 */
-        margin: 0 !important;
+        height: calc(100vh - 76px - 200px) !important;
+        /* 超小屏幕减少高度，顶部76px包含导航和间距，底部200px包含快捷操作栏和输入框以及间隔 */
+        padding: 0 0 16px 12px !important;
+        /* 移除顶部padding，左侧12px间距，减少底部padding */
+        margin: 0 0 20px 0 !important;
+        /* 增加底部间隔 */
         width: 100% !important;
         max-width: none !important;
     }
@@ -5105,7 +5772,8 @@ body.onboarding-mode {
     }
 
     .chat-area {
-        padding-bottom: 70px;
+        padding-bottom: 90px;
+        /* 增加底部间距，确保与输入区域有足够间隔 */
         /* 调整底部间距 */
     }
 
@@ -5119,8 +5787,9 @@ body.onboarding-mode {
 
 .new-chat-btn,
 .goto-recommendation-btn {
-    width: 100%;
-    max-width: 100px;
+    min-width: 80px;
+    max-width: 120px;
+    flex-shrink: 0;
 }
 
 .dialog-footer {
@@ -8695,7 +9364,7 @@ body {
         margin-bottom: 12px;
     }
 
-    /* 微信环境下输入框强制贴底全宽 */
+    /* 微信环境下输入框使用固定定位 */
     body.wechat-browser .input-area,
     body.wechat-browser .home-input-area {
         position: fixed !important;
@@ -8708,6 +9377,34 @@ body {
         padding: 0 !important;
         z-index: 1000 !important;
         box-sizing: border-box !important;
+    }
+
+    /* 微信环境下键盘弹起时整个输入区域容器向上移动 */
+    body.wechat-browser.keyboard-open .input-area,
+    body.wechat-browser.keyboard-open .home-input-area {
+        bottom: 0 !important;
+        /* 键盘弹起时，整个容器向上移动，减少与键盘的间距 */
+        transition: bottom 0.3s ease !important;
+    }
+
+    /* 微信环境下主页快捷操作按钮在容器内部使用相对定位 */
+    body.wechat-browser .mobile-home-shortcuts-wrapper {
+        position: relative !important;
+        margin-bottom: 40px !important;
+        /* 与输入框保持40px的固定间距，减少初始间隔 */
+        z-index: 999 !important;
+    }
+
+    body.wechat-browser .mobile-home-shortcuts {
+        padding: 8px;
+        /* 微信环境下减少左右内边距 */
+
+    }
+
+    /* 微信环境下键盘弹起时整个输入区域容器向上移动 */
+    body.wechat-browser.keyboard-open .mobile-home-shortcuts-wrapper {
+        position: relative !important;
+        margin-bottom: 0 !important;
     }
 }
 
@@ -8805,9 +9502,10 @@ body {
 
     /* 7. 聊天历史区域 */
     .chat-history-area {
-        height: calc(var(--vh, 1vh) * 100 - 76px - 160px);
-        padding: 16px 8px 30px 8px;
-        margin: 0;
+        height: calc(var(--vh, 1vh) * 100 - 76px - 180px);
+        padding: 16px 8px 16px 8px;
+        margin: 0 0 20px 0;
+        /* 增加底部间隔 */
         width: 100%;
         box-sizing: border-box;
         overflow-y: auto;
@@ -8828,7 +9526,8 @@ body {
     }
 
     .chat-message:last-child {
-        margin-bottom: 20px;
+        margin-bottom: 30px;
+        /* 增加最后一条消息的底部间距 */
     }
 
     /* 9. 快捷按钮样式 */

@@ -20,8 +20,8 @@
         <div class="recommendations-list">
             <!-- PC端使用StockList -->
             <StockList v-if="!isMobileView" :stocks="formattedRecommendations" :actions="recommendationActions"
-                :show-recommend-index="true" :show-basic-details="true" :show-reason="true" :clickable="false"
-                :is-mobile="isMobileView" @action-click="handleActionClick" />
+                :show-recommend-index="true" :show-recommend-tooltip="true" :show-basic-details="true" 
+                :show-reason="true" :clickable="false" :is-mobile="isMobileView" @action-click="handleActionClick" />
 
             <!-- 移动端使用MobileStockList -->
             <MobileStockList v-else :stocks="formattedRecommendations" :actions="recommendationActions"
@@ -80,14 +80,16 @@ const formattedRecommendations = computed(() => {
         name: stock.name,
         price: stock.latestPrice,
         change: stock.change,
-        changePercent: stock.rise+"%",
-        recommendIndex: stock.recommendIndex,
-        recommendLevel: stock.recommendLevel,
+        changePercent: stock.rise ? stock.rise + "%" : stock.changePercent,
+        // 修复推荐指数字段映射
+        recommendIndex: stock.recommendIndex || stock.recommendScore || stock.score || 4.0,
+        recommendLevel: stock.recommendLevel || stock.level || "推荐",
         targetPrice: stock.targetPrice,
-        expectedReturn: stock.expectedBenefits,
+        // 修复预期收益字段映射
+        expectedReturn: stock.expectedReturn || stock.expectedBenefits || stock.expected_return,
         riskLevel: stock.riskLevel,
         industry: stock.industry,
-        reason: stock.recommendReason
+        reason: stock.recommendReason || stock.reason
     }));
 });
 

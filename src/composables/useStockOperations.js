@@ -64,7 +64,7 @@ export function useStockOperations() {
   const scrollToRecommendation = () => {
     nextTick(() => {
       const recommendationElements = document.querySelectorAll(
-        ".persistent-stock-list",
+        ".stock-list",
       );
       if (recommendationElements.length > 0) {
         // 滚动到最后一个荐股列表
@@ -677,16 +677,11 @@ export function useStockOperations() {
           ...res.data,
           isPersistent: true,
           messageId: message.messageId, // 保持原有ID
-          timestamp: new Date().toISOString(), // 更新时间戳
+          timestamp: message.timestamp, // 保持原始荐股生成时间
         };
       }
 
       ElMessage.success("荐股列表已刷新");
-
-      // 滚动到更新的荐股列表
-      nextTick(() => {
-        scrollToRecommendation();
-      });
     } catch (error) {
       ElMessage.error("刷新失败，请稍后重试");
     }

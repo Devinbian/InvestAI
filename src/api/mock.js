@@ -297,7 +297,7 @@ export const mockApi = {
 • 定期关注公司基本面变化和行业发展趋势
 
 **风险提示**
-以上推荐仅供参考，投资有风险，入市需谨慎。建议结合自身风险承受能力做出投资决策。`,
+以下推荐仅供参考，投资有风险，入市需谨慎。建议结合自身风险承受能力做出投资决策。`,
         hasStockInfo: true,
         stockList: recommendedStocks, // 返回股票列表而不是单只股票
         isRecommendation: true,

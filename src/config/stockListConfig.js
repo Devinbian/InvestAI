@@ -174,7 +174,7 @@ export const SMART_RECOMMENDATION_CONFIG = {
   showBasicDetails: true,
   showReason: true,
   clickable: true,
-  listClass: "persistent-stock-list",
+  listClass: "stock-list",
 
   // 操作按钮配置 - 量化分析和AI委托交易排在前面
   actions: [

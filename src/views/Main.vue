@@ -686,8 +686,19 @@ const handleReminderConfirm = (reminder) => {
 };
 
 // 刷新荐股列表的包装函数
-const refreshRecommendation = (message) => {
-    return stockRefreshRecommendation(message, userStore, chatHistory);
+const refreshRecommendation = async (message) => {
+    // 暂时禁用自动滚动
+    shouldAutoScroll.value = false;
+    
+    try {
+        const result = await stockRefreshRecommendation(message, userStore, chatHistory);
+        return result;
+    } finally {
+        // 无论成功还是失败，都要重新启用自动滚动
+        nextTick(() => {
+            shouldAutoScroll.value = true;
+        });
+    }
 };
 
 const handleReminderCancel = (reminder) => {
@@ -967,9 +978,15 @@ const wrappedHandleDeleteChat = (chatId) => {
     handleDeleteChat(chatId, isMobileView, mobileAdaptation, scrollToTop);
 };
 
+// 控制是否自动滚动的标志
+const shouldAutoScroll = ref(true);
+
 watch(chatHistory, () => {
     nextTick(() => {
-        scrollToBottom();
+        // 只有在应该自动滚动时才滚动
+        if (shouldAutoScroll.value) {
+            scrollToBottom();
+        }
         // 确保滚动事件监听器已绑定
         if (chatHistoryRef.value && !chatHistoryRef.value.hasScrollListener) {
             chatHistoryRef.value.addEventListener('scroll', handleScroll, { passive: true });
@@ -4208,27 +4225,11 @@ body.onboarding-mode {
     gap: 12px;
 }
 
-/* 持久化荐股列表样式 */
-.persistent-stock-list {
-    position: relative;
-    border: 2px solid transparent;
+/* 荐股列表样式 */
+.stock-list {
     border-radius: 12px;
     padding: 8px;
     transition: all 0.3s ease;
-}
-
-.persistent-stock-list::before {
-    content: '📊 智能荐股';
-    position: absolute;
-    top: -12px;
-    left: 12px;
-    background: #fef3c7;
-    color: #92400e;
-    font-size: 0.75rem;
-    font-weight: 600;
-    padding: 2px 8px;
-    border-radius: 8px;
-    border: 1px solid #fbbf24;
 }
 
 /* 荐股工具栏样式 */
@@ -4282,7 +4283,7 @@ body.onboarding-mode {
 
 /* 高亮效果 */
 .highlight-recommendation {
-    border-color: #fbbf24 !important;
+    border: 2px solid #fbbf24 !important;
     background: rgba(254, 243, 199, 0.1) !important;
     box-shadow: 0 0 0 4px rgba(251, 191, 36, 0.1) !important;
 }

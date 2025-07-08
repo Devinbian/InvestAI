@@ -315,8 +315,8 @@
                     </svg>
                     <span class="action-text">重新生成</span>
                 </el-button>
-                <el-button size="small" text @click="handleShareMessage" class="action-btn share-btn"
-                    title="分享" :loading="isGeneratingImage" :disabled="isGeneratingImage">
+                <el-button size="small" text @click="handleShareMessage" class="action-btn share-btn" title="分享"
+                    :loading="isGeneratingImage" :disabled="isGeneratingImage">
                     <svg v-if="!isGeneratingImage" width="14" height="14" viewBox="0 0 24 24" fill="none">
                         <path
                             d="M18 16.08c-.76 0-1.44.3-1.96.77L8.91 12.7c.05-.23.09-.46.09-.7s-.04-.47-.09-.7l7.05-4.11c.54.5 1.25.81 2.04.81 1.66 0 3-1.34 3-3s-1.34-3-3-3-3 1.34-3 3c0 .24.04.47.09.7L8.04 9.81C7.5 9.31 6.79 9 6 9c-1.66 0-3 1.34-3 3s1.34 3 3 3c.79 0 1.5-.31 2.04-.81l7.12 4.16c-.05.21-.08.43-.08.65 0 1.61 1.31 2.92 2.92 2.92s2.92-1.31 2.92-2.92-1.31-2.92-2.92-2.92z"
@@ -326,11 +326,11 @@
                 </el-button>
             </div>
         </div>
-        
+
         <!-- 图片预览弹框 - PC端 -->
-        <el-dialog v-if="!isMobileView" v-model="showImagePreview" title="分享预览" width="600px" 
-                   :show-close="true" @close="closePreview" class="image-preview-dialog"
-                   :modal="true" :append-to-body="true" :close-on-click-modal="true">
+        <el-dialog v-if="!isMobileView" v-model="showImagePreview" title="分享预览" width="600px" :show-close="true"
+            @close="closePreview" class="image-preview-dialog" :modal="true" :append-to-body="true"
+            :close-on-click-modal="true">
             <div class="preview-container">
                 <div class="preview-image-wrapper">
                     <img v-if="previewImageUrl" :src="previewImageUrl" alt="分享预览" class="preview-image" />
@@ -339,9 +339,10 @@
                     <el-button @click="closePreview" size="default">取消</el-button>
                     <el-button type="primary" @click="downloadImage" size="default">
                         <svg width="14" height="14" viewBox="0 0 24 24" fill="none" style="margin-right: 4px;">
-                            <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" stroke="currentColor" stroke-width="2"/>
-                            <polyline points="7,10 12,15 17,10" stroke="currentColor" stroke-width="2"/>
-                            <line x1="12" y1="15" x2="12" y2="3" stroke="currentColor" stroke-width="2"/>
+                            <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" stroke="currentColor"
+                                stroke-width="2" />
+                            <polyline points="7,10 12,15 17,10" stroke="currentColor" stroke-width="2" />
+                            <line x1="12" y1="15" x2="12" y2="3" stroke="currentColor" stroke-width="2" />
                         </svg>
                         下载图片
                     </el-button>
@@ -354,11 +355,9 @@
             <div class="mobile-share-overlay" @click="closePreview">
                 <div class="mobile-share-dialog" @click.stop>
                     <!-- 移动端拖拽指示器 -->
-                    <div class="mobile-drag-indicator" 
-                         @touchstart="handleShareTouchStart" 
-                         @touchmove="handleShareTouchMove" 
-                         @touchend="handleShareTouchEnd"></div>
-                    
+                    <div class="mobile-drag-indicator" @touchstart="handleShareTouchStart"
+                        @touchmove="handleShareTouchMove" @touchend="handleShareTouchEnd"></div>
+
                     <!-- 移动端头部 -->
                     <div class="mobile-share-header">
                         <h3 class="mobile-share-title">分享预览</h3>
@@ -368,14 +367,15 @@
                             </svg>
                         </button>
                     </div>
-                    
+
                     <!-- 移动端内容区域 -->
                     <div class="mobile-share-content">
                         <div class="mobile-image-wrapper">
-                            <img v-if="previewImageUrl" :src="previewImageUrl" alt="分享预览" class="mobile-preview-image" />
+                            <img v-if="previewImageUrl" :src="previewImageUrl" alt="分享预览"
+                                class="mobile-preview-image" />
                         </div>
                     </div>
-                    
+
                     <!-- 移动端底部操作区 -->
                     <div class="mobile-share-actions">
                         <button class="mobile-action-btn mobile-cancel-btn" @click="closePreview">
@@ -383,9 +383,10 @@
                         </button>
                         <button class="mobile-action-btn mobile-download-btn" @click="downloadImage">
                             <svg width="16" height="16" viewBox="0 0 24 24" fill="none" style="margin-right: 6px;">
-                                <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" stroke="currentColor" stroke-width="2"/>
-                                <polyline points="7,10 12,15 17,10" stroke="currentColor" stroke-width="2"/>
-                                <line x1="12" y1="15" x2="12" y2="3" stroke="currentColor" stroke-width="2"/>
+                                <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" stroke="currentColor"
+                                    stroke-width="2" />
+                                <polyline points="7,10 12,15 17,10" stroke="currentColor" stroke-width="2" />
+                                <line x1="12" y1="15" x2="12" y2="3" stroke="currentColor" stroke-width="2" />
                             </svg>
                             下载图片
                         </button>
@@ -397,7 +398,7 @@
 </template>
 
 <script setup>
-import { ref, computed } from 'vue';
+import { ref, computed, nextTick, onMounted } from 'vue';
 import MarkdownRenderer from './MarkdownRenderer.vue';
 import StockList from './StockList.vue';
 import MobileStockList from './MobileStockList.vue';
@@ -635,7 +636,7 @@ const getPreviousUserMessage = () => {
     if (!props.chatHistory || props.chatHistory.length === 0) {
         return '用户提问';
     }
-    
+
     // 从当前消息索引向前查找最近的用户消息
     for (let i = props.messageIndex - 1; i >= 0; i--) {
         const message = props.chatHistory[i];
@@ -643,45 +644,87 @@ const getPreviousUserMessage = () => {
             return message.content;
         }
     }
-    
+
     // 如果没有找到用户消息，返回默认值
     return '用户提问';
 };
 
+// 确保文本选择功能正常工作
+const ensureTextSelectable = () => {
+    // 在组件挂载后确保文本可选择
+    nextTick(() => {
+        const messageElement = document.querySelector('.chat-message-content');
+        if (messageElement) {
+            // 强制设置文本选择样式
+            messageElement.style.userSelect = 'text';
+            messageElement.style.webkitUserSelect = 'text';
+            messageElement.style.mozUserSelect = 'text';
+            messageElement.style.msUserSelect = 'text';
+
+            // 对所有子元素也设置文本选择
+            const allChildren = messageElement.querySelectorAll('*');
+            allChildren.forEach(child => {
+                child.style.userSelect = 'text';
+                child.style.webkitUserSelect = 'text';
+                child.style.mozUserSelect = 'text';
+                child.style.msUserSelect = 'text';
+            });
+        }
+    });
+};
+
+// 在组件挂载时确保文本可选择
+onMounted(() => {
+    ensureTextSelectable();
+
+    // 添加调试信息
+    console.log('ChatMessage mounted, text selection should be enabled');
+
+    // 验证文本选择功能
+    nextTick(() => {
+        const messageContent = document.querySelector('.chat-message-content');
+        if (messageContent) {
+            const computedStyle = window.getComputedStyle(messageContent);
+            console.log('Message content user-select:', computedStyle.userSelect);
+            console.log('Message content -webkit-user-select:', computedStyle.webkitUserSelect);
+        }
+    });
+});
+
 // 分享消息为图片 - 生成预览
 const handleShareMessage = async () => {
     if (isGeneratingImage.value) return;
-    
+
     try {
         isGeneratingImage.value = true;
-        
+
         const canvas = document.createElement('canvas');
         const ctx = canvas.getContext('2d');
-        
+
         // 设置画布尺寸 - 动态计算高度
         const width = 750;
         let height = 1000; // 初始高度，后面会根据内容调整
         canvas.width = width;
         canvas.height = height;
-        
+
         // 设置高质量渲染
         ctx.imageSmoothingEnabled = true;
         ctx.imageSmoothingQuality = 'high';
-        
+
         // 纯白背景
         ctx.fillStyle = '#ffffff';
         ctx.fillRect(0, 0, width, height);
-        
+
         // 绘制顶部标题区域
         const headerY = 60;
         ctx.fillStyle = '#333333';
         ctx.font = 'bold 24px -apple-system, BlinkMacSystemFont, "PingFang SC", sans-serif';
         ctx.textAlign = 'left';
-        
+
         // 使用会话标题
         const title = props.sessionTitle || 'AI 智能分析';
         ctx.fillText(title, 40, headerY);
-        
+
         // 绘制时间和来源信息
         ctx.fillStyle = '#999999';
         ctx.font = '14px -apple-system, BlinkMacSystemFont, "PingFang SC", sans-serif';
@@ -693,7 +736,7 @@ const handleShareMessage = async () => {
             minute: '2-digit'
         });
         ctx.fillText(`${timeText} · 内容由 AI 生成，不能完全保障准确性`, 40, headerY + 30);
-        
+
         // 绘制分割线
         ctx.strokeStyle = '#e5e5e5';
         ctx.lineWidth = 1;
@@ -701,23 +744,23 @@ const handleShareMessage = async () => {
         ctx.moveTo(40, headerY + 50);
         ctx.lineTo(width - 40, headerY + 50);
         ctx.stroke();
-        
+
         // 用户输入气泡（右侧）- 参照当前聊天气泡样式
         const userBubbleY = headerY + 80;
-        
+
         // 获取前一条用户消息
         const userInput = getPreviousUserMessage();
-        
+
         // 处理用户消息的换行 - 使用简化的换行处理逻辑
         ctx.font = '16px -apple-system, BlinkMacSystemFont, "PingFang SC", sans-serif';
         const userMaxWidth = 300; // 用户气泡最大宽度
         const userLines = wrapUserMessage(ctx, userInput, userMaxWidth);
-        
+
         // 计算用户气泡的实际尺寸
         const userLineHeight = 20; // 用户气泡行高稍小一些
         const userPadding = 16; // 用户气泡内边距
         const userBubbleHeight = Math.max(40, userLines.length * userLineHeight + userPadding * 2);
-        
+
         // 计算用户气泡的宽度 - 基于最长行的宽度
         let maxLineWidth = 0;
         userLines.forEach(line => {
@@ -726,7 +769,7 @@ const handleShareMessage = async () => {
         });
         const userBubbleWidth = Math.max(maxLineWidth + userPadding * 2, 120); // 最小宽度120px
         const userBubbleX = width - 40 - userBubbleWidth;
-        
+
         // 绘制用户输入气泡 - 参照聊天气泡样式（右上角有小圆角）
         ctx.fillStyle = '#007AFF';
         ctx.beginPath();
@@ -743,26 +786,26 @@ const handleShareMessage = async () => {
         ctx.arcTo(userBubbleX, userBubbleY, userBubbleX + r1, userBubbleY, r1);
         ctx.closePath();
         ctx.fill();
-        
+
         // 用户输入文字 - 支持多行显示
         ctx.fillStyle = '#ffffff';
         ctx.textAlign = 'left';
-        
+
         let userCurrentY = userBubbleY + userPadding + 14; // 14px是字体的基线偏移
         userLines.forEach((line) => {
             renderFormattedLine(ctx, line, userBubbleX + userPadding, userCurrentY);
             userCurrentY += userLineHeight;
         });
-        
+
         // AI回复区域（左侧）- 参照当前聊天气泡样式，铺满屏幕宽度
         const aiReplyY = userBubbleY + userBubbleHeight + 20; // 调整间距，基于用户气泡的实际高度
         const aiReplyBubbleX = 40; // 从左边距开始
         const aiReplyBubbleWidth = width - 80; // 铺满屏幕宽度，左右各留40px边距
         const messageContent = props.message.content || '暂无内容';
-        
+
         // 设置字体用于测量 - 与聊天界面保持一致
         ctx.font = '16px -apple-system, BlinkMacSystemFont, "PingFang SC", "Microsoft YaHei", sans-serif';
-        
+
         // 计算AI回复内容的换行和高度 - 确保有足够的边距
         const textMaxWidth = aiReplyBubbleWidth - 40; // 减去左右padding (20px * 2)
         console.log('🔍 文本换行调试信息:', {
@@ -773,7 +816,7 @@ const handleShareMessage = async () => {
             hasBoldMarkers: messageContent.includes('**'),
             boldMatches: messageContent.match(/\*\*(.*?)\*\*/g)
         });
-        
+
         const lines = wrapTextWithFormat(ctx, messageContent, textMaxWidth);
         console.log('🔍 换行结果:', {
             linesCount: lines.length,
@@ -784,33 +827,33 @@ const handleShareMessage = async () => {
             })), // 只显示前3行
             maxLineLength: Math.max(...lines.map(line => line.text.length))
         });
-        
+
         const lineHeight = 24; // 与聊天界面的line-height: 1.5保持一致
         const padding = 20; // 与聊天界面的padding保持一致
         const aiReplyBubbleHeight = Math.max(50, lines.length * lineHeight + padding * 2);
-        
+
         // 计算实际需要的总高度
         const headerHeight = 120; // 标题区域高度
         const bubbleSpacing = 20; // 气泡间距（已调整）
         const footerHeight = 150; // 底部区域高度
         const actualHeight = headerHeight + userBubbleHeight + bubbleSpacing + aiReplyBubbleHeight + footerHeight;
-        
+
         // 如果实际高度超过初始高度，重新设置画布尺寸
         if (actualHeight > height) {
             height = actualHeight + 50; // 额外添加50px底部边距
             canvas.height = height;
-            
+
             // 重新填充背景色（因为画布尺寸改变了）
             ctx.fillStyle = '#ffffff';
             ctx.fillRect(0, 0, width, height);
-            
+
             // 重新绘制标题和时间信息
             ctx.fillStyle = '#333333';
             ctx.font = 'bold 24px -apple-system, BlinkMacSystemFont, "PingFang SC", "Microsoft YaHei", sans-serif';
             ctx.textAlign = 'left';
             const title = props.sessionTitle || 'AI 智能分析';
             ctx.fillText(title, 40, headerY);
-            
+
             ctx.fillStyle = '#999999';
             ctx.font = '14px -apple-system, BlinkMacSystemFont, "PingFang SC", "Microsoft YaHei", sans-serif';
             const timeText = new Date().toLocaleString('zh-CN', {
@@ -821,7 +864,7 @@ const handleShareMessage = async () => {
                 minute: '2-digit'
             });
             ctx.fillText(`${timeText} · 内容由 AI 生成，不能完全保障准确性`, 40, headerY + 30);
-            
+
             // 重新绘制分割线
             ctx.strokeStyle = '#e5e5e5';
             ctx.lineWidth = 1;
@@ -829,7 +872,7 @@ const handleShareMessage = async () => {
             ctx.moveTo(40, headerY + 50);
             ctx.lineTo(width - 40, headerY + 50);
             ctx.stroke();
-            
+
             // 重新绘制用户气泡
             ctx.fillStyle = '#007AFF';
             ctx.beginPath();
@@ -845,19 +888,19 @@ const handleShareMessage = async () => {
             ctx.arcTo(userBubbleX, userBubbleY, userBubbleX + r1, userBubbleY, r1);
             ctx.closePath();
             ctx.fill();
-            
+
             // 重新绘制用户文字 - 支持多行显示
             ctx.fillStyle = '#ffffff';
             ctx.font = '16px -apple-system, BlinkMacSystemFont, "PingFang SC", "Microsoft YaHei", sans-serif';
             ctx.textAlign = 'left';
-            
+
             let userCurrentY = userBubbleY + userPadding + 14; // 14px是字体的基线偏移
             userLines.forEach((line) => {
                 renderFormattedLine(ctx, line, userBubbleX + userPadding, userCurrentY);
                 userCurrentY += userLineHeight;
             });
         }
-        
+
         console.log('🔍 画布尺寸调整:', {
             originalHeight: 1000,
             actualHeight,
@@ -865,7 +908,7 @@ const handleShareMessage = async () => {
             aiReplyBubbleHeight,
             linesCount: lines.length
         });
-        
+
         // 绘制AI回复气泡 - 参照聊天气泡样式（左下角有小圆角）
         ctx.fillStyle = '#f1f3f4'; // 与聊天界面的背景色保持一致
         ctx.beginPath();
@@ -882,35 +925,35 @@ const handleShareMessage = async () => {
         ctx.arcTo(aiReplyBubbleX, aiReplyY, aiReplyBubbleX + ar1, aiReplyY, ar1);
         ctx.closePath();
         ctx.fill();
-        
+
         // AI回复文字 - 支持格式化文本渲染
         ctx.fillStyle = '#18181b'; // 与聊天界面的文字颜色保持一致
         ctx.textAlign = 'left';
-        
+
         let currentY = aiReplyY + padding + 16; // 16px是字体的基线偏移
         lines.forEach((line) => {
             renderFormattedLine(ctx, line, aiReplyBubbleX + padding, currentY);
             currentY += lineHeight;
         });
-        
+
         // 底部区域 - 根据实际高度调整位置
         const footerY = height - 150;
-        
+
         // 绘制AI助手信息
         ctx.fillStyle = '#333333';
         ctx.font = 'bold 16px -apple-system, BlinkMacSystemFont, "PingFang SC", sans-serif';
         ctx.textAlign = 'left';
         ctx.fillText('InvestAI', 40, footerY);
-        
+
         ctx.fillStyle = '#999999';
         ctx.font = '14px -apple-system, BlinkMacSystemFont, "PingFang SC", sans-serif';
         ctx.fillText('你的AI投资助手，助力智能投资决策', 40, footerY + 25);
-        
+
         // 绘制Logo区域
         const logoSize = 80;
         const logoX = width - 40 - logoSize;
         const logoY = footerY - 20;
-        
+
         // 加载并绘制项目Logo
         const logoImg = new Image();
         logoImg.onload = () => {
@@ -919,15 +962,15 @@ const handleShareMessage = async () => {
             ctx.beginPath();
             ctx.roundRect(logoX, logoY, logoSize, logoSize, 8);
             ctx.fill();
-            
+
             // Logo边框
             ctx.strokeStyle = '#e9ecef';
             ctx.lineWidth = 1;
             ctx.stroke();
-            
+
             // 绘制Logo图片（留8px边距）
             ctx.drawImage(logoImg, logoX + 8, logoY + 8, logoSize - 16, logoSize - 16);
-            
+
             // 转换为图片URL并显示预览
             canvas.toBlob((blob) => {
                 previewImageUrl.value = URL.createObjectURL(blob);
@@ -935,7 +978,7 @@ const handleShareMessage = async () => {
                 isGeneratingImage.value = false;
             }, 'image/png', 0.95);
         };
-        
+
         logoImg.onerror = () => {
             console.warn('Logo图片加载失败，使用备用方案');
             // 备用方案：绘制文字Logo
@@ -943,17 +986,17 @@ const handleShareMessage = async () => {
             ctx.beginPath();
             ctx.roundRect(logoX, logoY, logoSize, logoSize, 8);
             ctx.fill();
-            
+
             ctx.strokeStyle = '#e9ecef';
             ctx.lineWidth = 1;
             ctx.stroke();
-            
+
             // 绘制InvestAI文字Logo
             ctx.fillStyle = '#007AFF';
             ctx.font = 'bold 14px -apple-system, BlinkMacSystemFont, "PingFang SC", "Microsoft YaHei", sans-serif';
             ctx.textAlign = 'center';
             ctx.fillText('InvestAI', logoX + logoSize / 2, logoY + logoSize / 2 + 5);
-            
+
             // 转换为图片URL并显示预览
             canvas.toBlob((blob) => {
                 previewImageUrl.value = URL.createObjectURL(blob);
@@ -961,16 +1004,16 @@ const handleShareMessage = async () => {
                 isGeneratingImage.value = false;
             }, 'image/png', 0.95);
         };
-        
+
         // 设置图片源，开始加载
         logoImg.src = '/logo.png';
-        
+
         // 发送分享事件
         emit('share-message', {
             message: props.message,
             messageId: props.message.id || props.message.timestamp
         });
-        
+
     } catch (error) {
         console.error('分享图片生成失败:', error);
         isGeneratingImage.value = false;
@@ -980,7 +1023,7 @@ const handleShareMessage = async () => {
 // 下载图片
 const downloadImage = () => {
     if (!previewImageUrl.value) return;
-    
+
     const a = document.createElement('a');
     a.href = previewImageUrl.value;
     a.download = `InvestAI-分享-${new Date().getTime()}.png`;
@@ -1051,11 +1094,11 @@ const handleShareTouchEnd = (e) => {
 const parseTextWithFormat = (text) => {
     const parts = [];
     let currentIndex = 0;
-    
+
     // 匹配加粗文本 **text**
     const boldRegex = /\*\*(.*?)\*\*/g;
     let match;
-    
+
     while ((match = boldRegex.exec(text)) !== null) {
         // 添加普通文本部分
         if (match.index > currentIndex) {
@@ -1064,16 +1107,16 @@ const parseTextWithFormat = (text) => {
                 bold: false
             });
         }
-        
+
         // 添加加粗文本部分
         parts.push({
             text: match[1],
             bold: true
         });
-        
+
         currentIndex = match.index + match[0].length;
     }
-    
+
     // 添加剩余的普通文本
     if (currentIndex < text.length) {
         parts.push({
@@ -1081,7 +1124,7 @@ const parseTextWithFormat = (text) => {
             bold: false
         });
     }
-    
+
     return parts;
 };
 
@@ -1095,52 +1138,52 @@ const wrapTextWithFormat = (ctx, text, maxWidth) => {
         .replace(/>\s/g, '')              // 移除引用
         .replace(/\n\s*\n/g, '\n')        // 合并多个换行
         .trim();
-    
+
     const paragraphs = cleanText.split('\n');
     const lines = [];
-    
+
     paragraphs.forEach(paragraph => {
         // 先清理段落首尾空格
         const trimmedParagraph = paragraph.trim();
         if (!trimmedParagraph) return;
-        
+
         // 解析段落中的格式化文本
         const parts = parseTextWithFormat(trimmedParagraph);
         let currentLine = { text: '', parts: [] };
-        
+
         parts.forEach(part => {
             if (!part.text) return;
-            
+
             // 逐字符处理每个部分
             for (let i = 0; i < part.text.length; i++) {
                 const char = part.text[i];
-                
+
                 // 设置字体以测量宽度
                 if (part.bold) {
                     ctx.font = 'bold 16px -apple-system, BlinkMacSystemFont, "PingFang SC", "Microsoft YaHei", sans-serif';
                 } else {
                     ctx.font = '16px -apple-system, BlinkMacSystemFont, "PingFang SC", "Microsoft YaHei", sans-serif';
                 }
-                
+
                 const testText = currentLine.text + char;
                 const metrics = ctx.measureText(testText);
-                
+
                 if (metrics.width > maxWidth && currentLine.text.trim()) {
                     // 换行 - 确保当前行有实际内容才换行
                     lines.push({
                         text: currentLine.text.trim(), // 去除行尾空格
                         parts: currentLine.parts.filter(p => p.text.trim()) // 过滤空白parts
                     });
-                    currentLine = { 
+                    currentLine = {
                         text: char.trim() ? char : '', // 如果新行首字符是空格，则忽略
                         parts: char.trim() ? [{ text: char, bold: part.bold }] : []
                     };
                 } else {
                     // 添加到当前行
                     currentLine.text += char;
-                    
+
                     // 更新parts数组
-                    if (currentLine.parts.length > 0 && 
+                    if (currentLine.parts.length > 0 &&
                         currentLine.parts[currentLine.parts.length - 1].bold === part.bold) {
                         // 如果格式相同，合并到最后一个part
                         currentLine.parts[currentLine.parts.length - 1].text += char;
@@ -1151,7 +1194,7 @@ const wrapTextWithFormat = (ctx, text, maxWidth) => {
                 }
             }
         });
-        
+
         // 添加最后一行 - 清理首尾空格
         if (currentLine.text.trim()) {
             lines.push({
@@ -1163,39 +1206,39 @@ const wrapTextWithFormat = (ctx, text, maxWidth) => {
             });
         }
     });
-    
+
     return lines;
 };
 
 // 渲染带格式的文本行
 const renderFormattedLine = (ctx, line, x, y) => {
     let currentX = x;
-    
+
     line.parts.forEach(part => {
         if (!part.text) return;
-        
-                          // 设置字体
-         if (part.bold) {
-             ctx.font = 'bold 16px -apple-system, BlinkMacSystemFont, "PingFang SC", "Microsoft YaHei", sans-serif';
-             // 额外设置字体权重确保加粗效果
-             ctx.save();
-             ctx.shadowColor = 'rgba(0,0,0,0.1)';
-             ctx.shadowOffsetX = 0.5;
-             ctx.shadowOffsetY = 0;
-             ctx.shadowBlur = 0;
-         } else {
-             ctx.font = '16px -apple-system, BlinkMacSystemFont, "PingFang SC", "Microsoft YaHei", sans-serif';
-         }
-         
-         // 绘制文本
-         ctx.fillText(part.text, currentX, y);
-         
-         // 如果是加粗文本，再次绘制以增强效果
-         if (part.bold) {
-             ctx.fillText(part.text, currentX + 0.5, y);
-             ctx.restore();
-         }
-        
+
+        // 设置字体
+        if (part.bold) {
+            ctx.font = 'bold 16px -apple-system, BlinkMacSystemFont, "PingFang SC", "Microsoft YaHei", sans-serif';
+            // 额外设置字体权重确保加粗效果
+            ctx.save();
+            ctx.shadowColor = 'rgba(0,0,0,0.1)';
+            ctx.shadowOffsetX = 0.5;
+            ctx.shadowOffsetY = 0;
+            ctx.shadowBlur = 0;
+        } else {
+            ctx.font = '16px -apple-system, BlinkMacSystemFont, "PingFang SC", "Microsoft YaHei", sans-serif';
+        }
+
+        // 绘制文本
+        ctx.fillText(part.text, currentX, y);
+
+        // 如果是加粗文本，再次绘制以增强效果
+        if (part.bold) {
+            ctx.fillText(part.text, currentX + 0.5, y);
+            ctx.restore();
+        }
+
         // 更新x位置
         const metrics = ctx.measureText(part.text);
         currentX += metrics.width;
@@ -1205,7 +1248,7 @@ const renderFormattedLine = (ctx, line, x, y) => {
 // 计算属性
 const smartRecommendationConfig = computed(() => {
     if (!props.message) return {};
-    
+
     // 基础操作按钮
     const baseActions = [
         {
@@ -1223,7 +1266,7 @@ const smartRecommendationConfig = computed(() => {
             class: 'remove-watchlist-btn'
         }
     ];
-    
+
     // 如果不是量化分析内容，则添加量化分析按钮
     if (!props.message.isQuantAnalysis) {
         baseActions.push({
@@ -1238,7 +1281,7 @@ const smartRecommendationConfig = computed(() => {
             }
         });
     }
-    
+
     // 添加其他操作按钮
     baseActions.push(
         {
@@ -1260,7 +1303,7 @@ const smartRecommendationConfig = computed(() => {
             class: 'buy-stock-btn-secondary'
         }
     );
-    
+
     return {
         showRecommendIndex: true,
         showRecommendTooltip: true,
@@ -1305,7 +1348,7 @@ const mobileSmartRecommendationConfig = computed(() => {
             class: 'remove-watchlist-btn'
         }
     ];
-    
+
     // 如果不是量化分析内容，则添加量化分析按钮
     if (!props.message.isQuantAnalysis) {
         baseActions.push({
@@ -1320,7 +1363,7 @@ const mobileSmartRecommendationConfig = computed(() => {
             }
         });
     }
-    
+
     // 添加其他操作按钮
     baseActions.push(
         {
@@ -1364,44 +1407,44 @@ const wrapUserMessage = (ctx, text, maxWidth) => {
         .replace(/\n[ \t]+/g, '\n')     // 去除换行后的空格/制表符
         .replace(/[ \t]+\n/g, '\n')     // 去除换行前的空格/制表符
         .trim();
-    
+
     const paragraphs = cleanText.split('\n');
     const lines = [];
-    
+
     paragraphs.forEach(paragraph => {
         const trimmedParagraph = paragraph.trim();
         if (!trimmedParagraph) return;
-        
+
         // 智能换行处理
         let currentLine = '';
         let lastSpaceIndex = -1;
-        
+
         for (let i = 0; i < trimmedParagraph.length; i++) {
             const char = trimmedParagraph[i];
             const testText = currentLine + char;
-            
+
             ctx.font = '16px -apple-system, BlinkMacSystemFont, "PingFang SC", sans-serif';
             const metrics = ctx.measureText(testText);
-            
+
             // 记录最后一个空格的位置
             if (char === ' ') {
                 lastSpaceIndex = currentLine.length;
             }
-            
+
             if (metrics.width > maxWidth && currentLine.length > 0) {
                 // 需要换行
                 if (lastSpaceIndex > 0 && lastSpaceIndex < currentLine.length) {
                     // 在最后一个空格处换行（智能换行）
                     const lineToAdd = currentLine.substring(0, lastSpaceIndex).trim();
                     const remainingText = currentLine.substring(lastSpaceIndex + 1) + char;
-                    
+
                     if (lineToAdd) {
                         lines.push({
                             text: lineToAdd,
                             parts: [{ text: lineToAdd, bold: false }]
                         });
                     }
-                    
+
                     currentLine = remainingText;
                     lastSpaceIndex = -1;
                 } else {
@@ -1413,7 +1456,7 @@ const wrapUserMessage = (ctx, text, maxWidth) => {
                             parts: [{ text: lineToAdd, bold: false }]
                         });
                     }
-                    
+
                     currentLine = char === ' ' ? '' : char;
                     lastSpaceIndex = -1;
                 }
@@ -1421,7 +1464,7 @@ const wrapUserMessage = (ctx, text, maxWidth) => {
                 currentLine += char;
             }
         }
-        
+
         // 添加最后一行
         if (currentLine.trim()) {
             lines.push({
@@ -1430,7 +1473,7 @@ const wrapUserMessage = (ctx, text, maxWidth) => {
             });
         }
     });
-    
+
     return lines;
 };
 </script>
@@ -1444,6 +1487,18 @@ const wrapUserMessage = (ctx, text, maxWidth) => {
     width: 100%;
     box-sizing: border-box;
     flex-direction: column;
+}
+
+/* 确保整个聊天消息内容都可以被选择 */
+.chat-message-content,
+.chat-message-content *,
+.chat-message-content :deep(*) {
+    -webkit-user-select: text !important;
+    -khtml-user-select: text !important;
+    -moz-user-select: text !important;
+    -ms-user-select: text !important;
+    user-select: text !important;
+    -webkit-touch-callout: text !important;
 }
 
 .chat-message.user .chat-message-content {
@@ -1766,6 +1821,24 @@ const wrapUserMessage = (ctx, text, maxWidth) => {
 .message-text {
     line-height: 1.6;
     color: #333;
+    /* 确保消息文本可以被选择 */
+    -webkit-user-select: text !important;
+    -khtml-user-select: text !important;
+    -moz-user-select: text !important;
+    -ms-user-select: text !important;
+    user-select: text !important;
+    -webkit-touch-callout: text !important;
+}
+
+/* 确保消息文本的所有子元素都可以被选择 */
+.message-text *,
+.message-text :deep(*) {
+    -webkit-user-select: text !important;
+    -khtml-user-select: text !important;
+    -moz-user-select: text !important;
+    -ms-user-select: text !important;
+    user-select: text !important;
+    -webkit-touch-callout: text !important;
 }
 
 /* AI消息操作按钮样式（外部底部） */
@@ -3175,22 +3248,22 @@ const wrapUserMessage = (ctx, text, maxWidth) => {
         max-height: 85vh;
         margin: 5vh auto;
     }
-    
+
     .preview-image-wrapper {
         max-height: 60vh;
         padding: 16px;
     }
-    
+
     .preview-image {
         max-height: none;
     }
-    
+
     .preview-actions {
         padding: 12px 16px;
         background: white;
         border-top: 1px solid #e9ecef;
     }
-    
+
     .preview-actions .el-button {
         height: 34px;
         font-size: 13px;
@@ -3415,6 +3488,7 @@ const wrapUserMessage = (ctx, text, maxWidth) => {
     from {
         opacity: 0;
     }
+
     to {
         opacity: 1;
     }
@@ -3425,6 +3499,7 @@ const wrapUserMessage = (ctx, text, maxWidth) => {
         opacity: 0;
         transform: translateY(100%);
     }
+
     to {
         opacity: 1;
         transform: translateY(0);

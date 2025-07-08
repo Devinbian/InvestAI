@@ -76,7 +76,7 @@ export default {
         // 输入框占位符
         placeholder: {
             type: String,
-            default: '如：分析比亚迪近期走势及投资价值，考虑新能源政策影响...'
+            default: '今天想了解哪只股票？😊'
         },
         // 是否显示历史记录按钮
         showHistoryButton: {

@@ -3347,15 +3347,84 @@ input,
 textarea,
 [contenteditable],
 .chat-message .message-text,
+.chat-message .message-text *,
 .chat-message .markdown-content,
 .chat-message .markdown-content *,
+.chat-message .chat-message-content,
+.chat-message .chat-message-content *,
 .chat-title,
-.chat-history-container .chat-info .chat-title {
+.chat-history-container .chat-info .chat-title,
+.markdown-content,
+.markdown-content *,
+.message-text,
+.message-text * {
     -webkit-user-select: text !important;
     -khtml-user-select: text !important;
     -moz-user-select: text !important;
     -ms-user-select: text !important;
     user-select: text !important;
+    -webkit-touch-callout: text !important;
+}
+
+/* 特别针对聊天消息内容的文本选择 */
+.chat-message-content,
+.chat-message-content *,
+.chat-message-content .message-text,
+.chat-message-content .message-text *,
+.chat-message-content .markdown-content,
+.chat-message-content .markdown-content * {
+    -webkit-user-select: text !important;
+    -khtml-user-select: text !important;
+    -moz-user-select: text !important;
+    -ms-user-select: text !important;
+    user-select: text !important;
+    -webkit-touch-callout: text !important;
+}
+
+/* 更强制的文本选择规则 - 确保覆盖所有可能的阻止规则 */
+.chat-message .chat-message-content,
+.chat-message .chat-message-content *,
+.chat-message .message-text,
+.chat-message .message-text *,
+.chat-message .markdown-content,
+.chat-message .markdown-content *,
+.chat-message .markdown-content p,
+.chat-message .markdown-content p *,
+.chat-message .markdown-content div,
+.chat-message .markdown-content div *,
+.chat-message .markdown-content span,
+.chat-message .markdown-content span *,
+.markdown-content,
+.markdown-content *,
+.markdown-content p,
+.markdown-content p *,
+.markdown-content div,
+.markdown-content div *,
+.markdown-content span,
+.markdown-content span * {
+    -webkit-user-select: text !important;
+    -khtml-user-select: text !important;
+    -moz-user-select: text !important;
+    -ms-user-select: text !important;
+    user-select: text !important;
+    -webkit-touch-callout: text !important;
+    cursor: text !important;
+}
+
+/* 确保文本选择在所有状态下都可用 */
+.chat-message:hover .chat-message-content,
+.chat-message:hover .chat-message-content *,
+.chat-message:active .chat-message-content,
+.chat-message:active .chat-message-content *,
+.chat-message:focus .chat-message-content,
+.chat-message:focus .chat-message-content * {
+    -webkit-user-select: text !important;
+    -khtml-user-select: text !important;
+    -moz-user-select: text !important;
+    -ms-user-select: text !important;
+    user-select: text !important;
+    -webkit-touch-callout: text !important;
+    cursor: text !important;
 }
 
 .main-modern {
@@ -3911,10 +3980,6 @@ body.onboarding-mode {
 /* 用户消息中的markdown段落间距优化 */
 .chat-message.user .chat-message-content .markdown-content :deep(p) {
     margin: 2px 0 !important;
-}
-
-.chat-message.user .chat-message-content .markdown-content :deep(p:first-child) {
-    margin-top: 0 !important;
 }
 
 .chat-message.user .chat-message-content .markdown-content :deep(p:last-child) {

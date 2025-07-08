@@ -104,6 +104,21 @@ const renderedContent = computed(() => {
     display: flex;
     flex-direction: column;
     min-height: fit-content;
+    /* 确保markdown内容可以被选择 */
+    -webkit-user-select: text !important;
+    -khtml-user-select: text !important;
+    -moz-user-select: text !important;
+    -ms-user-select: text !important;
+    user-select: text !important;
+}
+
+/* 确保所有子元素都可以被选择 */
+.markdown-content :deep(*) {
+    -webkit-user-select: text !important;
+    -khtml-user-select: text !important;
+    -moz-user-select: text !important;
+    -ms-user-select: text !important;
+    user-select: text !important;
 }
 
 /* 标题样式 */

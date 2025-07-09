@@ -8,6 +8,7 @@ import {
   getFocusIndustryText,
 } from "@/utils/userPortraitHelpers";
 import { generateMessageId } from "@/utils/formatters";
+import { authFetchEventSource } from "@/utils/request";
 
 export function useStockOperations() {
   // 股票相关状态
@@ -342,6 +343,7 @@ export function useStockOperations() {
   // 资讯推送功能
   const handleNewsUpdate = async (
     userStore,
+    chatHistoryStore,
     chatHistory,
     isChatMode,
     scrollToBottom,
@@ -380,8 +382,56 @@ export function useStockOperations() {
       return;
     }
 
-    const fullMessage = "资讯推送：今日重要财经新闻和市场动态";
-    const res = await mockApi.sendMessage(fullMessage);
+    const fullMessage =
+      "请为我推送今日重要财经新闻和市场动态，包括政策动向、行业热点、个股新闻等";
+
+    // 使用真实的聊天流式API获取资讯推送
+    const res = await new Promise((resolve, reject) => {
+      let responseContent = "";
+
+      // 获取当前聊天会话ID
+      const conversationId = chatHistoryStore.currentChatId || "default";
+
+      // 调用流式API
+      authFetchEventSource(
+        `${api.devPrefix}${api.chatStreamApi}?conversationId=${conversationId}&userInput=${encodeURIComponent(fullMessage)}`,
+        {
+          method: "GET",
+          headers: {
+            Accept: "text/event-stream",
+            "Cache-Control": "no-cache",
+          },
+          onopen: async (response) => {
+            console.log("🔄 资讯推送 - 流式连接已建立");
+          },
+          onmessage: (event) => {
+            try {
+              const data = event.data;
+              if (data.trim().length === 0) return;
+              responseContent += data;
+            } catch (err) {
+              console.error("🔄 资讯推送 - 解析消息时出错:", err);
+            }
+          },
+          onclose: () => {
+            console.log("🔄 资讯推送 - 流式连接已关闭");
+            resolve({
+              data: {
+                content: responseContent,
+                isNewsUpdate: true,
+                hasInteractionButtons: false,
+                interactionData: null,
+                hasStockInfo: false,
+              },
+            });
+          },
+          onerror: (err) => {
+            console.error("🔄 资讯推送 - 流式连接错误:", err);
+            reject(err);
+          },
+        },
+      );
+    });
 
     // 在API调用后再次检查是否被中断
     if (isStillGenerating && !isStillGenerating()) {

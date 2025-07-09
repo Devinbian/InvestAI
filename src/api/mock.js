@@ -49,7 +49,7 @@ export const mockApi = {
     });
   },
 
-  // 发送消息 - 简化版本，移除所有快捷操作按钮相关的mock数据
+  // 发送消息 - 支持资讯推送的特殊处理
   sendMessage: (message) => {
     // 确保message是字符串类型
     if (typeof message !== "string") {
@@ -60,6 +60,38 @@ export const mockApi = {
         // 其他类型转换为字符串
         message = String(message || "");
       }
+    }
+
+    // 检查是否是资讯推送请求
+    if (message.includes("资讯推送")) {
+      const newsResponse = {
+        id: generateMessageId(),
+        role: "assistant",
+        content: `以下是最新的财经资讯：
+1. 安达集团厨房插件进入中国商飞机客户选项指南支达维研发的"羽享"厨房插件系列产品成功进入中国商飞客户选项指南，标志着其产品从国产化替代转型为OEM产品。
+2. 绿景中国地产基金投资延期绿景中国地产公告，清盘呈请投资进一步延期至2025年8月4日。
+3. 马来西亚易部长谈关税上调马来西亚贸易部长表示，不清楚为何关税税率从最初的24%上调，需询问美国贸易代表，并强调不能在国家主权问题上妥协。
+4. 印度计划收回非法占用土地印度计划收回非法占用土地并启动防长宣布，计划在8月前收回300万公顷被非法占用的森林和土地。
+5. 澳大利亚矿业受工行动澳大利亚矿业与能源工会表示，格伦科尔马兰地下矿因罢工行动停止工作。
+6. 华能国际等投资成立新能源公司华能国际与华能水电共同投资成立华能（动脂）新能源有限公司，业务涵盖新能源技术开发等。
+7. 山西开行首趟跨里海中欧班列山西开行首趟跨里海中欧班列，深化与欧洲及中亚平台贸易合作。
+8. 广西中越班列发货量增长上半年广西始发中越班列发货量同比增长283%，汽车零配件等出口增长显著`,
+        isNewsUpdate: true,
+        hasInteractionButtons: false,
+        interactionData: null,
+        hasStockInfo: false,
+      };
+
+      chatHistory.push(
+        { id: generateMessageId(), role: "user", content: message },
+        newsResponse,
+      );
+
+      return Promise.resolve({
+        code: 200,
+        data: newsResponse,
+        message: "success",
+      });
     }
 
     // 通用AI响应

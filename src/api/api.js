@@ -21,6 +21,7 @@ const api = {
   sellStockApi: "/stock/sell", // 卖出股票
   cancelStockOrderApi: "/stock/cancel-order", // 撤销订单
   userPositionApi: "/user/position/detail", // 获取用户某只股票的持仓详情
+  canCancelStockOrderApi: "/stock/can-cancel-order", // 可撤单列表
 
   createConversationApi: "/conversation/create", // 创建会话
   chatStreamApi: "/chat/stream", // 聊天流式接口
@@ -84,5 +85,10 @@ export const getRecommendStocks = () => request.get(api.recommendStocksApi);
 
 // 获取用户某只股票的持仓详情
 export const getUserPosition = (params) => request.get(api.userPositionApi, {
+  params
+});
+
+// 获取可撤单列表
+export const getCanCancelStockOrder = (params) => request.get(api.canCancelStockOrderApi, {
   params
 });

@@ -341,7 +341,7 @@
 import { ref, reactive, computed, watch, nextTick } from 'vue';
 import { ElMessage, ElMessageBox } from 'element-plus';
 import { useUserStore } from '@/store/user';
-import { getStockRealtimeData, buyStock, sellStock, cancelStockOrder, getUserInfo, getUserPosition } from '@/api/api';
+import { getStockRealtimeData, buyStock, sellStock, cancelStockOrder, getUserInfo, getUserPosition, getCanCancelStockOrder } from '@/api/api';
 
 // Props
 const props = defineProps({
@@ -376,6 +376,9 @@ const tradingLoading = ref(false);
 const tradeType = ref(props.tradeType);
 const sellOrders = ref([]);
 const buyOrders = ref([]);
+
+// 当前股票的待撤销委托单
+const currentStockPendingOrders = ref([]);;
 
 // 实时数据查询定时器
 let realtimeTimer = null;
@@ -442,6 +445,30 @@ const getUserPositionDetail = async (code) => {
     }
 }
 
+// 获取可撤单列表
+const getCanCancelStockOrderList = async (code) => {
+    let res = await getCanCancelStockOrder({code: code});
+    if (res && res.data && res.data.success) {
+        let data = [];
+        if (res.data.data && res.data.data.length > 0) {
+            data = res.data.data.map(order => ({
+                id: order.id,
+                type: order.direction === 1 ? 'buy' : 'sell',
+                price: order.price,
+                quantity: order.quantity,
+                createdAt: order.createTime
+            }));
+        }
+        currentStockPendingOrders.value = data;
+    }
+}
+
+// 提交撤单申请
+const cancelStockOrderRequest = async (orderId) => {
+ return await cancelStockOrder({stockOrderId: orderId});
+}
+
+
 // 计算属性
 const isInWatchlist = computed(() => {
     if (!props.stock) return false;
@@ -507,13 +534,6 @@ const canTrade = computed(() => {
         && estimatedAmount.value <= availableBalance.value;
     }
 });
-
-// 当前股票的待撤销委托单
-const currentStockPendingOrders = computed(() => {
-    if (!props.stock) return [];
-    return userStore.getPendingOrdersByStock(props.stock.code);
-});
-
 
 // 初始化数据
 const initStockRealtimeData = async () => {
@@ -771,46 +791,29 @@ const switchTradeType = (type) => {
 const handleCancelOrders = () => {
     // 切换到撤单模式
     tradeType.value = 'cancel';
+    // 获取可撤单列表
+    getCanCancelStockOrderList(stockInfo.code);
 };
 
+// 撤单
 const cancelOrder = async (orderId) => {
-    try {
-        // 查找委托单信息
-        const order = currentStockPendingOrders.value.find(o => o.id === orderId);
-        if (!order) {
-            ElMessage.error('委托单不存在');
-            return;
+    const confirmed = await ElMessageBox.confirm('确定要撤销这笔委托吗？', '确认撤单',
+        {
+            confirmButtonText: '确定撤单',
+            cancelButtonText: '取消',
+            type: 'warning',
+            dangerouslyUseHTMLString: false,
+            customClass: 'high-z-index-dialog',
+            appendTo: 'body',
         }
+    );
 
-        // 确认撤单
-        const confirmed = await ElMessageBox.confirm(
-            `确定要撤销这笔委托吗？\n\n${order.type === 'buy' ? '买入' : '卖出'} ${order.stockName}\n委托价格：¥${order.price.toFixed(2)}\n委托数量：${order.quantity}股`,
-            '确认撤单',
-            {
-                confirmButtonText: '确定撤单',
-                cancelButtonText: '取消',
-                type: 'warning',
-                dangerouslyUseHTMLString: false,
-                customClass: 'high-z-index-dialog',
-                appendTo: 'body',
-            }
-        );
-
-        if (confirmed) {
-            const success = userStore.cancelPendingOrder(orderId);
-            if (success) {
-                ElMessage.success('委托单已撤销');
-            } else {
-                ElMessage.error('撤单失败，该委托单可能已经成交');
-            }
+    if (confirmed) {
+        const res = await cancelStockOrderRequest(orderId);
+        if (res && res.data && res.data.success) {
+            ElMessage.success('委托单已撤销');
+            getCanCancelStockOrderList(stockInfo.code);
         }
-    } catch (error) {
-        if (error === 'cancel') {
-            // 用户取消撤单
-            return;
-        }
-        console.error('撤单失败:', error);
-        ElMessage.error('撤单失败，请重试');
     }
 };
 
@@ -824,6 +827,7 @@ const formatOrderTime = (timeString) => {
     });
 };
 
+// 关闭窗口
 const handleClose = () => {
     visible.value = false;
 };
@@ -854,6 +858,9 @@ watch(visible, (newVisible) => {
         }else if(tradeType.value === 'sell') {
             // 获取用户持仓信息
             getUserPositionDetail(props.stock.code);
+        }else if(tradeType.value === 'cancel') {
+            // 获取可撤单列表
+            getCanCancelStockOrderList(props.stock.code);
         }
         // 查询用户信息
         getUserInfoDetail();

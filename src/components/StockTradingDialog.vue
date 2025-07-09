@@ -219,12 +219,12 @@
 
                                     <!-- 快捷数量选择 -->
                                     <div class="quantity-shortcuts">
-                                        <el-button size="small" @click="setQuantityByPercent(100)">{{ tradeType ===
+                                        <el-button size="small" @click="setQuantityByPercent(1)">{{ tradeType ===
                                             'sell' ?
                                             '全部' : '全仓' }}</el-button>
-                                        <el-button size="small" @click="setQuantityByPercent(50)">1/2</el-button>
-                                        <el-button size="small" @click="setQuantityByPercent(33)">1/3</el-button>
-                                        <el-button size="small" @click="setQuantityByPercent(25)">1/4</el-button>
+                                        <el-button size="small" @click="setQuantityByPercent(1/2)">1/2</el-button>
+                                        <el-button size="small" @click="setQuantityByPercent(1/3)">1/3</el-button>
+                                        <el-button size="small" @click="setQuantityByPercent(1/4)">1/4</el-button>
                                     </div>
                                 </div>
 
@@ -255,21 +255,21 @@
 
                                 <!-- 账户信息 -->
                                 <div class="account-info-section">
-                                    <div class="account-row">
+                                    <div class="account-row" v-if="tradeType === 'buy'">
                                         <span class="label">资金余额</span>
                                         <span class="value">{{ balance.toFixed(2) }}</span>
                                     </div>
-                                     <div class="account-row">
+                                    <div class="account-row" v-if="tradeType === 'buy'">
                                         <span class="label">可用资金</span>
                                         <span class="value">{{ availableBalance.toFixed(2) }}</span>
                                     </div>
-                                    <div class="account-row" v-if="currentPosition">
+                                    <div class="account-row" v-if="tradeType === 'sell'">
                                         <span class="label">持仓数量</span>
-                                        <span class="value">{{ currentPosition.quantity }}</span>
+                                        <span class="value">{{ userPosition.quantity }}</span>
                                     </div>
-                                    <div class="account-row" v-if="currentPosition">
+                                    <div class="account-row" v-if="tradeType === 'sell'">
                                         <span class="label">可卖数量</span>
-                                        <span class="value">{{ currentPosition.quantity }}</span>
+                                        <span class="value">{{ userPosition.availableQuantity }}</span>
                                     </div>
                                 </div>
                             </div>
@@ -341,7 +341,7 @@
 import { ref, reactive, computed, watch, nextTick } from 'vue';
 import { ElMessage, ElMessageBox } from 'element-plus';
 import { useUserStore } from '@/store/user';
-import { getStockRealtimeData, buyStock, sellStock, cancelStockOrder, getUserInfo } from '@/api/api';
+import { getStockRealtimeData, buyStock, sellStock, cancelStockOrder, getUserInfo, getUserPosition } from '@/api/api';
 
 // Props
 const props = defineProps({
@@ -411,6 +411,13 @@ const stockInfo = reactive({
     time: ''
 });
 
+// 用户持仓
+const userPosition = reactive({
+    quantity: 0,
+    availableQuantity: 0,
+});
+
+// 获取用户资产详情
 const getUserInfoDetail = async () => {
     let res = await getUserInfo();
     if (res && res.data && res.data.success) {
@@ -426,6 +433,15 @@ const getUserInfoDetail = async () => {
     }
 }
 
+// 获取用户持仓详情
+const getUserPositionDetail = async (code) => {
+    let res = await getUserPosition({code: code});
+    if (res && res.data && res.data.success) {
+        userPosition.quantity = res.data.data.totalVolume;
+        userPosition.availableQuantity = res.data.data.availableVolume;
+    }
+}
+
 // 计算属性
 const isInWatchlist = computed(() => {
     if (!props.stock) return false;
@@ -438,18 +454,10 @@ const balance = computed(() => userStore.balance);
 // 用户可用资产
 const availableBalance = computed(() => userStore.availableBalance);
 
-// 用户持仓
-const currentPosition = computed(() => {
-    if (!props.stock) return null;
-    return userStore.getPosition(props.stock.code);
-});
-
 // 最大可买卖股数计算
 const maxBuyQuantity = computed(() => {
-
     if (tradeType.value === 'sell') {
-        const position = userStore.getPosition(props.stock.code);
-        return position ? position.quantity : 0;
+        return userPosition.availableQuantity;
     }else{
         const price = tradingForm.orderType === 'market' ? parseFloat(stockInfo.price) : parseFloat(tradingForm.price);
         const availableFunds = availableBalance.value;
@@ -470,8 +478,7 @@ const availableBuyQuantity = computed(() => {
 
 // 可卖股数计算
 const availableSellQuantity = computed(() => {
-    const position = userStore.getPosition(props.stock.code);
-    return position ? position.quantity : 0;
+    return userPosition.availableQuantity;
 });
 
 // 更新委托金额
@@ -484,10 +491,17 @@ const estimatedAmount = computed(() => {
 // 是否可以交易
 const canTrade = computed(() => {
     if (tradeType.value === 'sell') {
-        return availableSellQuantity.value >= tradingForm.quantity;
+        // 卖出时需要检查可用股数和实际卖出数量及价格
+        const price = tradingForm.orderType === 'market' ? parseFloat(stockInfo.price) : parseFloat(tradingForm.price);
+        return price && price > 0
+        && tradingForm.quantity > 0 && (tradingForm.quantity % 100 === 0 || tradingForm.quantity == availableSellQuantity.value)
+        && availableSellQuantity.value > 0 
+        && tradingForm.quantity <= availableSellQuantity.value;
     }else{
-        // 买入时需要检查可用资金和可购买数量，实际购买数量
-        return tradingForm.quantity > 0 && tradingForm.quantity % 100 === 0
+        // 买入时需要检查可用资金和可购买数量，实际购买数量及价格
+        const price = tradingForm.orderType === 'market' ? parseFloat(stockInfo.price) : parseFloat(tradingForm.price);
+        return price && price > 0
+        && tradingForm.quantity > 0 && tradingForm.quantity % 100 === 0
         && availableBuyQuantity.value > 0 
         && tradingForm.quantity <= availableBuyQuantity.value
         && estimatedAmount.value <= availableBalance.value;
@@ -558,7 +572,6 @@ const startRealtimeTimer = () => {
         clearInterval(realtimeTimer);
     }
     // 交易时间内才执行定时查询
-    const currentTime = new Date();
     if(isMarketOpen()){
         realtimeTimer = setInterval(() => {
             initStockRealtimeData();
@@ -575,6 +588,13 @@ const startCheckMarketStatus = () => {
         const newStatus = isMarketOpen();
         if(stockInfo.marketStatus !== newStatus){
             stockInfo.marketStatus = newStatus;
+            // 如果市场开盘，且当前没有实时定时器，则启动实时定时器
+            if(newStatus && !realtimeTimer){
+                startRealtimeTimer();
+            }
+            if(!newStatus && realtimeTimer){
+                stopRealtimeTimer();
+            }
         } 
     }, 1000);
 };
@@ -670,16 +690,20 @@ const adjustPrice = (delta) => {
 // 快速设置买卖数量
 const setQuantityByPercent = (percent) => {
     if (tradeType.value === 'sell') {
-        const position = userStore.getPosition(props.stock.code);
-        const targetQuantity = Math.floor((position?.quantity || 0) * percent / 100 / 100) * 100;
-        tradingForm.quantity = Math.max(100, targetQuantity);
+        const position = userPosition.availableQuantity;
+        if(percent === 1){
+            tradingForm.quantity = position;
+        }else{
+            const targetQuantity = Math.floor(position * percent / 100) * 100;
+            tradingForm.quantity = targetQuantity;
+        }
     } else {
         const price = tradingForm.orderType === 'market' ? parseFloat(stockInfo.price) : parseFloat(tradingForm.price);
         if (!price || price <= 0) {
             ElMessage.warning('请先输入有效的价格');
             return;
         }
-        const availableFunds = availableBalance.value * percent / 100;
+        const availableFunds = availableBalance.value * percent;
         const targetQuantity = Math.floor(availableFunds / price / 100) * 100;
         tradingForm.quantity = targetQuantity >= 100 ? targetQuantity : 0;
     }
@@ -734,6 +758,11 @@ const confirmTrade = async () => {
 
 const switchTradeType = (type) => {
     tradeType.value = type;
+    if(type === 'sell') {
+        getUserPositionDetail(props.stock.code);
+    }else if(type === 'buy') {
+        getUserInfoDetail();
+    }
     // 重置表单
     tradingForm.quantity = 100;
     tradingForm.price = stockInfo.price;
@@ -819,14 +848,24 @@ watch(visible, (newVisible) => {
         if (!tradingForm.orderType) {
             tradingForm.orderType = 'limit';
         }
+        if(tradeType.value === 'buy') {
+            // 获取用户持仓信息
+            getUserPositionDetail(props.stock.code);
+        }else if(tradeType.value === 'sell') {
+            // 获取用户持仓信息
+            getUserPositionDetail(props.stock.code);
+        }
         // 查询用户信息
         getUserInfoDetail();
         // 检查市场状态
         stockInfo.marketStatus = isMarketOpen()
+        // 页面打开且开市则启动定时器
+        if(stockInfo.marketStatus){
+            startRealtimeTimer();
+        }
         startCheckMarketStatus();
         // 打开弹窗时启动定时器和拉取一次数据
-        initStockRealtimeData();
-        startRealtimeTimer();
+        initStockRealtimeData();  
     } else if (!newVisible) {
         // 关闭弹窗时停止定时器
         stopRealtimeTimer();

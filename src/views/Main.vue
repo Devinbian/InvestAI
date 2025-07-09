@@ -255,7 +255,7 @@
                 </div>
                 <div class="guide-actions">
                     <el-button type="primary" size="small" @click="handleGuideAction">{{ guideActionText
-                    }}</el-button>
+                        }}</el-button>
                     <el-button size="small" @click="dismissGuide">稍后</el-button>
                 </div>
             </div>
@@ -1674,7 +1674,7 @@ const handleRegenerateMessage = async (data) => {
         });
 
         // 找到该消息在聊天历史中的索引
-        const messageIndex = chatHistory.value.findIndex(
+        let messageIndex = chatHistory.value.findIndex(
             msg => {
                 // 首先尝试通过ID匹配
                 if (msg.id && targetMessage.id && msg.id === targetMessage.id) {
@@ -1718,7 +1718,7 @@ const handleRegenerateMessage = async (data) => {
         }
 
         // 获取当前AI消息
-        const currentMessage = chatHistory.value[messageIndex];
+        let currentMessage = chatHistory.value[messageIndex];
 
         // 验证消息是否存在
         if (!currentMessage) {
@@ -1743,8 +1743,30 @@ const handleRegenerateMessage = async (data) => {
                 targetMessageContent: targetMessage.content?.substring(0, 100),
                 chatHistoryLength: chatHistory.value.length
             });
-            ElMessage.error('只能重新生成AI消息');
-            return;
+
+            // 临时解决方案：如果目标消息是assistant角色，尝试直接使用目标消息的索引
+            if (targetMessage.role === 'assistant') {
+                console.log('🔄 尝试使用目标消息进行重新生成');
+                // 直接使用目标消息更新聊天历史
+                const targetIndex = chatHistory.value.findIndex(msg =>
+                    msg === targetMessage ||
+                    (msg.id && targetMessage.id && msg.id === targetMessage.id) ||
+                    (msg.timestamp && targetMessage.timestamp && msg.timestamp === targetMessage.timestamp)
+                );
+
+                if (targetIndex !== -1) {
+                    console.log('🔄 找到目标消息索引:', targetIndex);
+                    // 继续使用找到的索引
+                    messageIndex = targetIndex;
+                    currentMessage = chatHistory.value[targetIndex];
+                } else {
+                    ElMessage.error('无法找到要重新生成的消息');
+                    return;
+                }
+            } else {
+                ElMessage.error('只能重新生成AI消息');
+                return;
+            }
         }
 
         console.log('🔄 重新生成消息 - 目标消息详情:', {

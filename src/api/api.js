@@ -20,6 +20,7 @@ const api = {
   buyStockApi: "/stock/buy", // 买入股票
   sellStockApi: "/stock/sell", // 卖出股票
   cancelStockOrderApi: "/stock/cancel-order", // 撤销订单
+  stockPlan:"/stock/plan",//获取股票计划
 
 
   createConversationApi: "/conversation/create", // 创建会话
@@ -80,4 +81,6 @@ export const getMarketIndices = () => request.get(api.marketIndicesApi);
 
 // 获取推荐股票
 export const getRecommendStocks = () => request.get(api.recommendStocksApi);
+
+export const getStockPlan = () => request.get(api.stockPlan);
 

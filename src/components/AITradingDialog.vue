@@ -136,6 +136,7 @@
 </template>
 
 <script setup>
+import {getStockPlan} from '@/api/stock';
 import { ref, reactive, watch, computed } from 'vue';
 import { useUserStore } from '../store/user';
 import { ArrowDown, ArrowUp } from '@element-plus/icons-vue';
@@ -151,6 +152,15 @@ const props = defineProps({
         type: Object,
         default: null
     }
+});
+
+
+onMounted(() => {
+    getStockPlan().then((res) => {
+        if (res.data.success) {
+        }
+    });
+
 });
 
 // Emits

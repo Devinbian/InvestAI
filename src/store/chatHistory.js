@@ -142,7 +142,7 @@ export const useChatHistoryStore = defineStore("chatHistory", {
       this.chatHistoryList.unshift(newChat);
       this.currentChatId = chatId;
       this.currentChatMessages = [...messages];
-      this.saveChatHistory();
+      this.saveChatHistoryWithoutLimit();
 
       return chatId;
     },
@@ -205,7 +205,7 @@ export const useChatHistoryStore = defineStore("chatHistory", {
               this.generateChatTitle(messages);
           }
 
-          this.saveChatHistory();
+          this.saveChatHistoryWithoutLimit();
         }
       }
     },
@@ -239,7 +239,7 @@ export const useChatHistoryStore = defineStore("chatHistory", {
     // 添加消息到当前聊天
     addMessageToCurrentChat(message) {
       this.currentChatMessages.push(message);
-      this.updateCurrentChatMessages(this.currentChatMessages);
+      this.updateCurrentChatMessagesWithoutLimit(this.currentChatMessages);
     },
 
     // 重命名聊天
@@ -249,7 +249,7 @@ export const useChatHistoryStore = defineStore("chatHistory", {
       );
       if (chatIndex > -1) {
         this.chatHistoryList[chatIndex].title = newTitle;
-        this.saveChatHistory();
+        this.saveChatHistoryWithoutLimit();
         return true;
       }
       return false;
@@ -269,7 +269,7 @@ export const useChatHistoryStore = defineStore("chatHistory", {
           this.currentChatMessages = [];
         }
 
-        this.saveChatHistory();
+        this.saveChatHistoryWithoutLimit();
         return true;
       }
       return false;
@@ -291,7 +291,7 @@ export const useChatHistoryStore = defineStore("chatHistory", {
       this.chatHistoryList = [];
       this.currentChatId = null;
       this.currentChatMessages = [];
-      this.saveChatHistory();
+      this.saveChatHistoryWithoutLimit();
     },
 
     // 导出聊天历史
@@ -305,7 +305,7 @@ export const useChatHistoryStore = defineStore("chatHistory", {
         const importedChats = JSON.parse(jsonData);
         if (Array.isArray(importedChats)) {
           this.chatHistoryList = importedChats;
-          this.saveChatHistory();
+          this.saveChatHistoryWithoutLimit();
           return true;
         }
       } catch (error) {

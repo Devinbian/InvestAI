@@ -151,7 +151,7 @@ export function useChatManager() {
             }
 
             // 保存聊天记录到存储
-            chatHistoryStore.updateCurrentChatMessages(chatHistory.value);
+            chatHistoryStore.updateCurrentChatMessagesWithoutLimit(chatHistory.value);
             console.log("流式响应完成，聊天记录已保存");
           },
           onerror: (err) => {
@@ -181,7 +181,7 @@ export function useChatManager() {
             }
 
             // 保存聊天记录到存储
-            chatHistoryStore.updateCurrentChatMessages(chatHistory.value);
+            chatHistoryStore.updateCurrentChatMessagesWithoutLimit(chatHistory.value);
             console.log("流式连接错误，聊天记录已保存");
 
             ElMessage.error("连接中断，请重试");
@@ -213,7 +213,7 @@ export function useChatManager() {
       }
 
       // 保存聊天记录到存储
-      chatHistoryStore.updateCurrentChatMessages(chatHistory.value);
+      chatHistoryStore.updateCurrentChatMessagesWithoutLimit(chatHistory.value);
       console.log("发送消息失败，聊天记录已保存");
 
       ElMessage.error("发送消息失败，请重试");
@@ -263,7 +263,7 @@ export function useChatManager() {
       }
 
       // 保存聊天记录到存储
-      chatHistoryStore.updateCurrentChatMessages(chatHistory.value);
+      chatHistoryStore.updateCurrentChatMessagesWithoutLimit(chatHistory.value);
 
       console.log("🛑 生成已停止，聊天记录已保存");
     } else {

@@ -129,6 +129,7 @@ export function useStockOperations() {
       content: "",
       isGenerating: true,
       timestamp: Date.now(),
+      messageType: 'smart_recommendation', // 设置消息类型
     };
     chatHistory.value.push(processingMessage, processingMessage1);
 
@@ -249,6 +250,7 @@ export function useStockOperations() {
         lastMessage.hasStockInfo = true;
         lastMessage.isRecommendation = true;
         lastMessage.stockList = stockList;
+        lastMessage.messageType = 'smart_recommendation'; // 设置消息类型备份
         lastMessage.isPersistent = true;
         lastMessage.messageId = `recommendation-${Date.now()}`;
         lastMessage.timestamp = new Date().toISOString();
@@ -356,7 +358,7 @@ export function useStockOperations() {
     // 添加用户消息和处理中的AI消息
     chatHistory.value.push(
       { id: generateMessageId(), role: "user", content: userMessage, timestamp: Date.now() },
-      { id: generateMessageId(), role: "assistant", content: "", isGenerating: true, timestamp: Date.now() },
+      { id: generateMessageId(), role: "assistant", content: "", isGenerating: true, timestamp: Date.now(), messageType: 'news_update' },
     );
 
     // 检查是否被中断
@@ -379,6 +381,8 @@ export function useStockOperations() {
     if (lastMessage && lastMessage.role === "assistant") {
       lastMessage.content = res.data.content;
       lastMessage.isGenerating = false; // 取消生成状态
+      lastMessage.isNewsUpdate = true;
+      lastMessage.messageType = 'news_update'; // 设置消息类型备份
       chatHistory.value = [...chatHistory.value];
     }
 
@@ -465,7 +469,7 @@ export function useStockOperations() {
 
     chatHistory.value.push(
       { id: generateMessageId(), role: "user", content: userMessage, timestamp: Date.now() },
-      { id: generateMessageId(), role: "assistant", content: "", isGenerating: true, timestamp: Date.now() },
+      { id: generateMessageId(), role: "assistant", content: "", isGenerating: true, timestamp: Date.now(), messageType: 'asset_analysis' },
     );
 
     // 检查是否被中断
@@ -533,6 +537,8 @@ export function useStockOperations() {
       lastMessage.content = '';
       lastMessage.isGenerating = false; // 取消生成状态
       lastMessage.hasAssetInfo = true;
+      lastMessage.isAssetAnalysis = true;
+      lastMessage.messageType = 'asset_analysis'; // 设置消息类型备份
       lastMessage.assetData = {
         totalAssets,
         balance: totalAssets - portfolioValue, // 可用资金 = 总资产 - 持仓市值

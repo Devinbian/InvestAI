@@ -257,13 +257,14 @@
                 </div>
             </div>
 
-                    <!-- 股票列表（智能荐股等场景） -->
-        <div v-if="message.hasStockInfo && message.stockList" class="stock-list">
-            <!-- 调试信息 -->
-            <div v-if="false" style="background: #f0f0f0; padding: 10px; margin: 10px 0; font-size: 12px; color: #666;">
-                调试信息: hasStockInfo={{ message.hasStockInfo }}, stockList长度={{ message.stockList?.length }}, 
-                isRecommendation={{ message.isRecommendation }}, isMobileView={{ isMobileView }}
-            </div>
+            <!-- 股票列表（智能荐股等场景） -->
+            <div v-if="message.hasStockInfo && message.stockList" class="stock-list">
+                <!-- 调试信息 -->
+                <div v-if="false"
+                    style="background: #f0f0f0; padding: 10px; margin: 10px 0; font-size: 12px; color: #666;">
+                    调试信息: hasStockInfo={{ message.hasStockInfo }}, stockList长度={{ message.stockList?.length }},
+                    isRecommendation={{ message.isRecommendation }}, isMobileView={{ isMobileView }}
+                </div>
 
 
                 <StockList v-if="!isMobileView" :stocks="message.stockList" v-bind="smartRecommendationConfig"
@@ -403,6 +404,7 @@
 
 <script setup>
 import { ref, computed, nextTick, onMounted, onUnmounted } from 'vue';
+import { ElMessage } from 'element-plus';
 import MarkdownRenderer from './MarkdownRenderer.vue';
 import StockList from './StockList.vue';
 import MobileStockList from './MobileStockList.vue';
@@ -507,7 +509,7 @@ const timeUpdateInterval = ref(null);
 // 实时计算相对时间
 const liveRecommendationTime = computed(() => {
     if (!props.message.timestamp) return "";
-    
+
     const messageTime = new Date(props.message.timestamp);
     const now = currentTime.value;
     const diffTime = now - messageTime;
@@ -667,10 +669,36 @@ const handleCopyMessage = async () => {
 
 // 重新生成消息
 const handleRegenerateMessage = () => {
+    console.log('🔄 ChatMessage - 重新生成消息请求');
+    console.log('🔄 ChatMessage - 当前消息详情:', {
+        role: props.message.role,
+        content: props.message.content?.substring(0, 100),
+        id: props.message.id,
+        timestamp: props.message.timestamp,
+        messageType: props.message.messageType,
+        isWatchlistDisplay: props.message.isWatchlistDisplay,
+        hasWatchlistInfo: props.message.hasWatchlistInfo,
+        messageIndex: props.messageIndex
+    });
+
+    // 验证消息是否为AI消息
+    if (props.message.role !== 'assistant') {
+        console.error('🔄 ChatMessage - 错误：尝试重新生成非AI消息！', {
+            role: props.message.role,
+            messageIndex: props.messageIndex
+        });
+        ElMessage.error('只能重新生成AI回复消息');
+        return;
+    }
+
+    // 发送重新生成请求
     emit('regenerate-message', {
         message: props.message,
-        messageId: props.message.id || props.message.timestamp
+        messageId: props.message.id || props.message.timestamp,
+        messageIndex: props.messageIndex
     });
+
+    console.log('🔄 ChatMessage - 重新生成请求已发送');
 };
 
 // 获取前一条用户消息

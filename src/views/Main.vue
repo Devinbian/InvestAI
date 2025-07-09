@@ -1061,9 +1061,9 @@ const handleWatchlistChanged = (changeData) => {
     console.log('自选股发生变化:', changeData);
     // 可以在这里添加自选股变化后的逻辑
     if (changeData && changeData.action === 'add') {
-        ElMessage.success(`已添加 ${changeData.stockName} 到自选股`);
+        addToWatchlist(changeData.stock);
     } else if (changeData && changeData.action === 'remove') {
-        ElMessage.success(`已从自选股移除 ${changeData.stockName}`);
+        removeFromWatchlist(changeData.stock);
     }
 };
 
@@ -3288,23 +3288,15 @@ const handleSidebarInteraction = async (data) => {
 // 自选股相关方法
 const addToWatchlist = (stockInfo) => {
     if (userStore.addToWatchlist(stockInfo)) {
-        ElMessage.success(`${stockInfo.name} 已加入自选股`);
-
         // 更新聊天历史中的自选股数据
         updateWatchlistInChatHistory();
-    } else {
-        ElMessage.warning(`${stockInfo.name} 已在自选股中`);
     }
 };
 
 const removeFromWatchlist = (stockCode) => {
     if (userStore.removeFromWatchlist(stockCode)) {
-        ElMessage.success('已从自选股中移除');
-
         // 更新聊天历史中的自选股数据
         updateWatchlistInChatHistory();
-    } else {
-        ElMessage.error('移除失败');
     }
 };
 

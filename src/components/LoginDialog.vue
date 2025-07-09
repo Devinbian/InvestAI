@@ -256,8 +256,10 @@ const handleLogin = async () => {
                     const user = res.data.data.user;
                     userStore.setBalance(user?.balance || 0);
                     userStore.setSmartPointsBalance(user?.point || 0);
+                    userStore.setAvailableBalance(user?.availableBalance || 0);
                     localStorage.setItem("balance", user?.balance || 0);
                     localStorage.setItem("smartPointsBalance", user?.point || 0);
+                    localStorage.setItem("availableBalance", user?.availableBalance || 0);
 
                     closeDialog();
 

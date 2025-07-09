@@ -22,6 +22,8 @@ const api = {
   cancelStockOrderApi: "/stock/cancel-order", // 撤销订单
   stockPlan:"/stock/trade-plan",//获取股票计划
 
+  userPositionApi: "/user/position/detail", // 获取用户某只股票的持仓详情
+  canCancelStockOrderApi: "/stock/can-cancel-order", // 可撤单列表
 
   createConversationApi: "/conversation/create", // 创建会话
   chatStreamApi: "/chat/stream", // 聊天流式接口
@@ -29,7 +31,11 @@ const api = {
   // sidebar
   marketIndicesApi: "/market/indices", // 获取大盘指数
   recommendStocksApi: "/stock/recommend", // 获取推荐股票
-  
+
+
+  stockSelectApi: "/stock/select", // 加入自选股
+  stockUnselectApi: "/stock/unselect", // 移除自选股
+  stockSelectStatusApi: "/stock/select-status", // 是否已经加入了自选股
 };
 
 export default api;
@@ -84,3 +90,28 @@ export const getRecommendStocks = () => request.get(api.recommendStocksApi);
 
 export const getStockPlan = (code) => request.get(api.stockPlan+"?code="+code);
 
+
+// 获取用户某只股票的持仓详情
+export const getUserPosition = (params) => request.get(api.userPositionApi, {
+  params
+});
+
+// 获取可撤单列表
+export const getCanCancelStockOrder = (params) => request.get(api.canCancelStockOrderApi, {
+  params
+});
+
+// 加入自选股
+export const stockSelect = (params) => request.get(api.stockSelectApi, {
+  params
+});
+
+// 移除自选股
+export const stockUnselect = (params) => request.get(api.stockUnselectApi, {
+  params
+});
+
+// 是否已经加入了自选股
+export const stockSelectStatus = (params) => request.get(api.stockSelectStatusApi, {
+  params
+});

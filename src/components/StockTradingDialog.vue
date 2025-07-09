@@ -57,7 +57,7 @@
 
                         <div class="action-buttons">
                             <!-- 自选股按钮 -->
-                            <el-button v-if="!isInWatchlist" class="action-btn favorite-btn" size="small"
+                            <el-button v-if="!selectedStock" class="action-btn favorite-btn" size="small"
                                 @click="handleAddToWatchlist">
                                 <svg width="14" height="14" viewBox="0 0 24 24" fill="none">
                                     <path
@@ -187,12 +187,12 @@
                                         <span class="input-label">委托价格</span>
                                         <div class="price-input-group">
                                             <el-input v-model="tradingForm.price" class="price-input"
-                                                placeholder="请输入委托价格" />
+                                              type="number" :min="0.01" :max="99999" :step="0.01" placeholder="请输入委托价格" />
                                             <div class="price-controls">
                                                 <el-button size="small" class="price-btn"
-                                                    @click="adjustPrice(0.01)">+</el-button>
+                                                    @click="adjustPrice(0.01)" :disabled="tradingForm.price >= 99999">+</el-button>
                                                 <el-button size="small" class="price-btn"
-                                                    @click="adjustPrice(-0.01)">-</el-button>
+                                                    @click="adjustPrice(-0.01)" :disabled="tradingForm.price <= 0.01" >-</el-button>
                                             </div>
                                         </div>
                                     </div>
@@ -211,7 +211,7 @@
                                     <div class="input-row">
                                         <span class="input-label">委托数量</span>
                                         <div class="quantity-input-group">
-                                            <el-input-number v-model="tradingForm.quantity" :min="100" :step="100"
+                                            <el-input-number v-model="tradingForm.quantity" :min="0" :step="100"
                                                 :max="maxBuyQuantity" controls-position="right"
                                                 class="quantity-input" />
                                         </div>
@@ -219,19 +219,19 @@
 
                                     <!-- 快捷数量选择 -->
                                     <div class="quantity-shortcuts">
-                                        <el-button size="small" @click="setQuantityByPercent(100)">{{ tradeType ===
+                                        <el-button size="small" @click="setQuantityByPercent(1)">{{ tradeType ===
                                             'sell' ?
                                             '全部' : '全仓' }}</el-button>
-                                        <el-button size="small" @click="setQuantityByPercent(50)">1/2</el-button>
-                                        <el-button size="small" @click="setQuantityByPercent(33)">1/3</el-button>
-                                        <el-button size="small" @click="setQuantityByPercent(25)">1/4</el-button>
+                                        <el-button size="small" @click="setQuantityByPercent(1/2)">1/2</el-button>
+                                        <el-button size="small" @click="setQuantityByPercent(1/3)">1/3</el-button>
+                                        <el-button size="small" @click="setQuantityByPercent(1/4)">1/4</el-button>
                                     </div>
                                 </div>
 
                                 <!-- 可买/可卖信息 -->
                                 <div class="available-info">
                                     <div class="info-row">
-                                        <span class="label">{{ tradeType === 'sell' ? '可卖---' : '可买---' }}</span>
+                                        <span class="label">{{ tradeType === 'sell' ? '可卖' : '可买' }}</span>
                                         <span class="value">{{ tradeType === 'sell' ? availableSellQuantity :
                                             availableBuyQuantity }}股</span>
                                     </div>
@@ -255,17 +255,21 @@
 
                                 <!-- 账户信息 -->
                                 <div class="account-info-section">
-                                    <div class="account-row">
+                                    <div class="account-row" v-if="tradeType === 'buy'">
                                         <span class="label">资金余额</span>
                                         <span class="value">{{ balance.toFixed(2) }}</span>
                                     </div>
-                                    <div class="account-row" v-if="currentPosition">
-                                        <span class="label">持仓数量</span>
-                                        <span class="value">{{ currentPosition.quantity }}</span>
+                                    <div class="account-row" v-if="tradeType === 'buy'">
+                                        <span class="label">可用资金</span>
+                                        <span class="value">{{ availableBalance.toFixed(2) }}</span>
                                     </div>
-                                    <div class="account-row" v-if="currentPosition">
+                                    <div class="account-row" v-if="tradeType === 'sell'">
+                                        <span class="label">持仓数量</span>
+                                        <span class="value">{{ userPosition.quantity }}</span>
+                                    </div>
+                                    <div class="account-row" v-if="tradeType === 'sell'">
                                         <span class="label">可卖数量</span>
-                                        <span class="value">{{ currentPosition.quantity }}</span>
+                                        <span class="value">{{ userPosition.availableQuantity }}</span>
                                     </div>
                                 </div>
                             </div>
@@ -285,8 +289,8 @@
                             <div class="depth-table">
                                 <div class="table-header">
                                     <span class="col-label">档位</span>
-                                    <span class="col-price">价格</span>
-                                    <span class="col-volume">数量</span>
+                                    <span class="col-price">价格(单位: 元)</span>
+                                    <span class="col-volume">数量(单位: 手)</span>
                                 </div>
 
                                 <!-- 卖盘 -->
@@ -337,7 +341,7 @@
 import { ref, reactive, computed, watch, nextTick } from 'vue';
 import { ElMessage, ElMessageBox } from 'element-plus';
 import { useUserStore } from '@/store/user';
-import { getStockRealtimeData, buyStock, sellStock, cancelStockOrder } from '@/api/api';
+import { getStockRealtimeData, buyStock, sellStock, cancelStockOrder, getUserInfo, getUserPosition, getCanCancelStockOrder, stockSelect, stockUnselect, stockSelectStatus } from '@/api/api';
 
 // Props
 const props = defineProps({
@@ -373,8 +377,18 @@ const tradeType = ref(props.tradeType);
 const sellOrders = ref([]);
 const buyOrders = ref([]);
 
+// 当前股票的待撤销委托单
+const currentStockPendingOrders = ref([]);
+
+// 是否加入自选
+const selectedStock = ref(false);;
+
 // 实时数据查询定时器
 let realtimeTimer = null;
+
+// 股市是否开盘定时器
+let checkMarketOpenInterval = null;
+
 
 // 交易表单
 const tradingForm = reactive({
@@ -403,85 +417,139 @@ const stockInfo = reactive({
     time: ''
 });
 
-// 计算属性
-const isInWatchlist = computed(() => {
-    if (!props.stock) return false;
-    return userStore.isInWatchlist(props.stock.code);
+// 用户持仓
+const userPosition = reactive({
+    quantity: 0,
+    availableQuantity: 0,
 });
 
+// 获取用户资产详情
+const getUserInfoDetail = async () => {
+    let res = await getUserInfo();
+    if (res && res.data && res.data.success) {
+        balance.value = res.data.data.user.balance;
+        availableBalance.value = res.data.data.user.availableBalance;
+        userStore.setBalance(res.data.data.user.balance);
+        userStore.setAvailableBalance(res.data.data.user.availableBalance);
+        userStore.setSmartPointsBalance(res.data.data.user.point);
+    }else{
+        userStore.setBalance(0);
+        userStore.setAvailableBalance(0);
+        userStore.setSmartPointsBalance(0);
+    }
+}
+
+// 获取用户持仓详情
+const getUserPositionDetail = async (code) => {
+    let res = await getUserPosition({code: code});
+    if (res && res.data && res.data.success) {
+        userPosition.quantity = res.data.data.totalVolume;
+        userPosition.availableQuantity = res.data.data.availableVolume;
+    }
+}
+
+// 获取可撤单列表
+const getCanCancelStockOrderList = async (code) => {
+    let res = await getCanCancelStockOrder({code: code});
+    if (res && res.data && res.data.success) {
+        let data = [];
+        if (res.data.data && res.data.data.length > 0) {
+            data = res.data.data.map(order => ({
+                id: order.id,
+                type: order.direction === 1 ? 'buy' : 'sell',
+                price: order.price,
+                quantity: order.quantity,
+                createdAt: order.createTime
+            }));
+        }
+        currentStockPendingOrders.value = data;
+    }
+}
+
+// 提交撤单申请
+const cancelStockOrderRequest = async (orderId) => {
+ return await cancelStockOrder({stockOrderId: orderId});
+}
+
+// 加入自选股
+const stockSelectRequest = async (code) => {
+ return await stockSelect({code: code});
+}
+
+// 移除自选股
+const stockUnselectRequest = async (code) => {
+ return await stockUnselect({code: code});
+}
+
+// 是否已经加入了自选股
+const stockSelectStatusRequest = async (code) => {
+    let res = await stockSelectStatus({code: code});
+    if (res && res.data && res.data.success) {
+        selectedStock.value = res.data.data === true;
+    }else{
+        selectedStock.value = false;
+    }
+}
+
+// 用户资产
 const balance = computed(() => userStore.balance);
 
-const currentPosition = computed(() => {
-    if (!props.stock) return null;
-    return userStore.getPosition(props.stock.code);
-});
+// 用户可用资产
+const availableBalance = computed(() => userStore.availableBalance);
 
+// 最大可买卖股数计算
 const maxBuyQuantity = computed(() => {
-    if (!props.stock) return 100;
-
     if (tradeType.value === 'sell') {
-        const position = userStore.getPosition(props.stock.code);
-        return position ? position.quantity : 0;
+        return userPosition.availableQuantity;
+    }else{
+        const price = tradingForm.orderType === 'market' ? parseFloat(stockInfo.price) : parseFloat(tradingForm.price);
+        const availableFunds = availableBalance.value;
+        const maxQuantity = Math.floor(availableFunds / price / 100) * 100;
+        return maxQuantity >= 100 ? maxQuantity : 0;
     }
-
-    const price = parseFloat(props.stock.price);
-    const availableFunds = userStore.balance;
-    const maxQuantity = Math.floor(availableFunds / price / 100) * 100;
-    return Math.max(100, maxQuantity);
 });
 
+// 可买股数计算
 const availableBuyQuantity = computed(() => {
-    if (!props.stock) return 0;
-    const price = tradingForm.orderType === 'market'
-        ? parseFloat(props.stock.price)
-        : parseFloat(tradingForm.price) || parseFloat(props.stock.price);
-
-    const availableFunds = userStore.balance;
+    const price = tradingForm.orderType === 'market' ? parseFloat(stockInfo.price) : parseFloat(tradingForm.price);
+    if (!price || price <= 0) return 0;
+    const availableFunds = availableBalance.value;
     const calculatedQuantity = Math.floor(availableFunds / price / 100) * 100;
-
-    // 调试信息
-    console.log('可买股数计算:', {
-        stockPrice: props.stock.price,
-        orderType: tradingForm.orderType,
-        formPrice: tradingForm.price,
-        finalPrice: price,
-        availableFunds: availableFunds,
-        calculatedQuantity: calculatedQuantity
-    });
 
     return calculatedQuantity;
 });
 
+// 可卖股数计算
 const availableSellQuantity = computed(() => {
-    if (!props.stock) return 0;
-    const position = userStore.getPosition(props.stock.code);
-    return position ? position.quantity : 0;
+    return userPosition.availableQuantity;
 });
 
+// 更新委托金额
 const estimatedAmount = computed(() => {
-    if (!props.stock || !tradingForm.quantity) return 0;
-    const price = tradingForm.orderType === 'market'
-        ? parseFloat(props.stock.price)
-        : parseFloat(tradingForm.price) || parseFloat(props.stock.price);
+    const price = tradingForm.orderType === 'market' ? parseFloat(stockInfo.price) : parseFloat(tradingForm.price);
+    if( !price || price <= 0 ) return 0;
     return tradingForm.quantity * price;
 });
 
+// 是否可以交易
 const canTrade = computed(() => {
-    if (!props.stock || !tradingForm.quantity) return false;
-
     if (tradeType.value === 'sell') {
-        return availableSellQuantity.value >= tradingForm.quantity;
+        // 卖出时需要检查可用股数和实际卖出数量及价格
+        const price = tradingForm.orderType === 'market' ? parseFloat(stockInfo.price) : parseFloat(tradingForm.price);
+        return price && price > 0
+        && tradingForm.quantity > 0 && (tradingForm.quantity % 100 === 0 || tradingForm.quantity == availableSellQuantity.value)
+        && availableSellQuantity.value > 0 
+        && tradingForm.quantity <= availableSellQuantity.value;
+    }else{
+        // 买入时需要检查可用资金和可购买数量，实际购买数量及价格
+        const price = tradingForm.orderType === 'market' ? parseFloat(stockInfo.price) : parseFloat(tradingForm.price);
+        return price && price > 0
+        && tradingForm.quantity > 0 && tradingForm.quantity % 100 === 0
+        && availableBuyQuantity.value > 0 
+        && tradingForm.quantity <= availableBuyQuantity.value
+        && estimatedAmount.value <= availableBalance.value;
     }
-
-    return estimatedAmount.value <= userStore.balance && tradingForm.quantity >= 100;
 });
-
-// 当前股票的待撤销委托单
-const currentStockPendingOrders = computed(() => {
-    if (!props.stock) return [];
-    return userStore.getPendingOrdersByStock(props.stock.code);
-});
-
 
 // 初始化数据
 const initStockRealtimeData = async () => {
@@ -540,11 +608,37 @@ const startRealtimeTimer = () => {
         clearInterval(realtimeTimer);
     }
     // 交易时间内才执行定时查询
-    const currentTime = new Date();
     if(isMarketOpen()){
         realtimeTimer = setInterval(() => {
             initStockRealtimeData();
         }, 5000); // 每5秒刷新一次
+    }
+};
+
+// 每秒钟检查交易时间
+const startCheckMarketStatus = () => {
+    if (checkMarketOpenInterval) {
+        clearInterval(checkMarketOpenInterval);
+    }
+    checkMarketOpenInterval = setInterval(()=>{
+        const newStatus = isMarketOpen();
+        if(stockInfo.marketStatus !== newStatus){
+            stockInfo.marketStatus = newStatus;
+            // 如果市场开盘，且当前没有实时定时器，则启动实时定时器
+            if(newStatus && !realtimeTimer){
+                startRealtimeTimer();
+            }
+            if(!newStatus && realtimeTimer){
+                stopRealtimeTimer();
+            }
+        } 
+    }, 1000);
+};
+
+const stopCheckMarketStatusTimer = () => {
+    if (checkMarketOpenInterval) {
+        clearInterval(checkMarketOpenInterval);
+        checkMarketOpenInterval = null;
     }
 };
 
@@ -622,171 +716,124 @@ const formatChangePercent = (changePercent) => {
     return num >= 0 ? `+${num.toFixed(2)}%` : `${num.toFixed(2)}%`;
 };
 
+// 调整价格
 const adjustPrice = (delta) => {
     const currentPrice = parseFloat(tradingForm.price) || 0;
     const newPrice = Math.max(0, currentPrice + delta);
     tradingForm.price = newPrice.toFixed(2);
 };
 
+// 快速设置买卖数量
 const setQuantityByPercent = (percent) => {
-    if (!props.stock) return;
-
     if (tradeType.value === 'sell') {
-        const position = userStore.getPosition(props.stock.code);
-        const targetQuantity = Math.floor((position?.quantity || 0) * percent / 100 / 100) * 100;
-        tradingForm.quantity = Math.max(100, targetQuantity);
+        const position = userPosition.availableQuantity;
+        if(percent === 1){
+            tradingForm.quantity = position;
+        }else{
+            const targetQuantity = Math.floor(position * percent / 100) * 100;
+            tradingForm.quantity = targetQuantity;
+        }
     } else {
-        const price = tradingForm.orderType === 'market'
-            ? parseFloat(props.stock.price)
-            : parseFloat(tradingForm.price) || parseFloat(props.stock.price);
-
-        const availableFunds = userStore.balance * percent / 100;
+        const price = tradingForm.orderType === 'market' ? parseFloat(stockInfo.price) : parseFloat(tradingForm.price);
+        if (!price || price <= 0) {
+            ElMessage.warning('请先输入有效的价格');
+            return;
+        }
+        const availableFunds = availableBalance.value * percent;
         const targetQuantity = Math.floor(availableFunds / price / 100) * 100;
-        tradingForm.quantity = Math.max(100, targetQuantity);
+        tradingForm.quantity = targetQuantity >= 100 ? targetQuantity : 0;
     }
 };
 
-const handleAddToWatchlist = () => {
-    if (userStore.addToWatchlist(props.stock)) {
-        ElMessage.success(`${props.stock.name} 已加入自选股`);
+const handleAddToWatchlist = async () => {
+    const res = await stockSelectRequest(stockInfo.code);
+    if (res && res.data && res.data.success) {
+        ElMessage.success('加入成功');
+        selectedStock.value = true;
         emit('watchlist-changed', { action: 'add', stock: props.stock });
-    } else {
-        ElMessage.warning(`${props.stock.name} 已在自选股中`);
+    }else{
+        selectedStock.value = false;
     }
 };
 
-const handleRemoveFromWatchlist = () => {
-    if (userStore.removeFromWatchlist(props.stock.code)) {
-        ElMessage.success('已从自选股中移除');
-        emit('watchlist-changed', { action: 'remove', stock: props.stock });
-    } else {
-        ElMessage.error('移除失败');
+const handleRemoveFromWatchlist = async () => {
+    const res = await stockUnselectRequest(stockInfo.code);
+    if (res && res.data && res.data.success) {
+        ElMessage.success('移除成功');
+        selectedStock.value = false;
+        emit('watchlist-changed', { action: 'remove', stock: stockInfo.code });
+    }else{
+        selectedStock.value = true;     
     }
 };
 
+// 提交委托
 const confirmTrade = async () => {
     if (!canTrade.value) return;
 
     tradingLoading.value = true;
 
-    try {
-        // 模拟交易延迟
-        await new Promise(resolve => setTimeout(resolve, 1500));
+    const prarms = {
+        code: stockInfo.code,
+        quantity: tradingForm.quantity,
+        price: tradingForm.orderType === 'market' ? stockInfo.price : tradingForm.price,
+        type: tradingForm.orderType === 'market' ? 1 : 2,
+    };
 
-        const tradePrice = tradingForm.orderType === 'market' ? parseFloat(props.stock.price) : parseFloat(tradingForm.price);
+    let res = null;
+    if (tradeType.value === 'buy') {
+        res = await buyStock(prarms);
+    } else if (tradeType.value === 'sell') {
+        res = await sellStock(prarms);
+    }
 
-        const tradeData = {
-            stock: props.stock,
-            type: tradeType.value,
-            orderType: tradingForm.orderType,
-            price: tradePrice,
-            quantity: tradingForm.quantity,
-            amount: estimatedAmount.value,
-            timestamp: new Date().toISOString()
-        };
-
-        // 创建委托单记录
-        const orderData = {
-            stockCode: props.stock.code,
-            stockName: props.stock.name,
-            type: tradeType.value,
-            orderType: tradingForm.orderType,
-            price: tradePrice,
-            quantity: tradingForm.quantity,
-        };
-
-        const createdOrder = userStore.addPendingOrder(orderData);
-
-        // 显示委托成功提示
-        ElMessage.success({
-            message: `委托${tradeType.value === 'buy' ? '买入' : '卖出'}已提交\n委托编号：${createdOrder.id.slice(-8)}`,
-            duration: 3000,
-            showClose: true
-        });
-
-        if (tradeType.value === 'buy') {
-            // 买入逻辑
-            const buyResult = userStore.buyStock(props.stock, tradingForm.quantity, tradePrice);
-            if (buyResult.success) {
-                ElMessage.success(`买入委托已提交：${props.stock.name} ${tradingForm.quantity}股`);
-            } else {
-                ElMessage.error(buyResult.message);
-                return;
-            }
-        } else {
-            // 卖出逻辑
-            const sellResult = userStore.sellStock(props.stock.code, tradingForm.quantity, tradePrice);
-            if (sellResult.success) {
-                ElMessage.success(`卖出委托已提交：${props.stock.name} ${tradingForm.quantity}股`);
-            } else {
-                ElMessage.error(sellResult.message);
-                return;
-            }
-        }
-
-        emit('trade-completed', tradeData);
+    if(res && res.data && res.data.success){
+        ElMessage.success('委托已提交');
+        tradingLoading.value = false;
         handleClose();
-
-    } catch (error) {
-        console.error('交易失败:', error);
-        ElMessage.error('交易失败，请重试');
-    } finally {
+    }else{
         tradingLoading.value = false;
     }
 };
 
 const switchTradeType = (type) => {
     tradeType.value = type;
+    if(type === 'sell') {
+        getUserPositionDetail(props.stock.code);
+    }else if(type === 'buy') {
+        getUserInfoDetail();
+    }
     // 重置表单
     tradingForm.quantity = 100;
-    if (props.stock) {
-        tradingForm.price = props.stock.price;
-    }
+    tradingForm.price = stockInfo.price;
 };
 
 const handleCancelOrders = () => {
     // 切换到撤单模式
     tradeType.value = 'cancel';
+    // 获取可撤单列表
+    getCanCancelStockOrderList(stockInfo.code);
 };
 
+// 撤单
 const cancelOrder = async (orderId) => {
-    try {
-        // 查找委托单信息
-        const order = currentStockPendingOrders.value.find(o => o.id === orderId);
-        if (!order) {
-            ElMessage.error('委托单不存在');
-            return;
+    const confirmed = await ElMessageBox.confirm('确定要撤销这笔委托吗？', '确认撤单',
+        {
+            confirmButtonText: '确定撤单',
+            cancelButtonText: '取消',
+            type: 'warning',
+            dangerouslyUseHTMLString: false,
+            customClass: 'high-z-index-dialog',
+            appendTo: 'body',
         }
+    );
 
-        // 确认撤单
-        const confirmed = await ElMessageBox.confirm(
-            `确定要撤销这笔委托吗？\n\n${order.type === 'buy' ? '买入' : '卖出'} ${order.stockName}\n委托价格：¥${order.price.toFixed(2)}\n委托数量：${order.quantity}股`,
-            '确认撤单',
-            {
-                confirmButtonText: '确定撤单',
-                cancelButtonText: '取消',
-                type: 'warning',
-                dangerouslyUseHTMLString: false,
-                customClass: 'high-z-index-dialog',
-                appendTo: 'body',
-            }
-        );
-
-        if (confirmed) {
-            const success = userStore.cancelPendingOrder(orderId);
-            if (success) {
-                ElMessage.success('委托单已撤销');
-            } else {
-                ElMessage.error('撤单失败，该委托单可能已经成交');
-            }
+    if (confirmed) {
+        const res = await cancelStockOrderRequest(orderId);
+        if (res && res.data && res.data.success) {
+            ElMessage.success('委托单已撤销');
+            getCanCancelStockOrderList(stockInfo.code);
         }
-    } catch (error) {
-        if (error === 'cancel') {
-            // 用户取消撤单
-            return;
-        }
-        console.error('撤单失败:', error);
-        ElMessage.error('撤单失败，请重试');
     }
 };
 
@@ -800,6 +847,7 @@ const formatOrderTime = (timeString) => {
     });
 };
 
+// 关闭窗口
 const handleClose = () => {
     visible.value = false;
 };
@@ -824,12 +872,33 @@ watch(visible, (newVisible) => {
         if (!tradingForm.orderType) {
             tradingForm.orderType = 'limit';
         }
+        if(tradeType.value === 'buy') {
+            // 获取用户持仓信息
+            getUserPositionDetail(props.stock.code);
+        }else if(tradeType.value === 'sell') {
+            // 获取用户持仓信息
+            getUserPositionDetail(props.stock.code);
+        }else if(tradeType.value === 'cancel') {
+            // 获取可撤单列表
+            getCanCancelStockOrderList(props.stock.code);
+        }
+        // 查询用户信息
+        getUserInfoDetail();
+        // 检查市场状态
+        stockInfo.marketStatus = isMarketOpen()
+        // 页面打开且开市则启动定时器
+        if(stockInfo.marketStatus){
+            startRealtimeTimer();
+        }
+        startCheckMarketStatus();
         // 打开弹窗时启动定时器和拉取一次数据
-        initStockRealtimeData();
-        startRealtimeTimer();
+        initStockRealtimeData();  
+        // 是否加入了自选股
+        stockSelectStatusRequest(props.stock.code);
     } else if (!newVisible) {
         // 关闭弹窗时停止定时器
         stopRealtimeTimer();
+        stopCheckMarketStatusTimer();
     }
 });
 

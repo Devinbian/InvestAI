@@ -3407,7 +3407,10 @@ const continueAnalysis = async (stockInfo, isPaid = false) => {
                 // 错误处理（网络错误、解析异常等）
                 abortController.abort(); // 取消请求
                 aiContent += `\n\n[${err.message || '请求中断'}]`;
-                throw err; // 重新抛出以终止流
+                const lastMessage = chatHistory.value[chatHistory.value.length - 1];
+                lastMessage.content = aiContent;
+                lastMessage.isGenerating = false; // 开始接收内容时取消生成状态
+                chatHistory.value = [...chatHistory.value]; // 触发响应式更新
             }
         });
 

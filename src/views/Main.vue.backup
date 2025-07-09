@@ -2847,26 +2847,16 @@ const showQuantAnalysisDialog = (stock) => {
 
 // 处理AI委托交易确认事件
 const handleAITradingConfirmed = async (data) => {
-    const { stock, tradingParams, message } = data;
+    const { stock, tradingParams } = data;
 
     try {
-        const res = await mockApi.sendMessage(message);
-        chatHistory.value.push(
-            { role: 'user', content: `AI委托交易设置 ${stock.name}(${stock.code})` },
-            {
-                ...res.data,
-                hasStockInfo: true,
-                stockInfo: stock,
-                isAITradingReport: true,
-                tradingParams: tradingParams
-            }
-        );
-
-        await nextTick();
-        scrollToBottom();
-
-        // 切换到聊天模式
-        isChatMode.value = true;
+        // AI委托交易设置成功，不再发送消息到聊天记录
+        ElMessage.success(`AI委托交易设置成功 - ${stock.name}(${stock.code})`);
+        
+        console.log("AI委托交易设置完成:", {
+            stock: stock,
+            tradingParams: tradingParams
+        });
     } catch (error) {
         ElMessage.error('设置失败，请稍后重试');
         console.error('AI委托交易设置失败:', error);

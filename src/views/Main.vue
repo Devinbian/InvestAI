@@ -111,11 +111,12 @@
                         :is-mobile-view="isMobileView" :watchlist-action-buttons="watchlistActionButtons"
                         :portfolio-action-buttons="portfolioActionButtons"
                         :active-reminders-count="activeReminders.filter(r => r.isActive).length"
-                        :is-in-watchlist="isInWatchlist" :format-currency="formatCurrency"
-                        :format-recommendation-time="formatRecommendationTime" :is-stream-paused="isStreamPaused"
-                        :session-title="currentChatTitle" :chat-history="chatHistory" :message-index="idx"
-                        @interaction-action="handleInteractionAction" @show-buy-dialog="showBuyDialog"
-                        @add-to-watchlist="addToWatchlist" @remove-from-watchlist="removeFromWatchlist"
+                        :active-reminders="activeReminders" :is-in-watchlist="isInWatchlist"
+                        :format-currency="formatCurrency" :format-recommendation-time="formatRecommendationTime"
+                        :is-stream-paused="isStreamPaused" :session-title="currentChatTitle" :chat-history="chatHistory"
+                        :message-index="idx" @interaction-action="handleInteractionAction"
+                        @show-buy-dialog="showBuyDialog" @add-to-watchlist="addToWatchlist"
+                        @remove-from-watchlist="removeFromWatchlist"
                         @show-quant-analysis-dialog="showQuantAnalysisDialog"
                         @set-quant-analysis-reminder="setQuantAnalysisReminder" @stock-click="handleStockClick"
                         @watchlist-action-click="handleWatchlistActionClick"
@@ -255,7 +256,7 @@
                 </div>
                 <div class="guide-actions">
                     <el-button type="primary" size="small" @click="handleGuideAction">{{ guideActionText
-                        }}</el-button>
+                    }}</el-button>
                     <el-button size="small" @click="dismissGuide">稍后</el-button>
                 </div>
             </div>
@@ -1069,13 +1070,8 @@ const handleWatchlistChanged = (changeData) => {
 
 const handleAITradingConfirmed = (tradingData) => {
     console.log('AI交易确认:', tradingData);
-    // 使用从 useStockOperations 导入的方法，传递必要的参数
-    return stockHandleAITradingConfirmed(
-        tradingData,
-        chatHistory,
-        isChatMode,
-        scrollToBottom
-    );
+    // 使用从 useStockOperations 导入的方法，不再传递聊天相关参数
+    return stockHandleAITradingConfirmed(tradingData);
 };
 
 const showGuideTip = ref(false);
@@ -2243,8 +2239,7 @@ const regenerateWatchlistView = async (messageIndex) => {
 
 您当前还没有添加任何自选股。您可以通过以下方式添加股票：
 - 在聊天中输入股票代码或名称
-- 点击推荐股票中的"加入自选"按钮
-- 使用"股票查询"功能查找并添加股票`
+- 使用"智能荐股"功能查找并添加股票`
             : `📋 **我的自选股列表**
 
 您当前关注 **${userStore.watchlist.length}** 只股票，详细信息如下：`;
@@ -10277,49 +10272,7 @@ body {
 }
 
 
-/* 设置提醒按钮样式（与其他股票操作按钮保持一致） */
-.reminder-btn-small {
-    display: flex;
-    align-items: center;
-    gap: 2px;
-    font-size: 0.7rem;
-    border-radius: 10px;
-    padding: 3px 6px;
-    transition: all 0.2s ease;
-    position: relative;
-    white-space: nowrap;
-    flex-shrink: 0;
-    background: #e0e7ff;
-    border-color: #a5b4fc;
-    color: #3730a3;
-}
-
-.reminder-btn-small:hover {
-    background: #c7d2fe;
-    border-color: #8b5cf6;
-    color: #312e81;
-    transform: translateY(-1px);
-}
-
-.reminder-count-badge-small {
-    position: absolute;
-    top: -6px;
-    right: -6px;
-    background: #ef4444;
-    color: white;
-    font-size: 10px;
-    font-weight: 600;
-    padding: 2px 5px;
-    border-radius: 10px;
-    min-width: 16px;
-    height: 16px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    line-height: 1;
-    border: 2px solid white;
-    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
-}
+/* 设置提醒按钮样式已移至ChatMessage.vue中统一管理 */
 
 /* 响应式设计 */
 @include mobile {

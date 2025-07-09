@@ -56,18 +56,68 @@
                     @action-click="handleChatStockAction" />
 
                 <!-- 设置提醒按钮（仅在量化分析消息中显示） -->
-                <el-button v-if="message.isQuantAnalysis" size="small"
-                    @click="$emit('set-quant-analysis-reminder', message)" class="reminder-btn-small">
-                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none">
+                <button v-if="message.isQuantAnalysis && !message.isGenerating"
+                    @click="$emit('set-quant-analysis-reminder', message)" class="simple-reminder-btn"
+                    :class="{ 'active': reminderStatus.hasReminder }" :style="{
+                        background: reminderStatus.hasReminder ? 'rgba(34, 197, 94, 0.15)' : 'rgba(156, 163, 175, 0.1)',
+                        color: reminderStatus.hasReminder ? '#15803d' : '#6b7280',
+                        border: reminderStatus.hasReminder ? '1px solid rgba(34, 197, 94, 0.4)' : '1px solid rgba(156, 163, 175, 0.3)',
+                        fontWeight: reminderStatus.hasReminder ? '600' : '500'
+                    }">
+                    <!-- 动态图标：未设置时显示铃铛，已设置时显示勾选铃铛 -->
+                    <svg v-if="!reminderStatus.hasReminder" width="12" height="12" viewBox="0 0 24 24" fill="none">
                         <path
                             d="M12 22c1.1 0 2-.9 2-2h-4c0 1.1.9 2 2 2zm6-6v-5c0-3.07-1.64-5.64-4.5-6.32V4c0-.83-.67-1.5-1.5-1.5s-1.5.67-1.5 1.5v.68C7.63 5.36 6 7.92 6 11v5l-2 2v1h16v-1l-2-2z"
                             fill="currentColor" />
                     </svg>
-                    设置提醒
-                    <span v-if="activeRemindersCount > 0" class="reminder-count-badge-small">
-                        {{ activeRemindersCount }}
-                    </span>
-                </el-button>
+                    <!-- 已设置提醒的图标：铃铛+勾选 -->
+                    <svg v-else width="12" height="12" viewBox="0 0 24 24" fill="none">
+                        <path
+                            d="M12 22c1.1 0 2-.9 2-2h-4c0 1.1.9 2 2 2zm6-6v-5c0-3.07-1.64-5.64-4.5-6.32V4c0-.83-.67-1.5-1.5-1.5s-1.5.67-1.5 1.5v.68C7.63 5.36 6 7.92 6 11v5l-2 2v1h16v-1l-2-2z"
+                            fill="currentColor" />
+                        <!-- 勾选标记 -->
+                        <circle cx="18" cy="6" r="4" fill="#22c55e" stroke="white" stroke-width="1" />
+                        <path d="M16 6l1 1 2-2" stroke="white" stroke-width="1.5" fill="none" stroke-linecap="round"
+                            stroke-linejoin="round" />
+                    </svg>
+                    {{ reminderStatus.hasReminder ? '✓ 提醒已开启' : '设置提醒' }}
+                    <!-- 状态指示器点 -->
+                    <span v-if="reminderStatus.hasReminder" class="reminder-status-dot"></span>
+                </button>
+
+
+            </div>
+
+            <!-- 独立的设置提醒按钮（仅在量化分析消息中显示，不依赖hasStockInfo） -->
+            <div v-if="message.isQuantAnalysis && !message.isGenerating && (!message.hasStockInfo || !message.stockInfo)"
+                class="stock-actions">
+                <button @click="$emit('set-quant-analysis-reminder', message)" class="simple-reminder-btn"
+                    :class="{ 'active': reminderStatus.hasReminder }" :style="{
+                        background: reminderStatus.hasReminder ? 'rgba(34, 197, 94, 0.15)' : 'rgba(156, 163, 175, 0.1)',
+                        color: reminderStatus.hasReminder ? '#15803d' : '#6b7280',
+                        border: reminderStatus.hasReminder ? '1px solid rgba(34, 197, 94, 0.4)' : '1px solid rgba(156, 163, 175, 0.3)',
+                        fontWeight: reminderStatus.hasReminder ? '600' : '500'
+                    }">
+                    <!-- 动态图标：未设置时显示铃铛，已设置时显示勾选铃铛 -->
+                    <svg v-if="!reminderStatus.hasReminder" width="12" height="12" viewBox="0 0 24 24" fill="none">
+                        <path
+                            d="M12 22c1.1 0 2-.9 2-2h-4c0 1.1.9 2 2 2zm6-6v-5c0-3.07-1.64-5.64-4.5-6.32V4c0-.83-.67-1.5-1.5-1.5s-1.5.67-1.5 1.5v.68C7.63 5.36 6 7.92 6 11v5l-2 2v1h16v-1l-2-2z"
+                            fill="currentColor" />
+                    </svg>
+                    <!-- 已设置提醒的图标：铃铛+勾选 -->
+                    <svg v-else width="12" height="12" viewBox="0 0 24 24" fill="none">
+                        <path
+                            d="M12 22c1.1 0 2-.9 2-2h-4c0 1.1.9 2 2 2zm6-6v-5c0-3.07-1.64-5.64-4.5-6.32V4c0-.83-.67-1.5-1.5-1.5s-1.5.67-1.5 1.5v.68C7.63 5.36 6 7.92 6 11v5l-2 2v1h16v-1l-2-2z"
+                            fill="currentColor" />
+                        <!-- 勾选标记 -->
+                        <circle cx="18" cy="6" r="4" fill="#22c55e" stroke="white" stroke-width="1" />
+                        <path d="M16 6l1 1 2-2" stroke="white" stroke-width="1.5" fill="none" stroke-linecap="round"
+                            stroke-linejoin="round" />
+                    </svg>
+                    {{ reminderStatus.hasReminder ? '✓ 提醒已开启' : '设置提醒' }}
+                    <!-- 状态指示器点 -->
+                    <span v-if="reminderStatus.hasReminder" class="reminder-status-dot"></span>
+                </button>
             </div>
 
             <!-- 自选股列表展示 -->
@@ -403,7 +453,7 @@
 </template>
 
 <script setup>
-import { ref, computed, nextTick, onMounted, onUnmounted } from 'vue';
+import { ref, computed, watch, nextTick, onMounted, onUnmounted } from 'vue';
 import MarkdownRenderer from './MarkdownRenderer.vue';
 import StockList from './StockList.vue';
 import MobileStockList from './MobileStockList.vue';
@@ -439,6 +489,10 @@ const props = defineProps({
     activeRemindersCount: {
         type: Number,
         default: 0
+    },
+    activeReminders: {
+        type: Array,
+        default: () => []
     },
     isInWatchlist: {
         type: Function,
@@ -522,6 +576,131 @@ const getMessageStatusClass = (content) => {
     }
 
     return '';
+};
+
+// 获取股票代码的计算属性
+const currentStockCode = computed(() => {
+    return getStockCodeFromMessage(props.message);
+});
+
+// 获取提醒状态的计算属性
+const reminderStatus = computed(() => {
+    const stockCode = currentStockCode.value;
+
+    if (!stockCode) return { hasReminder: false, count: 0 };
+
+    // 从全局提醒中查找该股票的活跃提醒
+    if (props.activeReminders && props.activeReminders.length > 0) {
+        console.log('🔍 详细查找提醒 - 开始:', {
+            stockCode,
+            activeRemindersLength: props.activeReminders.length,
+            allReminders: props.activeReminders
+        });
+
+        const stockReminder = props.activeReminders.find(reminder => {
+            const matches = reminder.stockCode === stockCode &&
+                reminder.isActive === true &&
+                reminder.triggered !== true;
+
+            console.log('🔍 检查提醒匹配:', {
+                reminderStockCode: reminder.stockCode,
+                targetStockCode: stockCode,
+                stockCodeMatch: reminder.stockCode === stockCode,
+                isActive: reminder.isActive,
+                triggered: reminder.triggered,
+                matches: matches
+            });
+
+            return matches;
+        });
+
+        console.log('📊 ChatMessage - 计算提醒状态:', {
+            stockCode,
+            activeRemindersLength: props.activeReminders.length,
+            foundReminder: !!stockReminder,
+            reminderData: stockReminder,
+            allReminders: props.activeReminders.map(r => ({
+                stockCode: r.stockCode,
+                isActive: r.isActive,
+                triggered: r.triggered
+            }))
+        });
+
+        return {
+            hasReminder: !!stockReminder,
+            count: stockReminder ? 1 : 0
+        };
+    }
+
+    return { hasReminder: false, count: 0 };
+});
+
+// 监听activeReminders变化，确保按钮状态实时更新
+watch(() => props.activeReminders, (newReminders, oldReminders) => {
+    const stockCode = currentStockCode.value;
+    if (stockCode && props.message.isQuantAnalysis) {
+        console.log('🔄 ChatMessage - activeReminders变化:', {
+            stockCode,
+            oldCount: oldReminders?.length || 0,
+            newCount: newReminders?.length || 0,
+            messageId: props.message.id,
+            reminderStatus: reminderStatus.value
+        });
+
+        // 强制重新渲染
+        nextTick(() => {
+            console.log('🔄 ChatMessage - 强制重新渲染完成');
+        });
+    }
+}, { deep: true, immediate: true });
+
+// 获取提醒按钮样式类
+const getReminderButtonClass = (message) => {
+    const status = reminderStatus.value;
+    console.log('🔍 ChatMessage - 获取按钮样式类:', {
+        stockCode: currentStockCode.value,
+        activeReminders: props.activeReminders,
+        reminderStatus: status,
+        hasReminder: status.hasReminder
+    });
+    return status.hasReminder ? 'reminder-btn-small reminder-btn-active' : 'reminder-btn-small';
+};
+
+// 旧的按钮样式和文本方法已移除，现在使用简单的CSS类和模板直接判断
+
+// 从消息中提取股票代码
+const getStockCodeFromMessage = (message) => {
+    let stockCode = null;
+
+    // 对于量化分析消息，直接使用 stockInfo
+    if (message.isQuantAnalysis && message.stockInfo && message.stockInfo.code) {
+        stockCode = message.stockInfo.code;
+        console.log('🔍 量化分析消息 - 直接使用stockInfo:', {
+            stockCode,
+            stockName: message.stockInfo.name
+        });
+        return stockCode;
+    }
+
+    // 对于其他消息，优先使用 stockInfo
+    if (message.stockInfo && message.stockInfo.code) {
+        stockCode = message.stockInfo.code;
+    } else {
+        // 降级方案：尝试从消息内容中提取股票代码
+        const content = message.content || '';
+        const codeMatch = content.match(/\((\d{6})\)/);
+        stockCode = codeMatch ? codeMatch[1] : null;
+    }
+
+    console.log('🔍 提取股票代码:', {
+        hasStockInfo: !!message.stockInfo,
+        stockInfoCode: message.stockInfo?.code,
+        contentCode: stockCode,
+        isQuantAnalysis: message.isQuantAnalysis,
+        messageContent: message.content?.substring(0, 100) + '...'
+    });
+
+    return stockCode;
 };
 
 // 聊天消息中的股票操作配置
@@ -2668,25 +2847,90 @@ const wrapUserMessage = (ctx, text, maxWidth) => {
     height: 100%;
 }
 
-.reminder-btn-small {
-    display: flex;
+/* 简单的提醒按钮样式 */
+.simple-reminder-btn {
+    height: 26px;
+    padding: 0 12px;
+    font-size: 0.75rem;
+    font-weight: 500;
+    border-radius: 3px;
+    transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+    display: inline-flex;
     align-items: center;
-    gap: 6px;
+    gap: 4px;
+    min-width: auto;
+    letter-spacing: 0.02em;
     position: relative;
+    white-space: nowrap;
+    flex-shrink: 0;
+    background: rgba(156, 163, 175, 0.1);
+    color: #6b7280;
+    border: 1px solid rgba(156, 163, 175, 0.3);
+    box-shadow: 0 1px 3px rgba(156, 163, 175, 0.1);
+    line-height: 1.4;
+    min-height: 25px;
+    max-height: 25px;
+    margin-left: 12px;
+    cursor: pointer;
+    outline: none;
 }
 
-.reminder-count-badge-small {
-    position: absolute;
-    top: -8px;
-    right: -8px;
-    background: #ff4757;
-    color: white;
-    font-size: 10px;
-    padding: 2px 6px;
-    border-radius: 10px;
-    min-width: 16px;
-    text-align: center;
+/* 旧的Element Plus按钮样式已移除，现在使用简单的原生按钮 */
+
+.simple-reminder-btn:hover {
+    background: rgba(156, 163, 175, 0.15);
+    color: #4b5563;
+    border-color: rgba(156, 163, 175, 0.4);
+    box-shadow: 0 2px 6px rgba(156, 163, 175, 0.2);
+    transform: translateY(-1px);
 }
+
+/* 已设置提醒的按钮样式 */
+.simple-reminder-btn.active {
+    background: rgba(34, 197, 94, 0.15);
+    color: #15803d;
+    border: 1px solid rgba(34, 197, 94, 0.4);
+    box-shadow: 0 1px 3px rgba(34, 197, 94, 0.2), inset 0 1px 0 rgba(255, 255, 255, 0.2);
+    font-weight: 600;
+}
+
+.simple-reminder-btn.active:hover {
+    background: rgba(34, 197, 94, 0.2);
+    color: #15803d;
+    border-color: rgba(34, 197, 94, 0.5);
+    box-shadow: 0 2px 6px rgba(34, 197, 94, 0.3);
+    transform: translateY(-1px);
+}
+
+/* 提醒状态指示器点 */
+.reminder-status-dot {
+    position: absolute;
+    top: -2px;
+    right: -2px;
+    width: 8px;
+    height: 8px;
+    background: #22c55e;
+    border: 2px solid white;
+    border-radius: 50%;
+    box-shadow: 0 1px 3px rgba(34, 197, 94, 0.4);
+    animation: pulse-reminder 2s infinite;
+}
+
+@keyframes pulse-reminder {
+    0% {
+        box-shadow: 0 0 0 0 rgba(34, 197, 94, 0.7);
+    }
+
+    70% {
+        box-shadow: 0 0 0 6px rgba(34, 197, 94, 0);
+    }
+
+    100% {
+        box-shadow: 0 0 0 0 rgba(34, 197, 94, 0);
+    }
+}
+
+
 
 /* 自选股展示样式 */
 .watchlist-display-container {

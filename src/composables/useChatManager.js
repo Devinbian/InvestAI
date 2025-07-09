@@ -40,6 +40,35 @@ export function useChatManager() {
         if (isGenerating.value) {
           console.log("🔄 检测到流式输出暂停");
           isStreamPaused.value = true;
+
+          // 如果暂停超过30秒，自动重置生成状态
+          setTimeout(() => {
+            if (isGenerating.value && isStreamPaused.value) {
+              console.log("🔄 流式输出长时间暂停，自动重置生成状态");
+              isGenerating.value = false;
+              isStreamPaused.value = false;
+
+              // 更新最后一条消息的状态
+              const lastMessage =
+                chatHistory.value[chatHistory.value.length - 1];
+              if (lastMessage && lastMessage.role === "assistant") {
+                lastMessage.isGenerating = false;
+                lastMessage.isStreamPaused = false;
+                if (!lastMessage.content || lastMessage.content.trim() === "") {
+                  lastMessage.content = "[生成超时，请重试]";
+                } else {
+                  lastMessage.content += "\n\n[生成超时]";
+                }
+              }
+
+              // 清理资源
+              if (currentAbortController.value) {
+                currentAbortController.value.abort();
+                currentAbortController.value = null;
+              }
+              clearStreamPauseTimer();
+            }
+          }, 30000); // 30秒超时
         }
       }, STREAM_PAUSE_TIMEOUT);
     }
@@ -151,7 +180,9 @@ export function useChatManager() {
             }
 
             // 保存聊天记录到存储
-            chatHistoryStore.updateCurrentChatMessagesWithoutLimit(chatHistory.value);
+            chatHistoryStore.updateCurrentChatMessagesWithoutLimit(
+              chatHistory.value,
+            );
             console.log("流式响应完成，聊天记录已保存");
           },
           onerror: (err) => {
@@ -181,7 +212,9 @@ export function useChatManager() {
             }
 
             // 保存聊天记录到存储
-            chatHistoryStore.updateCurrentChatMessagesWithoutLimit(chatHistory.value);
+            chatHistoryStore.updateCurrentChatMessagesWithoutLimit(
+              chatHistory.value,
+            );
             console.log("流式连接错误，聊天记录已保存");
 
             ElMessage.error("连接中断，请重试");

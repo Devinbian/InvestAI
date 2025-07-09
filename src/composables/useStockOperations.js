@@ -859,35 +859,17 @@ export function useStockOperations() {
   };
 
   // 处理AI委托交易确认事件
-  const handleAITradingConfirmed = async (
-    data,
-    chatHistory,
-    isChatMode,
-    scrollToBottom,
-  ) => {
-    const { stock, tradingParams, message } = data;
+  const handleAITradingConfirmed = async (data) => {
+    const { stock, tradingParams } = data;
 
     try {
-      const res = await mockApi.sendMessage(message);
-      chatHistory.value.push(
-        {
-          role: "user",
-          content: `AI委托交易设置 ${stock.name}(${stock.code})`,
-        },
-        {
-          ...res.data,
-          hasStockInfo: true,
-          stockInfo: stock,
-          isAITradingReport: true,
-          tradingParams: tradingParams,
-        },
-      );
+      // AI委托交易设置成功，不再发送消息到聊天记录
+      ElMessage.success(`AI委托交易设置成功 - ${stock.name}(${stock.code})`);
 
-      await nextTick();
-      scrollToBottom();
-
-      // 切换到聊天模式
-      isChatMode.value = true;
+      console.log("AI委托交易设置完成:", {
+        stock: stock,
+        tradingParams: tradingParams,
+      });
     } catch (error) {
       ElMessage.error("设置失败，请稍后重试");
       console.error("AI委托交易设置失败:", error);
@@ -896,39 +878,71 @@ export function useStockOperations() {
 
   // 量化分析报告操作方法
   const setQuantAnalysisReminder = (message) => {
+    console.log("🔧 setQuantAnalysisReminder 被调用:", {
+      hasMessage: !!message,
+      messageContent: message?.content?.substring(0, 200) || "no content",
+      hasStockInfo: !!message?.stockInfo,
+      stockInfoCode: message?.stockInfo?.code,
+    });
+
     currentReminderMessage.value = message;
     showQuantReminderDialog.value = true;
   };
 
   // 提醒对话框处理方法
-  const handleReminderConfirm = (newReminders) => {
-    activeReminders.value.push(...newReminders);
-
-    ElMessage.success(`已成功设置 ${newReminders.length} 个量化分析提醒`);
-
-    // 模拟提醒触发（实际应用中应该是后台监控量化指标）
-    newReminders.forEach((reminder, index) => {
-      setTimeout(
-        () => {
-          const conditionText = getReminderDescription(reminder);
-          ElMessage({
-            message: `🔔 量化分析提醒触发：${reminder.stockName} ${conditionText}`,
-            type: "warning",
-            duration: 5000,
-            showClose: true,
-          });
-
-          // 将提醒标记为已触发
-          const reminderIndex = activeReminders.value.findIndex(
-            (r) => r.id === reminder.id,
-          );
-          if (reminderIndex !== -1) {
-            activeReminders.value[reminderIndex].triggered = true;
-          }
-        },
-        (index + 1) * 3000,
-      ); // 每3秒触发一个提醒
+  const handleReminderConfirm = (reminderData) => {
+    console.log("🔧 handleReminderConfirm 被调用:", {
+      action: reminderData.action,
+      stockCode: reminderData.stockCode,
+      stockName: reminderData.stockName,
+      当前提醒数量: activeReminders.value.length,
     });
+
+    if (reminderData.action === "disable") {
+      // 禁用该股票的所有提醒
+      const stockCode = reminderData.stockCode;
+      activeReminders.value = activeReminders.value.map((reminder) => {
+        if (reminder.stockCode === stockCode) {
+          return { ...reminder, isActive: false };
+        }
+        return reminder;
+      });
+      console.log("🔧 禁用提醒后:", activeReminders.value);
+      ElMessage.success(`已关闭 ${reminderData.stockName} 的价格提醒`);
+    } else if (reminderData.action === "create") {
+      // 创建新提醒
+      const newReminder = {
+        id: Date.now().toString(),
+        stockCode: reminderData.stockCode,
+        stockName: reminderData.stockName,
+        settings: reminderData.settings,
+        isActive: true,
+        triggered: false,
+        createdAt: new Date().toISOString(),
+      };
+
+      console.log("🔧 创建新提醒:", newReminder);
+
+      // 先移除该股票的旧提醒，再添加新提醒
+      activeReminders.value = activeReminders.value.filter(
+        (r) => r.stockCode !== reminderData.stockCode,
+      );
+      activeReminders.value.push(newReminder);
+
+      console.log("🔧 添加提醒后 activeReminders:", activeReminders.value);
+
+      ElMessage.success(`已为 ${reminderData.stockName} 设置价格提醒`);
+
+      // 模拟提醒触发（实际应用中应该是后台监控量化指标）
+      setTimeout(() => {
+        ElMessage({
+          message: `🔔 量化分析提醒触发：${newReminder.stockName} 价格提醒已生效`,
+          type: "info",
+          duration: 3000,
+          showClose: true,
+        });
+      }, 5000);
+    }
   };
 
   // 获取提醒描述

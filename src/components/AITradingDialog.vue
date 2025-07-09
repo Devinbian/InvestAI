@@ -11,7 +11,7 @@
                         <h3>{{ stock.name }}</h3>
                         <span class="stock-code">{{ stock.code }}</span>
                     </div>
-                    <span class="current-price">¥{{stock.price || stock.currentPrice }}</span>
+                    <span class="current-price">¥{{ stock.price || stock.currentPrice }}</span>
                 </div>
                 <div class="stock-right">
                     <span class="cost-label">服务费用</span>
@@ -51,14 +51,14 @@
                         <div class="price-controls">
                             <div class="price-item">
                                 <div class="current-price-display">
-                                    <span v-if="plan.buyPrice" class="price-value">¥{{ plan.buyPrice}}</span>
+                                    <span v-if="plan.buyPrice" class="price-value">¥{{ plan.buyPrice }}</span>
                                     <span v-else class="price-value">¥{{ stock.price || stock.currentPrice }}</span>
                                 </div>
                             </div>
                             <div class="price-item">
                                 <label class="param-label">浮动空间</label>
                                 <div class="price-range">
-                                    <el-input-number v-model="form.priceFloatPercentage" :min="0.1" :max="10" 
+                                    <el-input-number v-model="form.priceFloatPercentage" :min="0.1" :max="10"
                                         :step="0.1" :precision="1" class="price-input" controls-position="right" />
                                     <span class="price-unit">%</span>
                                 </div>
@@ -97,7 +97,7 @@
                                         </el-radio>
                                     </el-radio-group>
                                 </div>
-                                
+
                                 <!-- 实际有效期显示 -->
                                 <div class="actual-validity-display">
                                     <div class="actual-validity-info">
@@ -106,12 +106,8 @@
                                         <span class="actual-reason">({{ getValidityReason() }})</span>
                                     </div>
                                     <div class="validity-note">
-                                        <el-alert 
-                                            :title="getValidityDescription()"
-                                            type="info"
-                                            :closable="false"
-                                            show-icon
-                                        />
+                                        <el-alert :title="getValidityDescription()" type="info" :closable="false"
+                                            show-icon />
                                     </div>
                                 </div>
                             </div>
@@ -136,8 +132,8 @@
 </template>
 
 <script setup>
-import {getStockPlan} from '@/api/api.js';
-import { ref, onMounted,reactive, watch, computed } from 'vue';
+import { getStockPlan } from '@/api/api.js';
+import { ref, onMounted, reactive, watch, computed } from 'vue';
 import { useUserStore } from '../store/user';
 import { ArrowDown, ArrowUp } from '@element-plus/icons-vue';
 import { ElMessage, ElMessageBox } from 'element-plus';
@@ -154,7 +150,7 @@ const props = defineProps({
     }
 });
 
-const plan=ref({
+const plan = ref({
     buyPrice: null,
     sellPrice: null,
     expireDate: null,
@@ -210,7 +206,7 @@ const form = reactive({
     timeInForce: 'DAY', // 固定为当日有效
     timeInForceType: 'DAY', // 用户选择的委托时效类型：DAY(当日有效) 或 QUANT(量化有效期内)
     orderType: 'limit', // 固定为限价单
-    
+
     // 量化分析有效期（从消息中获取）
     quantValidityEndTime: null,
 });
@@ -277,13 +273,13 @@ const getRiskLevelText = (level) => {
 // 获取价格区间文本
 const getPriceRangeText = () => {
     if (!props.stock || !props.stock.price) return '0 - 0';
-    
+
     const currentPrice = parseFloat(props.stock.price || props.stock.currentPrice);
     const floatPercentage = form.priceFloatPercentage / 100;
-    
+
     const minPrice = (currentPrice * (1 - floatPercentage)).toFixed(2);
     const maxPrice = (currentPrice * (1 + floatPercentage)).toFixed(2);
-    
+
     return `${minPrice} - ${maxPrice}`;
 };
 
@@ -313,14 +309,14 @@ const getTodayEndTime = () => {
 
 // 获取量化分析有效期时间
 const getQuantValidityTime = () => {
-    if( plan.expireDate){
+    if (plan.expireDate) {
         const endTime = new Date(plan.expireDate);
         return endTime.toLocaleString('zh-CN', {
             month: '2-digit',
             day: '2-digit',
             hour: '2-digit',
             minute: '2-digit'
-        }); 
+        });
     }
     // 默认3天后
     const defaultEnd = new Date();
@@ -339,7 +335,7 @@ const getActualValidityTime = () => {
     const today = new Date();
     const todayEnd = new Date(today);
     todayEnd.setHours(15, 0, 0, 0); // 当日15:00收盘
-    
+
     let quantEnd;
     if (plan.expireDate) {
         quantEnd = new Date(plan.expireDate);
@@ -349,10 +345,10 @@ const getActualValidityTime = () => {
         quantEnd.setDate(quantEnd.getDate() + 3);
         quantEnd.setHours(23, 59, 59, 999);
     }
-    let actualEnd=todayEnd;
-    if(form.timeInForceType === 'DAY'){
+    let actualEnd = todayEnd;
+    if (form.timeInForceType === 'DAY') {
         actualEnd = todayEnd;
-    }else{
+    } else {
         actualEnd = quantEnd;
     }
     // 取较短时间
@@ -369,20 +365,20 @@ const getValidityDescription = () => {
     const today = new Date();
     const todayEnd = new Date(today);
     todayEnd.setHours(15, 0, 0, 0); // 当日15:00收盘
-    
+
     let quantEnd;
     if (plan.expireDate) {
         quantEnd = new Date(plan.expireDate);
-    }  else {
+    } else {
         // 默认3天后
         quantEnd = new Date();
         quantEnd.setDate(quantEnd.getDate() + 3);
         quantEnd.setHours(23, 59, 59, 999);
     }
-    
+
     const userChoice = form.timeInForceType;
     const actualIsTodayEnd = todayEnd < quantEnd;
-    
+
     if (userChoice === 'DAY') {
         if (actualIsTodayEnd) {
             return '您选择当日有效，委托将在今日收盘前有效';
@@ -390,9 +386,9 @@ const getValidityDescription = () => {
             return '您选择当日有效，但量化分析有效期更短，委托将在量化有效期结束时失效';
         }
     } else { // QUANT
-    
-            return '您选择量化有效期内有效，委托将在量化分析有效期结束时失效';
-        
+
+        return '您选择量化有效期内有效，委托将在量化分析有效期结束时失效';
+
     }
 };
 
@@ -401,7 +397,7 @@ const getValidityReason = () => {
     const today = new Date();
     const todayEnd = new Date(today);
     todayEnd.setHours(15, 0, 0, 0); // 当日15:00收盘
-    
+
     let quantEnd;
     if (form.quantValidityEndTime) {
         quantEnd = new Date(form.quantValidityEndTime);
@@ -411,7 +407,7 @@ const getValidityReason = () => {
         quantEnd.setDate(quantEnd.getDate() + 3);
         quantEnd.setHours(23, 59, 59, 999);
     }
-    
+
     if (todayEnd < quantEnd) {
         return '取当日收盘时间';
     } else if (todayEnd > quantEnd) {
@@ -463,21 +459,21 @@ const handleConfirm = async () => {
         return;
     }
 
-            // 构建AI委托交易参数
-        const tradingParams = {
-            stock: props.stock,
-            action: form.action,
-            quantity: form.quantity,
-            orderType: form.orderType,
-            timeInForce: form.timeInForce,
-            
-            // 委托价格设置
-            priceSettings: {
-                floatPercentage: form.priceFloatPercentage,
-                currentPrice: parseFloat(props.stock.price || props.stock.currentPrice),
-                priceRange: getPriceRangeText()
-            }
-        };
+    // 构建AI委托交易参数
+    const tradingParams = {
+        stock: props.stock,
+        action: form.action,
+        quantity: form.quantity,
+        orderType: form.orderType,
+        timeInForce: form.timeInForce,
+
+        // 委托价格设置
+        priceSettings: {
+            floatPercentage: form.priceFloatPercentage,
+            currentPrice: parseFloat(props.stock.price || props.stock.currentPrice),
+            priceRange: getPriceRangeText()
+        }
+    };
 
     try {
         loading.value = true;
@@ -505,28 +501,10 @@ const handleConfirm = async () => {
         // 关闭对话框
         dialogVisible.value = false;
 
-        // 生成AI委托交易报告
-        const message = `【AI委托交易设置完成】已为${props.stock.name}(${props.stock.code})设置智能委托交易：
-
-🎯 **交易参数**
-• 交易方向：${form.action === 'buy' ? '买入' : '卖出'}
-• 交易数量：${form.quantity}股
-• 委托类型：限价单
-• 委托时效：当日有效（量化分析有效期内）
-
-💰 **价格设置**
-• 当前价格：¥${props.stock.price || props.stock.currentPrice}
-• 浮动空间：±${form.priceFloatPercentage}%
-• 价格区间：¥${getPriceRangeText()}
-
-🤖 **AI智能交易**
-AI将在设定的价格区间内，24小时智能监控市场，在最佳时机自动执行交易，确保您获得最优的交易价格。`;
-
-        // 发送事件给父组件
+        // 发送事件给父组件，不再包含消息内容
         emit('ai-trading-confirmed', {
             stock: props.stock,
-            tradingParams: tradingParams,
-            message: message
+            tradingParams: tradingParams
         });
 
     } catch (error) {
@@ -594,7 +572,7 @@ const fixWechatScroll = () => {
 watch(() => props.modelValue, (newVal) => {
     if (newVal && props.stock) {
         initAITradingFromPreferences();
-        
+
         // 初始化量化分析有效期（默认3天）
         const quantEnd = new Date();
         quantEnd.setDate(quantEnd.getDate() + 3);
@@ -1919,40 +1897,40 @@ watch(() => props.modelValue, (newVal) => {
     font-size: 14px !important;
 }
 
-    .mobile-dialog .price-input {
-        width: 100px !important;
-    }
+.mobile-dialog .price-input {
+    width: 100px !important;
+}
 
-    .mobile-dialog .current-price-display {
-        padding: 8px 10px !important;
-    }
+.mobile-dialog .current-price-display {
+    padding: 8px 10px !important;
+}
 
-    .mobile-dialog .price-value {
-        font-size: 14px !important;
-    }
+.mobile-dialog .price-value {
+    font-size: 14px !important;
+}
 
-    .mobile-dialog .price-range-display {
-        padding: 10px !important;
-        margin-top: 8px !important;
-    }
+.mobile-dialog .price-range-display {
+    padding: 10px !important;
+    margin-top: 8px !important;
+}
 
-    .mobile-dialog .range-label,
-    .mobile-dialog .range-value,
-    .mobile-dialog .range-desc {
-        font-size: 12px !important;
-    }
+.mobile-dialog .range-label,
+.mobile-dialog .range-value,
+.mobile-dialog .range-desc {
+    font-size: 12px !important;
+}
 
-    .mobile-dialog .order-validity {
-        padding: 8px 10px !important;
-    }
+.mobile-dialog .order-validity {
+    padding: 8px 10px !important;
+}
 
-    .mobile-dialog .validity-text {
-        font-size: 13px !important;
-    }
+.mobile-dialog .validity-text {
+    font-size: 13px !important;
+}
 
-    .mobile-dialog .validity-desc {
-        font-size: 11px !important;
-    }
+.mobile-dialog .validity-desc {
+    font-size: 11px !important;
+}
 
 .mobile-dialog .dialog-footer {
     flex-shrink: 0 !important;

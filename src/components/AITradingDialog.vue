@@ -136,7 +136,7 @@
 </template>
 
 <script setup>
-import {getStockPlan} from '@/api/stock';
+import {getStockPlan} from '@/api/api.js';
 import { ref, reactive, watch, computed } from 'vue';
 import { useUserStore } from '../store/user';
 import { ArrowDown, ArrowUp } from '@element-plus/icons-vue';

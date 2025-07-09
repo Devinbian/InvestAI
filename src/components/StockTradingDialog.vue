@@ -57,7 +57,7 @@
 
                         <div class="action-buttons">
                             <!-- 自选股按钮 -->
-                            <el-button v-if="!isInWatchlist" class="action-btn favorite-btn" size="small"
+                            <el-button v-if="!selectedStock" class="action-btn favorite-btn" size="small"
                                 @click="handleAddToWatchlist">
                                 <svg width="14" height="14" viewBox="0 0 24 24" fill="none">
                                     <path
@@ -341,7 +341,7 @@
 import { ref, reactive, computed, watch, nextTick } from 'vue';
 import { ElMessage, ElMessageBox } from 'element-plus';
 import { useUserStore } from '@/store/user';
-import { getStockRealtimeData, buyStock, sellStock, cancelStockOrder, getUserInfo, getUserPosition, getCanCancelStockOrder } from '@/api/api';
+import { getStockRealtimeData, buyStock, sellStock, cancelStockOrder, getUserInfo, getUserPosition, getCanCancelStockOrder, stockSelect, stockUnselect, stockSelectStatus } from '@/api/api';
 
 // Props
 const props = defineProps({
@@ -378,7 +378,10 @@ const sellOrders = ref([]);
 const buyOrders = ref([]);
 
 // 当前股票的待撤销委托单
-const currentStockPendingOrders = ref([]);;
+const currentStockPendingOrders = ref([]);
+
+// 是否加入自选
+const selectedStock = ref(false);;
 
 // 实时数据查询定时器
 let realtimeTimer = null;
@@ -468,12 +471,25 @@ const cancelStockOrderRequest = async (orderId) => {
  return await cancelStockOrder({stockOrderId: orderId});
 }
 
+// 加入自选股
+const stockSelectRequest = async (code) => {
+ return await stockSelect({code: code});
+}
 
-// 计算属性
-const isInWatchlist = computed(() => {
-    if (!props.stock) return false;
-    return userStore.isInWatchlist(props.stock.code);
-});
+// 移除自选股
+const stockUnselectRequest = async (code) => {
+ return await stockUnselect({code: code});
+}
+
+// 是否已经加入了自选股
+const stockSelectStatusRequest = async (code) => {
+    let res = await stockSelectStatus({code: code});
+    if (res && res.data && res.data.success) {
+        selectedStock.value = res.data.data === true;
+    }else{
+        selectedStock.value = false;
+    }
+}
 
 // 用户资产
 const balance = computed(() => userStore.balance);
@@ -729,21 +745,25 @@ const setQuantityByPercent = (percent) => {
     }
 };
 
-const handleAddToWatchlist = () => {
-    if (userStore.addToWatchlist(props.stock)) {
-        ElMessage.success(`${props.stock.name} 已加入自选股`);
+const handleAddToWatchlist = async () => {
+    const res = await stockSelectRequest(stockInfo.code);
+    if (res && res.data && res.data.success) {
+        ElMessage.success('加入成功');
+        selectedStock.value = true;
         emit('watchlist-changed', { action: 'add', stock: props.stock });
-    } else {
-        ElMessage.warning(`${props.stock.name} 已在自选股中`);
+    }else{
+        selectedStock.value = false;
     }
 };
 
-const handleRemoveFromWatchlist = () => {
-    if (userStore.removeFromWatchlist(props.stock.code)) {
-        ElMessage.success('已从自选股中移除');
-        emit('watchlist-changed', { action: 'remove', stock: props.stock });
-    } else {
-        ElMessage.error('移除失败');
+const handleRemoveFromWatchlist = async () => {
+    const res = await stockUnselectRequest(stockInfo.code);
+    if (res && res.data && res.data.success) {
+        ElMessage.success('移除成功');
+        selectedStock.value = false;
+        emit('watchlist-changed', { action: 'remove', stock: stockInfo.code });
+    }else{
+        selectedStock.value = true;     
     }
 };
 
@@ -873,6 +893,8 @@ watch(visible, (newVisible) => {
         startCheckMarketStatus();
         // 打开弹窗时启动定时器和拉取一次数据
         initStockRealtimeData();  
+        // 是否加入了自选股
+        stockSelectStatusRequest(props.stock.code);
     } else if (!newVisible) {
         // 关闭弹窗时停止定时器
         stopRealtimeTimer();

@@ -29,7 +29,11 @@ const api = {
   // sidebar
   marketIndicesApi: "/market/indices", // 获取大盘指数
   recommendStocksApi: "/stock/recommend", // 获取推荐股票
-  
+
+
+  stockSelectApi: "/stock/select", // 加入自选股
+  stockUnselectApi: "/stock/unselect", // 移除自选股
+  stockSelectStatusApi: "/stock/select-status", // 是否已经加入了自选股
 };
 
 export default api;
@@ -90,5 +94,20 @@ export const getUserPosition = (params) => request.get(api.userPositionApi, {
 
 // 获取可撤单列表
 export const getCanCancelStockOrder = (params) => request.get(api.canCancelStockOrderApi, {
+  params
+});
+
+// 加入自选股
+export const stockSelect = (params) => request.get(api.stockSelectApi, {
+  params
+});
+
+// 移除自选股
+export const stockUnselect = (params) => request.get(api.stockUnselectApi, {
+  params
+});
+
+// 是否已经加入了自选股
+export const stockSelectStatus = (params) => request.get(api.stockSelectStatusApi, {
   params
 });

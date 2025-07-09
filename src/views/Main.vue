@@ -255,7 +255,7 @@
                 </div>
                 <div class="guide-actions">
                     <el-button type="primary" size="small" @click="handleGuideAction">{{ guideActionText
-                        }}</el-button>
+                    }}</el-button>
                     <el-button size="small" @click="dismissGuide">稍后</el-button>
                 </div>
             </div>
@@ -1675,27 +1675,14 @@ const handleRegenerateMessage = async (data) => {
 
         // 找到该消息在聊天历史中的索引
         const messageIndex = chatHistory.value.findIndex(
-            (msg, index) => {
-                console.log(`🔍 匹配消息 ${index}:`, {
-                    msgId: msg.id,
-                    targetId: targetMessage.id,
-                    msgTimestamp: msg.timestamp,
-                    targetTimestamp: targetMessage.timestamp,
-                    msgRole: msg.role,
-                    targetRole: targetMessage.role,
-                    msgContent: msg.content?.substring(0, 30),
-                    targetContent: targetMessage.content?.substring(0, 30)
-                });
-
+            msg => {
                 // 首先尝试通过ID匹配
                 if (msg.id && targetMessage.id && msg.id === targetMessage.id) {
-                    console.log(`✅ 通过ID匹配成功: ${index}`);
                     return true;
                 }
 
                 // 然后尝试通过timestamp匹配
                 if (msg.timestamp && targetMessage.timestamp && msg.timestamp === targetMessage.timestamp) {
-                    console.log(`✅ 通过timestamp匹配成功: ${index}`);
                     return true;
                 }
 
@@ -1703,7 +1690,6 @@ const handleRegenerateMessage = async (data) => {
                 if (msg.role === 'assistant' && targetMessage.role === 'assistant' &&
                     msg.content && targetMessage.content &&
                     msg.content === targetMessage.content) {
-                    console.log(`✅ 通过内容匹配成功: ${index}`);
                     return true;
                 }
 
@@ -1714,7 +1700,19 @@ const handleRegenerateMessage = async (data) => {
         console.log('🔄 重新生成消息 - 找到的消息索引:', messageIndex);
 
         if (messageIndex === -1) {
-            console.error('🔄 重新生成消息 - 无法找到目标消息');
+            console.error('🔄 重新生成消息 - 无法找到目标消息，调试信息:', {
+                targetMessageId: targetMessage.id,
+                targetMessageTimestamp: targetMessage.timestamp,
+                targetMessageRole: targetMessage.role,
+                targetMessageContent: targetMessage.content?.substring(0, 50),
+                chatHistoryLength: chatHistory.value.length,
+                chatHistoryLastFewMessages: chatHistory.value.slice(-3).map(msg => ({
+                    id: msg.id,
+                    timestamp: msg.timestamp,
+                    role: msg.role,
+                    content: msg.content?.substring(0, 30)
+                }))
+            });
             ElMessage.error('无法找到要重新生成的消息');
             return;
         }
@@ -1737,7 +1735,14 @@ const handleRegenerateMessage = async (data) => {
 
         // 确保只能重新生成AI消息
         if (currentMessage.role !== 'assistant') {
-            console.error('🔄 重新生成消息 - 只能重新生成AI消息, 当前角色:', currentMessage.role);
+            console.error('🔄 重新生成消息 - 角色检查失败:', {
+                currentMessageRole: currentMessage.role,
+                targetMessageRole: targetMessage.role,
+                messageIndex: messageIndex,
+                currentMessageContent: currentMessage.content?.substring(0, 100),
+                targetMessageContent: targetMessage.content?.substring(0, 100),
+                chatHistoryLength: chatHistory.value.length
+            });
             ElMessage.error('只能重新生成AI消息');
             return;
         }

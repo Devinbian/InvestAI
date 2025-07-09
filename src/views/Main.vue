@@ -255,7 +255,7 @@
                 </div>
                 <div class="guide-actions">
                     <el-button type="primary" size="small" @click="handleGuideAction">{{ guideActionText
-                        }}</el-button>
+                    }}</el-button>
                     <el-button size="small" @click="dismissGuide">稍后</el-button>
                 </div>
             </div>
@@ -283,7 +283,7 @@ import { useRouter, useRoute } from 'vue-router';
 import { useUserStore } from '../store/user';
 import { useChatHistoryStore } from '../store/chatHistory';
 import { ElMessage, ElMessageBox } from 'element-plus';
-import { mockApi, wechatLoginApi } from '../api/mock';
+import { wechatLoginApi } from '../api/mock';
 import Sidebar from '../components/Sidebar.vue';
 import UserProfile from '../components/UserProfile.vue';
 import RecordsCenter from '../components/RecordsCenter.vue';
@@ -2387,11 +2387,10 @@ const regenerateSmartRecommendation = async (messageIndex) => {
 
         console.log("✅ 重新生成智能荐股API处理成功:", stockList);
 
-        // 获取推荐内容文本
-        const mockRes = await mockApi.sendMessage('智能荐股');
-
         // 更新AI消息内容和数据
-        targetMessage.content = mockRes.data.content;
+        targetMessage.content = `📊 **智能荐股推荐**
+
+基于您的投资偏好和当前市场环境，我为您推荐以下优质股票：`;
         targetMessage.hasStockInfo = true;
         targetMessage.stockList = stockList;
         targetMessage.isRecommendation = true;
@@ -2589,21 +2588,22 @@ const regenerateNewsUpdate = async (messageIndex) => {
 
         console.log('🔄 资讯推送内容已清空，开始重新生成');
 
-        // 第二步：调用API获取数据 - 使用与原始资讯推送相同的完整消息
-        const fullMessage = "资讯推送：今日重要财经新闻和市场动态";
-        const mockRes = await mockApi.sendMessage(fullMessage);
+        // 第二步：生成资讯推送内容
+        targetMessage.content = `📰 **今日财经资讯**
 
-        // 更新AI消息内容和数据 - 保持与原始资讯推送完全相同的数据结构
-        targetMessage.content = mockRes.data.content;
-        targetMessage.isNewsUpdate = mockRes.data.isNewsUpdate;
+正在为您获取最新的财经资讯和市场动态...
+
+**投资策略**
+• 关注市场热点和政策动向
+• 分散投资，控制风险
+• 长期配置优质资产
+
+💡 **温馨提示**：投资有风险，决策需谨慎。`;
+        targetMessage.isNewsUpdate = true;
         targetMessage.messageType = 'news_update'; // 设置消息类型备份
-        targetMessage.hasInteractionButtons = mockRes.data.hasInteractionButtons;
-        targetMessage.interactionData = mockRes.data.interactionData;
-
-        // 确保所有必要的字段都被正确设置
-        if (mockRes.data.hasStockInfo !== undefined) {
-            targetMessage.hasStockInfo = mockRes.data.hasStockInfo;
-        }
+        targetMessage.hasInteractionButtons = false;
+        targetMessage.interactionData = null;
+        targetMessage.hasStockInfo = false;
 
         completeMessageRegeneration(targetMessage);
 
@@ -3011,11 +3011,25 @@ const handleSidebarInteraction = async (data) => {
         message = String(message || '请提供具体的市场分析和投资建议');
     }
 
-    // 发送消息
-    const res = await mockApi.sendMessage(message);
+    // 生成响应消息
+    const responses = [
+        "根据您的风险偏好和投资目标，我建议您可以关注以下股票。",
+        "从技术面分析，该股票目前处于上升趋势，但需要注意风险控制。",
+        "根据基本面分析，该公司的财务状况良好，具有长期投资价值。",
+        "建议您关注该行业的龙头企业，它们通常具有更好的抗风险能力。",
+        "从估值角度来看，目前该股票的PE处于历史低位，具有投资价值。",
+        "感谢您的提问，我会根据市场情况为您提供专业的投资建议。"
+    ];
+
     const newMessages = [
         { id: generateMessageId(), role: 'user', content: message, timestamp: Date.now() },
-        { id: generateMessageId(), ...res.data, timestamp: Date.now() }
+        {
+            id: generateMessageId(),
+            role: 'assistant',
+            content: responses[Math.floor(Math.random() * responses.length)],
+            hasStockInfo: false,
+            timestamp: Date.now()
+        }
     ];
 
     // 直接添加消息，不限制消息数量以避免用户消息被清空
@@ -3590,11 +3604,25 @@ ${message.interactionData.newsItems.map(news => `- ${news.title}: ${news.summary
     }
 
     if (analysisPrompt) {
-        // 发送分析请求
-        const res = await mockApi.sendMessage(analysisPrompt);
+        // 生成分析响应
+        const responses = [
+            "根据您的风险偏好和投资目标，我建议您可以关注以下股票。",
+            "从技术面分析，该股票目前处于上升趋势，但需要注意风险控制。",
+            "根据基本面分析，该公司的财务状况良好，具有长期投资价值。",
+            "建议您关注该行业的龙头企业，它们通常具有更好的抗风险能力。",
+            "从估值角度来看，目前该股票的PE处于历史低位，具有投资价值。",
+            "感谢您的提问，我会根据市场情况为您提供专业的投资建议。"
+        ];
+
         const newMessages = [
             { id: generateMessageId(), role: 'user', content: action.description || analysisPrompt, timestamp: Date.now() },
-            { id: generateMessageId(), ...res.data, timestamp: Date.now() }
+            {
+                id: generateMessageId(),
+                role: 'assistant',
+                content: responses[Math.floor(Math.random() * responses.length)],
+                hasStockInfo: false,
+                timestamp: Date.now()
+            }
         ];
 
         // 直接添加交互分析消息，不限制消息数量

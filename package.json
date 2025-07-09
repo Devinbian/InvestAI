@@ -15,7 +15,7 @@
     "axios": "^1.6.7",
     "dompurify": "^3.2.6",
     "element-plus": "^2.5.3",
-    "marked": "^15.0.12",
+    "markdown-it": "^14.1.0",
     "mockjs": "^1.1.0",
     "pinia": "^2.1.7",
     "vue": "^3.4.15",

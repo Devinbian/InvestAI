@@ -11,7 +11,7 @@
                         <h3>{{ stock.name }}</h3>
                         <span class="stock-code">{{ stock.code }}</span>
                     </div>
-                    <span class="current-price">¥{{ stock.price || stock.currentPrice }}</span>
+                    <span class="current-price">¥{{stock.price || stock.currentPrice }}</span>
                 </div>
                 <div class="stock-right">
                     <span class="cost-label">服务费用</span>
@@ -50,9 +50,9 @@
                         <h4 class="section-title">委托价格</h4>
                         <div class="price-controls">
                             <div class="price-item">
-                                <label class="param-label">当前价格</label>
                                 <div class="current-price-display">
-                                    <span class="price-value">¥{{ stock.price || stock.currentPrice }}</span>
+                                    <span v-if="plan.buyPrice" class="price-value">¥{{ plan.buyPrice}}</span>
+                                    <span v-else class="price-value">¥{{ stock.price || stock.currentPrice }}</span>
                                 </div>
                             </div>
                             <div class="price-item">
@@ -136,7 +136,8 @@
 </template>
 
 <script setup>
-import { ref, reactive, watch, computed } from 'vue';
+import {getStockPlan} from '@/api/api.js';
+import { ref, onMounted,reactive, watch, computed } from 'vue';
 import { useUserStore } from '../store/user';
 import { ArrowDown, ArrowUp } from '@element-plus/icons-vue';
 import { ElMessage, ElMessageBox } from 'element-plus';
@@ -151,6 +152,22 @@ const props = defineProps({
         type: Object,
         default: null
     }
+});
+
+const plan=ref({
+    buyPrice: null,
+    sellPrice: null,
+    expireDate: null,
+});
+
+
+onMounted(() => {
+    getStockPlan(stock.code).then((res) => {
+        if (res.data.success) {
+            plan.value = res.data.data;
+        }
+    });
+
 });
 
 // Emits
@@ -296,14 +313,14 @@ const getTodayEndTime = () => {
 
 // 获取量化分析有效期时间
 const getQuantValidityTime = () => {
-    if (form.quantValidityEndTime) {
-        const endTime = new Date(form.quantValidityEndTime);
+    if( plan.expireDate){
+        const endTime = new Date(plan.expireDate);
         return endTime.toLocaleString('zh-CN', {
             month: '2-digit',
             day: '2-digit',
             hour: '2-digit',
             minute: '2-digit'
-        });
+        }); 
     }
     // 默认3天后
     const defaultEnd = new Date();
@@ -324,17 +341,21 @@ const getActualValidityTime = () => {
     todayEnd.setHours(15, 0, 0, 0); // 当日15:00收盘
     
     let quantEnd;
-    if (form.quantValidityEndTime) {
-        quantEnd = new Date(form.quantValidityEndTime);
+    if (plan.expireDate) {
+        quantEnd = new Date(plan.expireDate);
     } else {
         // 默认3天后
         quantEnd = new Date();
         quantEnd.setDate(quantEnd.getDate() + 3);
         quantEnd.setHours(23, 59, 59, 999);
     }
-    
+    let actualEnd=todayEnd;
+    if(form.timeInForceType === 'DAY'){
+        actualEnd = todayEnd;
+    }else{
+        actualEnd = quantEnd;
+    }
     // 取较短时间
-    const actualEnd = todayEnd < quantEnd ? todayEnd : quantEnd;
     return actualEnd.toLocaleString('zh-CN', {
         month: '2-digit',
         day: '2-digit',
@@ -350,9 +371,9 @@ const getValidityDescription = () => {
     todayEnd.setHours(15, 0, 0, 0); // 当日15:00收盘
     
     let quantEnd;
-    if (form.quantValidityEndTime) {
-        quantEnd = new Date(form.quantValidityEndTime);
-    } else {
+    if (plan.expireDate) {
+        quantEnd = new Date(plan.expireDate);
+    }  else {
         // 默认3天后
         quantEnd = new Date();
         quantEnd.setDate(quantEnd.getDate() + 3);
@@ -369,11 +390,9 @@ const getValidityDescription = () => {
             return '您选择当日有效，但量化分析有效期更短，委托将在量化有效期结束时失效';
         }
     } else { // QUANT
-        if (actualIsTodayEnd) {
-            return '您选择量化有效期内有效，但今日收盘时间更短，委托将在今日收盘前失效';
-        } else {
+    
             return '您选择量化有效期内有效，委托将在量化分析有效期结束时失效';
-        }
+        
     }
 };
 

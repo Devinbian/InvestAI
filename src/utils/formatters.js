@@ -72,3 +72,8 @@ export const formatPriceChange = (change, changePercent) => {
     isNegative: change < 0,
   };
 };
+
+// 生成唯一的消息ID
+export const generateMessageId = () => {
+  return `msg_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
+};

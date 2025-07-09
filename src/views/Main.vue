@@ -43,6 +43,32 @@
 
                 <!-- 主页模式输入区域 - 移动端贴底显示 -->
                 <div class="home-input-area" v-if="isMobileView">
+                    <!-- 移动端主页快捷操作按钮 - 作为输入区域的一部分 -->
+                    <div class="mobile-home-shortcuts-wrapper" v-if="!isChatMode">
+                        <div class="mobile-home-shortcuts">
+                            <div class="shortcuts-container">
+                                <div class="shortcuts-scroll-wrapper">
+                                    <div class="shortcuts-list">
+                                        <!-- 快捷操作按钮 -->
+                                        <button v-for="shortcut in activeHomeShortcuts" :key="shortcut.id"
+                                            class="shortcut-btn" @click="handleShortcutClick(shortcut)"
+                                            :title="shortcut.description">
+                                            <span class="shortcut-icon">{{ shortcut.icon }}</span>
+                                            <span class="shortcut-text">{{ shortcut.title }}</span>
+                                        </button>
+
+                                        <!-- 自定义按钮 -->
+                                        <button class="shortcut-btn customize-btn" @click="openCustomizeDialog"
+                                            title="自定义快捷操作">
+                                            <span class="shortcut-icon">⚙️</span>
+                                            <span class="shortcut-text">自定义</span>
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
                     <AIInputCard v-model="inputMessage" :show-history-button="userStore.isLoggedIn && !showChatHistory"
                         :is-chat-mode="false" :is-mobile-view="isMobileView" :is-recording="isRecording"
                         :recording-duration="recordingDuration" :is-generating="isGenerating"
@@ -80,38 +106,23 @@
             <div class="chat-history-area chat-area" v-if="isChatMode && chatHistory.length" ref="chatHistoryRef">
                 <!-- 当消息数量较少时使用普通渲染 -->
                 <template v-if="chatHistory.length <= 50">
-                    <ChatMessage 
-                        v-for="(message, idx) in chatHistory" 
-                        :key="idx" 
-                        :message="message"
-                        :is-generating="isGenerating"
-                        :is-last-message="idx === chatHistory.length - 1"
-                        :is-mobile-view="isMobileView"
-                        :watchlist-action-buttons="watchlistActionButtons"
+                    <ChatMessage v-for="(message, idx) in chatHistory" :key="idx" :message="message"
+                        :is-generating="isGenerating" :is-last-message="idx === chatHistory.length - 1"
+                        :is-mobile-view="isMobileView" :watchlist-action-buttons="watchlistActionButtons"
                         :portfolio-action-buttons="portfolioActionButtons"
                         :active-reminders-count="activeReminders.filter(r => r.isActive).length"
-                        :is-in-watchlist="isInWatchlist"
-                        :format-currency="formatCurrency"
-                        :format-recommendation-time="formatRecommendationTime"
-                        :is-stream-paused="isStreamPaused"
-                        :session-title="currentChatTitle"
-                        :chat-history="chatHistory"
-                        :message-index="idx"
-                        @interaction-action="handleInteractionAction"
-                        @show-buy-dialog="showBuyDialog"
-                        @add-to-watchlist="addToWatchlist"
-                        @remove-from-watchlist="removeFromWatchlist"
+                        :is-in-watchlist="isInWatchlist" :format-currency="formatCurrency"
+                        :format-recommendation-time="formatRecommendationTime" :is-stream-paused="isStreamPaused"
+                        :session-title="currentChatTitle" :chat-history="chatHistory" :message-index="idx"
+                        @interaction-action="handleInteractionAction" @show-buy-dialog="showBuyDialog"
+                        @add-to-watchlist="addToWatchlist" @remove-from-watchlist="removeFromWatchlist"
                         @show-quant-analysis-dialog="showQuantAnalysisDialog"
-                        @set-quant-analysis-reminder="setQuantAnalysisReminder"
-                                                    @stock-click="handleStockClick"
+                        @set-quant-analysis-reminder="setQuantAnalysisReminder" @stock-click="handleStockClick"
                         @watchlist-action-click="handleWatchlistActionClick"
                         @portfolio-action-click="handlePortfolioActionClick"
-                        @stock-action-click="handleStockActionClick"
-                        @refresh-recommendation="refreshRecommendation"
-                        @copy-message="handleCopyMessage"
-                        @regenerate-message="handleRegenerateMessage"
-                        @share-message="handleShareMessage"
-                    />
+                        @stock-action-click="handleStockActionClick" @refresh-recommendation="refreshRecommendation"
+                        @copy-message="handleCopyMessage" @regenerate-message="handleRegenerateMessage"
+                        @share-message="handleShareMessage" />
 
 
 
@@ -137,33 +148,49 @@
                 <!-- 新聊天按钮和快捷操作 -->
                 <div class="new-chat-section" v-if="chatHistory.length > 0">
                     <div class="chat-actions">
-                        <el-button class="new-chat-btn" @click="createNewChat">
-                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none">
-                                <path d="M12 5v14m-7-7h14" stroke="currentColor" stroke-width="2" stroke-linecap="round"
-                                    stroke-linejoin="round" />
-                            </svg>
-                            新建聊天
-                        </el-button>
+                        <!-- 移动端：快捷操作按钮和新建聊天按钮在同一行 -->
+                        <template v-if="isMobileView">
+                            <MobileChatShortcuts :show-shortcuts="true" :is-mobile-view="isMobileView"
+                                :is-logged-in="userStore.isLoggedIn" @shortcut-click="handleShortcutClick"
+                                @customize-dialog-open="openCustomizeDialog" ref="mobileChatShortcutsRef" />
 
-                        <!-- 快速跳转到荐股列表 -->
-                        <el-button v-if="hasRecommendationInHistory" class="goto-recommendation-btn"
-                            @click="scrollToRecommendation">
-                            🎯
-                            查看荐股
-                        </el-button>
+                            <div class="new-chat-buttons">
+                                <el-button class="new-chat-btn" @click="createNewChat">
+                                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none">
+                                        <path d="M12 5v14m-7-7h14" stroke="currentColor" stroke-width="2"
+                                            stroke-linecap="round" stroke-linejoin="round" />
+                                    </svg>
+                                    新建聊天
+                                </el-button>
+
+
+                            </div>
+                        </template>
+
+                        <!-- PC端：保持原有布局 -->
+                        <template v-else>
+                            <el-button class="new-chat-btn" @click="createNewChat">
+                                <svg width="16" height="16" viewBox="0 0 24 24" fill="none">
+                                    <path d="M12 5v14m-7-7h14" stroke="currentColor" stroke-width="2"
+                                        stroke-linecap="round" stroke-linejoin="round" />
+                                </svg>
+                                新建聊天
+                            </el-button>
+
+
+                        </template>
                     </div>
                 </div>
 
                 <AIInputCard v-model="inputMessage" :show-history-button="userStore.isLoggedIn && !showChatHistory"
                     :is-chat-mode="true" :is-mobile-view="isMobileView" :is-recording="isRecording"
-                    :recording-duration="recordingDuration" :is-generating="isGenerating"
-                    :show-chat-shortcuts="false" :is-logged-in="userStore.isLoggedIn"
-                    :show-chat-history="showChatHistory" @send-message="sendMessage"
-                    @toggle-chat-history="toggleChatHistory" @voice-click="onVoiceClick"
+                    :recording-duration="recordingDuration" :is-generating="isGenerating" :show-chat-shortcuts="false"
+                    :is-logged-in="userStore.isLoggedIn" :show-chat-history="showChatHistory"
+                    @send-message="sendMessage" @toggle-chat-history="toggleChatHistory" @voice-click="onVoiceClick"
                     @stop-generation="stopGeneration" />
 
-                <!-- 聊天模式快捷操作栏组件 - 直接显示在输入框下方 -->
-                <ShortcutsBar mode="initial" :show-shortcuts="true" :show-chat-shortcuts="false"
+                <!-- PC端聊天模式快捷操作栏组件 - 直接显示在输入框下方 -->
+                <ShortcutsBar v-if="!isMobileView" mode="initial" :show-shortcuts="true" :show-chat-shortcuts="false"
                     :is-mobile-view="isMobileView" :is-logged-in="userStore.isLoggedIn"
                     @shortcut-click="handleShortcutClick" @customize-dialog-open="openCustomizeDialog"
                     ref="chatShortcutsBarRef" />
@@ -256,7 +283,7 @@ import { useRouter, useRoute } from 'vue-router';
 import { useUserStore } from '../store/user';
 import { useChatHistoryStore } from '../store/chatHistory';
 import { ElMessage, ElMessageBox } from 'element-plus';
-import { mockApi, wechatLoginApi } from '../api/mock';
+import { wechatLoginApi, mockApi } from '../api/mock';
 import Sidebar from '../components/Sidebar.vue';
 import UserProfile from '../components/UserProfile.vue';
 import RecordsCenter from '../components/RecordsCenter.vue';
@@ -269,6 +296,7 @@ import MobileStockTradingDialog from '../components/MobileStockTradingDialog.vue
 import AITradingDialog from '../components/AITradingDialog.vue';
 import CustomizeShortcutsDialog from '../components/CustomizeShortcutsDialog.vue';
 import MobileShortcutsDialog from '../components/MobileShortcutsDialog.vue';
+import MobileChatShortcuts from '../components/MobileChatShortcuts.vue';
 import MobileUserMenu from '../components/MobileUserMenu.vue';
 import ChatHistory from '../components/ChatHistory.vue';
 import MarkdownRenderer from '../components/MarkdownRenderer.vue';
@@ -286,7 +314,7 @@ import StockActionButtons from '../components/StockActionButtons.vue';
 import CopyrightFooter from '../components/CopyrightFooter.vue';
 import { getStockListConfig } from '../config/stockListConfig';
 import { getStockActionConfig } from '../config/stockActionConfig';
-import { api } from '@/api/api';
+import { api, recommendStock } from '@/api/api';
 import { authFetchEventSource } from '@/utils/request';
 import { eventListenerManager, timerManager, chatHistoryManager, performanceOptimizer } from '@/utils/performanceOptimizer';
 import { useMobileAdaptation } from '../composables/useMobileAdaptation';
@@ -294,7 +322,7 @@ import { useChatManager } from '../composables/useChatManager';
 import { useVoiceInput } from '../composables/useVoiceInput';
 import { useStockOperations } from '../composables/useStockOperations';
 import { useAuthentication } from '../composables/useAuthentication';
-import { formatCurrency } from '@/utils/formatters';
+import { formatCurrency, generateMessageId } from '@/utils/formatters';
 
 const userStore = useUserStore();
 const chatHistoryStore = useChatHistoryStore();
@@ -360,6 +388,614 @@ const {
     layout,
     menu
 } = mobileAdaptation;
+
+// 键盘状态监听 - 用于微信环境优化
+const isKeyboardVisible = computed(() => layout.isKeyboardVisible.value);
+
+// 添加调试信息
+const debugKeyboardState = () => {
+    console.log('=== 键盘状态调试信息 ===');
+    console.log('当前键盘状态:', isKeyboardVisible.value);
+    console.log('是否微信环境:', isWechatEnv.value);
+    console.log('视口高度:', window.innerHeight);
+    console.log('可视视口高度:', window.visualViewport ? window.visualViewport.height : 'N/A');
+    console.log('body类名:', document.body.className);
+    console.log('========================');
+};
+
+// 监听键盘状态变化，为微信环境添加CSS类
+watch(isKeyboardVisible, (newVal) => {
+    console.log('键盘状态变化:', newVal);
+    debugKeyboardState();
+
+    if (isWechatEnv.value) {
+        const body = document.body;
+        if (newVal) {
+            body.classList.add('keyboard-open');
+            console.log('✅ 微信环境：键盘打开，添加keyboard-open类');
+        } else {
+            body.classList.remove('keyboard-open');
+            console.log('✅ 微信环境：键盘关闭，移除keyboard-open类');
+        }
+
+        // 再次检查类名是否正确应用
+        setTimeout(() => {
+            const hasKeyboardClass = body.classList.contains('keyboard-open');
+            console.log('键盘类名检查:', hasKeyboardClass, '预期:', newVal);
+            if (hasKeyboardClass !== newVal) {
+                console.warn('⚠️ 键盘类名状态不匹配，尝试重新设置');
+                if (newVal) {
+                    body.classList.add('keyboard-open');
+                } else {
+                    body.classList.remove('keyboard-open');
+                }
+            }
+        }, 100);
+    }
+}, { immediate: true });
+
+// 添加手动键盘状态切换（用于调试）
+const toggleKeyboardState = () => {
+    layout.isKeyboardVisible.value = !layout.isKeyboardVisible.value;
+    console.log('手动切换键盘状态:', layout.isKeyboardVisible.value);
+};
+
+// 添加额外的键盘检测机制
+const setupAdditionalKeyboardDetection = () => {
+    if (!isWechatEnv.value) return;
+
+    console.log('🔧 设置额外的键盘检测机制（微信环境）');
+
+    // 手动强制检查键盘状态的函数
+    const forceCheckKeyboardState = () => {
+        let keyboardVisible = false;
+
+        // 检查输入框焦点状态
+        const activeElement = document.activeElement;
+        const isInputFocused = activeElement && (
+            activeElement.tagName === 'INPUT' ||
+            activeElement.tagName === 'TEXTAREA' ||
+            activeElement.contentEditable === 'true'
+        );
+
+        // 检查visualViewport
+        if (window.visualViewport) {
+            const heightDiff = window.innerHeight - window.visualViewport.height;
+            const viewportKeyboardVisible = heightDiff > 150;
+
+            console.log('🔍 强制检查键盘状态:', {
+                inputFocused: isInputFocused,
+                viewportKeyboardVisible,
+                heightDiff,
+                innerHeight: window.innerHeight,
+                visualHeight: window.visualViewport.height
+            });
+
+            // 如果输入框聚焦或视口检测到键盘，则认为键盘显示
+            keyboardVisible = isInputFocused || viewportKeyboardVisible;
+        } else {
+            // 降级：仅基于输入框焦点
+            keyboardVisible = isInputFocused;
+            console.log('🔍 降级检查键盘状态（无visualViewport）:', {
+                inputFocused: isInputFocused,
+                keyboardVisible
+            });
+        }
+
+        // 更新状态
+        if (keyboardVisible !== layout.isKeyboardVisible.value) {
+            layout.isKeyboardVisible.value = keyboardVisible;
+            console.log('🎹 强制更新键盘状态:', keyboardVisible);
+        }
+    };
+
+    // 监听输入框焦点事件（作为补充检测）
+    const handleFocusIn = (event) => {
+        const target = event.target;
+        if (target && (target.tagName === 'INPUT' || target.tagName === 'TEXTAREA' || target.contentEditable === 'true')) {
+            console.log('📱 Main.vue检测到输入框获得焦点:', target.tagName);
+            setTimeout(() => {
+                forceCheckKeyboardState();
+            }, 400); // 稍微延长延迟，确保键盘动画完成
+        }
+    };
+
+    const handleFocusOut = (event) => {
+        const target = event.target;
+        if (target && (target.tagName === 'INPUT' || target.tagName === 'TEXTAREA' || target.contentEditable === 'true')) {
+            console.log('📱 Main.vue检测到输入框失去焦点:', target.tagName);
+            setTimeout(() => {
+                forceCheckKeyboardState();
+            }, 400);
+        }
+    };
+
+    document.addEventListener('focusin', handleFocusIn);
+    document.addEventListener('focusout', handleFocusOut);
+
+    // 监听visualViewport变化（如果支持）
+    if (window.visualViewport) {
+        const handleVisualViewportChange = () => {
+            console.log('📱 Main.vue监听到visualViewport变化');
+            setTimeout(() => {
+                forceCheckKeyboardState();
+            }, 100);
+        };
+
+        window.visualViewport.addEventListener('resize', handleVisualViewportChange);
+
+        // 清理函数
+        onUnmounted(() => {
+            document.removeEventListener('focusin', handleFocusIn);
+            document.removeEventListener('focusout', handleFocusOut);
+            window.visualViewport.removeEventListener('resize', handleVisualViewportChange);
+        });
+    } else {
+        // 清理函数
+        onUnmounted(() => {
+            document.removeEventListener('focusin', handleFocusIn);
+            document.removeEventListener('focusout', handleFocusOut);
+        });
+    }
+
+    // 初始检查
+    setTimeout(() => {
+        forceCheckKeyboardState();
+    }, 500);
+};
+
+// 在组件挂载时设置额外的键盘检测
+onMounted(() => {
+    setupAdditionalKeyboardDetection();
+
+    // 添加全局清理方法供开发者使用
+    window.clearPortfolioData = () => {
+        if (userStore.clearPortfolio()) {
+            console.log('✅ 持仓数据已清理');
+            ElMessage.success('持仓数据已清理');
+            // 如果当前有资产分析消息，刷新它
+            const lastAssetMessage = chatHistory.value.findLast(msg => msg.hasAssetInfo);
+            if (lastAssetMessage) {
+                const messageIndex = chatHistory.value.indexOf(lastAssetMessage);
+                regenerateAssetAnalysis(messageIndex);
+            }
+        } else {
+            console.log('❌ 清理持仓数据失败');
+            ElMessage.error('清理失败');
+        }
+    };
+
+    // 添加移除指定股票的方法
+    window.removeStockFromPortfolio = (stockCode) => {
+        if (userStore.removeFromPortfolio(stockCode)) {
+            console.log(`✅ 已移除股票 ${stockCode}`);
+            ElMessage.success(`已移除股票 ${stockCode}`);
+            // 如果当前有资产分析消息，刷新它
+            const lastAssetMessage = chatHistory.value.findLast(msg => msg.hasAssetInfo);
+            if (lastAssetMessage) {
+                const messageIndex = chatHistory.value.indexOf(lastAssetMessage);
+                regenerateAssetAnalysis(messageIndex);
+            }
+        } else {
+            console.log(`❌ 移除股票 ${stockCode} 失败`);
+            ElMessage.error(`移除股票 ${stockCode} 失败`);
+        }
+    };
+
+    // 提示用户如何使用
+    console.log('🔧 开发者工具已加载:');
+    console.log('- 清理所有持仓数据: clearPortfolioData()');
+    console.log('- 移除指定股票: removeStockFromPortfolio("000001")');
+    console.log('- 查看当前持仓: console.log(userStore.portfolio)');
+
+    // 检查是否有被污染的持仓数据
+    const suspiciousStocks = ['000001', '600036', '000858', '300750'].filter(code =>
+        userStore.portfolio.some(p => p.code === code)
+    );
+
+    if (suspiciousStocks.length > 0) {
+        console.warn('⚠️ 检测到可能的mock数据污染:');
+        console.warn('污染的股票代码:', suspiciousStocks);
+        console.warn('请执行 clearPortfolioData() 清理数据');
+    }
+
+    // 添加调试函数到全局，方便测试
+    window.debugWatchlistRegenerate = () => {
+        console.log('🔧 调试：自选股重新生成功能');
+        console.log('当前聊天历史长度:', chatHistory.value.length);
+        console.log('当前聊天历史:', chatHistory.value.map(msg => ({
+            role: msg.role,
+            content: msg.content?.substring(0, 50) + '...',
+            isWatchlistDisplay: msg.isWatchlistDisplay,
+            hasWatchlistInfo: msg.hasWatchlistInfo,
+            watchlistData: !!msg.watchlistData,
+            id: msg.id,
+            timestamp: msg.timestamp
+        })));
+
+        // 查找自选股消息
+        const watchlistMessages = chatHistory.value.filter(msg =>
+            msg.role === 'assistant' && (
+                msg.isWatchlistDisplay ||
+                msg.watchlistData ||
+                msg.hasWatchlistInfo ||
+                (msg.content && msg.content.includes('自选股'))
+            )
+        );
+
+        console.log('找到的自选股消息数量:', watchlistMessages.length);
+        console.log('找到的自选股消息:', watchlistMessages);
+
+        if (watchlistMessages.length > 0) {
+            const latestMessage = watchlistMessages[watchlistMessages.length - 1];
+            console.log('最新的自选股消息:', latestMessage);
+            console.log('消息类型判断:', determineMessageType(latestMessage));
+
+            // 检查消息索引
+            const messageIndex = chatHistory.value.findIndex(msg => msg.id === latestMessage.id);
+            console.log('消息在聊天历史中的索引:', messageIndex);
+
+            // 查找对应的用户消息
+            let userMessage = null;
+            for (let i = messageIndex - 1; i >= 0; i--) {
+                if (chatHistory.value[i] && chatHistory.value[i].role === 'user') {
+                    console.log(`检查用户消息 ${i}:`, chatHistory.value[i].content);
+                    if (chatHistory.value[i].content &&
+                        (chatHistory.value[i].content.includes('自选股') ||
+                            chatHistory.value[i].content.includes('查看我的自选股列表'))) {
+                        userMessage = chatHistory.value[i];
+                        console.log('找到对应的用户消息:', userMessage);
+                        break;
+                    }
+                }
+            }
+
+            if (!userMessage) {
+                console.log('⚠️ 没有找到对应的用户消息！');
+            }
+
+            // 模拟点击重新生成按钮
+            handleRegenerateMessage({ message: latestMessage });
+        } else {
+            console.log('没有找到自选股消息');
+        }
+    };
+
+    // 添加通用的重新生成调试函数
+    window.debugRegenerate = (messageType = 'watchlist') => {
+        console.log(`🔧 调试：${messageType} 重新生成功能`);
+        console.log('当前isGenerating状态:', isGenerating.value);
+
+        let targetMessages = [];
+        switch (messageType) {
+            case 'watchlist':
+                targetMessages = chatHistory.value.filter(msg =>
+                    msg.role === 'assistant' && (
+                        msg.isWatchlistDisplay ||
+                        msg.watchlistData ||
+                        msg.hasWatchlistInfo ||
+                        (msg.content && msg.content.includes('自选股'))
+                    )
+                );
+                break;
+            case 'recommendation':
+                targetMessages = chatHistory.value.filter(msg =>
+                    msg.role === 'assistant' && (
+                        msg.hasStockInfo ||
+                        msg.stockList ||
+                        msg.isRecommendation ||
+                        (msg.content && msg.content.includes('智能荐股'))
+                    )
+                );
+                break;
+            case 'asset':
+                targetMessages = chatHistory.value.filter(msg =>
+                    msg.role === 'assistant' && (
+                        msg.hasAssetInfo ||
+                        msg.assetData ||
+                        (msg.content && msg.content.includes('资产'))
+                    )
+                );
+                break;
+            case 'news':
+                targetMessages = chatHistory.value.filter(msg =>
+                    msg.role === 'assistant' && (
+                        msg.isNewsUpdate ||
+                        (msg.content && msg.content.includes('资讯'))
+                    )
+                );
+                break;
+        }
+
+        console.log(`找到的${messageType}消息:`, targetMessages);
+
+        if (targetMessages.length > 0) {
+            const latestMessage = targetMessages[targetMessages.length - 1];
+            console.log(`最新的${messageType}消息:`, latestMessage);
+            console.log('消息类型判断:', determineMessageType(latestMessage));
+            console.log('消息的isGenerating状态:', latestMessage.isGenerating);
+            console.log('消息的content长度:', latestMessage.content?.length || 0);
+
+            // 模拟点击重新生成按钮
+            handleRegenerateMessage({ message: latestMessage });
+        } else {
+            console.log(`没有找到${messageType}消息`);
+        }
+    };
+
+    // 添加测试清空效果的函数
+    window.testClearEffect = () => {
+        console.log('🔧 测试清空效果');
+
+        // 找到最后一条AI消息
+        const lastAiMessage = chatHistory.value.slice().reverse().find(msg => msg.role === 'assistant');
+
+        if (lastAiMessage) {
+            console.log('找到最后一条AI消息:', lastAiMessage);
+            console.log('原始content长度:', lastAiMessage.content?.length || 0);
+            console.log('原始isGenerating状态:', lastAiMessage.isGenerating);
+            console.log('原始isWatchlistDisplay状态:', lastAiMessage.isWatchlistDisplay);
+            console.log('原始watchlistData:', !!lastAiMessage.watchlistData);
+
+            // 模拟清空效果
+            const originalContent = lastAiMessage.content;
+            const originalIsGenerating = lastAiMessage.isGenerating;
+            const originalIsWatchlistDisplay = lastAiMessage.isWatchlistDisplay;
+            const originalWatchlistData = lastAiMessage.watchlistData;
+            const originalHasWatchlistInfo = lastAiMessage.hasWatchlistInfo;
+            const originalWatchlistStats = lastAiMessage.watchlistStats;
+            const originalHasInteractionButtons = lastAiMessage.hasInteractionButtons;
+            const originalInteractionData = lastAiMessage.interactionData;
+
+            // 清空所有相关数据
+            lastAiMessage.content = '';
+            lastAiMessage.isGenerating = true;
+            lastAiMessage.isWatchlistDisplay = false;
+            lastAiMessage.watchlistData = null;
+            lastAiMessage.hasWatchlistInfo = false;
+            lastAiMessage.watchlistStats = null;
+            lastAiMessage.hasInteractionButtons = false;
+            lastAiMessage.interactionData = null;
+
+            // 触发响应式更新
+            chatHistory.value = [...chatHistory.value];
+
+            console.log('消息已清空，isGenerating已设置为true');
+            console.log('请检查UI是否显示"AI正在思考中..."动画');
+
+            // 5秒后恢复内容
+            setTimeout(() => {
+                lastAiMessage.content = originalContent;
+                lastAiMessage.isGenerating = originalIsGenerating;
+                lastAiMessage.isWatchlistDisplay = originalIsWatchlistDisplay;
+                lastAiMessage.watchlistData = originalWatchlistData;
+                lastAiMessage.hasWatchlistInfo = originalHasWatchlistInfo;
+                lastAiMessage.watchlistStats = originalWatchlistStats;
+                lastAiMessage.hasInteractionButtons = originalHasInteractionButtons;
+                lastAiMessage.interactionData = originalInteractionData;
+                chatHistory.value = [...chatHistory.value];
+                console.log('内容已恢复');
+            }, 5000);
+        } else {
+            console.log('没有找到AI消息');
+        }
+    };
+
+    // 添加专门测试自选股重新生成的函数
+    window.testWatchlistRegenerate = () => {
+        console.log('🔧 测试自选股重新生成功能');
+
+        // 创建一个完整的自选股消息对话
+        const userMessage = {
+            role: 'user',
+            content: '查看我的自选股列表',
+            timestamp: Date.now() - 2000,
+            id: generateMessageId()
+        };
+
+        const watchlistMessage = {
+            role: 'assistant',
+            content: '📋 我的自选股列表\n\n您当前关注 2 只股票，详细信息如下：',
+            timestamp: Date.now() - 1000,
+            id: generateMessageId(),
+            isWatchlistDisplay: true,
+            hasWatchlistInfo: true,
+            watchlistData: [
+                { code: '000001', name: '平安银行', price: 10.00, changePct: 0.39 },
+                { code: '002371', name: '北方华创', price: 10.00, changePct: 0.39 }
+            ],
+            hasInteractionButtons: false,
+            watchlistStats: {
+                total: 2,
+                upCount: 1,
+                downCount: 1,
+                updateTime: new Date().toLocaleString('zh-CN')
+            }
+        };
+
+        // 添加到聊天历史
+        chatHistory.value.push(userMessage, watchlistMessage);
+        chatHistory.value = [...chatHistory.value];
+
+        console.log('✅ 自选股消息已添加到聊天历史');
+        console.log('用户消息:', userMessage.content);
+        console.log('AI消息内容长度:', watchlistMessage.content.length);
+        console.log('自选股数据:', watchlistMessage.watchlistData);
+
+        // 滚动到底部
+        nextTick(() => {
+            scrollToBottom();
+        });
+
+        console.log('🔄 5秒后将触发重新生成，请观察：');
+        console.log('1. 自选股列表是否消失');
+        console.log('2. 是否显示"AI正在思考中..."动画');
+        console.log('3. 用户消息"查看我的自选股列表"是否保留');
+        console.log('4. 重新生成后是否显示新的自选股数据');
+
+        // 5秒后触发重新生成
+        setTimeout(() => {
+            console.log('🔄 开始触发重新生成...');
+            handleRegenerateMessage({ message: watchlistMessage });
+        }, 5000);
+    };
+
+    // 添加诊断聊天历史限制的函数
+    window.diagnoseChatHistoryLimit = () => {
+        console.log('🔍 诊断聊天历史限制问题');
+        console.log('当前聊天历史长度:', chatHistory.value.length);
+        console.log('当前聊天历史:', chatHistory.value);
+
+        // 检查是否有用户消息
+        const userMessages = chatHistory.value.filter(msg => msg.role === 'user');
+        console.log('用户消息数量:', userMessages.length);
+        console.log('用户消息:', userMessages);
+
+        // 检查是否有自选股相关的用户消息
+        const watchlistUserMessages = userMessages.filter(msg =>
+            msg.content && (msg.content.includes('自选股') || msg.content.includes('查看我的自选股列表'))
+        );
+        console.log('自选股用户消息数量:', watchlistUserMessages.length);
+        console.log('自选股用户消息:', watchlistUserMessages);
+
+        // 检查chatHistoryStore
+        const currentChat = chatHistoryStore.getCurrentChat;
+        console.log('chatHistoryStore.currentChatId:', chatHistoryStore.currentChatId);
+        console.log('chatHistoryStore.currentChatMessages:', chatHistoryStore.currentChatMessages);
+
+        // 检查本地存储
+        const localStorageData = localStorage.getItem('chatHistoryList');
+        console.log('本地存储数据:', localStorageData ? JSON.parse(localStorageData) : '无数据');
+    };
+
+    // 添加专门测试自选股重新生成问题的函数
+    window.testWatchlistRegenerateIssue = () => {
+        console.log('🔧 测试自选股重新生成问题');
+
+        // 创建一个简单的自选股消息对话
+        const userMessage = {
+            role: 'user',
+            content: '查看我的自选股列表',
+            timestamp: Date.now() - 2000,
+            id: generateMessageId()
+        };
+
+        const watchlistMessage = {
+            role: 'assistant',
+            content: '📋 我的自选股列表\n\n您当前关注 2 只股票，详细信息如下：',
+            timestamp: Date.now() - 1000,
+            id: generateMessageId(),
+            isWatchlistDisplay: true,
+            hasWatchlistInfo: true,
+            watchlistData: [
+                { code: '000001', name: '平安银行', price: 10.00, changePct: 0.39 },
+                { code: '002371', name: '北方华创', price: 10.00, changePct: 0.39 }
+            ],
+            hasInteractionButtons: false,
+            watchlistStats: {
+                total: 2,
+                upCount: 1,
+                downCount: 1,
+                updateTime: new Date().toLocaleString('zh-CN')
+            }
+        };
+
+        // 清空当前聊天历史
+        chatHistory.value = [];
+
+        // 添加到聊天历史
+        chatHistory.value.push(userMessage, watchlistMessage);
+        chatHistory.value = [...chatHistory.value];
+
+        console.log('✅ 测试消息已添加到聊天历史');
+        console.log('用户消息:', userMessage);
+        console.log('自选股消息:', watchlistMessage);
+
+        // 滚动到底部
+        nextTick(() => {
+            scrollToBottom();
+        });
+
+        console.log('🔄 2秒后将触发重新生成...');
+
+        // 2秒后触发重新生成
+        setTimeout(() => {
+            console.log('🔄 开始触发重新生成...');
+            console.log('重新生成前的聊天历史:', chatHistory.value.map(msg => ({
+                role: msg.role,
+                content: msg.content?.substring(0, 30) + '...',
+                id: msg.id
+            })));
+
+            // 直接调用重新生成函数
+            const messageIndex = chatHistory.value.findIndex(msg => msg.id === watchlistMessage.id);
+            console.log('自选股消息索引:', messageIndex);
+
+            if (messageIndex !== -1) {
+                regenerateWatchlistView(messageIndex);
+            } else {
+                console.error('找不到自选股消息');
+            }
+        }, 2000);
+    };
+
+    // 检查chatHistoryStore
+    const currentChat = chatHistoryStore.getCurrentChat;
+    if (currentChat) {
+        console.log('当前聊天记录:', currentChat);
+        console.log('当前聊天消息数量:', currentChat.messages?.length || 0);
+
+        // 测试limitChatMessages的行为
+        const originalMessages = currentChat.messages || [];
+        const limitedMessages = chatHistoryManager.limitChatMessages(originalMessages);
+        console.log('原始消息数量:', originalMessages.length);
+        console.log('限制后消息数量:', limitedMessages.length);
+        console.log('是否有消息被删除:', originalMessages.length > limitedMessages.length);
+
+        if (originalMessages.length > limitedMessages.length) {
+            console.log('被删除的消息:', originalMessages.slice(0, originalMessages.length - limitedMessages.length));
+        }
+    } else {
+        console.log('没有当前聊天记录');
+    }
+
+    // 定期检查键盘状态（仅在微信环境下，作为最后的保障）
+    if (isWechatEnv.value) {
+        const checkInterval = setInterval(() => {
+            const activeElement = document.activeElement;
+            const isInputFocused = activeElement && (
+                activeElement.tagName === 'INPUT' ||
+                activeElement.tagName === 'TEXTAREA' ||
+                activeElement.contentEditable === 'true'
+            );
+
+            // 获取视口信息
+            let viewportKeyboardVisible = false;
+            if (window.visualViewport) {
+                const heightDiff = window.innerHeight - window.visualViewport.height;
+                viewportKeyboardVisible = heightDiff > 150;
+            }
+
+            // 综合判断键盘状态
+            const shouldKeyboardVisible = isInputFocused || viewportKeyboardVisible;
+
+            if (shouldKeyboardVisible !== layout.isKeyboardVisible.value) {
+                console.log('🔄 定期检查发现键盘状态不匹配，更新状态:', {
+                    current: layout.isKeyboardVisible.value,
+                    expected: shouldKeyboardVisible,
+                    inputFocused: isInputFocused,
+                    viewportKeyboard: viewportKeyboardVisible
+                });
+                layout.isKeyboardVisible.value = shouldKeyboardVisible;
+            }
+        }, 2000); // 增加间隔到2秒，减少性能影响
+
+        // 清理定时器
+        onUnmounted(() => {
+            clearInterval(checkInterval);
+        });
+    }
+});
 
 // 使用语音输入组合式函数
 const voiceInput = useVoiceInput();
@@ -451,8 +1087,19 @@ const handleReminderConfirm = (reminder) => {
 };
 
 // 刷新荐股列表的包装函数
-const refreshRecommendation = (message) => {
-    return stockRefreshRecommendation(message, userStore, chatHistory);
+const refreshRecommendation = async (message) => {
+    // 暂时禁用自动滚动
+    shouldAutoScroll.value = false;
+
+    try {
+        const result = await stockRefreshRecommendation(message, userStore, chatHistory);
+        return result;
+    } finally {
+        // 无论成功还是失败，都要重新启用自动滚动
+        nextTick(() => {
+            shouldAutoScroll.value = true;
+        });
+    }
 };
 
 const handleReminderCancel = (reminder) => {
@@ -503,11 +1150,12 @@ const activeTab = ref('portfolio'); // 默认显示持仓明细
 
 // 简化的ShortcutsBar组件操作函数
 const notifyShortcutsBarComponents = (method) => {
-    [shortcutsBarRef.value, chatShortcutsBarRef.value].forEach((ref, index) => {
+    [shortcutsBarRef.value, chatShortcutsBarRef.value, mobileChatShortcutsRef.value].forEach((ref, index) => {
         if (ref && typeof ref[method] === 'function') {
             try {
                 ref[method]();
-                console.log(`✅ 已通知${index === 0 ? '初始模式' : '聊天模式'}ShortcutsBar组件执行${method}`);
+                const componentName = index === 0 ? '初始模式' : index === 1 ? '聊天模式' : '移动端聊天';
+                console.log(`✅ 已通知${componentName}ShortcutsBar组件执行${method}`);
             } catch (error) {
                 console.warn(`⚠️ 通知ShortcutsBar执行${method}时出错:`, error);
             }
@@ -515,10 +1163,114 @@ const notifyShortcutsBarComponents = (method) => {
     });
 };
 
+// 主页快捷操作数据
+const activeHomeShortcuts = ref([]);
+
+// 默认主页快捷操作配置
+const defaultHomeShortcuts = ref([
+    {
+        id: 'smart_review',
+        icon: '📊',
+        title: '智能复盘',
+        shortTitle: '复盘',
+        description: '智能分析市场表现和投资策略',
+        action: 'smart_review',
+        isDefault: true,
+        isActive: true
+    },
+    {
+        id: 'watchlist',
+        icon: '⭐',
+        title: '自选股',
+        shortTitle: '自选',
+        description: '查看和管理我的自选股票',
+        action: 'watchlist',
+        isDefault: true,
+        isActive: true
+    },
+    {
+        id: 'smart_recommendation',
+        icon: '📈',
+        title: '智能荐股',
+        shortTitle: '荐股',
+        description: '基于AI算法推荐优质股票',
+        action: 'smart_recommendation',
+        isDefault: true,
+        isActive: true
+    },
+    {
+        id: 'news_update',
+        icon: '📄',
+        title: '资讯推送',
+        shortTitle: '资讯',
+        description: '获取最新市场资讯和重要公告',
+        action: 'news_update',
+        isDefault: true,
+        isActive: true
+    },
+    {
+        id: 'asset_analysis',
+        icon: '💼',
+        title: '我的资产',
+        shortTitle: '资产',
+        description: '查看投资组合和账户分析',
+        action: 'asset_analysis',
+        isDefault: true,
+        isActive: true
+    }
+]);
+
+// 快捷操作数据管理类
+class HomeShortcutsManager {
+    static getDefaultStates() {
+        const saved = localStorage.getItem('defaultShortcutStates');
+        return saved ? JSON.parse(saved) : {};
+    }
+
+    static getCustomShortcuts() {
+        const saved = localStorage.getItem('customShortcuts');
+        return saved ? JSON.parse(saved) : [];
+    }
+
+    static loadActiveShortcuts(defaultShortcuts) {
+        const result = [];
+        const states = this.getDefaultStates();
+
+        // 添加激活的默认快捷操作
+        const activeDefaults = defaultShortcuts.filter(s => {
+            if (states.hasOwnProperty(s.id)) {
+                s.isActive = states[s.id];
+            }
+            return s.isActive;
+        });
+        result.push(...activeDefaults);
+
+        // 添加激活的自定义快捷操作
+        const customShortcuts = this.getCustomShortcuts();
+        const activeCustoms = customShortcuts
+            .filter(s => s.isActive)
+            .map(shortcut => ({ ...shortcut, action: 'custom' }));
+        result.push(...activeCustoms);
+
+        return result;
+    }
+}
+
+// 初始化主页快捷操作
+const initializeHomeShortcuts = () => {
+    console.log('🔄 初始化主页快捷操作');
+    console.log('🔍 默认快捷操作配置:', defaultHomeShortcuts.value);
+    activeHomeShortcuts.value = HomeShortcutsManager.loadActiveShortcuts(defaultHomeShortcuts.value);
+    console.log('✅ 主页快捷操作初始化完成，总数:', activeHomeShortcuts.value.length);
+    console.log('🔍 激活的快捷操作:', activeHomeShortcuts.value);
+};
+
 // 初始化快捷操作
 const initializeShortcuts = () => {
     console.log('🔄 初始化快捷操作');
     notifyShortcutsBarComponents('initializeShortcuts');
+    // 同时初始化主页快捷操作
+    initializeHomeShortcuts();
     console.log('✅ 快捷操作初始化完成');
 };
 
@@ -627,9 +1379,15 @@ const wrappedHandleDeleteChat = (chatId) => {
     handleDeleteChat(chatId, isMobileView, mobileAdaptation, scrollToTop);
 };
 
+// 控制是否自动滚动的标志
+const shouldAutoScroll = ref(true);
+
 watch(chatHistory, () => {
     nextTick(() => {
-        scrollToBottom();
+        // 只有在应该自动滚动时才滚动
+        if (shouldAutoScroll.value) {
+            scrollToBottom();
+        }
         // 确保滚动事件监听器已绑定
         if (chatHistoryRef.value && !chatHistoryRef.value.hasScrollListener) {
             chatHistoryRef.value.addEventListener('scroll', handleScroll, { passive: true });
@@ -891,72 +1649,425 @@ const handleCopyMessage = async (message) => {
     }
 };
 
-// 重新生成消息
-const handleRegenerateMessage = async (message) => {
+// 重新生成消息 - 重新设计的安全逻辑
+const handleRegenerateMessage = async (data) => {
     try {
-        // 找到该消息在聊天历史中的索引
-        const messageIndex = chatHistory.value.findIndex(
-            msg => (msg.id && msg.id === message.id) ||
-                (msg.timestamp && msg.timestamp === message.timestamp)
+        console.log('🔄 重新生成消息 - 接收到的数据:', data);
+
+        // 从事件数据中获取消息对象
+        const targetMessage = data.message || data;
+        console.log('🔄 重新生成消息 - 目标消息:', {
+            role: targetMessage.role,
+            content: targetMessage.content?.substring(0, 50),
+            hasId: !!targetMessage.id,
+            hasTimestamp: !!targetMessage.timestamp
+        });
+
+        // 找到该消息在聊天历史中的索引 - 更严格的匹配逻辑
+        let messageIndex = chatHistory.value.findIndex(
+            msg => {
+                // 首先尝试通过ID匹配（最可靠）
+                if (msg.id && targetMessage.id && msg.id === targetMessage.id) {
+                    // 额外验证角色一致性
+                    if (msg.role === targetMessage.role) {
+                        return true;
+                    } else {
+                        console.warn('🔄 ID匹配但角色不一致:', {
+                            msgRole: msg.role,
+                            targetRole: targetMessage.role,
+                            msgId: msg.id,
+                            targetId: targetMessage.id
+                        });
+                    }
+                }
+
+                // 然后尝试通过timestamp匹配
+                if (msg.timestamp && targetMessage.timestamp && msg.timestamp === targetMessage.timestamp) {
+                    // 额外验证角色一致性
+                    if (msg.role === targetMessage.role) {
+                        return true;
+                    } else {
+                        console.warn('🔄 Timestamp匹配但角色不一致:', {
+                            msgRole: msg.role,
+                            targetRole: targetMessage.role,
+                            msgTimestamp: msg.timestamp,
+                            targetTimestamp: targetMessage.timestamp
+                        });
+                    }
+                }
+
+                // 最后尝试通过内容和角色匹配（适用于没有ID的旧消息）
+                if (msg.role === 'assistant' && targetMessage.role === 'assistant' &&
+                    msg.content && targetMessage.content &&
+                    msg.content === targetMessage.content) {
+                    return true;
+                }
+
+                return false;
+            }
         );
 
+        console.log('🔄 重新生成消息 - 找到的消息索引:', messageIndex);
+
         if (messageIndex === -1) {
+            console.error('🔄 重新生成消息 - 无法找到目标消息，调试信息:', {
+                targetMessageId: targetMessage.id,
+                targetMessageTimestamp: targetMessage.timestamp,
+                targetMessageRole: targetMessage.role,
+                targetMessageContent: targetMessage.content?.substring(0, 50),
+                chatHistoryLength: chatHistory.value.length,
+                chatHistoryLastFewMessages: chatHistory.value.slice(-3).map(msg => ({
+                    id: msg.id,
+                    timestamp: msg.timestamp,
+                    role: msg.role,
+                    content: msg.content?.substring(0, 30)
+                }))
+            });
             ElMessage.error('无法找到要重新生成的消息');
             return;
         }
 
-        // 找到对应的用户消息（通常在AI消息的前一条）
-        let userMessageIndex = -1;
+        // 获取当前AI消息
+        let currentMessage = chatHistory.value[messageIndex];
+
+        // 验证消息是否存在
+        if (!currentMessage) {
+            console.error('🔄 重新生成消息 - 消息不存在');
+            ElMessage.error('消息不存在');
+            return;
+        }
+
+        console.log('🔄 重新生成消息 - 当前消息详情:', {
+            role: currentMessage.role,
+            content: currentMessage.content?.substring(0, 50),
+            messageType: currentMessage.messageType
+        });
+
+        // 确保只能重新生成AI消息
+        if (currentMessage.role !== 'assistant') {
+            console.error('🔄 重新生成消息 - 角色检查失败:', {
+                currentMessageRole: currentMessage.role,
+                targetMessageRole: targetMessage.role,
+                messageIndex: messageIndex,
+                currentMessageContent: currentMessage.content?.substring(0, 100),
+                targetMessageContent: targetMessage.content?.substring(0, 100),
+                chatHistoryLength: chatHistory.value.length
+            });
+
+            // 临时解决方案：如果目标消息是assistant角色，尝试直接使用目标消息的索引
+            if (targetMessage.role === 'assistant') {
+                console.log('🔄 尝试使用目标消息进行重新生成');
+                // 使用更精确的匹配逻辑，优先匹配角色一致的消息
+                const targetIndex = chatHistory.value.findIndex(msg => {
+                    // 必须是assistant角色
+                    if (msg.role !== 'assistant') return false;
+
+                    // 然后尝试各种匹配方式
+                    if (msg === targetMessage) return true;
+                    if (msg.id && targetMessage.id && msg.id === targetMessage.id) return true;
+                    if (msg.timestamp && targetMessage.timestamp && msg.timestamp === targetMessage.timestamp) return true;
+
+                    // 如果以上都不匹配，尝试内容匹配
+                    if (msg.content && targetMessage.content && msg.content === targetMessage.content) return true;
+
+                    return false;
+                });
+
+                if (targetIndex !== -1) {
+                    console.log('🔄 找到目标消息索引:', targetIndex);
+                    // 继续使用找到的索引
+                    messageIndex = targetIndex;
+                    currentMessage = chatHistory.value[targetIndex];
+
+                    // 再次验证角色
+                    if (currentMessage.role !== 'assistant') {
+                        console.error('🔄 重新匹配后角色仍不正确:', currentMessage.role);
+                        ElMessage.error('无法找到正确的AI消息');
+                        return;
+                    }
+                } else {
+                    ElMessage.error('无法找到要重新生成的消息');
+                    return;
+                }
+            } else {
+                ElMessage.error('只能重新生成AI消息');
+                return;
+            }
+        }
+
+        console.log('🔄 重新生成消息 - 目标消息详情:', {
+            role: currentMessage.role,
+            content: currentMessage.content?.substring(0, 100),
+            messageIndex: messageIndex,
+            messageType: currentMessage.messageType
+        });
+
+        // 使用统一的消息类型判断逻辑
+        const messageType = determineMessageType(currentMessage, messageIndex);
+        console.log('🔄 重新生成消息类型判断结果:', messageType);
+
+        // 设置生成状态
+        isGenerating.value = true;
+
+        // 设置全局标志，防止性能优化器干扰重新生成过程
+        window.isRegenerating = true;
+
+        try {
+            // 根据消息类型调用对应的重新生成函数
+            switch (messageType) {
+                case 'smart_recommendation':
+                    console.log('🔄 调用智能荐股重新生成');
+                    await regenerateSmartRecommendation(messageIndex);
+                    break;
+                case 'watchlist_view':
+                    console.log('🔄 调用自选股查看重新生成');
+                    await regenerateWatchlistView(messageIndex);
+                    break;
+                case 'asset_analysis':
+                    console.log('🔄 调用资产分析重新生成');
+                    await regenerateAssetAnalysis(messageIndex);
+                    break;
+                case 'news_update':
+                    console.log('🔄 调用资讯推送重新生成');
+                    await regenerateNewsUpdate(messageIndex);
+                    break;
+                case 'smart_review':
+                    console.log('🔄 调用智能复盘重新生成');
+                    await regenerateSmartReview(messageIndex);
+                    break;
+                default:
+                    console.log('🔄 调用普通消息重新生成');
+                    await regenerateNormalMessage(messageIndex);
+                    break;
+            }
+        } finally {
+            // 重置生成状态和全局标志
+            isGenerating.value = false;
+            window.isRegenerating = false;
+        }
+
+    } catch (error) {
+        console.error('重新生成消息失败:', error);
+        ElMessage.error('重新生成失败，请稍后重试');
+        // 确保状态被重置
+        isGenerating.value = false;
+        window.isRegenerating = false;
+    }
+};
+
+// 确定消息类型 - 使用更准确的判断逻辑
+const determineMessageType = (aiMessage, messageIndex) => {
+    console.log('🔍 消息类型判断 - AI消息详情:', {
+        messageType: aiMessage.messageType, // 预设的消息类型
+        hasStockInfo: aiMessage.hasStockInfo,
+        stockList: !!aiMessage.stockList,
+        isRecommendation: aiMessage.isRecommendation,
+        isWatchlistDisplay: aiMessage.isWatchlistDisplay,
+        watchlistData: !!aiMessage.watchlistData,
+        hasWatchlistInfo: aiMessage.hasWatchlistInfo,
+        hasAssetInfo: aiMessage.hasAssetInfo,
+        assetData: !!aiMessage.assetData,
+        isAssetAnalysis: aiMessage.isAssetAnalysis,
+        isNewsUpdate: aiMessage.isNewsUpdate,
+        content: aiMessage.content ? aiMessage.content.substring(0, 100) + '...' : '无内容'
+    });
+
+    // 第一优先级：检查预设的消息类型字段（在消息创建时设置）
+    if (aiMessage.messageType) {
+        console.log('🔍 从预设字段获取消息类型:', aiMessage.messageType);
+        return aiMessage.messageType;
+    }
+
+    // 第二优先级：基于AI消息的特有属性判断
+    // 智能荐股：检查股票推荐相关属性
+    if (aiMessage.hasStockInfo || aiMessage.stockList || aiMessage.isRecommendation) {
+        console.log('🔍 基于属性判断 - 智能荐股');
+        return 'smart_recommendation';
+    }
+
+    // 自选股查看：检查自选股相关属性
+    if (aiMessage.isWatchlistDisplay || aiMessage.watchlistData || aiMessage.hasWatchlistInfo) {
+        console.log('🔍 基于属性判断 - 自选股查看');
+        return 'watchlist_view';
+    }
+
+    // 资产分析：检查资产相关属性
+    if (aiMessage.hasAssetInfo || aiMessage.assetData || aiMessage.isAssetAnalysis) {
+        console.log('🔍 基于属性判断 - 资产分析');
+        return 'asset_analysis';
+    }
+
+    // 资讯推送：检查资讯相关属性
+    if (aiMessage.isNewsUpdate) {
+        console.log('🔍 基于属性判断 - 资讯推送');
+        return 'news_update';
+    }
+
+    // 第三优先级：查找对应的用户消息进行内容匹配
+    let userMessage = null;
+    for (let i = messageIndex - 1; i >= 0; i--) {
+        if (chatHistory.value[i] && chatHistory.value[i].role === 'user') {
+            userMessage = chatHistory.value[i];
+            break;
+        }
+    }
+
+    console.log('🔍 找到的用户消息:', userMessage?.content || '无用户消息');
+
+    if (userMessage?.content) {
+        const userContent = userMessage.content.toLowerCase();
+
+        // 基于用户消息内容判断
+        if (userContent.includes('智能荐股') || userContent.includes('推荐') ||
+            userContent.includes('根据我的投资偏好')) {
+            console.log('🔍 基于用户消息判断 - 智能荐股');
+            return 'smart_recommendation';
+        }
+
+        if (userContent.includes('自选股') || userContent.includes('查看我的自选股') ||
+            userContent.includes('我的自选股列表')) {
+            console.log('🔍 基于用户消息判断 - 自选股查看');
+            return 'watchlist_view';
+        }
+
+        if (userContent.includes('资产') || userContent.includes('持仓') ||
+            userContent.includes('我的资产')) {
+            console.log('🔍 基于用户消息判断 - 资产分析');
+            return 'asset_analysis';
+        }
+
+        if (userContent.includes('资讯') || userContent.includes('新闻') ||
+            userContent.includes('推送')) {
+            console.log('🔍 基于用户消息判断 - 资讯推送');
+            return 'news_update';
+        }
+
+        if (userContent.includes('复盘') || userContent.includes('智能化复盘') ||
+            userContent.includes('投资风格和市场大数据')) {
+            console.log('🔍 基于用户消息判断 - 智能复盘');
+            return 'smart_review';
+        }
+    }
+
+    // 第四优先级：基于AI消息内容的关键词匹配
+    if (aiMessage.content) {
+        const aiContent = aiMessage.content.toLowerCase();
+
+        if (aiContent.includes('智能荐股') || aiContent.includes('推荐股票') ||
+            aiContent.includes('📊 **智能荐股**')) {
+            console.log('🔍 基于AI内容判断 - 智能荐股');
+            return 'smart_recommendation';
+        }
+
+        if (aiContent.includes('📋 **我的自选股列表**') || aiContent.includes('自选股列表') ||
+            aiContent.includes('我的自选股')) {
+            console.log('🔍 基于AI内容判断 - 自选股查看');
+            return 'watchlist_view';
+        }
+
+        if (aiContent.includes('资产分析') || aiContent.includes('持仓分析') ||
+            aiContent.includes('💼 **资产分析**')) {
+            console.log('🔍 基于AI内容判断 - 资产分析');
+            return 'asset_analysis';
+        }
+
+        if (aiContent.includes('📰 **财经资讯**') || aiContent.includes('市场资讯') ||
+            aiContent.includes('今日重要财经新闻')) {
+            console.log('🔍 基于AI内容判断 - 资讯推送');
+            return 'news_update';
+        }
+    }
+
+    console.log('🔍 消息类型判断结果: unknown (普通聊天消息)');
+    return 'unknown';
+};
+
+// 统一的重新生成状态管理
+const resetMessageForRegeneration = (message, messageType) => {
+    // 清空通用属性
+    message.isGenerating = true;
+    message.content = '';
+    message.timestamp = Date.now();
+
+    // 根据消息类型清空特定属性
+    switch (messageType) {
+        case 'smart_recommendation':
+            message.hasStockInfo = false;
+            message.stockList = null;
+            message.isRecommendation = false;
+            break;
+        case 'watchlist_view':
+            message.hasWatchlistInfo = false;
+            message.watchlistData = null;
+            message.isWatchlistDisplay = false;
+            message.hasInteractionButtons = false;
+            message.interactionData = null;
+            message.watchlistStats = null;
+            break;
+        case 'asset_analysis':
+            message.hasAssetInfo = false;
+            message.assetData = null;
+            message.isAssetAnalysis = false;
+            break;
+        case 'news_update':
+            message.isNewsUpdate = false;
+            message.hasInteractionButtons = false;
+            message.interactionData = null;
+            break;
+        case 'smart_review':
+            // 智能复盘消息只需要清空内容，没有特殊属性
+            break;
+    }
+};
+
+// 统一的重新生成完成状态管理
+const completeMessageRegeneration = (message) => {
+    message.isGenerating = false;
+    message.timestamp = Date.now();
+};
+
+// handleQuickActionRegenerate 函数已被移除，逻辑合并到 handleRegenerateMessage 中
+
+// 重新生成普通消息 - 安全的重新生成逻辑
+const regenerateNormalMessage = async (messageIndex) => {
+    try {
+        console.log('🔄 开始重新生成普通消息');
+
+        // 获取当前AI消息引用
+        const targetMessage = chatHistory.value[messageIndex];
+
+        // 找到对应的用户消息（不修改用户消息，只用于重新生成）
+        let userMessage = null;
         for (let i = messageIndex - 1; i >= 0; i--) {
-            if (chatHistory.value[i].role === 'user') {
-                userMessageIndex = i;
+            if (chatHistory.value[i] && chatHistory.value[i].role === 'user') {
+                userMessage = chatHistory.value[i];
                 break;
             }
         }
 
-        let userMessage;
-
-        if (userMessageIndex === -1) {
-            // 没有找到直接的用户消息，可能是通过快捷操作生成的消息
-            const aiMessage = chatHistory.value[messageIndex];
-
-            // 检查消息是否有特殊标识来推断原始请求类型
-            if (aiMessage.hasStockInfo || aiMessage.stockList || aiMessage.content.includes('智能荐股') || aiMessage.content.includes('推荐')) {
-                userMessage = { content: '智能荐股' };
-            } else if (aiMessage.isNewsUpdate || aiMessage.content.includes('资讯') || aiMessage.content.includes('新闻')) {
-                userMessage = { content: '资讯推送' };
-            } else if (aiMessage.hasAssetInfo || aiMessage.assetData || aiMessage.content.includes('资产') || aiMessage.content.includes('持仓')) {
-                userMessage = { content: '我的资产分析' };
-            } else if (aiMessage.isWatchlistDisplay || aiMessage.watchlistData || aiMessage.content.includes('自选股')) {
-                userMessage = { content: '查看自选股' };
-            } else {
-                // 如果无法推断，使用通用的重新生成请求
-                userMessage = { content: '请重新生成回复' };
-            }
-        } else {
-            userMessage = chatHistory.value[userMessageIndex];
+        if (!userMessage) {
+            console.error('🔄 无法找到对应的用户消息');
+            ElMessage.error('无法找到对应的用户消息');
+            return;
         }
 
-        // 先清空当前AI消息内容，然后设置为生成中状态
-        const currentMessage = chatHistory.value[messageIndex];
-        currentMessage.content = '';
-        currentMessage.isGenerating = true;
-        currentMessage.timestamp = Date.now();
+        console.log('🔄 找到用户消息:', userMessage.content.substring(0, 100));
 
-        // 触发响应式更新，确保UI立即显示清空效果
+        // 第一步：清空AI消息内容并显示生成中状态
+        targetMessage.content = '';
+        targetMessage.isGenerating = true;
+        targetMessage.timestamp = Date.now();
+
+        // 触发响应式更新，让用户立即看到清空效果
         chatHistory.value = [...chatHistory.value];
 
-        // 保存聊天历史
-        chatHistoryStore.saveChatHistory();
-
-        ElMessage.info('正在重新生成回复...');
-
-        // 等待一下让用户看到清空效果，然后开始重新生成
+        // 等待一下让用户看到清空效果和"AI正在思考中..."动画
         await nextTick();
-        await new Promise(resolve => setTimeout(resolve, 200));
+        await new Promise(resolve => setTimeout(resolve, 500));
 
-        // 直接调用API重新生成
-        isGenerating.value = true;
+        console.log('🔄 普通消息内容已清空，开始重新生成');
+
+        // 第二步：调用API重新生成
         currentAbortController.value = new AbortController();
 
         try {
@@ -977,7 +2088,7 @@ const handleRegenerateMessage = async (message) => {
                     },
                     signal: currentAbortController.value.signal,
                     onopen: async (response) => {
-                        console.log('重新生成 - 流式连接已建立');
+                        console.log('🔄 重新生成 - 流式连接已建立');
                     },
                     onmessage: (event) => {
                         try {
@@ -985,10 +2096,10 @@ const handleRegenerateMessage = async (message) => {
                             if (data.trim().length === 0) return;
 
                             // 更新指定位置的AI消息内容
-                            const targetMessage = chatHistory.value[messageIndex];
-                            if (targetMessage && targetMessage.role === 'assistant') {
-                                targetMessage.content += data;
-                                targetMessage.isGenerating = false;
+                            const currentTargetMessage = chatHistory.value[messageIndex];
+                            if (currentTargetMessage && currentTargetMessage.role === 'assistant') {
+                                currentTargetMessage.content += data;
+                                currentTargetMessage.isGenerating = false;
 
                                 // 滚动到底部
                                 requestAnimationFrame(() => {
@@ -996,29 +2107,40 @@ const handleRegenerateMessage = async (message) => {
                                 });
                             }
                         } catch (err) {
-                            console.error('重新生成 - 解析消息时出错:', err);
+                            console.error('🔄 重新生成 - 解析消息时出错:', err);
                         }
                     },
                     onclose: () => {
-                        console.log('重新生成 - 流式连接已关闭');
-                        isGenerating.value = false;
+                        console.log('🔄 重新生成 - 流式连接已关闭');
                         currentAbortController.value = null;
+
+                        // 第三步：完成生成
+                        const finalTargetMessage = chatHistory.value[messageIndex];
+                        if (finalTargetMessage) {
+                            finalTargetMessage.isGenerating = false;
+                            finalTargetMessage.timestamp = Date.now();
+                            chatHistory.value = [...chatHistory.value];
+                        }
+
+                        // 保存聊天历史
+                        chatHistoryStore.saveChatHistoryWithoutLimit();
+
+                        console.log('🔄 普通消息重新生成完成');
+                        ElMessage.success('消息已重新生成');
                     },
                     onerror: (err) => {
-                        console.error('重新生成 - 流式连接错误:', err);
-                        isGenerating.value = false;
+                        console.error('🔄 重新生成 - 流式连接错误:', err);
                         currentAbortController.value = null;
 
                         // 更新目标消息，添加错误标识
-                        const targetMessage = chatHistory.value[messageIndex];
-                        if (targetMessage && targetMessage.role === 'assistant') {
-                            if (targetMessage.content) {
-                                targetMessage.content += '\n\n[连接中断]';
+                        const errorTargetMessage = chatHistory.value[messageIndex];
+                        if (errorTargetMessage && errorTargetMessage.role === 'assistant') {
+                            if (errorTargetMessage.content) {
+                                errorTargetMessage.content += '\n\n[连接中断]';
                             } else {
-                                targetMessage.content = '[连接中断]';
+                                errorTargetMessage.content = '[连接中断]';
                             }
-                            targetMessage.isGenerating = false;
-                            // 触发响应式更新
+                            errorTargetMessage.isGenerating = false;
                             chatHistory.value = [...chatHistory.value];
                         }
 
@@ -1027,29 +2149,762 @@ const handleRegenerateMessage = async (message) => {
                 }
             );
         } catch (err) {
-            console.error('重新生成失败:', err);
-            isGenerating.value = false;
+            console.error('🔄 重新生成失败:', err);
             currentAbortController.value = null;
 
             // 更新目标消息，添加错误标识
-            const targetMessage = chatHistory.value[messageIndex];
-            if (targetMessage && targetMessage.role === 'assistant') {
-                if (targetMessage.content) {
-                    targetMessage.content += '\n\n[请求失败]';
-                } else {
-                    targetMessage.content = '[请求失败]';
-                }
-                targetMessage.isGenerating = false;
-                // 触发响应式更新
-                chatHistory.value = [...chatHistory.value];
+            if (targetMessage.content) {
+                targetMessage.content += '\n\n[请求失败]';
+            } else {
+                targetMessage.content = '[请求失败]';
             }
+            targetMessage.isGenerating = false;
+            chatHistory.value = [...chatHistory.value];
 
             ElMessage.error('重新生成失败，请稍后重试');
         }
 
     } catch (error) {
-        console.error('重新生成消息失败:', error);
+        console.error('普通消息重新生成失败:', error);
+
+        // 恢复消息状态
+        const targetMessage = chatHistory.value[messageIndex];
+        if (targetMessage) {
+            targetMessage.isGenerating = false;
+            chatHistory.value = [...chatHistory.value];
+        }
+
         ElMessage.error('重新生成失败，请稍后重试');
+        throw error;
+    }
+};
+
+// 重新生成自选股查看
+const regenerateWatchlistView = async (messageIndex) => {
+    try {
+        console.log('🔄 开始重新生成自选股查看');
+        console.log('🔄 自选股 - 传入的messageIndex:', messageIndex);
+        console.log('🔄 自选股 - 聊天历史长度:', chatHistory.value.length);
+
+        // 设置重新生成标志，防止性能优化器干扰
+        window.isRegenerating = true;
+
+        // 设置全局生成状态，让UI显示生成中动画
+        isGenerating.value = true;
+
+        // 获取当前AI消息引用（和智能荐股一样的简单方式）
+        const targetMessage = chatHistory.value[messageIndex];
+
+        console.log('🔄 自选股 - 目标消息详情:', {
+            exists: !!targetMessage,
+            role: targetMessage?.role,
+            content: targetMessage?.content?.substring(0, 50),
+            messageType: targetMessage?.messageType,
+            hasWatchlistInfo: targetMessage?.hasWatchlistInfo
+        });
+
+        if (!targetMessage) {
+            console.error('🔄 自选股 - 目标消息不存在');
+            ElMessage.error('无法找到要重新生成的消息');
+            return;
+        }
+
+        if (targetMessage.role !== 'assistant') {
+            console.error('🔄 自选股 - 目标消息不是AI消息:', targetMessage.role);
+            ElMessage.error('只能重新生成AI消息');
+            return;
+        }
+
+        console.log('🔄 直接重新生成AI消息，不修改用户消息');
+
+        // 第一步：清空原有数据并显示生成中状态
+        resetMessageForRegeneration(targetMessage, 'watchlist_view');
+
+        // 触发响应式更新，让用户立即看到清空效果
+        chatHistory.value = [...chatHistory.value];
+
+        // 等待一下让用户看到清空效果和"AI正在思考中..."动画
+        await nextTick();
+        await new Promise(resolve => setTimeout(resolve, 800));
+
+        console.log('🔄 自选股内容已清空，开始重新生成');
+
+        // 第二步：模拟生成过程
+        await new Promise(resolve => setTimeout(resolve, 500));
+
+        // 第三步：获取用户真实的自选股数据
+        const watchlistData = userStore.watchlist.map(stock => generateWatchlistStockData(stock));
+
+        console.log('🔄 自选股数据生成完成，开始更新消息');
+
+        // 第四步：更新AI消息
+        const assistantMessage = userStore.watchlist.length === 0
+            ? `📋 **我的自选股列表**
+
+您当前还没有添加任何自选股。您可以通过以下方式添加股票：
+- 在聊天中输入股票代码或名称
+- 点击推荐股票中的"加入自选"按钮
+- 使用"股票查询"功能查找并添加股票`
+            : `📋 **我的自选股列表**
+
+您当前关注 **${userStore.watchlist.length}** 只股票，详细信息如下：`;
+
+        targetMessage.content = assistantMessage;
+        targetMessage.isGenerating = false;
+        isGenerating.value = false; // 重置全局生成状态
+        targetMessage.hasWatchlistInfo = true;
+        targetMessage.watchlistData = watchlistData;
+        targetMessage.isWatchlistDisplay = true;
+        targetMessage.messageType = 'watchlist_view'; // 设置消息类型备份
+        targetMessage.hasInteractionButtons = false;
+        targetMessage.watchlistStats = {
+            total: userStore.watchlist.length,
+            upCount: watchlistData.length > 0 ? watchlistData.filter(s => s.changePct >= 0).length : 0,
+            downCount: watchlistData.length > 0 ? watchlistData.filter(s => s.changePct < 0).length : 0,
+            bestPerformer: watchlistData.length > 0 ? watchlistData.sort((a, b) => b.changePct - a.changePct)[0] : null,
+            worstPerformer: watchlistData.length > 0 ? watchlistData.sort((a, b) => a.changePct - b.changePct)[0] : null,
+            updateTime: new Date().toLocaleString('zh-CN')
+        };
+        targetMessage.timestamp = Date.now();
+
+        console.log('🔄 自选股 - 消息更新完成:', {
+            content: targetMessage.content.substring(0, 50),
+            isGenerating: targetMessage.isGenerating,
+            hasWatchlistInfo: targetMessage.hasWatchlistInfo,
+            watchlistDataLength: targetMessage.watchlistData?.length
+        });
+
+        // 触发响应式更新
+        chatHistory.value = [...chatHistory.value];
+
+        // 验证更新后的消息
+        const updatedMessage = chatHistory.value[messageIndex];
+        console.log('🔄 自选股 - 验证更新后的消息:', {
+            role: updatedMessage?.role,
+            content: updatedMessage?.content?.substring(0, 50),
+            hasWatchlistInfo: updatedMessage?.hasWatchlistInfo
+        });
+
+        // 在重新生成过程中，不调用可能压缩数据的函数，直接更新存储
+        chatHistoryStore.currentChatMessages = [...chatHistory.value];
+        if (chatHistoryStore.currentChatId) {
+            const chatIndex = chatHistoryStore.chatHistoryList.findIndex(
+                (chat) => chat.id === chatHistoryStore.currentChatId
+            );
+            if (chatIndex > -1) {
+                chatHistoryStore.chatHistoryList[chatIndex].messages = [...chatHistory.value];
+                chatHistoryStore.chatHistoryList[chatIndex].lastMessage = Date.now();
+                // 直接保存到localStorage，不经过压缩
+                localStorage.setItem("chatHistoryList", JSON.stringify(chatHistoryStore.chatHistoryList));
+            }
+        }
+
+        await nextTick();
+        scrollToBottom();
+
+        console.log('🔄 自选股重新生成完成');
+        ElMessage.success('自选股列表已重新生成');
+
+        // 清除重新生成标志
+        window.isRegenerating = false;
+
+    } catch (error) {
+        console.error('重新生成自选股查看失败:', error);
+
+        // 恢复消息状态
+        if (targetMessage) {
+            targetMessage.isGenerating = false;
+            chatHistory.value = [...chatHistory.value];
+        }
+
+        // 重置全局生成状态
+        isGenerating.value = false;
+
+        ElMessage.error('重新生成自选股失败，请稍后重试');
+        throw error;
+    } finally {
+        // 清除重新生成标志
+        window.isRegenerating = false;
+        // 确保全局生成状态被重置
+        isGenerating.value = false;
+    }
+};
+
+// 重新生成智能复盘
+const regenerateSmartReview = async (messageIndex) => {
+    try {
+        console.log('🔄 开始重新生成智能复盘');
+
+        // 获取当前AI消息引用
+        const targetMessage = chatHistory.value[messageIndex];
+
+        // 找到对应的用户消息
+        let userMessage = null;
+        for (let i = messageIndex - 1; i >= 0; i--) {
+            if (chatHistory.value[i] && chatHistory.value[i].role === 'user') {
+                userMessage = chatHistory.value[i];
+                break;
+            }
+        }
+
+        if (!userMessage) {
+            console.error('🔄 无法找到对应的用户消息');
+            ElMessage.error('无法找到对应的用户消息');
+            return;
+        }
+
+        console.log('🔄 找到用户消息:', userMessage.content);
+
+        // 第一步：清空AI消息内容并显示生成中状态
+        targetMessage.content = '';
+        targetMessage.isGenerating = true;
+        targetMessage.timestamp = Date.now();
+
+        // 触发响应式更新，让用户立即看到清空效果
+        chatHistory.value = [...chatHistory.value];
+
+        // 等待一下让用户看到清空效果和"AI正在思考中..."动画
+        await nextTick();
+        await new Promise(resolve => setTimeout(resolve, 800));
+
+        console.log('🔄 智能复盘内容已清空，开始重新生成');
+
+        // 获取当前聊天会话ID
+        let conversationId = chatHistoryStore.currentChatId;
+        if (!conversationId) {
+            conversationId = await chatHistoryStore.createNewChat();
+        }
+
+        // 使用流式API重新生成智能复盘内容
+        await authFetchEventSource(
+            `${api.devPrefix}${api.chatStreamApi}?conversationId=${conversationId}&userInput=${encodeURIComponent(userMessage.content)}`,
+            {
+                method: 'GET',
+                headers: {
+                    'Accept': 'text/event-stream',
+                    'Cache-Control': 'no-cache',
+                },
+                onopen: async (response) => {
+                    console.log('🔄 智能复盘 - 流式连接已建立');
+                },
+                onmessage: (event) => {
+                    try {
+                        const data = event.data;
+                        if (data.trim().length === 0) return;
+
+                        // 更新智能复盘消息内容
+                        targetMessage.content += data;
+                        targetMessage.isGenerating = false;
+
+                        // 滚动到底部
+                        requestAnimationFrame(() => {
+                            scrollToBottom();
+                        });
+                    } catch (error) {
+                        console.error('🔄 智能复盘 - 解析消息时出错:', error);
+                    }
+                },
+                onclose: () => {
+                    console.log('🔄 智能复盘 - 流式连接已关闭');
+
+                    // 完成生成
+                    targetMessage.isGenerating = false;
+                    targetMessage.timestamp = Date.now();
+                    chatHistory.value = [...chatHistory.value];
+
+                    // 保存聊天历史
+                    chatHistoryStore.updateCurrentChatMessagesWithoutLimit(chatHistory.value);
+
+                    console.log('🔄 智能复盘重新生成完成');
+                    ElMessage.success('智能复盘已重新生成');
+                },
+                onerror: (error) => {
+                    console.error('🔄 智能复盘 - 流式连接错误:', error);
+
+                    // 更新目标消息，添加错误标识
+                    if (targetMessage.content) {
+                        targetMessage.content += '\n\n[连接中断]';
+                    } else {
+                        targetMessage.content = '[连接中断]';
+                    }
+                    targetMessage.isGenerating = false;
+                    chatHistory.value = [...chatHistory.value];
+
+                    ElMessage.error('智能复盘重新生成失败，连接中断');
+                }
+            }
+        );
+
+    } catch (error) {
+        console.error('重新生成智能复盘失败:', error);
+
+        // 恢复消息状态
+        if (targetMessage) {
+            targetMessage.isGenerating = false;
+            if (targetMessage.content) {
+                targetMessage.content += '\n\n[请求失败]';
+            } else {
+                targetMessage.content = '[请求失败]';
+            }
+            chatHistory.value = [...chatHistory.value];
+        }
+
+        ElMessage.error('重新生成智能复盘失败，请稍后重试');
+        throw error;
+    }
+};
+
+// 重新生成智能荐股
+const regenerateSmartRecommendation = async (messageIndex) => {
+    try {
+        console.log('🔄 开始重新生成智能荐股');
+
+        // 获取当前AI消息引用
+        const targetMessage = chatHistory.value[messageIndex];
+
+        console.log('🔄 直接重新生成AI消息，不修改用户消息');
+
+        // 第一步：清空原有数据并显示生成中状态
+        resetMessageForRegeneration(targetMessage, 'smart_recommendation');
+
+        // 触发响应式更新，让用户立即看到清空效果
+        chatHistory.value = [...chatHistory.value];
+
+        // 等待一下让用户看到清空效果和"AI正在思考中..."动画
+        await nextTick();
+        await new Promise(resolve => setTimeout(resolve, 800));
+
+        console.log('🔄 智能荐股内容已清空，开始重新生成');
+
+        // 获取当前聊天会话ID
+        let conversationId = chatHistoryStore.currentChatId;
+        if (!conversationId) {
+            conversationId = await chatHistoryStore.createNewChat();
+        }
+
+        console.log("🔍 重新生成智能荐股API调用参数:", {
+            pageNo: 1,
+            pageSize: 3,
+            conversationId: conversationId,
+            userInfo: userStore.userInfo,
+            hasPreferences: !!userStore.userInfo?.preferences,
+        });
+
+        let response = await recommendStock({
+            pageNo: 1,
+            pageSize: 3,
+            conversationId: conversationId,
+        });
+
+        console.log("🔍 重新生成智能荐股API响应:", response);
+
+        // 检查响应是否有效
+        if (!response) {
+            throw new Error("服务器响应为空，请稍后重试");
+        }
+
+        // 检查是否有错误信息
+        if (response.code && response.code !== "B0001") {
+            throw new Error(response.message || "智能荐股服务暂时不可用");
+        }
+
+        // 处理不同的响应格式
+        let stockList = [];
+        let apiData = null;
+
+        // 尝试多种响应格式
+        if (
+            response &&
+            response.data &&
+            response.data.success &&
+            response.data.data
+        ) {
+            // 格式1: { data: { success: true, data: [...] } }
+            apiData = response.data.data;
+        } else if (response && response.data && Array.isArray(response.data)) {
+            // 格式2: { data: [...] }
+            apiData = response.data;
+        } else if (response && Array.isArray(response)) {
+            // 格式3: [...]
+            apiData = response;
+        } else if (response && response.success && response.data) {
+            // 格式4: { success: true, data: [...] }
+            apiData = response.data;
+        }
+
+        if (!apiData || !Array.isArray(apiData) || apiData.length === 0) {
+            throw new Error("暂无推荐股票数据，请稍后重试");
+        }
+
+        // 处理API数据
+        apiData.forEach((item) => {
+            stockList.push({
+                name: item.name || item.stockName,
+                code: item.code || item.stockCode,
+                recommendIndex: item.recommendScore || item.score || 4.0,
+                recommendLevel: item.recommendLevel || item.level || "推荐",
+                price: item.latestPrice || item.price || item.currentPrice,
+                change: item.change || 0,
+                changePercent: item.rise
+                    ? item.rise + "%"
+                    : item.changePercent || "0%",
+                targetPrice: item.targetPrice || item.target,
+                expectedReturn:
+                    item.expectedReturn ||
+                    item.expectedBenefits ||
+                    item.expected_return,
+                riskLevel: item.riskLevel || item.risk || "中等",
+                industry: item.industry || item.sector || "未分类",
+                reason: item.recommendReason || item.reason || "基于AI算法推荐",
+            });
+        });
+        stockList.sort((a, b) => b.recommendIndex - a.recommendIndex);
+
+        console.log("✅ 重新生成智能荐股API处理成功:", stockList);
+
+        // 更新AI消息内容和数据
+        targetMessage.content = `📊 **智能荐股推荐**
+
+基于您的投资偏好和当前市场环境，我为您推荐以下优质股票：`;
+        targetMessage.hasStockInfo = true;
+        targetMessage.stockList = stockList;
+        targetMessage.isRecommendation = true;
+        targetMessage.messageType = 'smart_recommendation'; // 设置消息类型备份
+        targetMessage.isPersistent = true;
+        targetMessage.messageId = `recommendation-${Date.now()}`;
+        targetMessage.timestamp = new Date().toISOString();
+        completeMessageRegeneration(targetMessage);
+
+        // 添加调试信息
+        console.log("🔍 重新生成智能荐股 - 最终消息结构:", {
+            hasStockInfo: targetMessage.hasStockInfo,
+            stockList: targetMessage.stockList,
+            stockListLength: targetMessage.stockList?.length,
+            isRecommendation: targetMessage.isRecommendation,
+            isPersistent: targetMessage.isPersistent,
+            content: targetMessage.content.substring(0, 100) + '...'
+        });
+
+        // 触发响应式更新
+        chatHistory.value = [...chatHistory.value];
+
+        // 在重新生成过程中，不调用可能压缩数据的函数，直接更新存储
+        chatHistoryStore.currentChatMessages = [...chatHistory.value];
+        if (chatHistoryStore.currentChatId) {
+            const chatIndex = chatHistoryStore.chatHistoryList.findIndex(
+                (chat) => chat.id === chatHistoryStore.currentChatId
+            );
+            if (chatIndex > -1) {
+                chatHistoryStore.chatHistoryList[chatIndex].messages = [...chatHistory.value];
+                chatHistoryStore.chatHistoryList[chatIndex].lastMessage = Date.now();
+                // 直接保存到localStorage，不经过压缩
+                localStorage.setItem("chatHistoryList", JSON.stringify(chatHistoryStore.chatHistoryList));
+            }
+        }
+
+        await nextTick();
+        scrollToBottom();
+
+        console.log('🔄 智能荐股重新生成完成');
+        ElMessage.success('智能荐股已重新生成');
+
+    } catch (error) {
+        console.error('重新生成智能荐股失败:', error);
+
+        // 恢复消息状态
+        const targetMessage = chatHistory.value[messageIndex];
+        if (targetMessage) {
+            targetMessage.isGenerating = false;
+            chatHistory.value = [...chatHistory.value];
+        }
+
+        ElMessage.error('重新生成智能荐股失败，请稍后重试');
+        throw error;
+    }
+};
+
+// 重新生成资产分析
+const regenerateAssetAnalysis = async (messageIndex) => {
+    try {
+        console.log('🔄 开始重新生成资产分析');
+
+        // 获取当前AI消息引用
+        const targetMessage = chatHistory.value[messageIndex];
+
+        console.log('🔄 直接重新生成AI消息，不修改用户消息');
+
+        // 第一步：清空原有数据并显示生成中状态
+        resetMessageForRegeneration(targetMessage, 'asset_analysis');
+
+        // 触发响应式更新，让用户立即看到清空效果
+        chatHistory.value = [...chatHistory.value];
+
+        // 等待一下让用户看到清空效果和"AI正在思考中..."动画
+        await nextTick();
+        await new Promise(resolve => setTimeout(resolve, 800));
+
+        console.log('🔄 资产分析内容已清空，开始重新生成');
+
+        // 第二步：模拟生成过程
+        await new Promise(resolve => setTimeout(resolve, 800));
+
+        // 构建资产分析数据
+        const totalAssets = userStore.getTotalAssets();
+
+        // 只使用用户的真实持仓数据，不使用mock数据
+        const portfolioForAnalysis = [...userStore.portfolio];
+        const portfolioCount = portfolioForAnalysis.length;
+        const watchlistCount = userStore.watchlist.length;
+
+        // 计算持仓盈亏
+        const portfolioData = portfolioForAnalysis.map((position) => {
+            const currentPrice = getCurrentStockPrice(position.code);
+            const marketValue = position.quantity * currentPrice;
+            const costValue = position.quantity * position.avgPrice;
+            const profit = marketValue - costValue;
+            const profitPercent = ((profit / costValue) * 100).toFixed(2);
+
+            return {
+                ...position,
+                currentPrice,
+                marketValue,
+                costValue,
+                profit,
+                profitPercent: parseFloat(profitPercent),
+                price: currentPrice.toFixed(2),
+                change: (currentPrice - position.avgPrice).toFixed(2),
+                changePercent: `${profitPercent}%`,
+            };
+        });
+
+        // 计算总盈亏
+        const totalProfit = portfolioData.reduce((sum, item) => sum + item.profit, 0);
+        const totalCostValue = portfolioData.reduce((sum, item) => sum + item.costValue, 0);
+        const totalProfitPercent = totalCostValue > 0 ? ((totalProfit / totalCostValue) * 100).toFixed(2) : "0.00";
+        const portfolioValue = portfolioData.reduce((sum, item) => sum + item.marketValue, 0);
+
+        // 资产分析不需要文本内容，只显示数据卡片
+        // 更新AI消息内容和数据
+        targetMessage.content = '';
+        targetMessage.isGenerating = false;
+        targetMessage.hasAssetInfo = true;
+        targetMessage.assetData = {
+            totalAssets,
+            balance: totalAssets - portfolioValue,
+            portfolioCount,
+            watchlistCount,
+            portfolioData,
+            watchlistData: userStore.watchlist.map((stock) => generateWatchlistStockData(stock)),
+            totalProfit,
+            totalProfitPercent: parseFloat(totalProfitPercent),
+            portfolioValue,
+        };
+        targetMessage.isAssetAnalysis = true;
+        targetMessage.messageType = 'asset_analysis'; // 设置消息类型备份
+        targetMessage.timestamp = Date.now();
+
+        // 触发响应式更新
+        chatHistory.value = [...chatHistory.value];
+
+        // 在重新生成过程中，不调用可能压缩数据的函数，直接更新存储
+        chatHistoryStore.currentChatMessages = [...chatHistory.value];
+        if (chatHistoryStore.currentChatId) {
+            const chatIndex = chatHistoryStore.chatHistoryList.findIndex(
+                (chat) => chat.id === chatHistoryStore.currentChatId
+            );
+            if (chatIndex > -1) {
+                chatHistoryStore.chatHistoryList[chatIndex].messages = [...chatHistory.value];
+                chatHistoryStore.chatHistoryList[chatIndex].lastMessage = Date.now();
+                // 直接保存到localStorage，不经过压缩
+                localStorage.setItem("chatHistoryList", JSON.stringify(chatHistoryStore.chatHistoryList));
+            }
+        }
+
+        await nextTick();
+        scrollToBottom();
+
+        console.log('🔄 资产分析重新生成完成');
+        ElMessage.success('资产分析已重新生成');
+
+    } catch (error) {
+        console.error('重新生成资产分析失败:', error);
+
+        // 恢复消息状态
+        const targetMessage = chatHistory.value[messageIndex];
+        if (targetMessage) {
+            targetMessage.isGenerating = false;
+            chatHistory.value = [...chatHistory.value];
+        }
+
+        ElMessage.error('重新生成资产分析失败，请稍后重试');
+        throw error;
+    }
+};
+
+// 重新生成资讯推送
+const regenerateNewsUpdate = async (messageIndex) => {
+    try {
+        console.log('🔄 开始重新生成资讯推送');
+        console.log('🔄 资讯推送 - 传入的messageIndex:', messageIndex);
+        console.log('🔄 资讯推送 - 聊天历史长度:', chatHistory.value.length);
+
+        // 获取当前AI消息引用
+        const targetMessage = chatHistory.value[messageIndex];
+
+        console.log('🔄 资讯推送 - 目标消息详情:', {
+            exists: !!targetMessage,
+            role: targetMessage?.role,
+            content: targetMessage?.content?.substring(0, 50),
+            messageType: targetMessage?.messageType,
+            isNewsUpdate: targetMessage?.isNewsUpdate
+        });
+
+        if (!targetMessage) {
+            console.error('🔄 资讯推送 - 目标消息不存在');
+            ElMessage.error('无法找到要重新生成的消息');
+            return;
+        }
+
+        if (targetMessage.role !== 'assistant') {
+            console.error('🔄 资讯推送 - 目标消息不是AI消息:', targetMessage.role);
+            ElMessage.error('只能重新生成AI消息');
+            return;
+        }
+
+        console.log('🔄 直接重新生成AI消息，不修改用户消息');
+
+        // 第一步：清空原有数据并显示生成中状态
+        resetMessageForRegeneration(targetMessage, 'news_update');
+
+        // 触发响应式更新，让用户立即看到清空效果
+        chatHistory.value = [...chatHistory.value];
+
+        // 等待一下让用户看到清空效果和"AI正在思考中..."动画
+        await nextTick();
+        await new Promise(resolve => setTimeout(resolve, 800));
+
+        console.log('🔄 资讯推送内容已清空，开始重新生成');
+
+        // 第二步：调用真实的API重新生成资讯推送内容
+        const fullMessage = "请为我推送今日重要财经新闻和市场动态，包括政策动向、行业热点、个股新闻等";
+
+        // 使用真实的聊天流式API获取资讯推送
+        const res = await new Promise((resolve, reject) => {
+            let responseContent = "";
+
+            // 获取当前聊天会话ID
+            const conversationId = chatHistoryStore.currentChatId || "default";
+
+            // 调用流式API
+            authFetchEventSource(
+                `${api.devPrefix}${api.chatStreamApi}?conversationId=${conversationId}&userInput=${encodeURIComponent(fullMessage)}`,
+                {
+                    method: 'GET',
+                    headers: {
+                        'Accept': 'text/event-stream',
+                        'Cache-Control': 'no-cache',
+                    },
+                    onopen: async (response) => {
+                        console.log('🔄 资讯推送 - 流式连接已建立');
+                    },
+                    onmessage: (event) => {
+                        try {
+                            const data = event.data;
+                            if (data.trim().length === 0) return;
+                            responseContent += data;
+                        } catch (err) {
+                            console.error('🔄 资讯推送 - 解析消息时出错:', err);
+                        }
+                    },
+                    onclose: () => {
+                        console.log('🔄 资讯推送 - 流式连接已关闭');
+                        resolve({
+                            data: {
+                                content: responseContent,
+                                isNewsUpdate: true,
+                                hasInteractionButtons: false,
+                                interactionData: null,
+                                hasStockInfo: false,
+                            }
+                        });
+                    },
+                    onerror: (err) => {
+                        console.error('🔄 资讯推送 - 流式连接错误:', err);
+                        reject(err);
+                    },
+                }
+            );
+        });
+
+        console.log('🔄 资讯推送 - API调用完成:', {
+            hasContent: !!res?.data?.content,
+            isNewsUpdate: res?.data?.isNewsUpdate,
+            hasInteractionButtons: res?.data?.hasInteractionButtons
+        });
+
+        // 第三步：更新AI消息为API返回的内容
+        targetMessage.content = res.data.content;
+        targetMessage.isNewsUpdate = res.data.isNewsUpdate;
+        targetMessage.messageType = 'news_update'; // 设置消息类型备份
+        targetMessage.hasInteractionButtons = res.data.hasInteractionButtons;
+        targetMessage.interactionData = res.data.interactionData;
+
+        // 确保所有必要的字段都被正确设置
+        if (res.data.hasStockInfo !== undefined) {
+            targetMessage.hasStockInfo = res.data.hasStockInfo;
+        }
+
+        completeMessageRegeneration(targetMessage);
+
+        console.log('🔄 资讯推送 - 消息更新完成:', {
+            content: targetMessage.content.substring(0, 50),
+            isGenerating: targetMessage.isGenerating,
+            isNewsUpdate: targetMessage.isNewsUpdate
+        });
+
+        // 触发响应式更新
+        chatHistory.value = [...chatHistory.value];
+
+        // 验证更新后的消息
+        const updatedMessage = chatHistory.value[messageIndex];
+        console.log('🔄 资讯推送 - 验证更新后的消息:', {
+            role: updatedMessage?.role,
+            content: updatedMessage?.content?.substring(0, 50),
+            isNewsUpdate: updatedMessage?.isNewsUpdate
+        });
+
+        // 在重新生成过程中，不调用可能压缩数据的函数，直接更新存储
+        chatHistoryStore.currentChatMessages = [...chatHistory.value];
+        if (chatHistoryStore.currentChatId) {
+            const chatIndex = chatHistoryStore.chatHistoryList.findIndex(
+                (chat) => chat.id === chatHistoryStore.currentChatId
+            );
+            if (chatIndex > -1) {
+                chatHistoryStore.chatHistoryList[chatIndex].messages = [...chatHistory.value];
+                chatHistoryStore.chatHistoryList[chatIndex].lastMessage = Date.now();
+                // 直接保存到localStorage，不经过压缩
+                localStorage.setItem("chatHistoryList", JSON.stringify(chatHistoryStore.chatHistoryList));
+            }
+        }
+
+        await nextTick();
+        scrollToBottom();
+
+        console.log('🔄 资讯推送重新生成完成');
+        ElMessage.success('资讯推送已重新生成');
+
+    } catch (error) {
+        console.error('重新生成资讯推送失败:', error);
+
+        // 恢复消息状态
+        const targetMessage = chatHistory.value[messageIndex];
+        if (targetMessage) {
+            targetMessage.isGenerating = false;
+            chatHistory.value = [...chatHistory.value];
+        }
+
+        ElMessage.error('重新生成资讯推送失败，请稍后重试');
+        throw error;
     }
 };
 
@@ -1148,9 +3003,11 @@ const handleNewsUpdate = async () => {
         // 执行业务逻辑，传递中断检查函数
         await stockHandleNewsUpdate(
             userStore,
+            chatHistoryStore,
             chatHistory,
             isChatMode,
             scrollToBottom,
+            showChatShortcuts,
             showGuide,
             () => isGenerating.value // 传递中断检查函数
         );
@@ -1224,13 +3081,16 @@ const handleWatchlistView = async () => {
 
         // 添加用户消息和处理中消息
         const newMessages = [
-            { role: 'user', content: '查看我的自选股列表' },
-            { role: 'assistant', content: '', isGenerating: true }
+            { id: generateMessageId(), role: 'user', content: '查看我的自选股列表', timestamp: Date.now() },
+            { id: generateMessageId(), role: 'assistant', content: '', isGenerating: true, timestamp: Date.now(), messageType: 'watchlist_view' }
         ];
 
-        // 使用chatHistoryManager限制消息数量
+        // 直接添加消息，不使用limitChatMessages以避免用户消息被清空
         chatHistory.value.push(...newMessages);
-        chatHistory.value = chatHistoryManager.limitChatMessages(chatHistory.value);
+        chatHistory.value = [...chatHistory.value]; // 触发响应式更新
+
+        // 同步到chatHistoryStore，确保用户消息被保存
+        chatHistoryStore.updateCurrentChatMessagesWithoutLimit(chatHistory.value);
 
         // 再次检查是否被中断
         if (!isGenerating.value) {
@@ -1238,26 +3098,18 @@ const handleWatchlistView = async () => {
             return;
         }
 
-        // 如果用户没有自选股，添加一些示例数据用于演示
-        if (userStore.watchlist.length === 0) {
-            const sampleWatchlist = [
-                { code: '600519', name: '贵州茅台', industry: '食品饮料', addedAt: '2024-01-15T09:30:00.000Z', price: '1680.50', change: '+28.50', changePercent: '+1.72%' },
-                { code: '000001', name: '平安银行', industry: '银行', addedAt: '2024-01-14T10:15:00.000Z', price: '12.68', change: '-0.15', changePercent: '-1.17%' },
-                { code: '300750', name: '宁德时代', industry: '新能源', addedAt: '2024-01-13T14:20:00.000Z', price: '485.20', change: '+12.30', changePercent: '+2.60%' },
-                { code: '000858', name: '五粮液', industry: '食品饮料', addedAt: '2024-01-12T11:45:00.000Z', price: '52.30', change: '-1.20', changePercent: '-2.24%' },
-                { code: '002415', name: '海康威视', industry: '电子', addedAt: '2024-01-11T13:30:00.000Z', price: '28.90', change: '+0.45', changePercent: '+1.58%' }
-            ];
-
-            userStore.watchlist.push(...sampleWatchlist);
-            localStorage.setItem('watchlist', JSON.stringify(userStore.watchlist));
-            ElMessage.info('已为您添加示例自选股数据');
-        }
-
-        // 获取自选股数据，使用辅助函数生成完整的股票详情
+        // 获取用户真实的自选股数据
         const watchlistData = userStore.watchlist.map(stock => generateWatchlistStockData(stock));
 
         // 更新最后一条AI消息为自选股列表
-        const assistantMessage = `📋 **我的自选股列表**
+        const assistantMessage = userStore.watchlist.length === 0
+            ? `📋 **我的自选股列表**
+
+您当前还没有添加任何自选股。您可以通过以下方式添加股票：
+- 在聊天中输入股票代码或名称
+- 点击推荐股票中的"加入自选"按钮
+- 使用"股票查询"功能查找并添加股票`
+            : `📋 **我的自选股列表**
 
 您当前关注 **${userStore.watchlist.length}** 只股票，详细信息如下：`;
 
@@ -1268,46 +3120,29 @@ const handleWatchlistView = async () => {
             lastMessage.hasWatchlistInfo = true;
             lastMessage.watchlistData = watchlistData;
             lastMessage.isWatchlistDisplay = true;
-            lastMessage.hasInteractionButtons = true;
-            lastMessage.interactionData = {
-                recommendActions: [
-                    {
-                        id: 'analyze_overall',
-                        icon: '📊',
-                        description: '分析整体表现',
-                        actionType: 'analyze',
-                        prompt: '分析我的自选股整体表现'
-                    },
-                    {
-                        id: 'trading_advice',
-                        icon: '💰',
-                        description: '获取交易建议',
-                        actionType: 'advice',
-                        prompt: '给出我的自选股交易建议'
-                    },
-                    {
-                        id: 'related_recommend',
-                        icon: '🔥',
-                        description: '相关热门推荐',
-                        actionType: 'recommend',
-                        prompt: '推荐与我自选股相关的热门股票'
-                    }
-                ]
-            };
+            lastMessage.messageType = 'watchlist_view'; // 设置消息类型备份
+            lastMessage.hasInteractionButtons = false;
             lastMessage.watchlistStats = {
                 total: userStore.watchlist.length,
-                upCount: watchlistData.filter(s => s.changePct >= 0).length,
-                downCount: watchlistData.filter(s => s.changePct < 0).length,
-                bestPerformer: watchlistData.sort((a, b) => b.changePct - a.changePct)[0],
-                worstPerformer: watchlistData.sort((a, b) => a.changePct - b.changePct)[0],
+                upCount: watchlistData.length > 0 ? watchlistData.filter(s => s.changePct >= 0).length : 0,
+                downCount: watchlistData.length > 0 ? watchlistData.filter(s => s.changePct < 0).length : 0,
+                bestPerformer: watchlistData.length > 0 ? watchlistData.sort((a, b) => b.changePct - a.changePct)[0] : null,
+                worstPerformer: watchlistData.length > 0 ? watchlistData.sort((a, b) => a.changePct - b.changePct)[0] : null,
                 updateTime: new Date().toLocaleString('zh-CN')
             };
             chatHistory.value = [...chatHistory.value]; // 触发响应式更新
+
+            // 同步到chatHistoryStore，确保完整的自选股消息被保存
+            chatHistoryStore.updateCurrentChatMessagesWithoutLimit(chatHistory.value);
         }
 
         await nextTick();
         scrollToBottom();
-        ElMessage.success('已显示您的自选股列表');
+        if (userStore.watchlist.length === 0) {
+            ElMessage.info('您还没有添加自选股，请先添加股票到自选列表');
+        } else {
+            ElMessage.success('已显示您的自选股列表');
+        }
 
 
     } finally {
@@ -1416,16 +3251,33 @@ const handleSidebarInteraction = async (data) => {
         message = String(message || '请提供具体的市场分析和投资建议');
     }
 
-    // 发送消息
-    const res = await mockApi.sendMessage(message);
-    const newMessages = [
-        { role: 'user', content: message },
-        res.data
+    // 生成响应消息
+    const responses = [
+        "根据您的风险偏好和投资目标，我建议您可以关注以下股票。",
+        "从技术面分析，该股票目前处于上升趋势，但需要注意风险控制。",
+        "根据基本面分析，该公司的财务状况良好，具有长期投资价值。",
+        "建议您关注该行业的龙头企业，它们通常具有更好的抗风险能力。",
+        "从估值角度来看，目前该股票的PE处于历史低位，具有投资价值。",
+        "感谢您的提问，我会根据市场情况为您提供专业的投资建议。"
     ];
 
-    // 使用chatHistoryManager限制消息数量
+    const newMessages = [
+        { id: generateMessageId(), role: 'user', content: message, timestamp: Date.now() },
+        {
+            id: generateMessageId(),
+            role: 'assistant',
+            content: responses[Math.floor(Math.random() * responses.length)],
+            hasStockInfo: false,
+            timestamp: Date.now()
+        }
+    ];
+
+    // 直接添加消息，不限制消息数量以避免用户消息被清空
     chatHistory.value.push(...newMessages);
-    chatHistory.value = chatHistoryManager.limitChatMessages(chatHistory.value);
+    chatHistory.value = [...chatHistory.value]; // 触发响应式更新
+
+    // 同步到chatHistoryStore，确保用户消息被保存
+    chatHistoryStore.updateCurrentChatMessagesWithoutLimit(chatHistory.value);
 
     await nextTick();
     scrollToBottom();
@@ -1491,6 +3343,7 @@ const continueAnalysis = async (stockInfo, isPaid = false) => {
     console.log('当前聊天ID:', conversationId);
 
     const newMessage = {
+        id: generateMessageId(),
         role: 'assistant',
         content: '',
         isGenerating: true,
@@ -1498,11 +3351,15 @@ const continueAnalysis = async (stockInfo, isPaid = false) => {
         stockInfo: stockInfo,
         isQuantAnalysis: true, // 标识这是量化分析消息
         analysis: true, // 标识这是量化分析消息
+        timestamp: Date.now(),
     };
 
-    // 使用chatHistoryManager限制消息数量
+    // 直接添加消息，不限制消息数量以避免用户消息被清空
     chatHistory.value.push(newMessage);
-    chatHistory.value = chatHistoryManager.limitChatMessages(chatHistory.value);
+    chatHistory.value = [...chatHistory.value]; // 触发响应式更新
+
+    // 同步到chatHistoryStore，确保用户消息被保存
+    chatHistoryStore.updateCurrentChatMessagesWithoutLimit(chatHistory.value);
 
     try {
         let aiContent = '';
@@ -1580,6 +3437,14 @@ const portfolioActionButtons = computed(() => {
 const currentChatTitle = computed(() => {
     const currentChat = chatHistoryStore.getCurrentChat;
     return currentChat ? currentChat.title : 'AI 智能分析';
+});
+
+// 检查聊天历史中是否有智能荐股记录
+const hasRecommendationInHistory = computed(() => {
+    return chatHistory.value.some(message =>
+        message.role === 'assistant' &&
+        (message.hasStockInfo || message.stockList || message.isRecommendation)
+    );
 });
 
 // 统一的股票操作事件处理
@@ -1674,9 +3539,9 @@ const handlePreferencesCompleted = (preferences) => {
             content: `欢迎使用智投小助！根据您的投资偏好（${getRiskLevelText(preferences.riskLevel)}），我将为您提供个性化的投资建议。您可以问我任何关于投资的问题。`
         };
 
-        // 使用chatHistoryManager限制消息数量
+        // 直接添加欢迎消息，不限制消息数量
         chatHistory.value.push(welcomeMessage);
-        chatHistory.value = chatHistoryManager.limitChatMessages(chatHistory.value);
+        chatHistory.value = [...chatHistory.value]; // 触发响应式更新
 
         nextTick(() => {
             scrollToBottom();
@@ -1759,13 +3624,12 @@ onMounted(() => {
     mobileAdaptation.preventZoom();
 
 
-    // 如果有当前聊天ID，恢复聊天记录（限制消息数量）
+    // 如果有当前聊天ID，恢复聊天记录（不限制消息数量，避免用户消息被清空）
     if (chatHistoryStore.currentChatId) {
         const currentChat = chatHistoryStore.getCurrentChat;
         if (currentChat) {
-            // 使用聊天历史管理器限制消息数量，防止内存过度占用
-            const limitedMessages = chatHistoryManager.limitChatMessages(currentChat.messages);
-            chatHistory.value = [...limitedMessages];
+            // 直接恢复聊天记录，不使用limitChatMessages以避免用户消息被清空
+            chatHistory.value = [...(currentChat.messages || [])];
             isChatMode.value = chatHistory.value.length > 0;
         }
     }
@@ -1797,12 +3661,12 @@ onMounted(() => {
         mobileAdaptation.setupMobileViewportListeners(scrollToBottom);
     }
 
-    // 定期清理聊天历史数据，防止内存过度占用
+    // 定期清理聊天历史数据，防止内存过度占用（只清理聊天数量，不限制消息数量）
     timerManager.create('cleanup-chat-history', () => {
         if (chatHistoryStore.chatHistoryList.length > 50) {
             const cleanedList = chatHistoryManager.limitChatHistory(chatHistoryStore.chatHistoryList);
             chatHistoryStore.chatHistoryList = cleanedList;
-            chatHistoryStore.saveChatHistory();
+            chatHistoryStore.saveChatHistoryWithoutLimit(); // 使用不限制消息数量的版本
             console.log('🧹 已清理聊天历史数据，保留最近50条记录');
         }
     }, 5 * 60 * 1000, true); // 每5分钟检查一次
@@ -1972,16 +3836,33 @@ ${message.interactionData.newsItems.map(news => `- ${news.title}: ${news.summary
     }
 
     if (analysisPrompt) {
-        // 发送分析请求
-        const res = await mockApi.sendMessage(analysisPrompt);
-        const newMessages = [
-            { role: 'user', content: action.description || analysisPrompt },
-            res.data
+        // 生成分析响应
+        const responses = [
+            "根据您的风险偏好和投资目标，我建议您可以关注以下股票。",
+            "从技术面分析，该股票目前处于上升趋势，但需要注意风险控制。",
+            "根据基本面分析，该公司的财务状况良好，具有长期投资价值。",
+            "建议您关注该行业的龙头企业，它们通常具有更好的抗风险能力。",
+            "从估值角度来看，目前该股票的PE处于历史低位，具有投资价值。",
+            "感谢您的提问，我会根据市场情况为您提供专业的投资建议。"
         ];
 
-        // 使用chatHistoryManager限制消息数量
+        const newMessages = [
+            { id: generateMessageId(), role: 'user', content: action.description || analysisPrompt, timestamp: Date.now() },
+            {
+                id: generateMessageId(),
+                role: 'assistant',
+                content: responses[Math.floor(Math.random() * responses.length)],
+                hasStockInfo: false,
+                timestamp: Date.now()
+            }
+        ];
+
+        // 直接添加交互分析消息，不限制消息数量
         chatHistory.value.push(...newMessages);
-        chatHistory.value = chatHistoryManager.limitChatMessages(chatHistory.value);
+        chatHistory.value = [...chatHistory.value]; // 触发响应式更新
+
+        // 同步到chatHistoryStore，确保用户消息被保存
+        chatHistoryStore.updateCurrentChatMessagesWithoutLimit(chatHistory.value);
 
         await nextTick();
         scrollToBottom();
@@ -2048,7 +3929,7 @@ const handleShortcutClick = (shortcut) => {
     try {
         if (shortcut.isDefault) {
             const actionMap = {
-                'smart_review': () => setSuggestionAndSend(`智能复盘：请帮我进行全面的智能投资复盘分析，包括：\n\n1. 市场整体走势分析（主要指数表现、板块轮动）\n2. 我的投资组合表现分析和风险评估\n3. 基于AI算法的策略优化建议\n4. 市场情绪和技术指标综合分析\n5. 个性化的下一步操作建议\n6. 风险预警和机会识别\n7. 智能资产配置优化方案\n\n请结合我的投资风格和市场大数据，给出专业的智能化复盘建议。`),
+                'smart_review': () => setSuggestionAndSend(`请结合我的投资风格和市场大数据，给出专业的智能化复盘建议。`),
                 'watchlist': handleWatchlistView,
                 'smart_recommendation': handleSmartRecommendation,
                 'news_update': () => setSuggestionAndSend(`最新财经资讯`),
@@ -2086,13 +3967,17 @@ const openCustomizeDialog = () => {
 // ShortcutsBar组件引用
 const shortcutsBarRef = ref(null);
 const chatShortcutsBarRef = ref(null);
+const mobileChatShortcutsRef = ref(null);
 
 // 处理快捷操作更新事件
 const handleShortcutsUpdated = () => {
     console.log('🔄 快捷操作更新事件触发');
     notifyShortcutsBarComponents('handleShortcutsUpdated');
-
-
+    // 同时更新主页快捷操作
+    nextTick(() => {
+        initializeHomeShortcuts();
+        console.log('✅ 主页快捷操作更新完成');
+    });
 };
 
 
@@ -2189,8 +4074,194 @@ onMounted(() => {
 
     /* 主页模式下为内容区域添加底部间距，避免被输入框遮挡 */
     .modern-content:not(.chatting) {
-        padding-bottom: 180px !important;
-        /* 为贴底的输入框留出空间 */
+        padding-bottom: 220px !important;
+        /* 为贴底的输入框和快捷操作按钮留出更多空间 */
+    }
+
+    /* 移动端主页快捷操作按钮外层容器 */
+    .mobile-home-shortcuts-wrapper {
+        position: fixed !important;
+        left: 0 !important;
+        right: 0 !important;
+        bottom: 120px !important;
+        /* 基础位置：位于输入框上方 */
+        z-index: 999 !important;
+        /* 确保在输入框之上 */
+        pointer-events: none;
+        /* 允许点击穿透到下层元素 */
+        transform: translateY(0) !important;
+        /* 默认无偏移 */
+        transition: transform 0.3s ease !important;
+        /* 平滑过渡 */
+    }
+
+    /* 移动端主页快捷操作按钮样式 */
+    .mobile-home-shortcuts {
+        width: 100%;
+        // background: rgba(255, 255, 255, 0.95);
+        /* 添加半透明背景，确保可见性 */
+        // backdrop-filter: blur(10px);
+        /* 添加模糊效果 */
+        -webkit-backdrop-filter: blur(10px);
+        /* Safari兼容 */
+        padding: 12px 12px 8px 12px;
+        /* 增加顶部内边距 */
+        box-sizing: border-box;
+        // border-top: 1px solid rgba(0, 0, 0, 0.05);
+        /* 添加顶部边框 */
+        // box-shadow: 0 -2px 8px rgba(0, 0, 0, 0.05);
+        /* 添加阴影效果 */
+        /* 调试用：确保可见性 */
+        min-height: 50px;
+        /* 确保有足够高度 */
+        display: block !important;
+        /* 确保显示 */
+        pointer-events: auto;
+        /* 恢复按钮的点击事件 */
+    }
+
+    .mobile-home-shortcuts .shortcuts-container {
+        position: relative;
+        padding: 0;
+    }
+
+    .mobile-home-shortcuts .shortcuts-scroll-wrapper {
+        overflow: hidden;
+        position: relative;
+    }
+
+    .mobile-home-shortcuts .shortcuts-list {
+        display: flex;
+        gap: 8px;
+        padding: 0;
+        overflow-x: auto;
+        scroll-behavior: smooth;
+        -webkit-overflow-scrolling: touch;
+        scrollbar-width: none;
+        -ms-overflow-style: none;
+        flex: 1;
+    }
+
+    .mobile-home-shortcuts .shortcuts-list::-webkit-scrollbar {
+        display: none;
+    }
+
+    /* 移动端主页快捷操作按钮 */
+    .mobile-home-shortcuts .shortcut-btn {
+        border-radius: 12px;
+        background: #f5f7fa;
+        color: #18181b;
+        font-weight: 500;
+        border: 1px solid #e0e0e0;
+        box-shadow: none;
+        padding: 4px 12px;
+        transition: all 0.2s;
+        display: flex;
+        align-items: center;
+        gap: 4px;
+        font-size: 0.8rem;
+        height: 28px;
+        white-space: nowrap;
+        flex-shrink: 0;
+        min-width: auto;
+        flex-direction: row;
+        justify-content: center;
+        text-align: left;
+        cursor: pointer;
+    }
+
+    .mobile-home-shortcuts .shortcut-btn:hover {
+        background: #e6e8eb;
+        border-color: #d0d0d0;
+    }
+
+    .mobile-home-shortcuts .shortcut-btn:active {
+        background: #e6e8eb;
+        border-color: #d0d0d0;
+    }
+
+    .mobile-home-shortcuts .shortcut-icon {
+        font-size: 14px;
+        line-height: 1;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        flex-shrink: 0;
+    }
+
+    .mobile-home-shortcuts .shortcut-text {
+        font-size: 0.8rem;
+        line-height: 1.2;
+        text-align: left;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        flex: 1;
+    }
+
+    /* 自定义按钮样式 */
+    .mobile-home-shortcuts .customize-btn:hover {
+        background: #e6e8eb;
+        border-color: #d0d0d0;
+    }
+
+    .mobile-home-shortcuts .customize-btn:active {
+        background: #e6e8eb;
+        border-color: #d0d0d0;
+    }
+
+    /* 超小屏幕适配 */
+    @media (max-width: 375px) {
+        .mobile-home-shortcuts-wrapper {
+            bottom: 110px !important;
+            /* 超小屏幕调整位置 */
+        }
+
+        .mobile-home-shortcuts .shortcuts-list {
+            gap: 6px;
+        }
+
+        .mobile-home-shortcuts .shortcut-btn {
+            height: 26px;
+            padding: 3px 8px;
+            gap: 3px;
+            font-size: 0.7rem;
+        }
+
+        .mobile-home-shortcuts .shortcut-icon {
+            font-size: 12px;
+        }
+
+        .mobile-home-shortcuts .shortcut-text {
+            font-size: 0.7rem;
+        }
+    }
+
+    /* 大屏手机适配 */
+    @media (min-width: 414px) {
+        .mobile-home-shortcuts-wrapper {
+            bottom: 130px !important;
+            /* 大屏手机调整位置 */
+        }
+
+        .mobile-home-shortcuts .shortcuts-list {
+            gap: 10px;
+        }
+
+        .mobile-home-shortcuts .shortcut-btn {
+            height: 30px;
+            padding: 5px 12px;
+            gap: 5px;
+            font-size: 0.85rem;
+        }
+
+        .mobile-home-shortcuts .shortcut-icon {
+            font-size: 16px;
+        }
+
+        .mobile-home-shortcuts .shortcut-text {
+            font-size: 0.85rem;
+        }
     }
 
     /* 移动端增加welcome-section和AI卡片之间的间距 */
@@ -2254,8 +4325,8 @@ onMounted(() => {
 
     /* 移动端聊天历史区域完整重新定义 */
     .chat-history-area {
-        height: calc(100vh - 76px - 160px) !important;
-        /* 减少高度：76px(导航+间距) + 160px(输入框空间) */
+        height: calc(100vh - 76px - 200px) !important;
+        /* 减少高度：76px(导航+间距) + 200px(输入框空间+快捷操作栏) */
         padding: 0 12px 40px 12px !important;
         /* 顶部无padding，左右12px间距确保消息不贴边，底部40px避免遮挡 */
         margin: 0 !important;
@@ -2809,15 +4880,84 @@ input,
 textarea,
 [contenteditable],
 .chat-message .message-text,
+.chat-message .message-text *,
 .chat-message .markdown-content,
 .chat-message .markdown-content *,
+.chat-message .chat-message-content,
+.chat-message .chat-message-content *,
 .chat-title,
-.chat-history-container .chat-info .chat-title {
+.chat-history-container .chat-info .chat-title,
+.markdown-content,
+.markdown-content *,
+.message-text,
+.message-text * {
     -webkit-user-select: text !important;
     -khtml-user-select: text !important;
     -moz-user-select: text !important;
     -ms-user-select: text !important;
     user-select: text !important;
+    -webkit-touch-callout: text !important;
+}
+
+/* 特别针对聊天消息内容的文本选择 */
+.chat-message-content,
+.chat-message-content *,
+.chat-message-content .message-text,
+.chat-message-content .message-text *,
+.chat-message-content .markdown-content,
+.chat-message-content .markdown-content * {
+    -webkit-user-select: text !important;
+    -khtml-user-select: text !important;
+    -moz-user-select: text !important;
+    -ms-user-select: text !important;
+    user-select: text !important;
+    -webkit-touch-callout: text !important;
+}
+
+/* 更强制的文本选择规则 - 确保覆盖所有可能的阻止规则 */
+.chat-message .chat-message-content,
+.chat-message .chat-message-content *,
+.chat-message .message-text,
+.chat-message .message-text *,
+.chat-message .markdown-content,
+.chat-message .markdown-content *,
+.chat-message .markdown-content p,
+.chat-message .markdown-content p *,
+.chat-message .markdown-content div,
+.chat-message .markdown-content div *,
+.chat-message .markdown-content span,
+.chat-message .markdown-content span *,
+.markdown-content,
+.markdown-content *,
+.markdown-content p,
+.markdown-content p *,
+.markdown-content div,
+.markdown-content div *,
+.markdown-content span,
+.markdown-content span * {
+    -webkit-user-select: text !important;
+    -khtml-user-select: text !important;
+    -moz-user-select: text !important;
+    -ms-user-select: text !important;
+    user-select: text !important;
+    -webkit-touch-callout: text !important;
+    cursor: text !important;
+}
+
+/* 确保文本选择在所有状态下都可用 */
+.chat-message:hover .chat-message-content,
+.chat-message:hover .chat-message-content *,
+.chat-message:active .chat-message-content,
+.chat-message:active .chat-message-content *,
+.chat-message:focus .chat-message-content,
+.chat-message:focus .chat-message-content * {
+    -webkit-user-select: text !important;
+    -khtml-user-select: text !important;
+    -moz-user-select: text !important;
+    -ms-user-select: text !important;
+    user-select: text !important;
+    -webkit-touch-callout: text !important;
+    cursor: text !important;
 }
 
 .main-modern {
@@ -3255,7 +5395,8 @@ body.onboarding-mode {
 
 /* 移动端聊天历史底部占位元素 */
 .mobile-chat-spacer {
-    height: 20px;
+    height: 60px;
+    /* 增加占位高度，确保有足够空间避免被输入区域遮挡 */
     /* 确保有足够空间避免被新建聊天按钮遮挡 */
     width: 100%;
     flex-shrink: 0;
@@ -3372,10 +5513,6 @@ body.onboarding-mode {
 /* 用户消息中的markdown段落间距优化 */
 .chat-message.user .chat-message-content .markdown-content :deep(p) {
     margin: 2px 0 !important;
-}
-
-.chat-message.user .chat-message-content .markdown-content :deep(p:first-child) {
-    margin-top: 0 !important;
 }
 
 .chat-message.user .chat-message-content .markdown-content :deep(p:last-child) {
@@ -3604,27 +5741,11 @@ body.onboarding-mode {
     gap: 12px;
 }
 
-/* 持久化荐股列表样式 */
-.persistent-stock-list {
-    position: relative;
-    border: 2px solid transparent;
+/* 荐股列表样式 */
+.stock-list {
     border-radius: 12px;
     padding: 8px;
     transition: all 0.3s ease;
-}
-
-.persistent-stock-list::before {
-    content: '📊 智能荐股';
-    position: absolute;
-    top: -12px;
-    left: 12px;
-    background: #fef3c7;
-    color: #92400e;
-    font-size: 0.75rem;
-    font-weight: 600;
-    padding: 2px 8px;
-    border-radius: 8px;
-    border: 1px solid #fbbf24;
 }
 
 /* 荐股工具栏样式 */
@@ -3678,7 +5799,7 @@ body.onboarding-mode {
 
 /* 高亮效果 */
 .highlight-recommendation {
-    border-color: #fbbf24 !important;
+    border: 2px solid #fbbf24 !important;
     background: rgba(254, 243, 199, 0.1) !important;
     box-shadow: 0 0 0 4px rgba(251, 191, 36, 0.1) !important;
 }
@@ -4790,6 +6911,17 @@ body.onboarding-mode {
     justify-content: center !important;
     align-items: center !important;
     /* 确保内容垂直居中 */
+    overflow-x: auto;
+    /* 隐藏水平滚动条但保持滚动功能 */
+    scrollbar-width: none;
+    /* Firefox */
+    -ms-overflow-style: none;
+    /* IE and Edge */
+}
+
+.new-chat-section::-webkit-scrollbar {
+    display: none;
+    /* Chrome, Safari, Opera */
 }
 
 .chat-actions {
@@ -4802,6 +6934,17 @@ body.onboarding-mode {
     justify-content: center !important;
     width: 100% !important;
     /* 确保容器宽度充足 */
+    overflow-x: auto;
+    /* 隐藏水平滚动条但保持滚动功能 */
+    scrollbar-width: none;
+    /* Firefox */
+    -ms-overflow-style: none;
+    /* IE and Edge */
+}
+
+.chat-actions::-webkit-scrollbar {
+    display: none;
+    /* Chrome, Safari, Opera */
 }
 
 .new-chat-btn {
@@ -4827,8 +6970,12 @@ body.onboarding-mode {
     /* 防止文字换行 */
     flex-shrink: 0 !important;
     /* 防止按钮被压缩 */
-    min-width: auto !important;
-    /* 允许按钮根据内容自适应宽度 */
+    min-width: 80px !important;
+    /* 确保按钮有最小宽度 */
+    visibility: visible !important;
+    /* 确保按钮可见 */
+    opacity: 1 !important;
+    /* 确保按钮不透明 */
 }
 
 .new-chat-btn:hover {
@@ -4995,7 +7142,8 @@ body.onboarding-mode {
         flex: 1;
         display: flex;
         flex-direction: column;
-        padding-bottom: 80px;
+        padding-bottom: 100px;
+        /* 增加底部间距，为输入区域留出更多空间 */
         padding-top: 40px;
         /* 增加顶部间距 */
         /* 为底部聊天框留出空间 */
@@ -5011,7 +7159,9 @@ body.onboarding-mode {
         /* 移除重复的安全区域间距，让AIInputCard组件自己处理 */
         z-index: 1000 !important;
         background: transparent !important;
+        /* 恢复透明背景 */
         padding: 0 !important;
+        /* 移除顶部内边距，让快捷操作按钮能够正确显示 */
         margin: 0 !important;
         border: none !important;
         box-sizing: border-box !important;
@@ -5030,6 +7180,47 @@ body.onboarding-mode {
         height: auto !important;
         min-height: auto !important;
         max-height: none !important;
+    }
+
+    /* 移动端聊天快捷操作栏样式 */
+    .mobile-chat-shortcuts {
+        background: transparent !important;
+        /* 在同一行显示时的样式 */
+        flex: 1 !important;
+        margin-right: 12px !important;
+        min-width: 0 !important;
+        /* 允许收缩 */
+        overflow: hidden !important;
+        /* 防止内容溢出 */
+    }
+
+    /* 移动端新建聊天按钮容器 */
+    .new-chat-buttons {
+        display: flex !important;
+        gap: 8px !important;
+        flex-shrink: 0 !important;
+        align-items: center !important;
+        min-width: 0 !important;
+        /* 确保按钮可见 */
+    }
+
+    /* 移动端聊天操作区域布局 */
+    .chat-actions {
+        display: flex !important;
+        align-items: center !important;
+        gap: 0 !important;
+        width: 100% !important;
+        overflow-x: auto !important;
+        /* 隐藏水平滚动条但保持滚动功能 */
+        scrollbar-width: none !important;
+        /* Firefox */
+        -ms-overflow-style: none !important;
+        /* IE and Edge */
+    }
+
+    .chat-actions::-webkit-scrollbar {
+        display: none !important;
+        /* Chrome, Safari, Opera */
     }
 
     /* iOS Safari 特殊处理 */
@@ -5080,11 +7271,12 @@ body.onboarding-mode {
 
     /* 超小屏幕聊天历史区域高度优化 */
     .chat-history-area {
-        height: calc(100vh - 76px - 140px) !important;
-        /* 超小屏幕减少高度，顶部76px包含导航和间距 */
-        padding: 0 0 28px 12px !important;
-        /* 移除顶部padding，左侧12px间距，增加底部padding确保间隔 */
-        margin: 0 !important;
+        height: calc(100vh - 76px - 200px) !important;
+        /* 超小屏幕减少高度，顶部76px包含导航和间距，底部200px包含快捷操作栏和输入框以及间隔 */
+        padding: 0 0 16px 12px !important;
+        /* 移除顶部padding，左侧12px间距，减少底部padding */
+        margin: 0 0 20px 0 !important;
+        /* 增加底部间隔 */
         width: 100% !important;
         max-width: none !important;
     }
@@ -5097,7 +7289,8 @@ body.onboarding-mode {
     }
 
     .chat-area {
-        padding-bottom: 70px;
+        padding-bottom: 90px;
+        /* 增加底部间距，确保与输入区域有足够间隔 */
         /* 调整底部间距 */
     }
 
@@ -5111,8 +7304,9 @@ body.onboarding-mode {
 
 .new-chat-btn,
 .goto-recommendation-btn {
-    width: 100%;
-    max-width: 100px;
+    min-width: 80px;
+    max-width: 120px;
+    flex-shrink: 0;
 }
 
 .dialog-footer {
@@ -8687,7 +10881,7 @@ body {
         margin-bottom: 12px;
     }
 
-    /* 微信环境下输入框强制贴底全宽 */
+    /* 微信环境下输入框使用固定定位 */
     body.wechat-browser .input-area,
     body.wechat-browser .home-input-area {
         position: fixed !important;
@@ -8700,6 +10894,34 @@ body {
         padding: 0 !important;
         z-index: 1000 !important;
         box-sizing: border-box !important;
+    }
+
+    /* 微信环境下键盘弹起时整个输入区域容器向上移动 */
+    body.wechat-browser.keyboard-open .input-area,
+    body.wechat-browser.keyboard-open .home-input-area {
+        bottom: 0 !important;
+        /* 键盘弹起时，整个容器向上移动，减少与键盘的间距 */
+        transition: bottom 0.3s ease !important;
+    }
+
+    /* 微信环境下主页快捷操作按钮在容器内部使用相对定位 */
+    body.wechat-browser .mobile-home-shortcuts-wrapper {
+        position: relative !important;
+        margin-bottom: 40px !important;
+        /* 与输入框保持40px的固定间距，减少初始间隔 */
+        z-index: 999 !important;
+    }
+
+    body.wechat-browser .mobile-home-shortcuts {
+        padding: 8px;
+        /* 微信环境下减少左右内边距 */
+
+    }
+
+    /* 微信环境下键盘弹起时整个输入区域容器向上移动 */
+    body.wechat-browser.keyboard-open .mobile-home-shortcuts-wrapper {
+        position: relative !important;
+        margin-bottom: 0 !important;
     }
 }
 
@@ -8797,9 +11019,10 @@ body {
 
     /* 7. 聊天历史区域 */
     .chat-history-area {
-        height: calc(var(--vh, 1vh) * 100 - 76px - 160px);
-        padding: 16px 8px 30px 8px;
-        margin: 0;
+        height: calc(var(--vh, 1vh) * 100 - 76px - 180px);
+        padding: 16px 8px 16px 8px;
+        margin: 0 0 20px 0;
+        /* 增加底部间隔 */
         width: 100%;
         box-sizing: border-box;
         overflow-y: auto;
@@ -8820,7 +11043,8 @@ body {
     }
 
     .chat-message:last-child {
-        margin-bottom: 20px;
+        margin-bottom: 30px;
+        /* 增加最后一条消息的底部间距 */
     }
 
     /* 9. 快捷按钮样式 */

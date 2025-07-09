@@ -87,6 +87,16 @@
                                 <label>更新时间</label>
                                 <span>{{ formatDetailTime(record.updatedAt) }}</span>
                             </div>
+                            <div v-if="isAIRecord && record.status === 'pending' && record.validityDate" class="detail-item">
+                                <label>委托时效</label>
+                                <span :class="getValidityStatusClass(record.validityDate)">
+                                    {{ formatValidityDate(record.validityDate) }}
+                                </span>
+                            </div>
+                            <div v-if="isAIRecord && record.status === 'cancelled' && record.cancelledAt" class="detail-item">
+                                <label>撤销时间</label>
+                                <span>{{ formatDetailTime(record.cancelledAt) }}</span>
+                            </div>
                         </div>
                     </div>
 
@@ -204,6 +214,16 @@
                     <div v-if="record.updatedAt" class="detail-item">
                         <label>更新时间</label>
                         <span>{{ formatDetailTime(record.updatedAt) }}</span>
+                    </div>
+                    <div v-if="isAIRecord && record.status === 'pending' && record.validityDate" class="detail-item">
+                        <label>委托时效</label>
+                        <span :class="getValidityStatusClass(record.validityDate)">
+                            {{ formatValidityDate(record.validityDate) }}
+                        </span>
+                    </div>
+                    <div v-if="isAIRecord && record.status === 'cancelled' && record.cancelledAt" class="detail-item">
+                        <label>撤销时间</label>
+                        <span>{{ formatDetailTime(record.cancelledAt) }}</span>
                     </div>
                 </div>
             </div>
@@ -351,6 +371,51 @@ const formatDetailTime = (dateString) => {
         second: '2-digit',
         hour12: false
     });
+};
+
+// 格式化委托时效显示
+const formatValidityDate = (validityDate) => {
+    if (!validityDate) return '无期限';
+    
+    const validity = new Date(validityDate);
+    const now = new Date();
+    const diffTime = validity - now;
+    const diffHours = Math.floor(diffTime / (1000 * 60 * 60));
+    const diffMinutes = Math.floor((diffTime % (1000 * 60 * 60)) / (1000 * 60));
+    
+    if (diffTime < 0) {
+        return '已过期';
+    } else if (diffHours === 0) {
+        if (diffMinutes <= 0) {
+            return '即将过期';
+        } else {
+            return `${diffMinutes}分钟后过期`;
+        }
+    } else if (diffHours < 24) {
+        return `${diffHours}小时${diffMinutes}分钟后过期`;
+    } else {
+        const diffDays = Math.floor(diffHours / 24);
+        const remainingHours = diffHours % 24;
+        return `${diffDays}天${remainingHours}小时后过期`;
+    }
+};
+
+// 获取委托时效状态样式类
+const getValidityStatusClass = (validityDate) => {
+    if (!validityDate) return '';
+    
+    const validity = new Date(validityDate);
+    const now = new Date();
+    const diffTime = validity - now;
+    const diffHours = Math.floor(diffTime / (1000 * 60 * 60));
+    
+    if (diffTime < 0) {
+        return 'expired';
+    } else if (diffHours <= 2) {
+        return 'expiring-soon';
+    } else {
+        return 'valid';
+    }
 };
 
 // 关闭弹窗
@@ -724,6 +789,21 @@ const handleCancel = () => {
     font-size: 13px;
     color: #666;
     line-height: 1.5;
+}
+
+/* 委托时效状态样式 */
+.valid {
+    color: #16a34a;
+}
+
+.expiring-soon {
+    color: #d97706;
+    font-weight: 600;
+}
+
+.expired {
+    color: #dc2626;
+    font-weight: 600;
 }
 
 /* 响应式设计 - 桌面端 */

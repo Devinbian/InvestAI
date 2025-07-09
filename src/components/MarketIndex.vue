@@ -58,7 +58,7 @@
                         <div class="change-info">
                             <span class="change-value">{{ index.change > 0 ? '+' : '' }}{{ index.change }}</span>
                             <span class="change-percent">({{ index.rise > 0 ? '+' : '' }}{{ index.rise
-                            }}%)</span>
+                                }}%)</span>
                         </div>
 
                         <!-- 涨跌幅度进度条 -->
@@ -90,7 +90,7 @@
 </template>
 
 <script setup>
-import {getMarketIndices} from '@/api/api.js'
+import { getMarketIndices } from '@/api/api.js';
 import { ref, onMounted, onUnmounted, computed } from 'vue';
 
 // 定义emit

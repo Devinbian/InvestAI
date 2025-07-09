@@ -101,6 +101,16 @@ export const useChatHistoryStore = defineStore("chatHistory", {
       this.chatHistoryList = limitedChatList;
     },
 
+    // 保存到localStorage - 不限制消息数量的版本（用于重新生成时）
+    saveChatHistoryWithoutLimit() {
+      // 只限制聊天历史数量，不限制消息数量
+      const limitedChatList = chatHistoryManager.limitChatHistory(this.chatHistoryList);
+      localStorage.setItem("chatHistoryList", JSON.stringify(limitedChatList));
+      
+      // 更新内存中的数据
+      this.chatHistoryList = limitedChatList;
+    },
+
     // 生成聊天标题
     generateChatTitle(messages) {
       // 从第一条用户消息生成标题
@@ -132,7 +142,7 @@ export const useChatHistoryStore = defineStore("chatHistory", {
       this.chatHistoryList.unshift(newChat);
       this.currentChatId = chatId;
       this.currentChatMessages = [...messages];
-      this.saveChatHistory();
+      this.saveChatHistoryWithoutLimit();
 
       return chatId;
     },
@@ -195,7 +205,33 @@ export const useChatHistoryStore = defineStore("chatHistory", {
               this.generateChatTitle(messages);
           }
 
-          this.saveChatHistory();
+          this.saveChatHistoryWithoutLimit();
+        }
+      }
+    },
+
+    // 更新当前聊天消息 - 不限制消息数量的版本（用于重新生成时）
+    updateCurrentChatMessagesWithoutLimit(messages) {
+      this.currentChatMessages = [...messages];
+
+      if (this.currentChatId) {
+        const chatIndex = this.chatHistoryList.findIndex(
+          (chat) => chat.id === this.currentChatId,
+        );
+        if (chatIndex > -1) {
+          this.chatHistoryList[chatIndex].messages = [...messages];
+          this.chatHistoryList[chatIndex].lastMessage = Date.now();
+
+          // 如果是第一次添加消息，更新标题
+          if (
+            messages.length > 0 &&
+            this.chatHistoryList[chatIndex].title === "新对话"
+          ) {
+            this.chatHistoryList[chatIndex].title =
+              this.generateChatTitle(messages);
+          }
+
+          this.saveChatHistoryWithoutLimit();
         }
       }
     },
@@ -203,7 +239,7 @@ export const useChatHistoryStore = defineStore("chatHistory", {
     // 添加消息到当前聊天
     addMessageToCurrentChat(message) {
       this.currentChatMessages.push(message);
-      this.updateCurrentChatMessages(this.currentChatMessages);
+      this.updateCurrentChatMessagesWithoutLimit(this.currentChatMessages);
     },
 
     // 重命名聊天
@@ -213,7 +249,7 @@ export const useChatHistoryStore = defineStore("chatHistory", {
       );
       if (chatIndex > -1) {
         this.chatHistoryList[chatIndex].title = newTitle;
-        this.saveChatHistory();
+        this.saveChatHistoryWithoutLimit();
         return true;
       }
       return false;
@@ -233,7 +269,7 @@ export const useChatHistoryStore = defineStore("chatHistory", {
           this.currentChatMessages = [];
         }
 
-        this.saveChatHistory();
+        this.saveChatHistoryWithoutLimit();
         return true;
       }
       return false;
@@ -255,7 +291,7 @@ export const useChatHistoryStore = defineStore("chatHistory", {
       this.chatHistoryList = [];
       this.currentChatId = null;
       this.currentChatMessages = [];
-      this.saveChatHistory();
+      this.saveChatHistoryWithoutLimit();
     },
 
     // 导出聊天历史
@@ -269,7 +305,7 @@ export const useChatHistoryStore = defineStore("chatHistory", {
         const importedChats = JSON.parse(jsonData);
         if (Array.isArray(importedChats)) {
           this.chatHistoryList = importedChats;
-          this.saveChatHistory();
+          this.saveChatHistoryWithoutLimit();
           return true;
         }
       } catch (error) {

@@ -3,6 +3,7 @@ import { ElMessage } from "element-plus";
 import { useChatHistoryStore } from "../store/chatHistory";
 import { authFetchEventSource } from "@/utils/request";
 import { api } from "@/api/api";
+import { generateMessageId } from "@/utils/formatters";
 
 export function useChatManager() {
   const chatHistoryStore = useChatHistoryStore();
@@ -56,6 +57,7 @@ export function useChatManager() {
 
     // 添加用户消息到聊天历史
     chatHistory.value.push({
+      id: generateMessageId(),
       role: "user",
       content: message,
       timestamp: Date.now(),
@@ -78,6 +80,7 @@ export function useChatManager() {
 
     // 添加空的AI消息占位符，使用isGenerating标志
     chatHistory.value.push({
+      id: generateMessageId(),
       role: "assistant",
       content: "",
       isGenerating: true,
@@ -148,7 +151,7 @@ export function useChatManager() {
             }
 
             // 保存聊天记录到存储
-            chatHistoryStore.updateCurrentChatMessages(chatHistory.value);
+            chatHistoryStore.updateCurrentChatMessagesWithoutLimit(chatHistory.value);
             console.log("流式响应完成，聊天记录已保存");
           },
           onerror: (err) => {
@@ -178,7 +181,7 @@ export function useChatManager() {
             }
 
             // 保存聊天记录到存储
-            chatHistoryStore.updateCurrentChatMessages(chatHistory.value);
+            chatHistoryStore.updateCurrentChatMessagesWithoutLimit(chatHistory.value);
             console.log("流式连接错误，聊天记录已保存");
 
             ElMessage.error("连接中断，请重试");
@@ -210,7 +213,7 @@ export function useChatManager() {
       }
 
       // 保存聊天记录到存储
-      chatHistoryStore.updateCurrentChatMessages(chatHistory.value);
+      chatHistoryStore.updateCurrentChatMessagesWithoutLimit(chatHistory.value);
       console.log("发送消息失败，聊天记录已保存");
 
       ElMessage.error("发送消息失败，请重试");
@@ -260,7 +263,7 @@ export function useChatManager() {
       }
 
       // 保存聊天记录到存储
-      chatHistoryStore.updateCurrentChatMessages(chatHistory.value);
+      chatHistoryStore.updateCurrentChatMessagesWithoutLimit(chatHistory.value);
 
       console.log("🛑 生成已停止，聊天记录已保存");
     } else {

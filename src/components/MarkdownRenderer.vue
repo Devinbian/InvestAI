@@ -4,7 +4,7 @@
 
 <script setup>
 import { computed } from 'vue';
-import { marked } from 'marked';
+import MarkdownIt from 'markdown-it';
 import DOMPurify from 'dompurify';
 
 const props = defineProps({
@@ -14,41 +14,23 @@ const props = defineProps({
     }
 });
 
-// 配置 marked 选项
-marked.setOptions({
-    breaks: true, // 支持换行符转换为 <br>
-    gfm: true, // 支持 GitHub Flavored Markdown
-    sanitize: false, // 我们使用 DOMPurify 来清理
-    pedantic: false,
-    smartLists: true,
-    smartypants: false
+// 配置markdown-it实例
+const md = new MarkdownIt({
+    html: true,        // 启用HTML标签
+    breaks: true,      // 将换行符转换为<br>
+    linkify: true,     // 自动转换URL为链接
+    typographer: true  // 启用一些语言中性的替换和引号美化
 });
-
-// 创建自定义渲染器
-const renderer = new marked.Renderer();
-
-// 自定义链接渲染（添加安全属性）
-renderer.link = function (href, title, text) {
-    const titleAttr = title ? ` title="${title}"` : '';
-    return `<a href="${href}" target="_blank" rel="noopener noreferrer"${titleAttr}>${text}</a>`;
-};
-
-// 自定义代码块渲染
-renderer.code = function (code, language) {
-    const validLanguage = language && language.match(/^[a-zA-Z0-9_+-]*$/) ? language : '';
-    return `<pre class="code-block"><code class="language-${validLanguage}">${code}</code></pre>`;
-};
-
-// 自定义内联代码渲染
-renderer.codespan = function (code) {
-    return `<code class="inline-code">${code}</code>`;
-};
 
 // 检测是否为智能复盘消息
 const isRecapMessage = computed(() => {
     if (!props.content) return false;
     const contentStr = typeof props.content === 'string' ? props.content : String(props.content);
-    return contentStr.includes('智能复盘') || contentStr.includes('请帮我进行全面的智能投资复盘分析');
+    return contentStr.includes('智能复盘') || 
+           contentStr.includes('请帮我进行全面的智能投资复盘分析') ||
+           contentStr.includes('昨日市场复盘分析') ||
+           contentStr.includes('昨日复盘') ||
+           contentStr.includes('复盘分析');
 });
 
 // 计算渲染后的内容
@@ -56,31 +38,244 @@ const renderedContent = computed(() => {
     if (!props.content) return '';
 
     // 确保content是字符串类型
-    const contentStr = typeof props.content === 'string' ? props.content : String(props.content);
+    let contentStr = typeof props.content === 'string' ? props.content : String(props.content);
 
-    // console.log('Original Content:', contentStr);
+    // 添加调试信息
+    if (process.env.NODE_ENV === 'development') {
+        console.log('原始内容:', contentStr.substring(0, 200) + '...');
+        
+        // 检查原始内容中的有序列表
+        const originalOrderedLines = contentStr.split('\n').filter(line => line.includes('1.'));
+        if (originalOrderedLines.length > 0) {
+            console.log('原始内容中包含1.的行:', originalOrderedLines);
+        }
+        
+        // 检查伪代码示例的格式
+        const pseudoCodeLines = contentStr.split('\n').filter(line => line.includes('伪代码示例'));
+        if (pseudoCodeLines.length > 0) {
+            console.log('原始内容中的伪代码示例:', pseudoCodeLines);
+        }
+        
+        // 检查是否包含多个#符号的行
+        const hashLines = contentStr.split('\n').filter(line => line.includes('####'));
+        if (hashLines.length > 0) {
+            console.log('原始内容包含多个#符号的行:', hashLines);
+        }
+        
+        // 专门检查原始内容中的5级标题
+        const originalFiveLevelHeaders = contentStr.split('\n').filter(line => line.includes('#####'));
+        if (originalFiveLevelHeaders.length > 0) {
+            console.log('原始内容5级标题行:', originalFiveLevelHeaders);
+            // 检查每个5级标题的具体字符
+            originalFiveLevelHeaders.forEach((line, index) => {
+                console.log(`原始5级标题${index + 1}详细信息:`, {
+                    line: line,
+                    chars: line.split('').map((char, i) => `${i}: '${char}' (${char.charCodeAt(0)})`),
+                    startsWithCorrectFormat: /^#####\s/.test(line),
+                    startsWithIncorrectFormat: /^#####[^\s]/.test(line)
+                });
+            });
+        }
+        
+        // 检查是否包含列表项
+        const listLines = contentStr.split('\n').filter(line => /^\s*[-*+]\s/.test(line) || /^\s*\d+\.\s/.test(line));
+        if (listLines.length > 0) {
+            console.log('列表项:', listLines.slice(0, 5));
+        }
+        
+        // 检查是否有错误的列表项格式
+        const incorrectListLines = contentStr.split('\n').filter(line => /^\s*[-*+][^\s]/.test(line));
+        if (incorrectListLines.length > 0) {
+            console.log('错误的列表项格式:', incorrectListLines.slice(0, 5));
+        }
+    }
+
+    // 改进的内容预处理
+    contentStr = contentStr
+        // 标准化行尾
+        .replace(/\r\n/g, '\n')
+        .replace(/\r/g, '\n')
+        // 移除行尾空白
+        .replace(/[ \t]+$/gm, '')
+        // 修复可能导致pre标签的多个空格问题，但保留列表项的缩进
+        .replace(/^    (?!\d+\.|[-*+])/gm, '')  // 移除行首的4个空格（但不是列表项）
+        .replace(/\n    (?!\d+\.|[-*+])/g, '\n')  // 移除换行后的4个空格（但不是列表项）
+        // 修复markdown语法问题
+        // 第一步：修复标题行本身格式（处理没有空格的情况）
+        // 处理行首的标题（可能前面有空格），并移除标题前的空格
+        .replace(/^(\s*)(#{1,6})([^\s#\n])/gm, '$2 $3')
+        .replace(/\n(\s*)(#{1,6})([^\s#\n])/g, '\n$2 $3')
+        // 第二步：确保标题前有适当的空行
+        .replace(/([^\n])(#{1,6}\s)/g, '$1\n\n$2')
+        .replace(/\n(#{1,6}\s)/g, '\n\n$1')
+        // 确保列表项格式正确（处理没有空格的情况）
+        .replace(/^(\s*)(-|\*|\+)([^\s])/gm, '$1$2 $3')
+        .replace(/\n(\s*)(-|\*|\+)([^\s])/g, '\n$1$2 $3')
+        // 修复特定格式：将 "**xxx**：" 开头的行转换为列表项（但不影响有序列表）
+        .replace(/^(\s*)(\*\*[^*]+\*\*：)(?!\s*\d+\.)/gm, '$1- $2')
+        .replace(/\n(\s*)(\*\*[^*]+\*\*：)(?!\s*\d+\.)/g, '\n$1- $2')
+        // 确保破折号后面有空格
+        .replace(/^(\s*)-([^\s])/gm, '$1- $2')
+        .replace(/\n(\s*)-([^\s])/g, '\n$1- $2')
+        // 确保列表项前有适当的空行（如果前面不是列表项）
+        .replace(/([^\n-*+])\n(\s*)(-|\*|\+)\s/g, '$1\n\n$2$3 ')
+        // 修复有序列表格式 - 确保数字后有空格
+        .replace(/^(\s*)(\d+\.)([^\s])/gm, '$1$2 $3')
+        .replace(/\n(\s*)(\d+\.)([^\s])/g, '\n$1$2 $3')
+        // 确保有序列表项前有适当的空行（如果前面不是列表项）
+        .replace(/([^\n\d])\n(\s*)(\d+\.)\s/g, '$1\n\n$2$3 ')
+        // 清理连续的空行，但保留标题前的双空行
+        .replace(/\n{3,}/g, '\n\n');
+
+    // 重新编号有序列表项，确保连续性
+    const lines = contentStr.split('\n');
+    let orderedListCounter = 0;
+    let inOrderedList = false;
+    
+    for (let i = 0; i < lines.length; i++) {
+        const line = lines[i];
+        
+        // 检查是否是有序列表项
+        if (/^\s*\d+\.\s/.test(line)) {
+            if (!inOrderedList) {
+                // 开始新的有序列表
+                orderedListCounter = 1;
+                inOrderedList = true;
+            } else {
+                // 继续有序列表
+                orderedListCounter++;
+            }
+            
+            // 替换数字
+            lines[i] = line.replace(/^\s*\d+\./, (match) => {
+                const indent = match.match(/^\s*/)[0];
+                return `${indent}${orderedListCounter}.`;
+            });
+        } else if (/^\s*[-*+]\s/.test(line)) {
+            // 无序列表项不中断有序列表的计数
+            continue;
+        } else if (line.trim() === '') {
+            // 空行不中断有序列表
+            continue;
+        } else if (/^\s+/.test(line) && !(/^\s*#{1,6}\s/.test(line))) {
+            // 缩进行（但不是标题）不中断有序列表
+            continue;
+        } else {
+            // 其他内容（如标题、段落等）中断有序列表
+            inOrderedList = false;
+        }
+    }
+    
+    contentStr = lines.join('\n')
+        // 清理开头和结尾的多余换行符
+        .replace(/^\n+/, '')
+        .replace(/\n+$/, '');
+
+    // 调试：显示重新编号后的有序列表
+    if (process.env.NODE_ENV === 'development') {
+        const renumberedOrderedLines = contentStr.split('\n').filter(line => /^\s*\d+\.\s/.test(line));
+        if (renumberedOrderedLines.length > 0) {
+            console.log('重新编号后的有序列表项:', renumberedOrderedLines);
+        }
+    }
+
+    // 添加预处理后的调试信息
+    if (process.env.NODE_ENV === 'development') {
+        console.log('预处理后内容:', contentStr.substring(0, 300) + '...');
+        
+        // 检查预处理后的有序列表
+        const processedOrderedLines = contentStr.split('\n').filter(line => line.includes('1.'));
+        if (processedOrderedLines.length > 0) {
+            console.log('预处理后包含1.的行:', processedOrderedLines);
+        }
+        
+        // 检查预处理后的代码块
+        const codeBlockLines = contentStr.split('\n').filter(line => line.includes('```'));
+        if (codeBlockLines.length > 0) {
+            console.log('预处理后的代码块标记:', codeBlockLines);
+        }
+        
+
+        
+        // 检查预处理后的标题行
+        const processedHashLines = contentStr.split('\n').filter(line => line.includes('####'));
+        if (processedHashLines.length > 0) {
+            console.log('预处理后的标题行:', processedHashLines);
+        }
+        
+        // 专门检查5级标题
+        const fiveLevelHeaders = contentStr.split('\n').filter(line => line.includes('#####'));
+        if (fiveLevelHeaders.length > 0) {
+            console.log('预处理后5级标题行:', fiveLevelHeaders);
+            // 检查每个5级标题的具体字符
+            fiveLevelHeaders.forEach((line, index) => {
+                console.log(`预处理后5级标题${index + 1}详细信息:`, {
+                    line: line,
+                    chars: line.split('').map((char, i) => `${i}: '${char}' (${char.charCodeAt(0)})`),
+                    startsWithCorrectFormat: /^#####\s/.test(line),
+                    startsWithIncorrectFormat: /^#####[^\s]/.test(line)
+                });
+            });
+        }
+        
+        // 检查是否有正确的标题格式
+        const correctHeaders = contentStr.split('\n').filter(line => /^#{1,6}\s/.test(line));
+        if (correctHeaders.length > 0) {
+            console.log('正确的标题格式:', correctHeaders);
+        }
+        
+        // 检查是否有错误的标题格式
+        const incorrectHeaders = contentStr.split('\n').filter(line => /^#{1,6}[^\s#]/.test(line));
+        if (incorrectHeaders.length > 0) {
+            console.log('错误的标题格式:', incorrectHeaders);
+        }
+        
+        // 检查预处理后的列表项格式
+        const processedListLines = contentStr.split('\n').filter(line => /^\s*[-*+]\s/.test(line));
+        if (processedListLines.length > 0) {
+            console.log('预处理后的正确列表项:', processedListLines.slice(0, 5));
+        }
+        
+        const processedIncorrectListLines = contentStr.split('\n').filter(line => /^\s*[-*+][^\s]/.test(line));
+        if (processedIncorrectListLines.length > 0) {
+            console.log('预处理后仍然错误的列表项:', processedIncorrectListLines.slice(0, 5));
+        }
+        
+        // 检查有序列表格式
+        const orderedListLines = contentStr.split('\n').filter(line => /^\s*\d+\.\s/.test(line));
+        if (orderedListLines.length > 0) {
+            console.log('预处理后的正确有序列表项:', orderedListLines.slice(0, 5));
+        }
+        
+        const incorrectOrderedListLines = contentStr.split('\n').filter(line => /^\s*\d+\.[^\s]/.test(line));
+        if (incorrectOrderedListLines.length > 0) {
+            console.log('预处理后仍然错误的有序列表项:', incorrectOrderedListLines.slice(0, 5));
+        }
+    }
 
     try {
-        // 使用 marked 解析 markdown，使用自定义渲染器
-        const parsed = marked(contentStr, { renderer });
+        // 使用markdown-it解析
+        const htmlString = md.render(contentStr);
+        
+        // 添加调试信息
+        if (process.env.NODE_ENV === 'development') {
+            console.log('markdown-it解析结果:', htmlString.substring(0, 300) + '...');
+        }
 
-        // console.log('Parsed Markdown:', parsed);
-
-        // 使用 DOMPurify 清理 HTML，防止 XSS 攻击
-        const result = DOMPurify.sanitize(parsed, {
+        // 使用DOMPurify清理HTML，保留pre和code标签
+        const result = DOMPurify.sanitize(htmlString, {
             ALLOWED_TAGS: [
                 'p', 'br', 'strong', 'em', 'u', 'del', 's', 'strike',
                 'h1', 'h2', 'h3', 'h4', 'h5', 'h6',
                 'ul', 'ol', 'li',
                 'blockquote',
-                'pre', 'code',
                 'a',
                 'table', 'thead', 'tbody', 'tr', 'th', 'td',
-                'div', 'span', 'input', 'hr'
+                'div', 'span', 'hr',
+                'pre', 'code'
             ],
             ALLOWED_ATTR: [
-                'href', 'target', 'rel', 'title',
-                'class', 'type', 'checked', 'disabled'
+                'href', 'target', 'rel', 'title', 'class'
             ],
             ALLOWED_URI_REGEXP: /^(?:(?:(?:f|ht)tps?|mailto|tel|callto|cid|xmpp):|[^a-z]|[a-z+.\-]+(?:[^a-z+.\-:]|$))/i
         });
@@ -101,9 +296,6 @@ const renderedContent = computed(() => {
     overflow-wrap: break-word;
     margin: 0;
     padding: 0;
-    display: flex;
-    flex-direction: column;
-    min-height: fit-content;
     /* 确保markdown内容可以被选择 */
     -webkit-user-select: text !important;
     -khtml-user-select: text !important;
@@ -131,6 +323,7 @@ const renderedContent = computed(() => {
     margin: 16px 0 8px 0;
     font-weight: 600;
     line-height: 1.4;
+    color: #2c3e50;
 }
 
 .markdown-content :deep(h1) {
@@ -145,34 +338,20 @@ const renderedContent = computed(() => {
 
 .markdown-content :deep(h3) {
     font-size: 1.2em;
+    color: #34495e;
 }
 
 .markdown-content :deep(h4),
 .markdown-content :deep(h5),
 .markdown-content :deep(h6) {
     font-size: 1.1em;
+    color: #34495e;
 }
 
 /* 段落样式 */
 .markdown-content :deep(p) {
     margin: 8px 0;
     line-height: inherit;
-    /* 继承容器的行高 */
-    display: block;
-    width: 100%;
-    box-sizing: border-box;
-}
-
-/* 最后一个段落的底部间距清零 */
-.markdown-content :deep(p:last-child) {
-    margin-bottom: 0 !important;
-    padding-bottom: 0 !important;
-}
-
-/* 第一个段落的顶部间距清零 */
-.markdown-content :deep(p:first-child) {
-    margin-top: 0 !important;
-    padding-top: 0 !important;
 }
 
 /* 强调样式 */
@@ -186,164 +365,67 @@ const renderedContent = computed(() => {
     color: #555;
 }
 
-.markdown-content :deep(del),
-.markdown-content :deep(s),
-.markdown-content :deep(strike) {
-    text-decoration: line-through;
-    color: #888;
-}
-
 /* 列表样式 */
 .markdown-content :deep(ul),
 .markdown-content :deep(ol) {
-    margin: 8px 0;
-    padding-left: 24px;
+    margin: 4px 0;
+    padding-left: 20px;
+    display: block;
+    visibility: visible;
+    opacity: 1;
+    overflow: visible;
 }
 
-/* 最后一个列表的底部间距清零 */
-.markdown-content :deep(ul:last-child),
-.markdown-content :deep(ol:last-child) {
-    margin-bottom: 0 !important;
-    padding-bottom: 0 !important;
+/* 重置有序列表的计数器 */
+.markdown-content {
+    counter-reset: ordered-list-counter;
 }
 
-/* 第一个列表的顶部间距清零 */
-.markdown-content :deep(ul:first-child),
-.markdown-content :deep(ol:first-child) {
-    margin-top: 0 !important;
-    padding-top: 0 !important;
-}
-
-/* 确保所有最后的元素都没有底部间距 */
-.markdown-content :deep(*:last-child) {
-    margin-bottom: 0 !important;
-    padding-bottom: 0 !important;
-}
-
-/* 确保所有第一个元素都没有顶部间距 */
-.markdown-content :deep(*:first-child) {
-    margin-top: 0 !important;
-    padding-top: 0 !important;
-}
-
-/* 单行文本优化：当只有一个段落时，完全贴合容器 */
-.markdown-content:has(p:only-child) {
-    align-items: stretch;
-}
-
-.markdown-content :deep(p:only-child) {
-    margin: 0 !important;
-    padding: 0 !important;
-    flex: 1;
-    display: flex;
-    align-items: center;
-    min-height: 1em;
-}
-
-/* 强制清除所有可能的间距 */
-.markdown-content :deep(p),
-.markdown-content :deep(div),
-.markdown-content :deep(span) {
-    margin-bottom: 0 !important;
-    padding-bottom: 0 !important;
-}
-
-.markdown-content :deep(p:last-child),
-.markdown-content :deep(div:last-child),
-.markdown-content :deep(span:last-child) {
-    margin-bottom: 0 !important;
-    padding-bottom: 0 !important;
+/* 为有序列表项设置自定义计数器 */
+.markdown-content :deep(ol) {
+    counter-reset: none;
 }
 
 .markdown-content :deep(li) {
-    margin: 4px 0;
-    line-height: 1.5;
+    margin: 1px 0;
+    line-height: 1.3;
 }
 
 .markdown-content :deep(ul li) {
-    list-style-type: disc;
+    list-style-type: none;
+    position: relative;
+    padding-left: 0;
+}
+
+.markdown-content :deep(ul li::before) {
+    content: "-";
+    position: absolute;
+    left: -16px;
+    color: inherit;
 }
 
 .markdown-content :deep(ol li) {
-    list-style-type: decimal;
-    margin-bottom: 0;
-    padding-bottom: 0;
+    list-style-type: none;
+    display: list-item !important;
+    visibility: visible !important;
+    opacity: 1 !important;
+    overflow: visible !important;
+    white-space: normal !important;
+    text-indent: 0 !important;
+    padding-left: 0 !important;
+    color: inherit !important;
+    font-size: inherit !important;
+    line-height: inherit !important;
+    counter-increment: ordered-list-counter;
+    position: relative;
 }
 
-/* 智能复盘消息的紧凑样式 */
-.markdown-content.compact-recap :deep(p) {
-    margin: 2px 0;
-    line-height: 1.3;
-}
-
-.markdown-content.compact-recap :deep(p:last-child) {
-    margin-bottom: 0;
-}
-
-.markdown-content.compact-recap :deep(p:first-child) {
-    margin-top: 0;
-}
-
-.markdown-content.compact-recap :deep(ol) {
-    margin: 0;
-    padding-left: 18px;
-    line-height: 0.6;
-}
-
-.markdown-content.compact-recap :deep(ol:last-child) {
-    margin-bottom: 0;
-}
-
-.markdown-content.compact-recap :deep(ol li) {
-    margin: 0;
-    padding: 0;
-    line-height: 1.2;
-    display: list-item;
-    list-style-position: outside;
-}
-
-.markdown-content.compact-recap {
-    line-height: 1.3;
-}
-
-/* 任务列表样式 */
-.markdown-content :deep(.task-list-item) {
-    list-style: none;
-    display: flex;
-    align-items: flex-start;
-    gap: 8px;
-    margin: 6px 0;
-}
-
-.markdown-content :deep(.task-checkbox) {
-    width: 16px;
-    height: 16px;
-    border: 2px solid #d1d5db;
-    border-radius: 3px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    font-size: 12px;
-    font-weight: bold;
-    color: white;
-    flex-shrink: 0;
-    margin-top: 2px;
-    transition: all 0.2s ease;
-}
-
-.markdown-content :deep(.task-checkbox.checked) {
-    background: #10b981;
-    border-color: #10b981;
-}
-
-.markdown-content :deep(.task-text) {
-    flex: 1;
-    line-height: 1.5;
-}
-
-.markdown-content :deep(.task-text.completed) {
-    text-decoration: line-through;
-    color: #6b7280;
+.markdown-content :deep(ol li::before) {
+    content: counter(ordered-list-counter) ". ";
+    position: absolute;
+    left: -20px;
+    color: inherit;
+    font-weight: normal;
 }
 
 /* 引用样式 */
@@ -361,35 +443,38 @@ const renderedContent = computed(() => {
     margin: 0;
 }
 
-/* 代码样式 */
-.markdown-content :deep(.inline-code) {
-    background: #f1f5f9;
-    color: #e11d48;
-    padding: 2px 6px;
-    border-radius: 4px;
+/* 代码样式 - 恢复代码块的样式 */
+.markdown-content :deep(code) {
+    background: #f6f8fa;
+    color: #24292e;
+    padding: 2px 4px;
+    border-radius: 3px;
     font-family: 'Consolas', 'Monaco', 'Courier New', monospace;
     font-size: 0.9em;
-    border: 1px solid #e2e8f0;
+    border: 1px solid #e1e4e8;
 }
 
-.markdown-content :deep(.code-block) {
-    background: #1e293b;
-    color: #e2e8f0;
-    padding: 16px;
-    border-radius: 8px;
+.markdown-content :deep(pre) {
+    background: #f6f8fa;
+    color: #24292e;
+    padding: 12px;
+    border-radius: 6px;
+    border: 1px solid #e1e4e8;
     margin: 12px 0;
     overflow-x: auto;
     font-family: 'Consolas', 'Monaco', 'Courier New', monospace;
     font-size: 0.9em;
-    line-height: 1.5;
+    line-height: 1.4;
+    white-space: pre;
 }
 
-.markdown-content :deep(.code-block code) {
+.markdown-content :deep(pre code) {
     background: none;
     color: inherit;
     padding: 0;
     border: none;
     font-size: inherit;
+    font-family: inherit;
 }
 
 /* 链接样式 */
@@ -406,38 +491,34 @@ const renderedContent = computed(() => {
 }
 
 /* 表格样式 */
-.markdown-content :deep(.table-wrapper) {
-    overflow-x: auto;
-    margin: 12px 0;
-}
-
-.markdown-content :deep(.markdown-table) {
+.markdown-content :deep(table) {
     width: 100%;
     border-collapse: collapse;
     background: white;
     border-radius: 8px;
     overflow: hidden;
     box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+    margin: 12px 0;
 }
 
-.markdown-content :deep(.markdown-table th),
-.markdown-content :deep(.markdown-table td) {
+.markdown-content :deep(table th),
+.markdown-content :deep(table td) {
     padding: 12px 16px;
     text-align: left;
     border-bottom: 1px solid #e5e7eb;
 }
 
-.markdown-content :deep(.markdown-table th) {
+.markdown-content :deep(table th) {
     background: #f8f9fa;
     font-weight: 600;
     color: #374151;
 }
 
-.markdown-content :deep(.markdown-table tr:hover) {
+.markdown-content :deep(table tr:hover) {
     background: #f9fafb;
 }
 
-.markdown-content :deep(.markdown-table tr:last-child td) {
+.markdown-content :deep(table tr:last-child td) {
     border-bottom: none;
 }
 
@@ -446,7 +527,100 @@ const renderedContent = computed(() => {
     border: none;
     height: 1px;
     background: linear-gradient(to right, transparent, #e5e7eb, transparent);
-    margin: 24px 0;
+    margin: 8px 0;
+}
+
+/* 智能复盘消息的紧凑样式 */
+.markdown-content.compact-recap :deep(p) {
+    margin: 4px 0;
+    line-height: 1.4;
+}
+
+.markdown-content.compact-recap :deep(h1),
+.markdown-content.compact-recap :deep(h2),
+.markdown-content.compact-recap :deep(h3),
+.markdown-content.compact-recap :deep(h4),
+.markdown-content.compact-recap :deep(h5),
+.markdown-content.compact-recap :deep(h6) {
+    margin: 12px 0 6px 0;
+    font-weight: 600;
+    line-height: 1.3;
+}
+
+.markdown-content.compact-recap :deep(h3) {
+    font-size: 1.1em;
+    color: #2c3e50;
+    margin: 10px 0 4px 0;
+}
+
+.markdown-content.compact-recap :deep(h4) {
+    font-size: 1.05em;
+    color: #34495e;
+    margin: 8px 0 4px 0;
+}
+
+.markdown-content.compact-recap :deep(ul),
+.markdown-content.compact-recap :deep(ol) {
+    margin: 4px 0;
+    padding-left: 20px;
+}
+
+.markdown-content.compact-recap :deep(li) {
+    margin: 2px 0;
+    padding: 0;
+    line-height: 1.4;
+}
+
+.markdown-content.compact-recap :deep(ul li) {
+    list-style-type: none;
+    position: relative;
+    padding-left: 0;
+}
+
+.markdown-content.compact-recap :deep(ul li::before) {
+    content: "-";
+    position: absolute;
+    left: -16px;
+    color: inherit;
+}
+
+.markdown-content.compact-recap :deep(strong) {
+    font-weight: 600;
+    color: #2c3e50;
+}
+
+.markdown-content.compact-recap :deep(hr) {
+    margin: 6px 0;
+}
+
+/* 紧凑样式的代码块 */
+.markdown-content.compact-recap :deep(pre) {
+    margin: 8px 0;
+    padding: 10px;
+    font-size: 0.85em;
+}
+
+.markdown-content.compact-recap :deep(code) {
+    font-size: 0.85em;
+}
+
+/* 紧凑样式的有序列表计数器 */
+.markdown-content.compact-recap :deep(ol li) {
+    counter-increment: ordered-list-counter;
+    position: relative;
+    list-style-type: none;
+}
+
+.markdown-content.compact-recap :deep(ol li::before) {
+    content: counter(ordered-list-counter) ". ";
+    position: absolute;
+    left: -20px;
+    color: inherit;
+    font-weight: normal;
+}
+
+.markdown-content.compact-recap {
+    line-height: 1.4;
 }
 
 /* 响应式设计 */
@@ -463,13 +637,13 @@ const renderedContent = computed(() => {
         font-size: 1.1em;
     }
 
-    .markdown-content :deep(.code-block) {
+    .markdown-content :deep(pre) {
         padding: 12px;
         font-size: 0.85em;
     }
 
-    .markdown-content :deep(.markdown-table th),
-    .markdown-content :deep(.markdown-table td) {
+    .markdown-content :deep(table th),
+    .markdown-content :deep(table td) {
         padding: 8px 12px;
         font-size: 0.9em;
     }
@@ -491,27 +665,39 @@ const renderedContent = computed(() => {
         border-left-color: #60a5fa;
     }
 
-    .markdown-content :deep(.inline-code) {
+    .markdown-content :deep(code) {
         background: #374151;
         color: #fbbf24;
         border-color: #4b5563;
     }
 
-    .markdown-content :deep(.markdown-table) {
+    .markdown-content :deep(table) {
         background: #1f2937;
     }
 
-    .markdown-content :deep(.markdown-table th) {
+    .markdown-content :deep(table th) {
         background: #374151;
         color: #f3f4f6;
     }
 
-    .markdown-content :deep(.markdown-table td) {
+    .markdown-content :deep(table td) {
         border-bottom-color: #4b5563;
     }
 
-    .markdown-content :deep(.markdown-table tr:hover) {
+    .markdown-content :deep(table tr:hover) {
         background: #374151;
+    }
+
+    .markdown-content :deep(code) {
+        background: #374151;
+        color: #fbbf24;
+        border-color: #4b5563;
+    }
+
+    .markdown-content :deep(pre) {
+        background: #1f2937;
+        color: #e5e7eb;
+        border-color: #374151;
     }
 }
 </style>

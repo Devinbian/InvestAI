@@ -131,6 +131,24 @@ export const useUserStore = defineStore("user", {
       return this.watchlist.some((item) => item.code === stockCode);
     },
 
+    // 清理持仓数据（清除mock数据污染）
+    clearPortfolio() {
+      this.portfolio = [];
+      localStorage.setItem("portfolio", JSON.stringify(this.portfolio));
+      return true;
+    },
+
+    // 移除指定股票持仓
+    removeFromPortfolio(stockCode) {
+      const index = this.portfolio.findIndex((item) => item.code === stockCode);
+      if (index > -1) {
+        this.portfolio.splice(index, 1);
+        localStorage.setItem("portfolio", JSON.stringify(this.portfolio));
+        return true;
+      }
+      return false;
+    },
+
     // 股票交易相关
     buyStock(stock, quantity, price) {
       const totalCost = quantity * price;
@@ -341,10 +359,15 @@ export const useUserStore = defineStore("user", {
 
     // 量化分析报告管理
     addQuantAnalysisReport(report) {
+      // 计算有效期（默认90天）
+      const expiryDate = new Date();
+      expiryDate.setDate(expiryDate.getDate() + 90);
+      
       const reportData = {
         id: `REPORT_${Date.now()}`,
         ...report,
         createdAt: new Date().toISOString(),
+        expiryDate: expiryDate.toISOString(), // 添加有效期
         fileSize: `${Math.floor(Math.random() * 500 + 100)}KB`,
       };
 
@@ -426,10 +449,26 @@ export const useUserStore = defineStore("user", {
 
     // AI委托交易记录管理
     addAITradingRecord(trade) {
+      // 计算委托时效（默认1天），但如果已经有validityDate则使用现有的
+      let validityDate;
+      if (trade.validityDate) {
+        validityDate = trade.validityDate;
+      } else {
+        const defaultValidityDate = new Date();
+        defaultValidityDate.setDate(defaultValidityDate.getDate() + 1);
+        validityDate = defaultValidityDate.toISOString();
+      }
+      
+      // 生成唯一ID，避免重复
+      const timestamp = Date.now();
+      const randomSuffix = Math.floor(Math.random() * 1000);
+      const uniqueId = `TRADE_${timestamp}_${randomSuffix}`;
+      
       const tradeData = {
-        id: `TRADE_${Date.now()}`,
+        id: uniqueId,
         ...trade,
-        createdAt: new Date().toISOString(),
+        createdAt: trade.createdAt || new Date().toISOString(),
+        validityDate: validityDate, // 使用传入的或默认的委托时效
         status: trade.status || "pending",
       };
 
@@ -446,25 +485,29 @@ export const useUserStore = defineStore("user", {
       const index = this.aiTradingRecords.findIndex(
         (trade) => trade.id === tradeId,
       );
+      
       if (index > -1) {
-        this.aiTradingRecords[index] = {
-          ...this.aiTradingRecords[index],
-          ...updates,
-        };
+        // 直接修改数组中的对象，确保响应式更新
+        Object.assign(this.aiTradingRecords[index], updates);
+        
         localStorage.setItem(
           "aiTradingRecords",
           JSON.stringify(this.aiTradingRecords),
         );
         return true;
+      } else {
+        console.error('未找到要更新的记录，ID:', tradeId);
+        return false;
       }
-      return false;
     },
 
     cancelAITradingOrder(tradeId) {
-      return this.updateAITradingRecord(tradeId, {
+      const result = this.updateAITradingRecord(tradeId, {
         status: "cancelled",
         cancelledAt: new Date().toISOString(),
       });
+      
+      return result;
     },
 
     // 用户自助交易记录管理
@@ -505,6 +548,14 @@ export const useUserStore = defineStore("user", {
 
     // 模拟生成一些测试数据
     generateMockRecords() {
+      // 检查是否已有数据，如果有则跳过生成
+      if (this.quantAnalysisReports.length > 0 || this.aiTradingRecords.length > 0) {
+        console.log('已有测试数据，跳过生成');
+        return;
+      }
+      
+      console.log('生成测试数据...');
+      
       // 生成量化分析报告测试数据
       const mockReports = [
         {
@@ -519,6 +570,9 @@ export const useUserStore = defineStore("user", {
           createdAt: new Date(
             Date.now() - 2 * 24 * 60 * 60 * 1000,
           ).toISOString(),
+          expiryDate: new Date(
+            Date.now() + 88 * 24 * 60 * 60 * 1000,
+          ).toISOString(), // 88天后过期
         },
         {
           title: "贵州茅台(600519)AI交易策略报告",
@@ -531,6 +585,9 @@ export const useUserStore = defineStore("user", {
           createdAt: new Date(
             Date.now() - 5 * 24 * 60 * 60 * 1000,
           ).toISOString(),
+          expiryDate: new Date(
+            Date.now() + 85 * 24 * 60 * 60 * 1000,
+          ).toISOString(), // 85天后过期
         },
       ];
 
@@ -574,6 +631,24 @@ export const useUserStore = defineStore("user", {
           createdAt: new Date(
             Date.now() - 4 * 24 * 60 * 60 * 1000,
           ).toISOString(),
+          validityDate: new Date(
+            Date.now() - 3 * 24 * 60 * 60 * 1000,
+          ).toISOString(), // 委托时效（已过期，因为已完成）
+        },
+        {
+          stockInfo: { name: "招商银行", code: "600036" },
+          type: "sell",
+          status: "pending",
+          quantity: 500,
+          expectedPrice: 35.8,
+          totalAmount: 17900,
+          analysis: "AI模型建议在此价位卖出，预期短期内可能出现调整。",
+          createdAt: new Date(
+            Date.now() - 2 * 60 * 60 * 1000,
+          ).toISOString(), // 2小时前创建
+          validityDate: new Date(
+            Date.now() + 22 * 60 * 60 * 1000,
+          ).toISOString(), // 22小时后过期
         },
       ];
 
@@ -861,6 +936,172 @@ export const useUserStore = defineStore("user", {
       }
 
       return null;
+    },
+
+    // 数据迁移：为现有的AI交易记录添加委托时效字段
+    migrateAITradingRecords() {
+      let updated = false;
+      
+      if (!this.aiTradingRecords || this.aiTradingRecords.length === 0) {
+        console.log('没有AI交易记录需要迁移');
+        return false;
+      }
+      
+      this.aiTradingRecords = this.aiTradingRecords.map(record => {
+        if (!record.validityDate) {
+          // 为没有委托时效的记录添加字段
+          const validityDate = new Date(record.createdAt);
+          if (record.status === 'pending') {
+            // 待成交的记录：设置为创建时间后1天
+            validityDate.setDate(validityDate.getDate() + 1);
+          } else {
+            // 已完成/已取消的记录：设置为创建时间后1小时（表示已过期）
+            validityDate.setHours(validityDate.getHours() + 1);
+          }
+          
+          updated = true;
+          console.log(`为记录 ${record.stockInfo?.name} 添加委托时效: ${validityDate.toISOString()}`);
+          return {
+            ...record,
+            validityDate: validityDate.toISOString()
+          };
+        }
+        return record;
+      });
+      
+      if (updated) {
+        localStorage.setItem("aiTradingRecords", JSON.stringify(this.aiTradingRecords));
+        console.log('AI交易记录数据已更新，添加了委托时效字段');
+      } else {
+        console.log('所有AI交易记录都已有委托时效字段');
+      }
+      
+      return updated;
+    },
+
+    // 数据迁移：为现有的量化分析报告添加有效期字段
+    migrateQuantAnalysisReports() {
+      let updated = false;
+      
+      this.quantAnalysisReports = this.quantAnalysisReports.map(report => {
+        if (!report.expiryDate) {
+          // 为没有有效期的报告添加字段
+          const expiryDate = new Date(report.createdAt);
+          expiryDate.setDate(expiryDate.getDate() + 90); // 90天有效期
+          
+          updated = true;
+          return {
+            ...report,
+            expiryDate: expiryDate.toISOString()
+          };
+        }
+        return report;
+      });
+      
+      if (updated) {
+        localStorage.setItem("quantAnalysisReports", JSON.stringify(this.quantAnalysisReports));
+        console.log('量化分析报告数据已更新，添加了有效期字段');
+      }
+      
+      return updated;
+    },
+
+    // 生成测试用的待成交AI委托记录
+    addTestPendingAITrade() {
+      const testTrade = {
+        stockInfo: { name: "招商银行", code: "600036" },
+        type: "sell",
+        status: "pending",
+        quantity: 500,
+        expectedPrice: 35.8,
+        totalAmount: 17900,
+        analysis: "AI模型建议在此价位卖出，预期短期内可能出现调整。",
+        createdAt: new Date().toISOString(),
+        validityDate: new Date(Date.now() + 20 * 60 * 60 * 1000).toISOString(), // 20小时后过期
+      };
+      
+      // 检查是否已存在相同的测试记录
+      const exists = this.aiTradingRecords.some(record => 
+        record.stockInfo.code === testTrade.stockInfo.code && 
+        record.status === 'pending' &&
+        record.type === testTrade.type
+      );
+      
+      if (!exists) {
+        this.addAITradingRecord(testTrade);
+        console.log('已添加测试待成交AI委托记录:', testTrade);
+        return true;
+      } else {
+        console.log('测试待成交AI委托记录已存在');
+      }
+      
+      return false;
+    },
+
+    // 强制重新生成测试数据（用于调试）
+    forceRegenerateTestData() {
+      console.log('强制重新生成测试数据...');
+      
+      // 清除现有数据
+      this.aiTradingRecords = [];
+      localStorage.removeItem('aiTradingRecords');
+      
+      // 生成新的测试数据，确保每个记录的时间戳不同
+      const baseTime = Date.now();
+      const testTrades = [
+        {
+          stockInfo: { name: "平安银行", code: "000001" },
+          type: "buy",
+          status: "completed",
+          quantity: 1000,
+          expectedPrice: 12.2,
+          executedPrice: 12.25,
+          totalAmount: 12250,
+          fee: 5.0,
+          profit: 2.5,
+          analysis: "基于AI算法分析，该股票具有较好的投资价值，建议买入。",
+          executedAt: new Date(baseTime - 3 * 24 * 60 * 60 * 1000).toISOString(),
+          createdAt: new Date(baseTime - 4 * 24 * 60 * 60 * 1000).toISOString(),
+          validityDate: new Date(baseTime - 3 * 24 * 60 * 60 * 1000).toISOString(), // 委托时效（已过期，因为已完成）
+        },
+        {
+          stockInfo: { name: "招商银行", code: "600036" },
+          type: "sell",
+          status: "pending",
+          quantity: 500,
+          expectedPrice: 35.8,
+          totalAmount: 17900,
+          analysis: "AI模型建议在此价位卖出，预期短期内可能出现调整。",
+          createdAt: new Date(baseTime - 2 * 60 * 60 * 1000).toISOString(), // 2小时前创建
+          validityDate: new Date(baseTime + 22 * 60 * 60 * 1000).toISOString(), // 22小时后过期
+        },
+        {
+          stockInfo: { name: "中国平安", code: "601318" },
+          type: "buy",
+          status: "pending",
+          quantity: 200,
+          expectedPrice: 45.5,
+          totalAmount: 9100,
+          analysis: "AI分析显示该股票具有良好的增长潜力。",
+          createdAt: new Date(baseTime - 30 * 60 * 1000).toISOString(), // 30分钟前创建
+          validityDate: new Date(baseTime + 90 * 60 * 1000).toISOString(), // 90分钟后过期（即将过期）
+        }
+      ];
+      
+              // 添加测试记录
+        testTrades.forEach(trade => {
+          this.addAITradingRecord(trade);
+        });
+      
+      console.log('测试数据已重新生成:', this.aiTradingRecords);
+      return true;
+    },
+
+    // 清除AI交易记录
+    clearAITradingRecords() {
+      this.aiTradingRecords = [];
+      localStorage.removeItem('aiTradingRecords');
+      console.log('AI交易记录已清除');
     },
   },
 });

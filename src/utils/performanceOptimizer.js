@@ -345,25 +345,24 @@ class PerformanceOptimizer {
   // 清理聊天历史
   cleanupChatHistory() {
     try {
-      // 全局聊天历史清理
-      if (window.chatHistoryManager) {
-        const chatHistory = window.chatHistory;
-        if (chatHistory && chatHistory.value && chatHistory.value.length > 30) {
-          chatHistory.value = window.chatHistoryManager.limitChatMessages(
-            chatHistory.value.slice(-15),
-          );
-          console.log("✅ 已清理聊天历史，保留最近15条消息");
-        }
+      // 检查是否有正在进行的重新生成操作，如果有则跳过清理
+      if (window.isRegenerating) {
+        console.log("⏸️ 检测到正在重新生成，跳过聊天历史清理");
+        return;
       }
 
-      // 清理Pinia store中的数据
+      // 完全跳过全局聊天历史清理，避免修改用户消息
+      console.log("⏸️ 跳过全局聊天历史清理，保护用户消息完整性");
+
+      // 清理Pinia store中的数据（也需要谨慎处理）
       if (window.pinia) {
         const stores = window.pinia._s;
         stores.forEach((store) => {
           if (store.chatHistory && Array.isArray(store.chatHistory)) {
-            if (store.chatHistory.length > 30) {
-              store.chatHistory = store.chatHistory.slice(-15);
-              console.log("✅ 已清理store聊天历史");
+            if (store.chatHistory.length > 50) { // 提高阈值
+              // 只清理数量，不修改消息内容
+              store.chatHistory = store.chatHistory.slice(-30);
+              console.log("✅ 已清理store聊天历史数量");
             }
           }
         });
@@ -376,7 +375,17 @@ class PerformanceOptimizer {
   // 清理localStorage
   cleanupLocalStorage() {
     try {
-      const keysToClean = ["chatHistoryList", "chatHistory", "userMessages"];
+      // 检查是否有正在进行的重新生成操作，如果有则跳过清理
+      if (window.isRegenerating) {
+        console.log("⏸️ 检测到正在重新生成，跳过localStorage清理");
+        return;
+      }
+
+      // 完全跳过聊天历史相关的localStorage清理，避免修改用户消息
+      console.log("⏸️ 跳过聊天历史localStorage清理，保护用户消息完整性");
+
+      // 只清理其他不重要的数据
+      const keysToClean = ["tempData", "cacheData", "debugInfo"];
 
       keysToClean.forEach((key) => {
         const data = localStorage.getItem(key);

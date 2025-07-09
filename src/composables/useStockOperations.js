@@ -749,7 +749,7 @@ export function useStockOperations() {
             stockList: stockList,
             isPersistent: true,
             messageId: message.messageId, // 保持原有ID
-            timestamp: new Date().toISOString(), // 更新时间戳为刷新时间
+            timestamp: message.timestamp, // 保持原始荐股生成时间戳
           };
         }
 
@@ -783,7 +783,7 @@ export function useStockOperations() {
           stockList: [],
           isPersistent: false,
           messageId: message.messageId, // 保持原有ID
-          timestamp: new Date().toISOString(),
+          timestamp: message.timestamp, // 保持原始荐股生成时间戳
         };
       }
 

@@ -257,13 +257,14 @@
                 </div>
             </div>
 
-                    <!-- 股票列表（智能荐股等场景） -->
-        <div v-if="message.hasStockInfo && message.stockList" class="stock-list">
-            <!-- 调试信息 -->
-            <div v-if="false" style="background: #f0f0f0; padding: 10px; margin: 10px 0; font-size: 12px; color: #666;">
-                调试信息: hasStockInfo={{ message.hasStockInfo }}, stockList长度={{ message.stockList?.length }}, 
-                isRecommendation={{ message.isRecommendation }}, isMobileView={{ isMobileView }}
-            </div>
+            <!-- 股票列表（智能荐股等场景） -->
+            <div v-if="message.hasStockInfo && message.stockList" class="stock-list">
+                <!-- 调试信息 -->
+                <div v-if="false"
+                    style="background: #f0f0f0; padding: 10px; margin: 10px 0; font-size: 12px; color: #666;">
+                    调试信息: hasStockInfo={{ message.hasStockInfo }}, stockList长度={{ message.stockList?.length }},
+                    isRecommendation={{ message.isRecommendation }}, isMobileView={{ isMobileView }}
+                </div>
 
 
                 <StockList v-if="!isMobileView" :stocks="message.stockList" v-bind="smartRecommendationConfig"
@@ -281,7 +282,7 @@
                     </template>
                 </StockList>
                 <MobileStockList v-else :stocks="message.stockList" :showRecommendIndex="true" :showDetails="true"
-                    :showReason="true" :showTime="true" :timestamp="liveTimestamp" :toolbarTitle="'智能荐股'"
+                    :showReason="true" :showTime="true" :timestamp="message.timestamp" :toolbarTitle="'智能荐股'"
                     :showToolbar="true" :actions="mobileSmartRecommendationConfig.actions"
                     @stock-click="$emit('stock-click', $event)" @action-click="$emit('stock-action-click', $event)">
                     <template #toolbar-actions>
@@ -500,43 +501,11 @@ const isGeneratingImage = ref(false);
 const shareTouchStartY = ref(null);
 const shareTouchStartTime = ref(null);
 
-// 实时更新时间
-const currentTime = ref(new Date());
-const timeUpdateInterval = ref(null);
+// 注意：实时时间更新相关变量已移除，现在由 StockList/MobileStockList 组件内部管理
 
-// 实时计算相对时间
-const liveRecommendationTime = computed(() => {
-    if (!props.message.timestamp) return "";
-    
-    const messageTime = new Date(props.message.timestamp);
-    const now = currentTime.value;
-    const diffTime = now - messageTime;
-    const diffMinutes = Math.floor(diffTime / (1000 * 60));
-    const diffHours = Math.floor(diffTime / (1000 * 60 * 60));
-    const diffDays = Math.floor(diffTime / (1000 * 60 * 60 * 24));
+// 注意：liveRecommendationTime 已被移除，现在时间格式化在 StockList/MobileStockList 组件内部处理
 
-    if (diffMinutes < 1) {
-        return "刚刚生成";
-    } else if (diffMinutes < 60) {
-        return `${diffMinutes}分钟前`;
-    } else if (diffHours < 24) {
-        return `${diffHours}小时前`;
-    } else if (diffDays < 7) {
-        return `${diffDays}天前`;
-    } else {
-        return messageTime.toLocaleDateString("zh-CN", {
-            month: "short",
-            day: "numeric",
-        });
-    }
-});
-
-// 实时时间戳（用于StockList和MobileStockList组件）
-const liveTimestamp = computed(() => {
-    // 触发时间更新，确保组件重新渲染
-    currentTime.value;
-    return props.message.timestamp;
-});
+// 注意：liveTimestamp 已被移除，现在直接使用 props.message.timestamp
 
 // 获取消息状态类
 const getMessageStatusClass = (content) => {
@@ -732,20 +701,12 @@ onMounted(() => {
         }
     });
 
-    // 启动时间更新定时器（仅针对有股票列表的消息）
-    if (props.message.hasStockInfo && props.message.stockList && props.message.timestamp) {
-        timeUpdateInterval.value = setInterval(() => {
-            currentTime.value = new Date();
-        }, 60000); // 每分钟更新一次
-    }
+    // 注意：时间更新定时器已移除，现在由 StockList/MobileStockList 组件内部管理
 });
 
-// 组件卸载时清理定时器
+// 组件卸载时清理定时器（时间更新定时器已移除）
 onUnmounted(() => {
-    if (timeUpdateInterval.value) {
-        clearInterval(timeUpdateInterval.value);
-        timeUpdateInterval.value = null;
-    }
+    // 注意：时间更新定时器已移除，现在由 StockList/MobileStockList 组件内部管理
 });
 
 // 分享消息为图片 - 生成预览
@@ -1367,7 +1328,7 @@ const smartRecommendationConfig = computed(() => {
         showBasicDetails: true,
         showReason: true,
         showTime: true,
-        timestamp: liveTimestamp.value,
+        timestamp: props.message.timestamp,
         toolbarTitle: '智能荐股',
         showToolbar: true,
         actions: baseActions
@@ -1449,7 +1410,7 @@ const mobileSmartRecommendationConfig = computed(() => {
         showDetails: true,
         showReason: true,
         showTime: true,
-        timestamp: liveTimestamp.value,
+        timestamp: props.message.timestamp,
         toolbarTitle: '智能荐股',
         showToolbar: true,
         actions: baseActions

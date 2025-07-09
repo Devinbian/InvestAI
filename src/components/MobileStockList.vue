@@ -402,11 +402,42 @@ const formatAddedTime = (addedAt) => {
     return date.toLocaleDateString('zh-CN', { month: 'short', day: 'numeric' });
 };
 
-const formatTime = (timestamp) => {
-    if (!timestamp) return '';
-    const date = new Date(timestamp);
-    return date.toLocaleString('zh-CN');
-};
+// 实时时间更新
+const currentTime = ref(new Date());
+const timeUpdateInterval = ref(null);
+
+// 实时时间格式化计算属性
+const formatTime = computed(() => {
+    return (timestamp) => {
+        if (!timestamp) return '';
+
+        // 触发响应式更新 - 只依赖currentTime，不依赖props.timestamp
+        // 因为时间戳是固定的（荐股生成时间），只是随着时间流逝显示不同的相对时间
+        currentTime.value;
+
+        const date = new Date(timestamp);
+        const now = new Date();
+        const diffTime = now - date;
+        const diffMinutes = Math.floor(diffTime / (1000 * 60));
+        const diffHours = Math.floor(diffTime / (1000 * 60 * 60));
+        const diffDays = Math.floor(diffTime / (1000 * 60 * 60 * 24));
+
+        if (diffMinutes < 1) {
+            return '刚刚生成';
+        } else if (diffMinutes < 60) {
+            return `${diffMinutes}分钟前`;
+        } else if (diffHours < 24) {
+            return `${diffHours}小时前`;
+        } else if (diffDays < 7) {
+            return `${diffDays}天前`;
+        } else {
+            return date.toLocaleDateString('zh-CN', {
+                month: 'short',
+                day: 'numeric'
+            });
+        }
+    };
+});
 
 // 格式化推荐指数，确保类型安全
 const formatRecommendIndex = (recommendIndex) => {
@@ -627,6 +658,13 @@ onMounted(() => {
     document.addEventListener('click', handleClickOutside);
     initializeExpandedReasons();
 
+    // 启动时间更新定时器（仅在显示时间时启动）
+    if (props.showTime && props.timestamp) {
+        timeUpdateInterval.value = setInterval(() => {
+            currentTime.value = new Date();
+        }, 60000); // 每分钟更新一次
+    }
+
     // 调试信息
     console.log('MobileStockList mounted:', {
         stocksLength: props.stocks ? props.stocks.length : 0,
@@ -644,6 +682,12 @@ onMounted(() => {
 
 onUnmounted(() => {
     document.removeEventListener('click', handleClickOutside);
+
+    // 清理定时器
+    if (timeUpdateInterval.value) {
+        clearInterval(timeUpdateInterval.value);
+        timeUpdateInterval.value = null;
+    }
 });
 </script>
 

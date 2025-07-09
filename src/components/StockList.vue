@@ -178,7 +178,7 @@
 </template>
 
 <script setup>
-import { computed } from 'vue';
+import { computed, ref, onMounted, onUnmounted } from 'vue';
 import { QuestionFilled } from '@element-plus/icons-vue';
 import { useUserStore } from '../store/user';
 import StockActionButtons from './StockActionButtons.vue';
@@ -298,6 +298,10 @@ const emit = defineEmits([
 // Store
 const userStore = useUserStore();
 
+// 实时时间更新
+const currentTime = ref(new Date());
+const timeUpdateInterval = ref(null);
+
 // 模拟当前价格数据
 const currentPrices = {
     '000001': 12.68,
@@ -381,25 +385,38 @@ const formatAddedTime = (addedAt) => {
     }
 };
 
-const formatTime = (timestamp) => {
-    if (!timestamp) return '';
-    const date = new Date(timestamp);
-    const now = new Date();
-    const diffTime = now - date;
-    const diffMinutes = Math.floor(diffTime / (1000 * 60));
-    const diffHours = Math.floor(diffTime / (1000 * 60 * 60));
-    const diffDays = Math.floor(diffTime / (1000 * 60 * 60 * 24));
+// 实时时间格式化计算属性
+const formatTime = computed(() => {
+    return (timestamp) => {
+        if (!timestamp) return '';
 
-    if (diffMinutes < 60) {
-        return `${diffMinutes}分钟前`;
-    } else if (diffHours < 24) {
-        return `${diffHours}小时前`;
-    } else if (diffDays < 7) {
-        return `${diffDays}天前`;
-    } else {
-        return date.toLocaleDateString('zh-CN');
-    }
-};
+        // 触发响应式更新 - 只依赖currentTime，不依赖props.timestamp
+        // 因为时间戳是固定的（荐股生成时间），只是随着时间流逝显示不同的相对时间
+        currentTime.value;
+
+        const date = new Date(timestamp);
+        const now = new Date();
+        const diffTime = now - date;
+        const diffMinutes = Math.floor(diffTime / (1000 * 60));
+        const diffHours = Math.floor(diffTime / (1000 * 60 * 60));
+        const diffDays = Math.floor(diffTime / (1000 * 60 * 60 * 24));
+
+        if (diffMinutes < 1) {
+            return '刚刚生成';
+        } else if (diffMinutes < 60) {
+            return `${diffMinutes}分钟前`;
+        } else if (diffHours < 24) {
+            return `${diffHours}小时前`;
+        } else if (diffDays < 7) {
+            return `${diffDays}天前`;
+        } else {
+            return date.toLocaleDateString('zh-CN', {
+                month: 'short',
+                day: 'numeric'
+            });
+        }
+    };
+});
 
 const getPositionProfitLoss = (stock) => {
     if (!stock.quantity || !stock.avgPrice) return 0;
@@ -447,6 +464,24 @@ const handleAction = (event) => {
         emit(eventName, stock);
     }
 };
+
+// 生命周期钩子
+onMounted(() => {
+    // 启动时间更新定时器（仅在显示时间时启动）
+    if (props.showTime && props.timestamp) {
+        timeUpdateInterval.value = setInterval(() => {
+            currentTime.value = new Date();
+        }, 60000); // 每分钟更新一次
+    }
+});
+
+onUnmounted(() => {
+    // 清理定时器
+    if (timeUpdateInterval.value) {
+        clearInterval(timeUpdateInterval.value);
+        timeUpdateInterval.value = null;
+    }
+});
 </script>
 
 <style scoped>

@@ -852,7 +852,12 @@ export function useStockOperations() {
   };
 
   // 付费AI委托交易
-  const showQuantAnalysisDialog = (stock) => {
+  const showQuantAnalysisDialog = (stock, isChatMode) => {
+    // 切换到聊天模式
+    if (isChatMode) {
+      isChatMode.value = true;
+    }
+
     // 显示AI委托交易设置对话框
     showAITradingDialog.value = true;
     selectedStockForAITrading.value = stock;

@@ -82,9 +82,9 @@
                                     :class="getPositionProfitLoss(stock) >= 0 ? 'profit' : 'loss'">
                                     <span class="status-label">盈亏：</span>
                                     <span class="status-value">
-                                        {{ getPositionProfitLoss(stock) >= 0 ? '+' : '' }}¥{{
+                                        {{ getPositionProfitLoss(stock) >= 0 ? '+' : '-' }}¥{{
                                             Math.abs(getPositionProfitLoss(stock)).toFixed(2) }}
-                                        ({{ getPositionProfitPercent(stock) >= 0 ? '+' : '' }}{{
+                                        ({{ getPositionProfitPercent(stock) >= 0 ? '+' : '-' }}{{
                                             getPositionProfitPercent(stock).toFixed(2) }}%)
                                     </span>
                                 </div>
@@ -710,11 +710,11 @@ onUnmounted(() => {
 }
 
 .position-status.profit .status-value {
-    color: #16a34a;
+    color: #dc2626;
 }
 
 .position-status.loss .status-value {
-    color: #dc2626;
+    color: #16a34a;
 }
 
 /* 价格变化样式 */

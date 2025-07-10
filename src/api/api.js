@@ -23,6 +23,7 @@ const api = {
   stockPlan:"/stock/trade-plan",//获取股票计划
 
   userPositionApi: "/user/position/detail", // 获取用户某只股票的持仓详情
+  userPositionOverviewApi: "/user/position/overview", //用户持仓概览
   canCancelStockOrderApi: "/stock/can-cancel-order", // 可撤单列表
 
   createConversationApi: "/conversation/create", // 创建会话
@@ -115,3 +116,6 @@ export const stockUnselect = (params) => request.get(api.stockUnselectApi, {
 export const stockSelectStatus = (params) => request.get(api.stockSelectStatusApi, {
   params
 });
+
+// 获取用户持仓概览
+export const getUserPositionOverview = () => request.get(api.userPositionOverviewApi);

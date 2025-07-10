@@ -18,13 +18,13 @@
                     <div class="asset-icon">💰</div>
                     <div class="asset-info">
                         <span class="asset-label">总资产</span>
-                        <span class="asset-value">¥{{ formatNumber(totalAssets) }}</span>
-                        <div class="asset-change" :class="totalProfitLoss >= 0 ? 'positive' : 'negative'">
-                            <svg width="12" height="12" viewBox="0 0 24 24" fill="none">
-                                <path :d="totalProfitLoss >= 0 ? 'M7 14l5-5 5 5' : 'M7 10l5 5 5-5'"
+                        <span class="asset-value">¥{{ userAssetInfo.totalAsset }}</span>
+                        <div class="asset-change" :class="userAssetInfo.totalProfitLoss >= 0 ? 'positive' : 'negative'">
+                            <!-- <svg width="12" height="12" viewBox="0 0 24 24" fill="none">
+                                <path :d="userAssetInfo.totalProfitLoss >= 0 ? 'M7 14l5-5 5 5' : 'M7 10l5 5 5-5'"
                                     stroke="currentColor" stroke-width="2" />
-                            </svg>
-                            {{ totalProfitLoss >= 0 ? '+' : '' }}¥{{ Math.abs(totalProfitLoss).toFixed(2) }}
+                            </svg> -->
+                            {{ userAssetInfo.totalProfitLoss >= 0 ? '+' : '' }}¥{{ Math.abs(userAssetInfo.totalProfitLoss).toFixed(2) }}
                         </div>
                     </div>
                 </div>
@@ -35,7 +35,7 @@
                     <div class="card-icon cash">💵</div>
                     <div class="card-content">
                         <span class="card-label">可用余额</span>
-                        <span class="card-value">¥{{ formatNumber(userStore.balance) }}</span>
+                        <span class="card-value">¥{{ userAssetInfo.availableBalance }}</span>
                     </div>
                 </div>
 
@@ -43,18 +43,18 @@
                     <div class="card-icon stocks">📈</div>
                     <div class="card-content">
                         <span class="card-label">持仓市值</span>
-                        <span class="card-value">¥{{ formatNumber(portfolioValue) }}</span>
+                        <span class="card-value">¥{{ userAssetInfo.positionMarketValue }}</span>
                     </div>
                 </div>
 
                 <div class="summary-card">
-                    <div class="card-icon profit" :class="totalProfitLoss >= 0 ? 'positive' : 'negative'">
-                        {{ totalProfitLoss >= 0 ? '📊' : '📉' }}
+                    <div class="card-icon profit" :class="userAssetInfo.todayProfitLoss >= 0 ? 'positive' : 'negative'">
+                        {{ userAssetInfo.todayProfitLoss >= 0 ? '📊' : '📉' }}
                     </div>
                     <div class="card-content">
                         <span class="card-label">今日盈亏</span>
-                        <span class="card-value" :class="totalProfitLoss >= 0 ? 'positive' : 'negative'">
-                            {{ totalProfitLoss >= 0 ? '+' : '' }}¥{{ Math.abs(totalProfitLoss).toFixed(2) }}
+                        <span class="card-value" :class="userAssetInfo.todayProfitLoss >= 0 ? 'positive' : 'negative'">
+                            {{ userAssetInfo.todayProfitLoss >= 0 ? '+' : '' }}¥{{ Math.abs(userAssetInfo.todayProfitLoss).toFixed(2) }}
                         </span>
                     </div>
                 </div>
@@ -65,7 +65,7 @@
         <div class="portfolio-content">
             <!-- PC端使用StockList（空状态由条件判断处理） -->
             <template v-if="!isMobileView">
-                <div v-if="userStore.portfolio.length === 0" class="empty-state">
+                <div v-if="portfolioStocks.length === 0" class="empty-state">
                     <div class="empty-icon">📊</div>
                     <div class="empty-text">
                         <h4>暂无持仓</h4>
@@ -87,20 +87,31 @@
 
 <script setup>
 import { ref, reactive, computed, onMounted, onUnmounted } from 'vue';
-import { useUserStore } from '../store/user';
 import { ElMessage, ElMessageBox } from 'element-plus';
 import StockList from './StockList.vue';
 import MobileStockList from './MobileStockList.vue';
 import { getStockActionConfig } from '../config/stockActionConfig';
 import { useMobileDetection } from '../composables/useResponsiveBreakpoints';
+import { getUserPositionOverview } from '@/api/api';
 
 // 定义emit
 const emit = defineEmits(['send-to-chat', 'show-buy-dialog', 'show-sell-dialog', 'action-click']);
 
-const userStore = useUserStore();
-
 // 使用统一的移动端检测
 const { isMobileView } = useMobileDetection();
+
+// 用户资金及盈亏
+const userAssetInfo = reactive({
+    totalAsset: '',
+    availableBalance: '',
+    positionMarketValue: '',
+    totalProfitLoss: '',
+    todayProfitLoss: '',
+    positionList: [],
+});
+
+// 持仓列表
+const portfolioStocks = ref([]);
 
 // 持仓操作按钮配置
 const portfolioActions = computed(() => {
@@ -110,102 +121,51 @@ const portfolioActions = computed(() => {
     });
 });
 
-// 模拟当前价格数据
-const currentPrices = {
-    '000001': 12.68,
-    '000858': 52.30,
-    '000002': 24.15,
-    '300750': 485.20,
-    '600519': 1680.50,
-    '000700': 15.80
-};
+// 用户持仓概览
+const getUserPositionOverviewRequest = async () => {
+    let res = await getUserPositionOverview();
+    if (res && res.data && res.data.success) {
+        const data = res.data.data;
+        userAssetInfo.totalAsset = data.totalAsset;
+        userAssetInfo.availableBalance = data.availableBalance;
+        userAssetInfo.positionMarketValue = data.positionMarketValue;
+        userAssetInfo.totalProfitLoss = data.totalProfitLoss;
+        userAssetInfo.todayProfitLoss = data.todayProfitLoss;
+        const positionList = formatPortfolioStocks(data.positionList);
+        portfolioStocks.value = positionList;
+        return true;
+    }else{
+        return false;
+    }
+}
 
-// 计算属性
-const totalAssets = computed(() => userStore.getTotalAssets());
-
-const portfolioValue = computed(() => {
-    return userStore.portfolio.reduce((total, position) => {
-        const currentPrice = getCurrentPrice(position.code);
-        return total + position.quantity * currentPrice;
-    }, 0);
-});
-
-const totalProfitLoss = computed(() => {
-    return userStore.portfolio.reduce((total, position) => {
-        return total + getPositionProfitLoss(position);
-    }, 0);
-});
-
-// 转换持仓数据为StockList组件需要的格式
-const portfolioStocks = computed(() => {
-    return userStore.portfolio.map(position => {
-        const currentPrice = getCurrentPrice(position.code);
-        const profitLoss = getPositionProfitLoss(position);
-        const profitPercent = getPositionProfitPercent(position);
-
-        // 根据股票代码推断行业信息
-        const getIndustryByCode = (code) => {
-            const industryMap = {
-                '000001': '银行业',
-                '000858': '食品饮料',
-                '000002': '房地产',
-                '300750': '医疗器械',
-                '600519': '食品饮料',
-                '000700': '交通运输'
-            };
-            return industryMap[code] || '未分类';
-        };
-
+// 格式化持仓列表
+const formatPortfolioStocks = (stocks) => {
+    stocks = stocks || [];
+    return stocks.map(position => {  
         return {
-            code: position.code,
-            name: position.name,
-            price: currentPrice,
-            change: profitPercent,
-            changeAmount: profitLoss,
-            industry: position.industry || getIndustryByCode(position.code),
+            code: position.stockCode,
+            name: position.stockName,
+            price: position.currentPrice,
+            change: position.change,
+            changePercent: position.changeRatio,
+            industry: position.industry || '未知',
             // 持仓特有信息
-            quantity: position.quantity,
-            avgPrice: position.avgPrice,
-            marketValue: position.quantity * currentPrice,
-            profitLoss: profitLoss,
-            profitPercent: profitPercent
+            quantity: position.totalVolume,
+            avgPrice: position.avgCostPrice,
+            marketValue: position.marketValue,
+            profitLoss: position.profitLoss,
+            profitPercent: position.profitLossRatio
         };
     });
-});
+}
 
-// 方法
-const getCurrentPrice = (stockCode) => {
-    return currentPrices[stockCode] || 0;
-};
-
-const getPositionProfitLoss = (position) => {
-    const currentPrice = getCurrentPrice(position.code);
-    return (currentPrice - position.avgPrice) * position.quantity;
-};
-
-const getPositionProfitPercent = (position) => {
-    const currentPrice = getCurrentPrice(position.code);
-    return ((currentPrice - position.avgPrice) / position.avgPrice) * 100;
-};
-
-const formatTime = (timeString) => {
-    const date = new Date(timeString);
-    return date.toLocaleDateString('zh-CN');
-};
-
-// 这些业务逻辑已经移到Main.vue中统一处理，避免重复代码
-// 但保留必要的数据处理方法供Main.vue调用
-
-const formatNumber = (num) => {
-    if (num >= 10000) {
-        return (num / 10000).toFixed(2) + '万';
-    }
-    return num.toFixed(2);
-};
-
-const refreshData = () => {
-    ElMessage.success('数据已刷新');
-    // 这里可以添加实际的数据刷新逻辑
+// 刷新数据
+const refreshData = async () => {
+  const res = await getUserPositionOverviewRequest();
+  if(res === true){
+     ElMessage.success('数据已刷新');
+  }
 };
 
 // 移动端操作处理 - 统一转发到Main.vue处理
@@ -219,6 +179,7 @@ const handleActionClick = ({ action, stock }) => {
 // 生命周期
 onMounted(() => {
     // 移动端检测由useMobileDetection自动处理
+    getUserPositionOverviewRequest();
 });
 
 onUnmounted(() => {
@@ -442,6 +403,14 @@ onUnmounted(() => {
     height: 10px;
 }
 
+.asset-change.positive {
+    color: #dc2626;
+}
+
+.asset-change.negative {
+    color: #059669;
+}
+
 .summary-grid {
     display: grid;
     grid-template-columns: repeat(3, 1fr);
@@ -545,11 +514,11 @@ onUnmounted(() => {
 }
 
 .card-value.positive {
-    color: #059669;
+    color: #dc2626;
 }
 
 .card-value.negative {
-    color: #dc2626;
+    color: #059669;
 }
 
 .portfolio-content {
@@ -714,12 +683,12 @@ onUnmounted(() => {
 }
 
 .price-change.positive {
-    color: #059669;
+    color: #dc2626;
     background: #d1fae5;
 }
 
 .price-change.negative {
-    color: #dc2626;
+    color: #059669;
     background: #fee2e2;
 }
 
@@ -1158,11 +1127,11 @@ onUnmounted(() => {
     }
 
     .card-value.positive {
-        color: #059669 !important;
+        color: #dc2626 !important;
     }
 
     .card-value.negative {
-        color: #dc2626 !important;
+        color: #059669 !important;
     }
 
     /* 移动端持仓内容优化 */

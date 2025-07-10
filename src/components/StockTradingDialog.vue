@@ -562,11 +562,9 @@ const initStockRealtimeData = async () => {
         props.stock.change = data.change;
         props.stock.changePercent = data.rise + '%';
         // 更新页面数据
-        stockInfo.name = data.name;
-        stockInfo.code = data.code;
         stockInfo.price = data.latestPrice;
         stockInfo.change = data.change;
-        stockInfo.changePercent = data.rise + '%';
+        stockInfo.changePercent = data.rise || data.rise === 0 ? (data.rise + '%') : '';
         stockInfo.openPrice = data.openPrice;
         stockInfo.closePrice = data.closePrice;
         stockInfo.volume = data.volume;
@@ -868,6 +866,8 @@ watch(() => props.tradeType, (newType) => {
 // 监听对话框显示状态
 watch(visible, (newVisible) => {
     if (newVisible && props.stock) {
+        stockInfo.code = props.stock.code;
+        stockInfo.name = props.stock.name;
         // 确保委托类型有默认值
         if (!tradingForm.orderType) {
             tradingForm.orderType = 'limit';

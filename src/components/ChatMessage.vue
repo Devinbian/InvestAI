@@ -199,7 +199,7 @@
                             <div class="asset-change"
                                 :class="[message.assetData.totalProfitPercent >= 0 ? 'profit' : 'loss']">
                                 <span class="change-icon">{{ message.assetData.totalProfitPercent >= 0 ? '📈' : '📉'
-                                }}</span>
+                                    }}</span>
                                 <span class="change-label">今日盈亏：</span>
                                 <span class="change-text">
                                     {{ message.assetData.totalProfitPercent >= 0 ? '+' : '' }}¥{{
@@ -1246,6 +1246,14 @@ const handleShareMessage = async () => {
             // 绘制股票列表
             if (props.message.stockList && props.message.stockList.length > 0) {
                 const beforeY = currentY;
+                console.log('📈 开始绘制推荐股票区域:', {
+                    stockCount: props.message.stockList.length,
+                    stocks: props.message.stockList.map(s => ({
+                        name: s.name,
+                        code: s.code,
+                        reason: s.reason ? s.reason.substring(0, 50) + '...' : '无推荐理由'
+                    }))
+                });
                 const sectionHeight = drawStockListSection(
                     ctx,
                     props.message.stockList,
@@ -1256,7 +1264,7 @@ const handleShareMessage = async () => {
                     'recommend'
                 );
                 currentY += sectionHeight + 20;
-                console.log('📈 推荐股票区域绘制:', {
+                console.log('📈 推荐股票区域绘制完成:', {
                     startY: beforeY,
                     sectionHeight,
                     endY: currentY,
@@ -1506,7 +1514,7 @@ const calculateStockLayoutHeight = (messageContent, message) => {
     }
 
     // 股票卡片高度计算
-    const stockCardHeight = 140; // 每个股票卡片的高度（已更新）
+    const stockCardHeight = 180; // 每个股票卡片的高度（已更新以容纳推荐理由）
     const stockCardSpacing = 12; // 卡片间距
     const sectionTitleHeight = 30; // 区域标题高度
     const sectionBottomSpacing = 20; // 区域底部间距
@@ -1540,7 +1548,7 @@ const calculateStockLayoutHeight = (messageContent, message) => {
 
 // 绘制股票卡片
 const drawStockCard = (ctx, stock, x, y, width, type = 'recommend') => {
-    const cardHeight = 140; // 增加卡片高度以容纳更多信息
+    const cardHeight = 180; // 增加卡片高度以容纳推荐理由
     const padding = 16;
     const borderRadius = 8;
 
@@ -1636,6 +1644,49 @@ const drawStockCard = (ctx, stock, x, y, width, type = 'recommend') => {
             ctx.fillText(leftInfo, x + padding, fourthRowY);
         }
 
+        // 第五行：推荐理由（新增）
+        if (stock.reason) {
+            console.log('🎨 绘制推荐理由:', stock.reason);
+            const reasonY = fourthRowY + 20;
+            ctx.fillStyle = '#374151';
+            ctx.font = '12px -apple-system, BlinkMacSystemFont, "PingFang SC", sans-serif';
+            ctx.textAlign = 'left';
+
+            // 推荐理由可能比较长，需要换行处理
+            const maxReasonWidth = width - padding * 2;
+            const reasonText = `💡 ${stock.reason}`;
+
+            // 简单的文本换行处理
+            const words = reasonText.split('');
+            let currentLine = '';
+            let currentY = reasonY;
+
+            for (let i = 0; i < words.length; i++) {
+                const testLine = currentLine + words[i];
+                const metrics = ctx.measureText(testLine);
+
+                if (metrics.width > maxReasonWidth && currentLine.length > 0) {
+                    ctx.fillText(currentLine, x + padding, currentY);
+                    currentLine = words[i];
+                    currentY += 16; // 行高
+
+                    // 最多显示两行推荐理由
+                    if (currentY > reasonY + 16) {
+                        currentLine = currentLine.substring(0, Math.max(0, currentLine.length - 3)) + '...';
+                        break;
+                    }
+                } else {
+                    currentLine = testLine;
+                }
+            }
+
+            if (currentLine) {
+                ctx.fillText(currentLine, x + padding, currentY);
+            }
+        } else {
+            console.log('⚠️ 股票推荐理由为空:', stock.name, stock.code);
+        }
+
     } else if (type === 'portfolio' && stock.quantity) {
         // 持仓信息
         ctx.fillStyle = '#6b7280';
@@ -1710,7 +1761,7 @@ const drawStockListSection = (ctx, stocks, title, startY, bubbleX, bubbleWidth, 
     stocks.forEach((stock, index) => {
         const cardWidth = bubbleWidth - padding * 2;
         drawStockCard(ctx, stock, bubbleX + padding, currentY, cardWidth, type);
-        currentY += 140 + cardSpacing; // 更新为新的卡片高度
+        currentY += 180 + cardSpacing; // 更新为新的卡片高度
     });
 
     // 移除最后一个卡片的多余间距，添加区域底部间距

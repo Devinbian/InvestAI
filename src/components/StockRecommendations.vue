@@ -20,7 +20,7 @@
         <div class="recommendations-list">
             <!-- PC端使用StockList -->
             <StockList v-if="!isMobileView" :stocks="formattedRecommendations" :actions="recommendationActions"
-                :show-recommend-index="true" :show-recommend-tooltip="true" :show-basic-details="true" 
+                :show-recommend-index="true" :show-recommend-tooltip="true" :show-basic-details="true"
                 :show-reason="true" :clickable="false" :is-mobile="isMobileView" @action-click="handleActionClick" />
 
             <!-- 移动端使用MobileStockList -->
@@ -34,7 +34,7 @@
 </template>
 
 <script setup>
-import {getRecommendStocks} from '@/api/api';
+import { getRecommendStocks } from '@/api/api';
 
 import { ref, computed, onMounted, onUnmounted } from 'vue';
 import { ElMessage, ElMessageBox } from 'element-plus';
@@ -130,7 +130,7 @@ const loadRecommendStocks = () => {
         // API调用失败
         console.error('获取推荐股票API调用失败:', error);
         recommendations.value = [];
-        
+
         // 根据错误类型提供不同的提示
         if (error.message && error.message.includes("500")) {
             ElMessage.error("服务器繁忙，请稍后再试");
@@ -140,7 +140,7 @@ const loadRecommendStocks = () => {
             ElMessage.error("获取推荐股票失败，请稍后重试");
         }
     });
-}
+};
 
 onUnmounted(() => {
     // 清理工作由useMobileDetection自动处理

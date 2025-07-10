@@ -199,7 +199,7 @@
                             <div class="asset-change"
                                 :class="[message.assetData.totalProfitPercent >= 0 ? 'profit' : 'loss']">
                                 <span class="change-icon">{{ message.assetData.totalProfitPercent >= 0 ? '📈' : '📉'
-                                    }}</span>
+                                }}</span>
                                 <span class="change-label">今日盈亏：</span>
                                 <span class="change-text">
                                     {{ message.assetData.totalProfitPercent >= 0 ? '+' : '' }}¥{{
@@ -768,8 +768,86 @@ const handleCopyMessage = async () => {
     try {
         isCopying.value = true;
 
-        // 获取纯文本内容（去除markdown格式）
-        const textContent = props.message.content || '';
+        // 获取完整的消息内容，包括股票列表
+        let textContent = props.message.content || '';
+
+        // 如果消息包含股票列表，格式化并添加到文本中
+        if (props.message.stockList && props.message.stockList.length > 0) {
+            textContent += '\n\n📈 推荐股票列表：\n';
+            props.message.stockList.forEach((stock, index) => {
+                textContent += `\n${index + 1}. ${stock.name} (${stock.code})\n`;
+                textContent += `   💰 当前价格：¥${stock.price}\n`;
+                if (stock.targetPrice) {
+                    textContent += `   🎯 目标价格：¥${stock.targetPrice}\n`;
+                }
+                if (stock.expectedReturn) {
+                    textContent += `   📊 预期收益：${stock.expectedReturn}\n`;
+                }
+                if (stock.recommendIndex) {
+                    textContent += `   ⭐ 推荐指数：${stock.recommendIndex}/5.0\n`;
+                }
+                if (stock.recommendLevel) {
+                    textContent += `   🏷️ 推荐等级：${stock.recommendLevel}\n`;
+                }
+                if (stock.industry) {
+                    textContent += `   🏭 所属行业：${stock.industry}\n`;
+                }
+                if (stock.riskLevel) {
+                    textContent += `   ⚠️ 风险等级：${stock.riskLevel}\n`;
+                }
+                if (stock.reason) {
+                    textContent += `   💡 推荐理由：${stock.reason}\n`;
+                }
+                if (stock.changePercent) {
+                    textContent += `   📈 涨跌幅：${stock.changePercent}\n`;
+                }
+            });
+        }
+
+        // 如果消息包含自选股列表，格式化并添加到文本中
+        if (props.message.watchlistData && props.message.watchlistData.length > 0) {
+            textContent += '\n\n⭐ 我的自选股：\n';
+            props.message.watchlistData.forEach((stock, index) => {
+                textContent += `\n${index + 1}. ${stock.name} (${stock.code})\n`;
+                textContent += `   💰 当前价格：¥${stock.price}\n`;
+                if (stock.changePercent) {
+                    textContent += `   📈 涨跌幅：${stock.changePercent}\n`;
+                }
+                if (stock.industry) {
+                    textContent += `   🏭 所属行业：${stock.industry}\n`;
+                }
+                if (stock.addedAt) {
+                    textContent += `   📅 添加时间：${new Date(stock.addedAt).toLocaleString('zh-CN')}\n`;
+                }
+            });
+        }
+
+        // 如果消息包含持仓数据，格式化并添加到文本中
+        if (props.message.portfolioData && props.message.portfolioData.length > 0) {
+            textContent += '\n\n📊 我的持仓：\n';
+            props.message.portfolioData.forEach((stock, index) => {
+                textContent += `\n${index + 1}. ${stock.name} (${stock.code})\n`;
+                textContent += `   💰 当前价格：¥${stock.price}\n`;
+                if (stock.quantity) {
+                    textContent += `   📦 持仓数量：${stock.quantity.toLocaleString()}股\n`;
+                }
+                if (stock.avgPrice) {
+                    textContent += `   💵 成本价格：¥${stock.avgPrice.toFixed(2)}\n`;
+                }
+                if (stock.marketValue) {
+                    textContent += `   💎 市值：¥${stock.marketValue.toLocaleString()}\n`;
+                }
+                if (stock.changePercent) {
+                    textContent += `   📈 涨跌幅：${stock.changePercent}\n`;
+                }
+                // 计算盈亏
+                if (stock.quantity && stock.price && stock.avgPrice) {
+                    const profitLoss = (stock.price - stock.avgPrice) * stock.quantity;
+                    const profitPercent = ((stock.price - stock.avgPrice) / stock.avgPrice * 100);
+                    textContent += `   💹 盈亏：${profitLoss >= 0 ? '+' : ''}¥${profitLoss.toFixed(2)} (${profitPercent >= 0 ? '+' : ''}${profitPercent.toFixed(2)}%)\n`;
+                }
+            });
+        }
 
         // 使用现代的 Clipboard API
         if (navigator.clipboard && window.isSecureContext) {
@@ -999,36 +1077,61 @@ const handleShareMessage = async () => {
         const aiReplyY = userBubbleY + userBubbleHeight + 20; // 调整间距，基于用户气泡的实际高度
         const aiReplyBubbleX = 40; // 从左边距开始
         const aiReplyBubbleWidth = width - 80; // 铺满屏幕宽度，左右各留40px边距
-        const messageContent = props.message.content || '暂无内容';
+
+        // 获取基本消息内容
+        let messageContent = props.message.content || '暂无内容';
+
+        // 检查是否包含股票数据，如果有则使用特殊的可视化布局
+        const hasStockData = (props.message.stockList && props.message.stockList.length > 0) ||
+            (props.message.watchlistData && props.message.watchlistData.length > 0) ||
+            (props.message.portfolioData && props.message.portfolioData.length > 0);
 
         // 设置字体用于测量 - 与聊天界面保持一致
         ctx.font = '16px -apple-system, BlinkMacSystemFont, "PingFang SC", "Microsoft YaHei", sans-serif';
 
         // 计算AI回复内容的换行和高度 - 确保有足够的边距
         const textMaxWidth = aiReplyBubbleWidth - 40; // 减去左右padding (20px * 2)
-        console.log('🔍 文本换行调试信息:', {
-            aiReplyBubbleWidth,
-            textMaxWidth,
-            messageContentLength: messageContent.length,
-            messageContentPreview: messageContent.substring(0, 100) + '...',
-            hasBoldMarkers: messageContent.includes('**'),
-            boldMatches: messageContent.match(/\*\*(.*?)\*\*/g)
-        });
+        let aiReplyBubbleHeight;
+        let lines = [];
 
-        const lines = wrapTextWithFormat(ctx, messageContent, textMaxWidth);
-        console.log('🔍 换行结果:', {
-            linesCount: lines.length,
-            lines: lines.slice(0, 3).map(line => ({
-                text: line.text,
-                partsCount: line.parts.length,
-                hasBold: line.parts.some(part => part.bold)
-            })), // 只显示前3行
-            maxLineLength: Math.max(...lines.map(line => line.text.length))
-        });
-
+        // 定义通用的布局参数
         const lineHeight = 24; // 与聊天界面的line-height: 1.5保持一致
         const padding = 20; // 与聊天界面的padding保持一致
-        const aiReplyBubbleHeight = Math.max(50, lines.length * lineHeight + padding * 2);
+
+        if (hasStockData) {
+            // 如果有股票数据，计算特殊布局的高度
+            aiReplyBubbleHeight = calculateStockLayoutHeight(messageContent, props.message);
+            console.log('🔍 股票布局高度计算:', {
+                messageContent: messageContent.substring(0, 50) + '...',
+                stockListCount: props.message.stockList?.length || 0,
+                watchlistCount: props.message.watchlistData?.length || 0,
+                portfolioCount: props.message.portfolioData?.length || 0,
+                calculatedHeight: aiReplyBubbleHeight
+            });
+        } else {
+            // 普通文本布局
+            console.log('🔍 文本换行调试信息:', {
+                aiReplyBubbleWidth,
+                textMaxWidth,
+                messageContentLength: messageContent.length,
+                messageContentPreview: messageContent.substring(0, 100) + '...',
+                hasBoldMarkers: messageContent.includes('**'),
+                boldMatches: messageContent.match(/\*\*(.*?)\*\*/g)
+            });
+
+            lines = wrapTextWithFormat(ctx, messageContent, textMaxWidth);
+            console.log('🔍 换行结果:', {
+                linesCount: lines.length,
+                lines: lines.slice(0, 3).map(line => ({
+                    text: line.text,
+                    partsCount: line.parts.length,
+                    hasBold: line.parts.some(part => part.bold)
+                })), // 只显示前3行
+                maxLineLength: Math.max(...lines.map(line => line.text.length))
+            });
+
+            aiReplyBubbleHeight = Math.max(50, lines.length * lineHeight + padding * 2);
+        }
 
         // 计算实际需要的总高度
         const headerHeight = 120; // 标题区域高度
@@ -1124,15 +1227,75 @@ const handleShareMessage = async () => {
         ctx.closePath();
         ctx.fill();
 
-        // AI回复文字 - 支持格式化文本渲染
+        // AI回复文字 - 支持格式化文本渲染和股票卡片布局
         ctx.fillStyle = '#18181b'; // 与聊天界面的文字颜色保持一致
         ctx.textAlign = 'left';
 
         let currentY = aiReplyY + padding + 16; // 16px是字体的基线偏移
-        lines.forEach((line) => {
-            renderFormattedLine(ctx, line, aiReplyBubbleX + padding, currentY);
-            currentY += lineHeight;
-        });
+
+        if (hasStockData) {
+            // 绘制基本文本内容
+            const basicLines = wrapTextWithFormat(ctx, messageContent, textMaxWidth);
+            basicLines.forEach((line) => {
+                renderFormattedLine(ctx, line, aiReplyBubbleX + padding, currentY);
+                currentY += 24; // lineHeight
+            });
+
+            currentY += 20; // 添加间距
+
+            // 绘制股票列表
+            if (props.message.stockList && props.message.stockList.length > 0) {
+                const beforeY = currentY;
+                const sectionHeight = drawStockListSection(
+                    ctx,
+                    props.message.stockList,
+                    '📈 推荐股票',
+                    currentY,
+                    aiReplyBubbleX,
+                    aiReplyBubbleWidth,
+                    'recommend'
+                );
+                currentY += sectionHeight + 20;
+                console.log('📈 推荐股票区域绘制:', {
+                    startY: beforeY,
+                    sectionHeight,
+                    endY: currentY,
+                    stockCount: props.message.stockList.length
+                });
+            }
+
+            if (props.message.watchlistData && props.message.watchlistData.length > 0) {
+                const sectionHeight = drawStockListSection(
+                    ctx,
+                    props.message.watchlistData,
+                    '⭐ 我的自选股',
+                    currentY,
+                    aiReplyBubbleX,
+                    aiReplyBubbleWidth,
+                    'watchlist'
+                );
+                currentY += sectionHeight + 20;
+            }
+
+            if (props.message.portfolioData && props.message.portfolioData.length > 0) {
+                const sectionHeight = drawStockListSection(
+                    ctx,
+                    props.message.portfolioData,
+                    '📊 我的持仓',
+                    currentY,
+                    aiReplyBubbleX,
+                    aiReplyBubbleWidth,
+                    'portfolio'
+                );
+                currentY += sectionHeight;
+            }
+        } else {
+            // 普通文本布局
+            lines.forEach((line) => {
+                renderFormattedLine(ctx, line, aiReplyBubbleX + padding, currentY);
+                currentY += 24; // lineHeight
+            });
+        }
 
         // 底部区域 - 根据实际高度调整位置
         const footerY = height - 150;
@@ -1324,6 +1487,236 @@ const parseTextWithFormat = (text) => {
     }
 
     return parts;
+};
+
+// 计算股票布局的高度
+const calculateStockLayoutHeight = (messageContent, message) => {
+    const padding = 20;
+    const lineHeight = 24;
+    let totalHeight = padding * 2; // 上下padding
+
+    // 基本文本内容高度 - 更准确的计算
+    if (messageContent && messageContent.trim()) {
+        const textWidth = 300; // 估算文本宽度
+        const averageCharWidth = 14; // 平均字符宽度
+        const charsPerLine = Math.floor(textWidth / averageCharWidth);
+        const basicTextLines = Math.ceil(messageContent.length / charsPerLine);
+        totalHeight += basicTextLines * lineHeight;
+        totalHeight += 20; // 文本与股票区域之间的间距
+    }
+
+    // 股票卡片高度计算
+    const stockCardHeight = 140; // 每个股票卡片的高度（已更新）
+    const stockCardSpacing = 12; // 卡片间距
+    const sectionTitleHeight = 30; // 区域标题高度
+    const sectionBottomSpacing = 20; // 区域底部间距
+
+    if (message.stockList && message.stockList.length > 0) {
+        totalHeight += sectionTitleHeight; // "推荐股票"标题
+        totalHeight += message.stockList.length * stockCardHeight;
+        totalHeight += (message.stockList.length - 1) * stockCardSpacing; // 卡片间距
+        totalHeight += sectionBottomSpacing; // 区域底部间距
+    }
+
+    if (message.watchlistData && message.watchlistData.length > 0) {
+        totalHeight += sectionTitleHeight; // "自选股"标题
+        totalHeight += message.watchlistData.length * stockCardHeight;
+        totalHeight += (message.watchlistData.length - 1) * stockCardSpacing; // 卡片间距
+        totalHeight += sectionBottomSpacing; // 区域底部间距
+    }
+
+    if (message.portfolioData && message.portfolioData.length > 0) {
+        totalHeight += sectionTitleHeight; // "持仓"标题
+        totalHeight += message.portfolioData.length * stockCardHeight;
+        totalHeight += (message.portfolioData.length - 1) * stockCardSpacing; // 卡片间距
+        totalHeight += sectionBottomSpacing; // 区域底部间距
+    }
+
+    // 添加额外的底部边距，确保内容不会超出容器
+    totalHeight += 30;
+
+    return Math.max(200, totalHeight); // 最小高度200px
+};
+
+// 绘制股票卡片
+const drawStockCard = (ctx, stock, x, y, width, type = 'recommend') => {
+    const cardHeight = 140; // 增加卡片高度以容纳更多信息
+    const padding = 16;
+    const borderRadius = 8;
+
+    // 绘制卡片背景
+    ctx.fillStyle = '#ffffff';
+    ctx.beginPath();
+    ctx.roundRect(x, y, width, cardHeight, borderRadius);
+    ctx.fill();
+
+    // 绘制卡片边框
+    ctx.strokeStyle = '#e5e7eb';
+    ctx.lineWidth = 1;
+    ctx.stroke();
+
+    // 第一行：股票名称和价格
+    ctx.fillStyle = '#1f2937';
+    ctx.font = 'bold 18px -apple-system, BlinkMacSystemFont, "PingFang SC", sans-serif';
+    ctx.textAlign = 'left';
+    ctx.fillText(stock.name, x + padding, y + padding + 20);
+
+    ctx.fillStyle = '#1f2937';
+    ctx.font = 'bold 20px -apple-system, BlinkMacSystemFont, "PingFang SC", sans-serif';
+    ctx.textAlign = 'right';
+    ctx.fillText(`¥${stock.price}`, x + width - padding, y + padding + 20);
+
+    // 第二行：股票代码和涨跌幅
+    ctx.fillStyle = '#6b7280';
+    ctx.font = '14px -apple-system, BlinkMacSystemFont, "PingFang SC", sans-serif';
+    ctx.textAlign = 'left';
+    ctx.fillText(`(${stock.code})`, x + padding, y + padding + 40);
+
+    if (stock.changePercent) {
+        const isPositive = !stock.changePercent.includes('-');
+        ctx.fillStyle = isPositive ? '#10b981' : '#ef4444';
+        ctx.font = 'bold 14px -apple-system, BlinkMacSystemFont, "PingFang SC", sans-serif';
+        ctx.textAlign = 'right';
+        ctx.fillText(stock.changePercent, x + width - padding, y + padding + 40);
+    }
+
+    // 第三行：根据类型显示不同信息
+    const thirdRowY = y + padding + 65;
+
+    if (type === 'recommend') {
+        // 绘制推荐指数星级
+        if (stock.recommendIndex) {
+            const starSize = 14;
+            const starSpacing = 2;
+
+            ctx.fillStyle = '#fbbf24';
+            ctx.font = `${starSize}px serif`;
+            ctx.textAlign = 'left';
+
+            for (let i = 0; i < 5; i++) {
+                const starX = x + padding + i * (starSize + starSpacing);
+                const filled = i < Math.floor(stock.recommendIndex);
+                ctx.fillStyle = filled ? '#fbbf24' : '#e5e7eb';
+                ctx.fillText('★', starX, thirdRowY);
+            }
+
+            // 绘制推荐指数数值
+            ctx.fillStyle = '#6b7280';
+            ctx.font = '12px -apple-system, BlinkMacSystemFont, "PingFang SC", sans-serif';
+            ctx.fillText(`${stock.recommendIndex}/5.0`, x + padding + 85, thirdRowY - 3);
+        }
+
+        // 绘制推荐等级
+        if (stock.recommendLevel) {
+            const levelColor = stock.recommendLevel === '强烈推荐' ? '#10b981' :
+                stock.recommendLevel === '推荐' ? '#3b82f6' :
+                    stock.recommendLevel === '中性' ? '#f59e0b' : '#ef4444';
+
+            ctx.fillStyle = levelColor;
+            ctx.font = 'bold 12px -apple-system, BlinkMacSystemFont, "PingFang SC", sans-serif';
+            ctx.textAlign = 'right';
+            ctx.fillText(stock.recommendLevel, x + width - padding, thirdRowY - 3);
+        }
+
+        // 第四行：目标价格和预期收益
+        const fourthRowY = thirdRowY + 20;
+        ctx.fillStyle = '#6b7280';
+        ctx.font = '12px -apple-system, BlinkMacSystemFont, "PingFang SC", sans-serif';
+        ctx.textAlign = 'left';
+
+        let leftInfo = '';
+        if (stock.targetPrice) {
+            leftInfo += `目标价: ¥${stock.targetPrice}`;
+        }
+        if (stock.expectedReturn) {
+            if (leftInfo) leftInfo += '  ';
+            leftInfo += `预期收益: ${stock.expectedReturn}`;
+        }
+        if (leftInfo) {
+            ctx.fillText(leftInfo, x + padding, fourthRowY);
+        }
+
+    } else if (type === 'portfolio' && stock.quantity) {
+        // 持仓信息
+        ctx.fillStyle = '#6b7280';
+        ctx.font = '12px -apple-system, BlinkMacSystemFont, "PingFang SC", sans-serif';
+        ctx.textAlign = 'left';
+        ctx.fillText(`持仓: ${stock.quantity.toLocaleString()}股`, x + padding, thirdRowY);
+
+        if (stock.avgPrice) {
+            ctx.fillText(`成本: ¥${stock.avgPrice.toFixed(2)}`, x + padding, thirdRowY + 15);
+        }
+
+        // 计算并绘制盈亏
+        if (stock.avgPrice && stock.price) {
+            const profitLoss = (stock.price - stock.avgPrice) * stock.quantity;
+            const profitPercent = ((stock.price - stock.avgPrice) / stock.avgPrice * 100);
+            const isProfit = profitLoss >= 0;
+
+            ctx.fillStyle = isProfit ? '#10b981' : '#ef4444';
+            ctx.textAlign = 'right';
+            ctx.fillText(
+                `${isProfit ? '+' : ''}¥${profitLoss.toFixed(2)} (${isProfit ? '+' : ''}${profitPercent.toFixed(2)}%)`,
+                x + width - padding,
+                thirdRowY
+            );
+        }
+
+    } else if (type === 'watchlist' && stock.addedAt) {
+        // 自选股信息
+        ctx.fillStyle = '#6b7280';
+        ctx.font = '12px -apple-system, BlinkMacSystemFont, "PingFang SC", sans-serif';
+        ctx.textAlign = 'left';
+
+        const addedDate = new Date(stock.addedAt).toLocaleDateString('zh-CN');
+        ctx.fillText(`关注时间: ${addedDate}`, x + padding, thirdRowY);
+    }
+
+    // 底部：行业信息
+    if (stock.industry) {
+        ctx.fillStyle = '#6b7280';
+        ctx.font = '12px -apple-system, BlinkMacSystemFont, "PingFang SC", sans-serif';
+        ctx.textAlign = 'left';
+        ctx.fillText(`行业: ${stock.industry}`, x + padding, y + cardHeight - padding - 8);
+    }
+
+    // 绘制风险等级（如果有）
+    if (stock.riskLevel) {
+        ctx.fillStyle = '#6b7280';
+        ctx.font = '12px -apple-system, BlinkMacSystemFont, "PingFang SC", sans-serif';
+        ctx.textAlign = 'right';
+        ctx.fillText(`风险: ${stock.riskLevel}`, x + width - padding, y + cardHeight - padding - 8);
+    }
+
+    return cardHeight;
+};
+
+// 绘制股票列表区域
+const drawStockListSection = (ctx, stocks, title, startY, bubbleX, bubbleWidth, type = 'recommend') => {
+    let currentY = startY;
+    const padding = 20;
+    const cardSpacing = 12;
+    const sectionTitleHeight = 30;
+    const sectionBottomSpacing = 20; // 区域底部间距
+
+    // 绘制区域标题
+    ctx.fillStyle = '#374151';
+    ctx.font = 'bold 16px -apple-system, BlinkMacSystemFont, "PingFang SC", sans-serif';
+    ctx.textAlign = 'left';
+    ctx.fillText(title, bubbleX + padding, currentY + 20);
+    currentY += sectionTitleHeight;
+
+    // 绘制股票卡片
+    stocks.forEach((stock, index) => {
+        const cardWidth = bubbleWidth - padding * 2;
+        drawStockCard(ctx, stock, bubbleX + padding, currentY, cardWidth, type);
+        currentY += 140 + cardSpacing; // 更新为新的卡片高度
+    });
+
+    // 移除最后一个卡片的多余间距，添加区域底部间距
+    currentY = currentY - cardSpacing + sectionBottomSpacing;
+
+    return currentY - startY;
 };
 
 // 文本换行处理函数 - 支持格式化文本

@@ -199,7 +199,7 @@
                             <div class="asset-change"
                                 :class="[message.assetData.totalProfitPercent >= 0 ? 'profit' : 'loss']">
                                 <span class="change-icon">{{ message.assetData.totalProfitPercent >= 0 ? '📈' : '📉'
-                                }}</span>
+                                    }}</span>
                                 <span class="change-label">今日盈亏：</span>
                                 <span class="change-text">
                                     {{ message.assetData.totalProfitPercent >= 0 ? '+' : '' }}¥{{
@@ -361,8 +361,9 @@
                     </svg>
                     <span class="action-text">{{ copyButtonText }}</span>
                 </el-button>
-                <el-button size="small" text @click="handleRegenerateMessage" class="action-btn regenerate-btn"
-                    title="重新生成">
+                <!-- 只有最后一条AI消息才显示重新生成按钮 -->
+                <el-button v-if="isLastAIMessage" size="small" text @click="handleRegenerateMessage"
+                    class="action-btn regenerate-btn" title="重新生成">
                     <svg width="14" height="14" viewBox="0 0 24 24" fill="none">
                         <path
                             d="M23 4v6h-6M1 20v-6h6M20.49 9A9 9 0 0 0 5.64 5.64L1 10m22 4l-4.64 4.36A9 9 0 0 1 3.51 15"
@@ -1443,6 +1444,51 @@ const renderFormattedLine = (ctx, line, x, y) => {
 };
 
 // 计算属性
+// 判断当前消息是否为最后一条AI消息
+const isLastAIMessage = computed(() => {
+    // 如果当前消息不是AI消息，直接返回false
+    if (props.message.role !== 'assistant') {
+        return false;
+    }
+
+    // 获取聊天历史中的所有AI消息
+    const aiMessages = props.chatHistory.filter(msg => msg.role === 'assistant');
+
+    // 如果没有AI消息，返回false
+    if (aiMessages.length === 0) {
+        return false;
+    }
+
+    // 找到最后一条AI消息
+    const lastAIMessage = aiMessages[aiMessages.length - 1];
+
+    // 通过消息ID或时间戳比较判断是否为最后一条AI消息
+    let isLast = false;
+    if (props.message.id && lastAIMessage.id) {
+        isLast = props.message.id === lastAIMessage.id;
+    } else if (props.message.timestamp && lastAIMessage.timestamp) {
+        isLast = props.message.timestamp === lastAIMessage.timestamp;
+    } else {
+        // 如果没有ID和时间戳，通过内容比较（不推荐，但作为降级方案）
+        isLast = props.message.content === lastAIMessage.content;
+    }
+
+    // 调试信息
+    if (process.env.NODE_ENV === 'development') {
+        console.log('🔍 ChatMessage - 判断是否为最后一条AI消息:', {
+            messageId: props.message.id,
+            messageTimestamp: props.message.timestamp,
+            messageContent: props.message.content?.substring(0, 50) + '...',
+            lastAIMessageId: lastAIMessage.id,
+            lastAIMessageTimestamp: lastAIMessage.timestamp,
+            totalAIMessages: aiMessages.length,
+            isLast: isLast
+        });
+    }
+
+    return isLast;
+});
+
 const smartRecommendationConfig = computed(() => {
     if (!props.message) return {};
 

@@ -12,7 +12,9 @@ export const useUserStore = defineStore("user", {
       localStorage.getItem("smartPointsBalance") || "0",
     ), // 智点账户余额
 
-    availableBalance: parseFloat(localStorage.getItem("availableBalance") || "0"), // 可用余额（用于计算可用资金）
+    availableBalance: parseFloat(
+      localStorage.getItem("availableBalance") || "0",
+    ), // 可用余额（用于计算可用资金）
 
     // 记录中心数据
     quantAnalysisReports: JSON.parse(
@@ -301,13 +303,19 @@ export const useUserStore = defineStore("user", {
     // 设置可用余额
     setAvailableBalance(amount) {
       this.availableBalance = parseFloat(amount);
-      localStorage.setItem("availableBalance", this.availableBalance.toString());
+      localStorage.setItem(
+        "availableBalance",
+        this.availableBalance.toString(),
+      );
     },
 
     //设置点数
     setSmartPointsBalance(amount) {
       this.smartPointsBalance = amount;
-      localStorage.setItem("smartPointsBalance", this.smartPointsBalance.toString());
+      localStorage.setItem(
+        "smartPointsBalance",
+        this.smartPointsBalance.toString(),
+      );
     },
 
     // 智点账户管理
@@ -370,7 +378,7 @@ export const useUserStore = defineStore("user", {
       // 计算有效期（默认90天）
       const expiryDate = new Date();
       expiryDate.setDate(expiryDate.getDate() + 90);
-      
+
       const reportData = {
         id: `REPORT_${Date.now()}`,
         ...report,
@@ -466,12 +474,12 @@ export const useUserStore = defineStore("user", {
         defaultValidityDate.setDate(defaultValidityDate.getDate() + 1);
         validityDate = defaultValidityDate.toISOString();
       }
-      
+
       // 生成唯一ID，避免重复
       const timestamp = Date.now();
       const randomSuffix = Math.floor(Math.random() * 1000);
       const uniqueId = `TRADE_${timestamp}_${randomSuffix}`;
-      
+
       const tradeData = {
         id: uniqueId,
         ...trade,
@@ -493,18 +501,18 @@ export const useUserStore = defineStore("user", {
       const index = this.aiTradingRecords.findIndex(
         (trade) => trade.id === tradeId,
       );
-      
+
       if (index > -1) {
         // 直接修改数组中的对象，确保响应式更新
         Object.assign(this.aiTradingRecords[index], updates);
-        
+
         localStorage.setItem(
           "aiTradingRecords",
           JSON.stringify(this.aiTradingRecords),
         );
         return true;
       } else {
-        console.error('未找到要更新的记录，ID:', tradeId);
+        console.error("未找到要更新的记录，ID:", tradeId);
         return false;
       }
     },
@@ -514,7 +522,7 @@ export const useUserStore = defineStore("user", {
         status: "cancelled",
         cancelledAt: new Date().toISOString(),
       });
-      
+
       return result;
     },
 
@@ -539,6 +547,35 @@ export const useUserStore = defineStore("user", {
       return this.userTradingRecords;
     },
 
+    updateUserTradingRecord(recordId, updates) {
+      const index = this.userTradingRecords.findIndex(
+        (record) => record.id === recordId,
+      );
+
+      if (index > -1) {
+        // 直接修改数组中的对象，确保响应式更新
+        Object.assign(this.userTradingRecords[index], updates);
+
+        localStorage.setItem(
+          "userTradingRecords",
+          JSON.stringify(this.userTradingRecords),
+        );
+        return true;
+      } else {
+        console.error("未找到要更新的用户交易记录，ID:", recordId);
+        return false;
+      }
+    },
+
+    cancelUserTradingRecord(recordId) {
+      const result = this.updateUserTradingRecord(recordId, {
+        status: "cancelled",
+        cancelledAt: new Date().toISOString(),
+      });
+
+      return result;
+    },
+
     deleteUserTradingRecord(recordId) {
       const index = this.userTradingRecords.findIndex(
         (record) => record.id === recordId,
@@ -557,13 +594,16 @@ export const useUserStore = defineStore("user", {
     // 模拟生成一些测试数据
     generateMockRecords() {
       // 检查是否已有数据，如果有则跳过生成
-      if (this.quantAnalysisReports.length > 0 || this.aiTradingRecords.length > 0) {
-        console.log('已有测试数据，跳过生成');
+      if (
+        this.quantAnalysisReports.length > 0 ||
+        this.aiTradingRecords.length > 0
+      ) {
+        console.log("已有测试数据，跳过生成");
         return;
       }
-      
-      console.log('生成测试数据...');
-      
+
+      console.log("生成测试数据...");
+
       // 生成量化分析报告测试数据
       const mockReports = [
         {
@@ -651,9 +691,7 @@ export const useUserStore = defineStore("user", {
           expectedPrice: 35.8,
           totalAmount: 17900,
           analysis: "AI模型建议在此价位卖出，预期短期内可能出现调整。",
-          createdAt: new Date(
-            Date.now() - 2 * 60 * 60 * 1000,
-          ).toISOString(), // 2小时前创建
+          createdAt: new Date(Date.now() - 2 * 60 * 60 * 1000).toISOString(), // 2小时前创建
           validityDate: new Date(
             Date.now() + 22 * 60 * 60 * 1000,
           ).toISOString(), // 22小时后过期
@@ -728,6 +766,49 @@ export const useUserStore = defineStore("user", {
           executedAt: new Date(
             Date.now() - 7 * 24 * 60 * 60 * 1000,
           ).toISOString(),
+        },
+        // 添加一些待成交的用户自助交易记录
+        {
+          type: "buy",
+          stockCode: "000002",
+          stockName: "万科A",
+          quantity: 1000,
+          price: 8.5,
+          totalAmount: 8500,
+          fee: 0,
+          status: "pending",
+          createdAt: new Date(Date.now() - 2 * 60 * 60 * 1000).toISOString(), // 2小时前创建
+          validityDate: new Date(
+            Date.now() + 22 * 60 * 60 * 1000,
+          ).toISOString(), // 22小时后过期
+        },
+        {
+          type: "sell",
+          stockCode: "600036",
+          stockName: "招商银行",
+          quantity: 500,
+          price: 36.2,
+          totalAmount: 18100,
+          fee: 0,
+          status: "pending",
+          createdAt: new Date(Date.now() - 4 * 60 * 60 * 1000).toISOString(), // 4小时前创建
+          validityDate: new Date(
+            Date.now() + 20 * 60 * 60 * 1000,
+          ).toISOString(), // 20小时后过期
+        },
+        {
+          type: "buy",
+          stockCode: "000858",
+          stockName: "五粮液",
+          quantity: 200,
+          price: 125.0,
+          totalAmount: 25000,
+          fee: 0,
+          status: "pending",
+          createdAt: new Date(Date.now() - 30 * 60 * 1000).toISOString(), // 30分钟前创建
+          validityDate: new Date(
+            Date.now() + 23.5 * 60 * 60 * 1000,
+          ).toISOString(), // 23.5小时后过期
         },
       ];
 
@@ -949,68 +1030,76 @@ export const useUserStore = defineStore("user", {
     // 数据迁移：为现有的AI交易记录添加委托时效字段
     migrateAITradingRecords() {
       let updated = false;
-      
+
       if (!this.aiTradingRecords || this.aiTradingRecords.length === 0) {
-        console.log('没有AI交易记录需要迁移');
+        console.log("没有AI交易记录需要迁移");
         return false;
       }
-      
-      this.aiTradingRecords = this.aiTradingRecords.map(record => {
+
+      this.aiTradingRecords = this.aiTradingRecords.map((record) => {
         if (!record.validityDate) {
           // 为没有委托时效的记录添加字段
           const validityDate = new Date(record.createdAt);
-          if (record.status === 'pending') {
+          if (record.status === "pending") {
             // 待成交的记录：设置为创建时间后1天
             validityDate.setDate(validityDate.getDate() + 1);
           } else {
             // 已完成/已取消的记录：设置为创建时间后1小时（表示已过期）
             validityDate.setHours(validityDate.getHours() + 1);
           }
-          
+
           updated = true;
-          console.log(`为记录 ${record.stockInfo?.name} 添加委托时效: ${validityDate.toISOString()}`);
+          console.log(
+            `为记录 ${record.stockInfo?.name} 添加委托时效: ${validityDate.toISOString()}`,
+          );
           return {
             ...record,
-            validityDate: validityDate.toISOString()
+            validityDate: validityDate.toISOString(),
           };
         }
         return record;
       });
-      
+
       if (updated) {
-        localStorage.setItem("aiTradingRecords", JSON.stringify(this.aiTradingRecords));
-        console.log('AI交易记录数据已更新，添加了委托时效字段');
+        localStorage.setItem(
+          "aiTradingRecords",
+          JSON.stringify(this.aiTradingRecords),
+        );
+        console.log("AI交易记录数据已更新，添加了委托时效字段");
       } else {
-        console.log('所有AI交易记录都已有委托时效字段');
+        console.log("所有AI交易记录都已有委托时效字段");
       }
-      
+
       return updated;
     },
 
     // 数据迁移：为现有的量化分析报告添加有效期字段
     migrateQuantAnalysisReports() {
       let updated = false;
-      
-      this.quantAnalysisReports = this.quantAnalysisReports.map(report => {
+
+      this.quantAnalysisReports = this.quantAnalysisReports.map((report) => {
         if (!report.expiryDate) {
           // 为没有有效期的报告添加字段
           const expiryDate = new Date(report.createdAt);
           expiryDate.setDate(expiryDate.getDate() + 90); // 90天有效期
-          
+
           updated = true;
           return {
             ...report,
-            expiryDate: expiryDate.toISOString()
+            expiryDate: expiryDate.toISOString(),
           };
         }
         return report;
       });
-      
+
       if (updated) {
-        localStorage.setItem("quantAnalysisReports", JSON.stringify(this.quantAnalysisReports));
-        console.log('量化分析报告数据已更新，添加了有效期字段');
+        localStorage.setItem(
+          "quantAnalysisReports",
+          JSON.stringify(this.quantAnalysisReports),
+        );
+        console.log("量化分析报告数据已更新，添加了有效期字段");
       }
-      
+
       return updated;
     },
 
@@ -1027,33 +1116,34 @@ export const useUserStore = defineStore("user", {
         createdAt: new Date().toISOString(),
         validityDate: new Date(Date.now() + 20 * 60 * 60 * 1000).toISOString(), // 20小时后过期
       };
-      
+
       // 检查是否已存在相同的测试记录
-      const exists = this.aiTradingRecords.some(record => 
-        record.stockInfo.code === testTrade.stockInfo.code && 
-        record.status === 'pending' &&
-        record.type === testTrade.type
+      const exists = this.aiTradingRecords.some(
+        (record) =>
+          record.stockInfo.code === testTrade.stockInfo.code &&
+          record.status === "pending" &&
+          record.type === testTrade.type,
       );
-      
+
       if (!exists) {
         this.addAITradingRecord(testTrade);
-        console.log('已添加测试待成交AI委托记录:', testTrade);
+        console.log("已添加测试待成交AI委托记录:", testTrade);
         return true;
       } else {
-        console.log('测试待成交AI委托记录已存在');
+        console.log("测试待成交AI委托记录已存在");
       }
-      
+
       return false;
     },
 
     // 强制重新生成测试数据（用于调试）
     forceRegenerateTestData() {
-      console.log('强制重新生成测试数据...');
-      
+      console.log("强制重新生成测试数据...");
+
       // 清除现有数据
       this.aiTradingRecords = [];
-      localStorage.removeItem('aiTradingRecords');
-      
+      localStorage.removeItem("aiTradingRecords");
+
       // 生成新的测试数据，确保每个记录的时间戳不同
       const baseTime = Date.now();
       const testTrades = [
@@ -1068,9 +1158,13 @@ export const useUserStore = defineStore("user", {
           fee: 5.0,
           profit: 2.5,
           analysis: "基于AI算法分析，该股票具有较好的投资价值，建议买入。",
-          executedAt: new Date(baseTime - 3 * 24 * 60 * 60 * 1000).toISOString(),
+          executedAt: new Date(
+            baseTime - 3 * 24 * 60 * 60 * 1000,
+          ).toISOString(),
           createdAt: new Date(baseTime - 4 * 24 * 60 * 60 * 1000).toISOString(),
-          validityDate: new Date(baseTime - 3 * 24 * 60 * 60 * 1000).toISOString(), // 委托时效（已过期，因为已完成）
+          validityDate: new Date(
+            baseTime - 3 * 24 * 60 * 60 * 1000,
+          ).toISOString(), // 委托时效（已过期，因为已完成）
         },
         {
           stockInfo: { name: "招商银行", code: "600036" },
@@ -1093,23 +1187,23 @@ export const useUserStore = defineStore("user", {
           analysis: "AI分析显示该股票具有良好的增长潜力。",
           createdAt: new Date(baseTime - 30 * 60 * 1000).toISOString(), // 30分钟前创建
           validityDate: new Date(baseTime + 90 * 60 * 1000).toISOString(), // 90分钟后过期（即将过期）
-        }
+        },
       ];
-      
-              // 添加测试记录
-        testTrades.forEach(trade => {
-          this.addAITradingRecord(trade);
-        });
-      
-      console.log('测试数据已重新生成:', this.aiTradingRecords);
+
+      // 添加测试记录
+      testTrades.forEach((trade) => {
+        this.addAITradingRecord(trade);
+      });
+
+      console.log("测试数据已重新生成:", this.aiTradingRecords);
       return true;
     },
 
     // 清除AI交易记录
     clearAITradingRecords() {
       this.aiTradingRecords = [];
-      localStorage.removeItem('aiTradingRecords');
-      console.log('AI交易记录已清除');
+      localStorage.removeItem("aiTradingRecords");
+      console.log("AI交易记录已清除");
     },
   },
 });

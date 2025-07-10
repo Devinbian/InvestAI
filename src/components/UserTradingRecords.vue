@@ -91,7 +91,7 @@
                                     <el-dropdown-menu>
                                         <el-dropdown-item command="view">查看详情</el-dropdown-item>
                                         <el-dropdown-item v-if="record.status === 'pending'" command="cancel"
-                                            divided>取消交易</el-dropdown-item>
+                                            divided>撤单</el-dropdown-item>
                                     </el-dropdown-menu>
                                 </template>
                             </el-dropdown>
@@ -133,7 +133,20 @@
                             </el-icon>
                             {{ getStatusText(record.status) }}
                         </div>
-                        <div class="record-time">{{ formatTime(record.executedAt) }}</div>
+                        <div class="record-actions-footer">
+                            <div class="record-time">
+                                <div v-if="record.status === 'cancelled' && record.cancelledAt">
+                                    撤销时间：{{ formatTime(record.cancelledAt) }}
+                                </div>
+                                <div v-else>
+                                    {{ formatTime(record.executedAt || record.createdAt) }}
+                                </div>
+                            </div>
+                            <el-button v-if="record.status === 'pending'" type="danger" size="small" plain
+                                @click.stop="handleCancelOrder(record)" class="cancel-order-btn">
+                                撤单
+                            </el-button>
+                        </div>
                     </div>
                 </div>
             </div>
@@ -192,7 +205,7 @@
 <script setup>
 import { ref, computed, watch } from 'vue';
 import { useUserStore } from '../store/user';
-import { ElButton, ElSelect, ElOption, ElDatePicker, ElInput, ElPagination, ElMessage, ElTag, ElDropdown, ElDropdownMenu, ElDropdownItem, ElIcon } from 'element-plus';
+import { ElButton, ElSelect, ElOption, ElDatePicker, ElInput, ElPagination, ElMessage, ElMessageBox, ElTag, ElDropdown, ElDropdownMenu, ElDropdownItem, ElIcon } from 'element-plus';
 import { Search, More, CircleCheck, Clock, CircleClose, Warning } from '@element-plus/icons-vue';
 import TradingRecordDetailModal from './TradingRecordDetailModal.vue';
 
@@ -363,9 +376,33 @@ const handleRecordAction = async (command, record) => {
 
 // 取消交易操作
 const cancelTransaction = (recordId) => {
-    // 这里可以实现取消交易的逻辑
-    console.log('取消交易:', recordId);
-    ElMessage.info('取消交易功能开发中...');
+    const success = userStore.cancelUserTradingRecord(recordId);
+
+    if (success) {
+        ElMessage.success('撤单成功');
+    } else {
+        ElMessage.error('撤单失败');
+    }
+};
+
+// 处理撤单按钮点击
+const handleCancelOrder = async (record) => {
+    try {
+        await ElMessageBox.confirm(
+            `确定要撤销这笔委托吗？\n\n股票：${record.stockName}(${record.stockCode})\n类型：${record.type === 'buy' ? '买入' : '卖出'}\n数量：${record.quantity}股\n价格：¥${record.price}`,
+            '撤销委托确认',
+            {
+                confirmButtonText: '确定撤销',
+                cancelButtonText: '取消',
+                type: 'warning',
+                dangerouslyUseHTMLString: false
+            }
+        );
+
+        cancelTransaction(record.id);
+    } catch (error) {
+        // 用户取消操作
+    }
 };
 
 // 处理详情弹窗中的取消记录操作
@@ -536,6 +573,37 @@ watch([filterType, filterStatus, filterDateRange, filterKeyword], () => {
     display: flex;
     align-items: center;
     gap: 4px;
+}
+
+.record-actions-footer {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+}
+
+.record-time {
+    font-size: 0.75rem;
+    color: #6b7280;
+}
+
+.cancel-order-btn {
+    font-size: 0.75rem;
+    padding: 4px 8px;
+    height: 28px;
+    border-radius: 4px;
+    border: 1px solid #ef4444;
+    color: #ef4444;
+    background: transparent;
+    transition: all 0.2s ease;
+}
+
+.cancel-order-btn:hover {
+    background: #ef4444;
+    color: white;
+}
+
+.cancel-order-btn:active {
+    transform: scale(0.95);
 }
 
 .record-status.pending {
@@ -925,6 +993,20 @@ watch([filterType, filterStatus, filterDateRange, filterKeyword], () => {
         margin: 0 16px;
         padding: 24px 16px;
         height: 200px;
+    }
+
+    .cancel-order-btn {
+        font-size: 0.6rem;
+        padding: 2px 6px;
+        height: 24px;
+    }
+
+    .record-actions-footer {
+        gap: 8px;
+    }
+
+    .record-time {
+        font-size: 0.65rem;
     }
 }
 </style>

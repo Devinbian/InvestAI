@@ -87,13 +87,15 @@
                                 <label>更新时间</label>
                                 <span>{{ formatDetailTime(record.updatedAt) }}</span>
                             </div>
-                            <div v-if="isAIRecord && record.status === 'pending' && record.validityDate" class="detail-item">
+                            <div v-if="isAIRecord && record.status === 'pending' && record.validityDate"
+                                class="detail-item">
                                 <label>委托时效</label>
                                 <span :class="getValidityStatusClass(record.validityDate)">
                                     {{ formatValidityDate(record.validityDate) }}
                                 </span>
                             </div>
-                            <div v-if="isAIRecord && record.status === 'cancelled' && record.cancelledAt" class="detail-item">
+                            <div v-if="isAIRecord && record.status === 'cancelled' && record.cancelledAt"
+                                class="detail-item">
                                 <label>撤销时间</label>
                                 <span>{{ formatDetailTime(record.cancelledAt) }}</span>
                             </div>
@@ -133,7 +135,7 @@
             <div class="mobile-modal-footer">
                 <el-button @click="handleClose">关闭</el-button>
                 <el-button v-if="record?.status === 'pending'" type="danger" @click="handleCancel">
-                    {{ isAIRecord ? '撤单' : '取消交易' }}
+                    撤单
                 </el-button>
             </div>
         </div>
@@ -221,7 +223,7 @@
                             {{ formatValidityDate(record.validityDate) }}
                         </span>
                     </div>
-                    <div v-if="isAIRecord && record.status === 'cancelled' && record.cancelledAt" class="detail-item">
+                    <div v-if="record.status === 'cancelled' && record.cancelledAt" class="detail-item">
                         <label>撤销时间</label>
                         <span>{{ formatDetailTime(record.cancelledAt) }}</span>
                     </div>
@@ -261,7 +263,7 @@
             <div class="dialog-footer">
                 <el-button @click="handleClose">关闭</el-button>
                 <el-button v-if="record?.status === 'pending'" type="danger" @click="handleCancel">
-                    {{ isAIRecord ? '撤单' : '取消交易' }}
+                    撤单
                 </el-button>
             </div>
         </template>
@@ -376,13 +378,13 @@ const formatDetailTime = (dateString) => {
 // 格式化委托时效显示
 const formatValidityDate = (validityDate) => {
     if (!validityDate) return '无期限';
-    
+
     const validity = new Date(validityDate);
     const now = new Date();
     const diffTime = validity - now;
     const diffHours = Math.floor(diffTime / (1000 * 60 * 60));
     const diffMinutes = Math.floor((diffTime % (1000 * 60 * 60)) / (1000 * 60));
-    
+
     if (diffTime < 0) {
         return '已过期';
     } else if (diffHours === 0) {
@@ -403,12 +405,12 @@ const formatValidityDate = (validityDate) => {
 // 获取委托时效状态样式类
 const getValidityStatusClass = (validityDate) => {
     if (!validityDate) return '';
-    
+
     const validity = new Date(validityDate);
     const now = new Date();
     const diffTime = validity - now;
     const diffHours = Math.floor(diffTime / (1000 * 60 * 60));
-    
+
     if (diffTime < 0) {
         return 'expired';
     } else if (diffHours <= 2) {

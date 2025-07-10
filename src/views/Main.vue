@@ -256,7 +256,7 @@
                 </div>
                 <div class="guide-actions">
                     <el-button type="primary" size="small" @click="handleGuideAction">{{ guideActionText
-                    }}</el-button>
+                        }}</el-button>
                     <el-button size="small" @click="dismissGuide">稍后</el-button>
                 </div>
             </div>
@@ -3383,7 +3383,7 @@ const continueAnalysis = async (stockInfo, isPaid = false) => {
 
                     const lastMessage = chatHistory.value[chatHistory.value.length - 1];
                     lastMessage.content = aiContent;
-                    lastMessage.isGenerating = false; // 开始接收内容时取消生成状态
+                    // 注意：这里不设置 isGenerating = false，保持生成状态直到完全完成
                     chatHistory.value = [...chatHistory.value]; // 触发响应式更新
                     // 使用 requestAnimationFrame 优化滚动
                     requestAnimationFrame(() => {
@@ -3394,9 +3394,12 @@ const continueAnalysis = async (stockInfo, isPaid = false) => {
                 }
             },
             onclose: () => {
-                // 显示购买等按钮
-                chatHistory.value[chatHistory.value.length - 1].hasStockInfo = true;
-                console.log('连接关闭');
+                // 量化分析完全完成后，才设置完成状态并显示按钮
+                const lastMessage = chatHistory.value[chatHistory.value.length - 1];
+                lastMessage.isGenerating = false; // 完全完成后取消生成状态
+                lastMessage.hasStockInfo = true; // 显示股票操作按钮
+                chatHistory.value = [...chatHistory.value]; // 触发响应式更新
+                console.log('量化分析完成，连接关闭');
             },
             onerror: (err) => {
                 // 错误处理（网络错误、解析异常等）
@@ -3404,7 +3407,8 @@ const continueAnalysis = async (stockInfo, isPaid = false) => {
                 aiContent += `\n\n[${err.message || '请求中断'}]`;
                 const lastMessage = chatHistory.value[chatHistory.value.length - 1];
                 lastMessage.content = aiContent;
-                lastMessage.isGenerating = false; // 开始接收内容时取消生成状态
+                lastMessage.isGenerating = false; // 错误时取消生成状态
+                lastMessage.hasStockInfo = true; // 错误时也显示股票操作按钮
                 chatHistory.value = [...chatHistory.value]; // 触发响应式更新
             }
         });

@@ -9,14 +9,14 @@
                     <el-select v-if="!isMobile" v-model="filterType" placeholder="交易类型" clearable size="small"
                         class="filter-select">
                         <el-option label="全部类型" value="" />
-                        <el-option label="买入" value="buy" />
-                        <el-option label="卖出" value="sell" />
+                        <el-option label="买入" value="1" />
+                        <el-option label="卖出" value="2" />
                     </el-select>
                     <!-- 移动端使用原生控件 -->
                     <select v-else v-model="filterType" class="mobile-select">
                         <option value="">全部类型</option>
-                        <option value="buy">买入</option>
-                        <option value="sell">卖出</option>
+                        <option value="1">买入</option>
+                        <option value="2">卖出</option>
                     </select>
                 </div>
                 <div class="filter-group">
@@ -25,18 +25,18 @@
                     <el-select v-if="!isMobile" v-model="filterStatus" placeholder="交易状态" clearable size="small"
                         class="filter-select">
                         <el-option label="全部状态" value="" />
-                        <el-option label="已完成" value="completed" />
-                        <el-option label="进行中" value="pending" />
-                        <el-option label="已取消" value="cancelled" />
-                        <el-option label="失败" value="failed" />
+                        <el-option label="已完成" value="3" />
+                        <el-option label="进行中" value="1" />
+                        <el-option label="已取消" value="4" />
+                        <el-option label="失败" value="5" />
                     </el-select>
                     <!-- 移动端使用原生控件 -->
                     <select v-else v-model="filterStatus" class="mobile-select">
                         <option value="">全部状态</option>
-                        <option value="completed">已完成</option>
-                        <option value="pending">进行中</option>
-                        <option value="cancelled">已取消</option>
-                        <option value="failed">失败</option>
+                        <option value="3">已完成</option>
+                        <option value="1">进行中</option>
+                        <option value="4">已取消</option>
+                        <option value="5">失败</option>
                     </select>
                 </div>
                 <div class="filter-group">
@@ -76,8 +76,8 @@
                     @click="viewRecord(record)">
                     <div class="record-header">
                         <div class="trade-type">
-                            <el-tag :type="record.type === 'buy' ? 'danger' : 'success'" size="small">
-                                {{ record.type === 'buy' ? '买入' : '卖出' }}
+                            <el-tag :type="record.type === 1 ? 'danger' : 'success'" size="small">
+                                {{ record.type === 1 ? '买入' : '卖出' }}
                             </el-tag>
                         </div>
                         <div class="record-actions" @click.stop>
@@ -90,7 +90,7 @@
                                 <template #dropdown>
                                     <el-dropdown-menu>
                                         <el-dropdown-item command="view">查看详情</el-dropdown-item>
-                                        <el-dropdown-item v-if="record.status === 'pending'" command="cancel"
+                                        <el-dropdown-item v-if="record.status === 1" command="cancel"
                                             divided>撤单</el-dropdown-item>
                                     </el-dropdown-menu>
                                 </template>
@@ -126,24 +126,30 @@
                     <div class="record-footer">
                         <div class="record-status" :class="record.status">
                             <el-icon class="status-icon">
-                                <CircleCheck v-if="record.status === 'completed'" />
-                                <Clock v-else-if="record.status === 'pending'" />
-                                <CircleClose v-else-if="record.status === 'cancelled'" />
+                                <CircleCheck v-if="record.status === 3" />
+                                <Clock v-else-if="record.status === 1" />
+                                <CircleClose v-else-if="record.status === 4" />
                                 <Warning v-else />
                             </el-icon>
                             {{ getStatusText(record.status) }}
                         </div>
                         <div class="record-actions-footer">
                             <div class="record-time">
-                                <div v-if="record.status === 'cancelled' && record.cancelledAt">
+                                <div v-if="record.status === 4">
                                     撤销时间：{{ formatTime(record.cancelledAt) }}
                                 </div>
+                                <div v-else-if="record.status === 1">
+                                    {{ formatTime(record.createdAt) }}
+                                </div>
+                                <div v-else-if="record.status === 3">
+                                    {{ formatTime(record.executedAt) }}
+                                </div>
                                 <div v-else>
-                                    {{ formatTime(record.executedAt || record.createdAt) }}
+                                    {{ formatTime(record.createdAt) }}
                                 </div>
                             </div>
-                            <el-button v-if="record.status === 'pending'" type="danger" size="small" plain
-                                @click.stop="handleCancelOrder(record)" class="cancel-order-btn">
+                            <el-button v-if="record.status === 1" type="danger" size="small" plain
+                                @click.stop="handleCancelOrder(record.id)" class="cancel-order-btn">
                                 撤单
                             </el-button>
                         </div>
@@ -203,11 +209,17 @@
 </template>
 
 <script setup>
-import { ref, computed, watch } from 'vue';
+import { ref, computed, watch, onMounted } from 'vue';
 import { useUserStore } from '../store/user';
 import { ElButton, ElSelect, ElOption, ElDatePicker, ElInput, ElPagination, ElMessage, ElMessageBox, ElTag, ElDropdown, ElDropdownMenu, ElDropdownItem, ElIcon } from 'element-plus';
 import { Search, More, CircleCheck, Clock, CircleClose, Warning } from '@element-plus/icons-vue';
 import TradingRecordDetailModal from './TradingRecordDetailModal.vue';
+import { getStockOrderRecord, cancelStockOrder } from '@/api/api'
+
+
+onMounted(() => {
+    getStockOrderRecordRequest();
+});
 
 const userStore = useUserStore();
 
@@ -233,6 +245,56 @@ const endDate = ref('');
 const detailModalVisible = ref(false);
 const selectedRecord = ref(null);
 
+// 获取交易记录
+const allRecords = ref([]);
+
+// 交易类型标签类型
+const orderStatusMap = {
+    1: 'pending',
+    3: 'completed',
+    4: 'cancelled',
+    5: 'failed',
+}
+
+
+// 获取股票委托记录
+const getStockOrderRecordRequest = async () => {
+    const param ={
+        key: filterKeyword.value,
+        startDate: filterKeyword.value ? filterDateRange.value[0] : '',
+        endDate: filterKeyword.value ? filterDateRange.value[1] : '',
+        direction: filterType.value,
+        orderStatus: filterStatus.value,       
+    }
+    let res = await getStockOrderRecord(param);
+    if (res && res.data && res.data.success) {
+        const data = res.data.data;
+        allRecords.value = formatPortfolioStocks(data); 
+    }
+}
+
+const formatPortfolioStocks = (records) => {
+    records = records || [];
+    return records.map(record => {  
+        // 全部成交则计算实际成交额，否则计算委托成交额
+        let totalAmount = record.status === 3 ? record.tradePrice * record.tradeQuantity : record.price * record.quantity;
+        return {
+            id: record.id,
+            stockCode: record.code,
+            stockName: record.stockName,
+            totalAmount: totalAmount,
+            createdAt: record.createTime,
+            fee: record.serviceFee || 0,
+            price: record.status === 3 ? record.tradePrice : record.price,
+            quantity: record.status === 3 ? record.tradeQuantity: record.quantity,
+            type: record.direction,
+            status: record.status,
+            cancelledAt: record.status === 4 ? record.updateTime : '',
+            executedAt: record.tradeTime,
+        }
+    })
+};
+
 // 监听移动端日期变化，同步到filterDateRange
 watch([startDate, endDate], ([start, end]) => {
     if (start && end) {
@@ -242,8 +304,6 @@ watch([startDate, endDate], ([start, end]) => {
     }
 });
 
-// 获取交易记录
-const allRecords = computed(() => userStore.getUserTradingRecords());
 
 // 筛选后的记录
 const filteredRecords = computed(() => {
@@ -251,12 +311,12 @@ const filteredRecords = computed(() => {
 
     // 交易类型筛选
     if (filterType.value) {
-        records = records.filter(record => record.type === filterType.value);
+        records = records.filter(record => record.type === Number(filterType.value));
     }
 
     // 状态筛选
     if (filterStatus.value) {
-        records = records.filter(record => record.status === filterStatus.value);
+        records = records.filter(record => record.status === Number(filterStatus.value));
     }
 
     // 日期范围筛选
@@ -289,11 +349,11 @@ const paginatedRecords = computed(() => {
 
 // 统计数据
 const filteredBuyCount = computed(() =>
-    filteredRecords.value.filter(record => record.type === 'buy').length
+    filteredRecords.value.filter(record => record.type === 1).length
 );
 
 const filteredSellCount = computed(() =>
-    filteredRecords.value.filter(record => record.type === 'sell').length
+    filteredRecords.value.filter(record => record.type === 2).length
 );
 
 const filteredTotalAmount = computed(() => {
@@ -318,10 +378,10 @@ const resetFilters = () => {
 // 获取状态文本
 const getStatusText = (status) => {
     const statusMap = {
-        'completed': '已完成',
-        'pending': '进行中',
-        'cancelled': '已取消',
-        'failed': '失败'
+        1: '进行中',
+        3: '已完成',
+        4: '已取消',
+        5: '失败'
     };
     return statusMap[status] || status;
 };
@@ -358,18 +418,20 @@ const formatTime = (dateString) => {
 
 // 查看记录详情
 const viewRecord = (record) => {
-    selectedRecord.value = record;
-    detailModalVisible.value = true;
+    // record.type = record.type === 1 ? 'buy' : 'sell';
+    // record.status = orderStatusMap[record.status];
+    // selectedRecord.value = record;
+    // detailModalVisible.value = true;
 };
 
 // 处理记录操作
 const handleRecordAction = async (command, record) => {
     switch (command) {
         case 'view':
-            viewRecord(record);
+            //viewRecord(record);
             break;
         case 'cancel':
-            await cancelTransaction(record.id);
+            //cancelTransaction(record.id);
             break;
     }
 };
@@ -385,23 +447,31 @@ const cancelTransaction = (recordId) => {
     }
 };
 
-// 处理撤单按钮点击
-const handleCancelOrder = async (record) => {
-    try {
-        await ElMessageBox.confirm(
-            `确定要撤销这笔委托吗？\n\n股票：${record.stockName}(${record.stockCode})\n类型：${record.type === 'buy' ? '买入' : '卖出'}\n数量：${record.quantity}股\n价格：¥${record.price}`,
-            '撤销委托确认',
-            {
-                confirmButtonText: '确定撤销',
-                cancelButtonText: '取消',
-                type: 'warning',
-                dangerouslyUseHTMLString: false
-            }
-        );
+// 提交撤单申请
+const cancelStockOrderRequest = async (orderId) => {
+ return await cancelStockOrder({stockOrderId: orderId});
+}
 
-        cancelTransaction(record.id);
-    } catch (error) {
-        // 用户取消操作
+// 处理撤单按钮点击
+const handleCancelOrder = async (orderId) => {
+    const confirmed = await ElMessageBox.confirm('确定要撤销这笔委托吗？', '撤销委托确认',
+        {
+            confirmButtonText: '确定撤销',
+            cancelButtonText: '取消',
+            type: 'warning',
+            dangerouslyUseHTMLString: false
+        }
+    );
+
+    if (confirmed) {
+        const res = await cancelStockOrderRequest(orderId);
+        if (res && res.data && res.data.success) {
+            ElMessage.success('委托单已撤销');
+            // 刷新列表
+            resetFilters();
+            getStockOrderRecordRequest();
+            
+        }
     }
 };
 

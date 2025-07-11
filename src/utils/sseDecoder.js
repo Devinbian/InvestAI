@@ -62,52 +62,25 @@ function isValidBase64(str) {
 export function processSSEData(rawData, context = "SSE") {
   let data = rawData;
 
-  // 🔍 详细调试日志
-  console.log(`🔍 ${context}-开始处理SSE数据:`, {
-    原始数据: JSON.stringify(rawData),
-    数据长度: rawData?.length || 0,
-    数据类型: typeof rawData,
-  });
-
   // 🔓 Base64解密处理
   try {
     // 检查是否为有效的Base64编码数据
     if (data && typeof data === "string" && data.length > 0) {
       // 首先检查是否为有效的Base64格式
       if (isValidBase64(data)) {
-        console.log(`🔍 ${context}-检测到有效Base64格式，尝试解密...`);
-
         // 使用正确的UTF-8解码方法
         const decoded = decodeBase64UTF8(data);
 
         // 验证解码结果是否包含可读字符
         if (decoded && decoded.length > 0) {
           data = decoded;
-          console.log(`🔓 ${context}-Base64解密成功:`, {
-            原始数据: JSON.stringify(rawData),
-            解密结果: JSON.stringify(data),
-            解密前长度: rawData.length,
-            解密后长度: data.length,
-          });
-        } else {
-          console.log(`🔓 ${context}-Base64解密结果为空，使用原始数据`);
         }
-      } else {
-        console.log(`🔍 ${context}-不是有效的Base64格式，使用原始数据`);
       }
-    } else {
-      console.log(`🔍 ${context}-数据为空或格式无效，使用原始数据`);
     }
   } catch (error) {
     // 如果不是base64编码或解码失败，使用原始数据
-    console.log(`🔓 ${context}-Base64解密失败，使用原始数据:`, error.message);
+    // 静默处理，不输出日志
   }
-
-  // ✅ Base64解密后的内容应该是完整且格式正确的，不需要额外的格式修复
-  console.log(`🔍 ${context}-最终处理结果:`, {
-    最终数据: JSON.stringify(data),
-    最终长度: data?.length || 0,
-  });
 
   return data;
 }

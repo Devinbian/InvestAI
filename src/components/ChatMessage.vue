@@ -14,10 +14,19 @@
                 </div>
             </div>
 
-            <!-- 正常消息内容 -->
-            <div v-else-if="message.content && !message.isGenerating" class="message-text"
-                :class="getMessageStatusClass(message.content)">
+            <!-- 正常消息内容 - 修复流式渲染：即使在生成中也显示已有内容 -->
+            <div v-else-if="message.content" class="message-text" :class="getMessageStatusClass(message.content)">
                 <MarkdownRenderer :content="message.content" />
+
+                <!-- 流式生成指示器 - 在生成中显示 -->
+                <div v-if="message.role === 'assistant' && message.isGenerating && isLastMessage"
+                    class="stream-generating-loader">
+                    <div class="stream-dots">
+                        <span class="stream-dot"></span>
+                        <span class="stream-dot"></span>
+                        <span class="stream-dot"></span>
+                    </div>
+                </div>
 
                 <!-- 流式暂停加载指示器 -->
                 <div v-if="message.role === 'assistant' && (isStreamPaused || message.isStreamPaused) && isGenerating && isLastMessage"
@@ -199,7 +208,7 @@
                             <div class="asset-change"
                                 :class="[message.assetData.totalProfitPercent >= 0 ? 'profit' : 'loss']">
                                 <span class="change-icon">{{ message.assetData.totalProfitPercent >= 0 ? '📈' : '📉'
-                                }}</span>
+                                    }}</span>
                                 <span class="change-label">今日盈亏：</span>
                                 <span class="change-text">
                                     {{ message.assetData.totalProfitPercent >= 0 ? '+' : '' }}¥{{
@@ -640,17 +649,9 @@ const reminderStatus = computed(() => {
 watch(() => props.activeReminders, (newReminders, oldReminders) => {
     const stockCode = currentStockCode.value;
     if (stockCode && props.message.isQuantAnalysis) {
-        console.log('🔄 ChatMessage - activeReminders变化:', {
-            stockCode,
-            oldCount: oldReminders?.length || 0,
-            newCount: newReminders?.length || 0,
-            messageId: props.message.id,
-            reminderStatus: reminderStatus.value
-        });
-
         // 强制重新渲染
         nextTick(() => {
-            console.log('🔄 ChatMessage - 强制重新渲染完成');
+            // 重新渲染完成
         });
     }
 }, { deep: true, immediate: true });
@@ -658,12 +659,6 @@ watch(() => props.activeReminders, (newReminders, oldReminders) => {
 // 获取提醒按钮样式类
 const getReminderButtonClass = (message) => {
     const status = reminderStatus.value;
-    console.log('🔍 ChatMessage - 获取按钮样式类:', {
-        stockCode: currentStockCode.value,
-        activeReminders: props.activeReminders,
-        reminderStatus: status,
-        hasReminder: status.hasReminder
-    });
     return status.hasReminder ? 'reminder-btn-small reminder-btn-active' : 'reminder-btn-small';
 };
 
@@ -676,10 +671,6 @@ const getStockCodeFromMessage = (message) => {
     // 对于量化分析消息，直接使用 stockInfo
     if (message.isQuantAnalysis && message.stockInfo && message.stockInfo.code) {
         stockCode = message.stockInfo.code;
-        console.log('🔍 量化分析消息 - 直接使用stockInfo:', {
-            stockCode,
-            stockName: message.stockInfo.name
-        });
         return stockCode;
     }
 
@@ -2467,6 +2458,12 @@ const wrapUserMessage = (ctx, text, maxWidth) => {
     align-items: center;
     margin-left: 8px;
     margin-top: 4px;
+}
+
+.stream-generating-loader {
+    margin-top: 8px;
+    padding: 4px 0;
+    opacity: 0.7;
 }
 
 .stream-dots {

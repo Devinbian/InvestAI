@@ -11,4 +11,6 @@ const getProductionHeadUrl = () => {
 };
 
 export const headUrl =
-  env === "development" ? "http://192.168.0.230:8080" : getProductionHeadUrl();
+  env === "development"
+    ? "https://stockai.datatellit.com"
+    : getProductionHeadUrl();

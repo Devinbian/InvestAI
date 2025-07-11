@@ -260,26 +260,13 @@ const getReminderDescription = (reminder) => {
 
 // 从量化分析内容中提取信息
 const extractQuantAnalysisData = (message) => {
-    console.log('🔍 QuantReminderDialog - 开始提取股票信息:', {
-        hasStockInfo: !!message.stockInfo,
-        stockInfo: message.stockInfo,
-        isQuantAnalysis: message.isQuantAnalysis,
-        contentPreview: message.content?.substring(0, 200)
-    });
-
     // 优先使用 message.stockInfo，这是最准确的来源
     if (message.stockInfo && message.stockInfo.code) {
         reminderForm.value.stockCode = message.stockInfo.code;
         reminderForm.value.stockName = message.stockInfo.name || '未知股票';
-
-        console.log('🔍 直接使用stockInfo:', {
-            stockCode: reminderForm.value.stockCode,
-            stockName: reminderForm.value.stockName
-        });
     } else {
         // 降级方案：从内容中提取（保留原有逻辑作为备用）
         const content = message.content || '';
-        console.log('🔍 降级方案 - 从内容提取:', content.substring(0, 400));
 
         // 尝试多种正则表达式来匹配股票信息
         const patterns = [
@@ -394,12 +381,6 @@ const extractQuantAnalysisData = (message) => {
 
 // 监听对话框打开，初始化数据
 watch(() => props.visible, (newVal) => {
-    console.log('🔍 QuantReminderDialog - 对话框状态变化:', {
-        visible: newVal,
-        hasMessage: !!props.message,
-        messageContent: props.message?.content?.substring(0, 100) || 'no content'
-    });
-
     if (newVal && props.message) {
         // 从量化分析消息内容中提取信息
         extractQuantAnalysisData(props.message);

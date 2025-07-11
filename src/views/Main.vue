@@ -3540,7 +3540,6 @@ const continueAnalysis = async (stockInfo, isPaid = false) => {
     chatHistoryStore.updateCurrentChatMessagesWithoutLimit(chatHistory.value);
 
     try {
-        let aiContent = '';
         const abortController = new AbortController(); // 用于取消请求
         authFetchEventSource(`${api.devPrefix}${api.analyzeStockApi}?conversationId=${conversationId}&stock=${encodeURIComponent(stockInfo.code)}`, {
             method: 'GET', // GET 是默认方法，可省略
@@ -3550,7 +3549,7 @@ const continueAnalysis = async (stockInfo, isPaid = false) => {
             backoffMultiplier: 0,    // 退避系数
 
             onopen: async (response) => {
-                console.log('连接成功');
+                // 量化分析连接已建立
             },
 
             onmessage: (event) => {
@@ -3560,17 +3559,24 @@ const continueAnalysis = async (stockInfo, isPaid = false) => {
 
                     // 🔓 使用统一的SSE解密处理
                     const data = processSSEData(rawData, "量化分析");
-                    aiContent += data;
 
-
+                    // 🔧 修复重复输出问题：直接累积到消息内容，不使用中间变量
                     const lastMessage = chatHistory.value[chatHistory.value.length - 1];
-                    lastMessage.content = aiContent;
-                    // 注意：这里不设置 isGenerating = false，保持生成状态直到完全完成
-                    chatHistory.value = [...chatHistory.value]; // 触发响应式更新
-                    // 使用 requestAnimationFrame 优化滚动
-                    requestAnimationFrame(() => {
-                        scrollToBottom();
-                    });
+                    if (lastMessage && lastMessage.role === 'assistant') {
+                        // 直接累积到消息内容，避免重复
+                        lastMessage.content += data;
+
+                        // ✅ 修复流式渲染：保持生成状态，确保内容能够逐步显示
+                        // 只有在 onclose 时才设置 isGenerating = false
+                        lastMessage.isGenerating = true;
+
+                        chatHistory.value = [...chatHistory.value]; // 触发响应式更新
+
+                        // 使用 requestAnimationFrame 优化滚动
+                        requestAnimationFrame(() => {
+                            scrollToBottom();
+                        });
+                    }
                 } catch (err) {
                     console.error('解析错误:', err);
                 }
@@ -3581,24 +3587,27 @@ const continueAnalysis = async (stockInfo, isPaid = false) => {
                 lastMessage.isGenerating = false; // 完全完成后取消生成状态
                 lastMessage.hasStockInfo = true; // 显示股票操作按钮
                 chatHistory.value = [...chatHistory.value]; // 触发响应式更新
-
-                console.log('量化分析完成，连接关闭');
             },
             onerror: (err) => {
                 // 错误处理（网络错误、解析异常等）
                 abortController.abort(); // 取消请求
-                aiContent += `\n\n[${err.message || '请求中断'}]`;
                 const lastMessage = chatHistory.value[chatHistory.value.length - 1];
-                lastMessage.content = aiContent;
-                lastMessage.isGenerating = false; // 错误时取消生成状态
-                lastMessage.hasStockInfo = true; // 错误时也显示股票操作按钮
-                chatHistory.value = [...chatHistory.value]; // 触发响应式更新
+                if (lastMessage && lastMessage.role === 'assistant') {
+                    lastMessage.content += `\n\n[${err.message || '请求中断'}]`;
+                    lastMessage.isGenerating = false; // 错误时取消生成状态
+                    lastMessage.hasStockInfo = true; // 错误时也显示股票操作按钮
+                    chatHistory.value = [...chatHistory.value]; // 触发响应式更新
+                }
             }
         });
 
     } catch (err) {
-        aiContent = '响应失败，请重试';
-        chatHistory.value = [...chatHistory.value];
+        const lastMessage = chatHistory.value[chatHistory.value.length - 1];
+        if (lastMessage && lastMessage.role === 'assistant') {
+            lastMessage.content = '响应失败，请重试';
+            lastMessage.isGenerating = false;
+            chatHistory.value = [...chatHistory.value];
+        }
     }
 };
 

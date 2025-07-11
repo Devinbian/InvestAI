@@ -1001,10 +1001,7 @@ export function useStockOperations() {
       // AI委托交易设置成功，不再发送消息到聊天记录
       ElMessage.success(`AI委托交易设置成功 - ${stock.name}(${stock.code})`);
 
-      console.log("AI委托交易设置完成:", {
-        stock: stock,
-        tradingParams: tradingParams,
-      });
+      // AI委托交易设置完成
     } catch (error) {
       ElMessage.error("设置失败，请稍后重试");
       console.error("AI委托交易设置失败:", error);
@@ -1013,13 +1010,6 @@ export function useStockOperations() {
 
   // 量化分析报告操作方法
   const setQuantAnalysisReminder = (message) => {
-    console.log("🔧 setQuantAnalysisReminder 被调用:", {
-      hasMessage: !!message,
-      messageContent: message?.content?.substring(0, 200) || "no content",
-      hasStockInfo: !!message?.stockInfo,
-      stockInfoCode: message?.stockInfo?.code,
-    });
-
     currentReminderMessage.value = message;
     showQuantReminderDialog.value = true;
   };

@@ -216,6 +216,8 @@ import { Search, More, CircleCheck, Clock, CircleClose, Warning } from '@element
 import TradingRecordDetailModal from './TradingRecordDetailModal.vue';
 import { getStockOrderRecord, cancelStockOrder } from '@/api/api'
 
+// 定义emit事件
+const emit = defineEmits(['data-loaded']);
 
 onMounted(() => {
     getStockOrderRecordRequest();
@@ -269,7 +271,7 @@ const getStockOrderRecordRequest = async () => {
     let res = await getStockOrderRecord(param);
     if (res && res.data && res.data.success) {
         const data = res.data.data;
-        allRecords.value = formatPortfolioStocks(data); 
+        allRecords.value = formatPortfolioStocks(data);
     }
 }
 
@@ -339,6 +341,11 @@ const filteredRecords = computed(() => {
 
     return records;
 });
+
+// 监听筛选结果变化，实时更新badge数量
+watch(filteredRecords, (newFilteredRecords) => {
+    emit('data-loaded', newFilteredRecords.length);
+}, { immediate: true });
 
 // 分页后的记录
 const paginatedRecords = computed(() => {
@@ -489,6 +496,12 @@ const handlePageChange = (page) => {
 // 监听筛选条件变化，重置分页
 watch([filterType, filterStatus, filterDateRange, filterKeyword], () => {
     currentPage.value = 1;
+});
+
+// 暴露数据给父组件
+defineExpose({
+    allRecords,
+    filteredRecords
 });
 </script>
 

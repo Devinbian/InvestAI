@@ -115,9 +115,12 @@
 </template>
 
 <script setup>
-import { ref, computed, watch } from 'vue';
+import { ref, computed, watch, onMounted } from 'vue';
 import { useUserStore } from '../store/user';
 import { Search } from '@element-plus/icons-vue';
+
+// 定义emit事件
+const emit = defineEmits(['data-loaded']);
 
 const userStore = useUserStore();
 
@@ -191,6 +194,11 @@ const filteredRecords = computed(() => {
     return filtered.sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
 });
 
+// 监听筛选结果变化，实时更新badge数量
+watch(filteredRecords, (newFilteredRecords) => {
+    emit('data-loaded', newFilteredRecords.length);
+}, { immediate: true });
+
 // 分页后的记录
 const paginatedRecords = computed(() => {
     const start = (currentPage.value - 1) * pageSize.value;
@@ -238,6 +246,14 @@ const formatTime = (createdAt) => {
         hour12: false
     });
 };
+
+
+
+// 暴露数据给父组件
+defineExpose({
+    allRecords,
+    filteredRecords
+});
 </script>
 
 <style scoped>

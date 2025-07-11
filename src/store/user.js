@@ -16,21 +16,21 @@ export const useUserStore = defineStore("user", {
       localStorage.getItem("availableBalance") || "0",
     ), // 可用余额（用于计算可用资金）
 
-    // 记录中心数据
-    quantAnalysisReports: JSON.parse(
-      localStorage.getItem("quantAnalysisReports") || "[]",
-    ), // 量化分析报告记录
+    // 记录中心数据 - 注意：大部分已迁移到API，仅保留必要的本地数据
+    // quantAnalysisReports: JSON.parse(
+    //   localStorage.getItem("quantAnalysisReports") || "[]",
+    // ), // 量化分析报告记录 - 已废弃，现使用API获取
     smartPointsTransactions: JSON.parse(
       localStorage.getItem("smartPointsTransactions") || "[]",
-    ), // 智点交易记录
-    aiTradingRecords: JSON.parse(
-      localStorage.getItem("aiTradingRecords") || "[]",
-    ), // AI委托交易记录
-    userTradingRecords: JSON.parse(
-      localStorage.getItem("userTradingRecords") || "[]",
-    ), // 用户自助交易记录
+    ), // 智点交易记录 - 仍在使用，本地存储智点消费记录
+    // aiTradingRecords: JSON.parse(
+    //   localStorage.getItem("aiTradingRecords") || "[]",
+    // ), // AI委托交易记录 - 已废弃，现使用API获取
+    // userTradingRecords: JSON.parse(
+    //   localStorage.getItem("userTradingRecords") || "[]",
+    // ), // 用户自助交易记录 - 已废弃，现使用API获取
 
-    // 委托单管理
+    // 委托单管理 - 仍在使用
     pendingOrders: JSON.parse(localStorage.getItem("pendingOrders") || "[]"), // 待成交委托单
 
     // 引导流程状态管理
@@ -75,20 +75,14 @@ export const useUserStore = defineStore("user", {
       this.portfolio = [];
       this.balance = 0;
       this.smartPointsBalance = 0;
-      this.quantAnalysisReports = [];
       this.smartPointsTransactions = [];
-      this.aiTradingRecords = [];
-      this.userTradingRecords = [];
       localStorage.removeItem("token");
       localStorage.removeItem("userInfo");
       localStorage.removeItem("watchlist");
       localStorage.removeItem("portfolio");
       localStorage.removeItem("balance");
       localStorage.removeItem("smartPointsBalance");
-      localStorage.removeItem("quantAnalysisReports");
       localStorage.removeItem("smartPointsTransactions");
-      localStorage.removeItem("aiTradingRecords");
-      localStorage.removeItem("userTradingRecords");
       localStorage.removeItem("pendingOrders");
 
       // 引导状态处理逻辑：
@@ -595,8 +589,8 @@ export const useUserStore = defineStore("user", {
     generateMockRecords() {
       // 检查是否已有数据，如果有则跳过生成
       if (
-        this.quantAnalysisReports.length > 0 ||
-        this.aiTradingRecords.length > 0
+        this.smartPointsTransactions.length > 0 ||
+        this.pendingOrders.length > 0
       ) {
         console.log("已有测试数据，跳过生成");
         return;

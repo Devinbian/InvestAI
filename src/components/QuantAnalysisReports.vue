@@ -280,6 +280,9 @@ import { useUserStore } from '../store/user';
 import { ElMessage, ElMessageBox } from 'element-plus';
 import { Download, Search, More, CircleCheck, Close } from '@element-plus/icons-vue';
 
+// 定义emit事件
+const emit = defineEmits(['data-loaded']);
+
 const userStore = useUserStore();
 
 // 移动端检测
@@ -351,10 +354,11 @@ onMounted(() => {
             reports.value.forEach(report => {
                 report.type="quant-analysis"
             })
-   
         }
+    }).catch(error => {
+        loading.value = false;
+        console.error('获取量化分析报告失败:', error);
     });
-
 });
 
 const filteredReports = computed(() => {
@@ -387,6 +391,11 @@ const filteredReports = computed(() => {
     // 按创建时间倒序排列
     return filtered.sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
 });
+
+// 监听筛选结果变化，实时更新badge数量
+watch(filteredReports, (newFilteredReports) => {
+    emit('data-loaded', newFilteredReports.length);
+}, { immediate: true });
 
 const paginatedReports = computed(() => {
     const start = (currentPage.value - 1) * pageSize.value;
@@ -535,6 +544,12 @@ const exportAllReports = () => {
         ElMessage.success('批量导出完成');
     }, 3000);
 };
+
+// 暴露数据给父组件
+defineExpose({
+    reports,
+    filteredReports
+});
 </script>
 
 <style scoped>

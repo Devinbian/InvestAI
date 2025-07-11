@@ -78,22 +78,22 @@
             <div class="records-content">
                 <!-- 量化分析报告 -->
                 <div v-show="activeTab === 'reports'" class="tab-panel">
-                    <QuantAnalysisReports />
+                    <QuantAnalysisReports ref="quantAnalysisReportsRef" @data-loaded="updateReportsCount" />
                 </div>
 
                 <!-- 智点记录 -->
                 <div v-show="activeTab === 'points'" class="tab-panel">
-                    <SmartPointsRecords />
+                    <SmartPointsRecords ref="smartPointsRecordsRef" @data-loaded="updatePointsCount" />
                 </div>
 
                 <!-- AI委托交易记录 -->
                 <div v-show="activeTab === 'trading'" class="tab-panel">
-                    <AITradingRecords />
+                    <AITradingRecords ref="aiTradingRecordsRef" @data-loaded="updateTradingCount" />
                 </div>
 
                 <!-- 用户自助交易记录 -->
                 <div v-show="activeTab === 'userTrading'" class="tab-panel">
-                    <UserTradingRecords />
+                    <UserTradingRecords ref="userTradingRecordsRef" @data-loaded="updateUserTradingCount" />
                 </div>
             </div>
         </div>
@@ -181,22 +181,22 @@
             <div class="mobile-records-content">
                 <!-- 量化分析报告 -->
                 <div v-show="activeTab === 'reports'" class="mobile-tab-panel">
-                    <QuantAnalysisReports />
+                    <QuantAnalysisReports ref="quantAnalysisReportsRef" @data-loaded="updateReportsCount" />
                 </div>
 
                 <!-- 智点记录 -->
                 <div v-show="activeTab === 'points'" class="mobile-tab-panel">
-                    <SmartPointsRecords />
+                    <SmartPointsRecords ref="smartPointsRecordsRef" @data-loaded="updatePointsCount" />
                 </div>
 
                 <!-- AI委托交易记录 -->
                 <div v-show="activeTab === 'trading'" class="mobile-tab-panel">
-                    <AITradingRecords />
+                    <AITradingRecords ref="aiTradingRecordsRef" @data-loaded="updateTradingCount" />
                 </div>
 
                 <!-- 用户自助交易记录 -->
                 <div v-show="activeTab === 'userTrading'" class="mobile-tab-panel">
-                    <UserTradingRecords />
+                    <UserTradingRecords ref="userTradingRecordsRef" @data-loaded="updateUserTradingCount" />
                 </div>
             </div>
         </div>
@@ -204,7 +204,7 @@
 </template>
 
 <script setup>
-import { ref, computed, onMounted, onUnmounted } from 'vue';
+import { ref, computed, onMounted, onUnmounted, nextTick, watch } from 'vue';
 import { useUserStore } from '../store/user';
 import { Close } from '@element-plus/icons-vue';
 import QuantAnalysisReports from './QuantAnalysisReports.vue';
@@ -234,13 +234,112 @@ const toggleFilters = () => {
     filtersExpanded.value = !filtersExpanded.value;
 };
 
-// 暂时移除复杂修复
+// 子组件引用
+const quantAnalysisReportsRef = ref(null);
+const smartPointsRecordsRef = ref(null);
+const aiTradingRecordsRef = ref(null);
+const userTradingRecordsRef = ref(null);
 
-// 计算各类记录数量
-const reportsCount = computed(() => userStore.quantAnalysisReports?.length || 0);
-const pointsRecordsCount = computed(() => userStore.smartPointsTransactions?.length || 0);
-const tradingRecordsCount = computed(() => userStore.aiTradingRecords?.length || 0);
-const userTradingRecordsCount = computed(() => userStore.userTradingRecords?.length || 0);
+// 各类记录数量
+const reportsCount = ref(0);
+const pointsRecordsCount = ref(0);
+const tradingRecordsCount = ref(0);
+const userTradingRecordsCount = ref(0);
+
+// 更新数量的方法
+const updateReportsCount = (count) => {
+    reportsCount.value = count || 0;
+};
+
+const updatePointsCount = (count) => {
+    pointsRecordsCount.value = count || 0;
+};
+
+const updateTradingCount = (count) => {
+    tradingRecordsCount.value = count || 0;
+};
+
+const updateUserTradingCount = (count) => {
+    userTradingRecordsCount.value = count || 0;
+};
+
+// 获取子组件的数据数量
+const getChildComponentCounts = async () => {
+    await nextTick();
+    
+    // 获取量化分析报告数量
+    if (quantAnalysisReportsRef.value) {
+        try {
+            const reports = quantAnalysisReportsRef.value.reports || quantAnalysisReportsRef.value.filteredReports;
+            if (reports) {
+                reportsCount.value = Array.isArray(reports) ? reports.length : (reports.value ? reports.value.length : 0);
+            }
+        } catch (error) {
+            console.warn('获取量化分析报告数量失败:', error);
+        }
+    }
+
+    // 获取智点记录数量
+    if (smartPointsRecordsRef.value) {
+        try {
+            const records = smartPointsRecordsRef.value.allRecords || smartPointsRecordsRef.value.filteredRecords;
+            if (records) {
+                pointsRecordsCount.value = Array.isArray(records) ? records.length : (records.value ? records.value.length : 0);
+            } else {
+                // 回退到userStore
+                pointsRecordsCount.value = userStore.smartPointsTransactions?.length || 0;
+            }
+        } catch (error) {
+            console.warn('获取智点记录数量失败:', error);
+            pointsRecordsCount.value = userStore.smartPointsTransactions?.length || 0;
+        }
+    }
+
+    // 获取AI委托交易记录数量
+    if (aiTradingRecordsRef.value) {
+        try {
+            const records = aiTradingRecordsRef.value.allRecords || aiTradingRecordsRef.value.filteredRecords;
+            if (records) {
+                tradingRecordsCount.value = Array.isArray(records) ? records.length : (records.value ? records.value.length : 0);
+            }
+        } catch (error) {
+            console.warn('获取AI委托交易记录数量失败:', error);
+        }
+    }
+
+    // 获取用户自助交易记录数量
+    if (userTradingRecordsRef.value) {
+        try {
+            const records = userTradingRecordsRef.value.allRecords || userTradingRecordsRef.value.filteredRecords;
+            if (records) {
+                userTradingRecordsCount.value = Array.isArray(records) ? records.length : (records.value ? records.value.length : 0);
+            }
+        } catch (error) {
+            console.warn('获取用户自助交易记录数量失败:', error);
+        }
+    }
+};
+
+// 组件挂载后获取数据数量
+onMounted(() => {
+    // 延迟获取，确保子组件已经加载完成
+    setTimeout(() => {
+        getChildComponentCounts();
+    }, 1000);
+});
+
+// 监听tab切换，更新对应的数据数量
+const handleTabChange = async (tabName) => {
+    await nextTick();
+    setTimeout(() => {
+        getChildComponentCounts();
+    }, 500);
+};
+
+// 监听activeTab变化
+watch(activeTab, (newTab) => {
+    handleTabChange(newTab);
+});
 </script>
 
 <style scoped>

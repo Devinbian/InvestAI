@@ -223,6 +223,9 @@ import { ElButton, ElMessage, ElMessageBox } from 'element-plus';
 import { Search, More, CircleCheck, Clock, CircleClose, Warning } from '@element-plus/icons-vue';
 import TradingRecordDetailModal from './TradingRecordDetailModal.vue';
 
+// 定义emit事件
+const emit = defineEmits(['data-loaded']);
+
 const userStore = useUserStore();
 
 // 移动端检测
@@ -285,8 +288,9 @@ onMounted(() => {
                 else if(record.status==3)record.status='completed';
                 else if(record.status==4)record.status='cancelled';
             });
-   
         }
+    }).catch(error => {
+        console.error('获取AI交易记录失败:', error);
     });
 });
 
@@ -327,6 +331,11 @@ const filteredRecords = computed(() => {
     return filtered.sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
 });
 
+// 监听筛选结果变化，实时更新badge数量
+watch(filteredRecords, (newFilteredRecords) => {
+    emit('data-loaded', newFilteredRecords.length);
+}, { immediate: true });
+
 // 分页后的记录
 const paginatedRecords = computed(() => {
     const start = (currentPage.value - 1) * pageSize.value;
@@ -366,56 +375,77 @@ const resetFilters = () => {
 const getStatusText = (status) => {
     const statusMap = {
         'pending': '待成交',
-        'completed': '已成交',
-        'cancelled': '已撤单',
-        'failed': '交易失败'
+        'completed': '已完成',
+        'cancelled': '已取消',
+        'failed': '失败'
     };
     return statusMap[status] || status;
 };
 
-// 格式化时间 - 显示完整的日期时分秒
-const formatTime = (dateString) => {
-    if (!dateString) return '-';
-    const date = new Date(dateString);
-    return date.toLocaleString('zh-CN', {
-        year: 'numeric',
-        month: '2-digit',
-        day: '2-digit',
-        hour: '2-digit',
-        minute: '2-digit',
-        second: '2-digit',
-        hour12: false
-    });
+// 获取状态样式类
+const getStatusClass = (status) => {
+    const classMap = {
+        'pending': 'pending',
+        'completed': 'completed',
+        'cancelled': 'cancelled',
+        'failed': 'failed'
+    };
+    return classMap[status] || '';
 };
 
-// 格式化委托时效显示
+// 格式化时间
+const formatTime = (dateString) => {
+    const date = new Date(dateString);
+    const now = new Date();
+    const diffTime = now - date;
+    const diffDays = Math.floor(diffTime / (1000 * 60 * 60 * 24));
+
+    if (diffDays === 0) {
+        return '今天 ' + date.toLocaleTimeString('zh-CN', {
+            hour: '2-digit',
+            minute: '2-digit'
+        });
+    } else if (diffDays === 1) {
+        return '昨天 ' + date.toLocaleTimeString('zh-CN', {
+            hour: '2-digit',
+            minute: '2-digit'
+        });
+    } else if (diffDays < 7) {
+        return diffDays + '天前';
+    } else {
+        return date.toLocaleDateString('zh-CN', {
+            year: 'numeric',
+            month: '2-digit',
+            day: '2-digit',
+            hour: '2-digit',
+            minute: '2-digit'
+        });
+    }
+};
+
+// 格式化有效期显示
 const formatValidityDate = (validityDate) => {
-    if (!validityDate) return '无期限';
+    if (!validityDate) return '长期有效';
     
     const validity = new Date(validityDate);
     const now = new Date();
     const diffTime = validity - now;
     const diffHours = Math.floor(diffTime / (1000 * 60 * 60));
-    const diffMinutes = Math.floor((diffTime % (1000 * 60 * 60)) / (1000 * 60));
     
     if (diffTime < 0) {
         return '已过期';
-    } else if (diffHours === 0) {
-        if (diffMinutes <= 0) {
-            return '即将过期';
-        } else {
-            return `${diffMinutes}分钟后过期`;
-        }
+    } else if (diffHours < 1) {
+        const diffMinutes = Math.floor(diffTime / (1000 * 60));
+        return `${diffMinutes}分钟后过期`;
     } else if (diffHours < 24) {
-        return `${diffHours}小时${diffMinutes}分钟后过期`;
+        return `${diffHours}小时后过期`;
     } else {
         const diffDays = Math.floor(diffHours / 24);
-        const remainingHours = diffHours % 24;
-        return `${diffDays}天${remainingHours}小时后过期`;
+        return `${diffDays}天后过期`;
     }
 };
 
-// 获取委托时效状态样式类
+// 获取有效期状态样式类
 const getValidityStatusClass = (validityDate) => {
     if (!validityDate) return '';
     
@@ -487,6 +517,22 @@ const handleCancelRecord = (record) => {
     cancelOrder(record.id);
     detailModalVisible.value = false;
 };
+
+// 分页处理
+const handlePageChange = (page) => {
+    currentPage.value = page;
+};
+
+// 监听筛选条件变化，重置分页
+watch([filterType, filterStatus, filterDateRange, filterKeyword], () => {
+    currentPage.value = 1;
+});
+
+// 暴露数据给父组件
+defineExpose({
+    allRecords,
+    filteredRecords
+});
 </script>
 
 <style scoped>

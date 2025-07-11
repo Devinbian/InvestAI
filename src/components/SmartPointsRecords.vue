@@ -65,9 +65,14 @@
                     <div class="record-title">{{ record.description }}</div>
                     <div class="record-time">{{ formatTime(record.createdAt) }}</div>
                 </div>
-                <div class="record-amount"
-                    :class="{ 'consume': record.type === 'consumption', 'recharge': record.type === 'recharge' }">
-                    {{ record.type === 'consumption' ? '-' : '+' }}{{ record.amount }} 智点
+                <div class="record-amount-section">
+                    <div class="record-amount"
+                        :class="{ 'consume': record.type === 'consumption', 'recharge': record.type === 'recharge' }">
+                        {{ record.type === 'consumption' ? '-' : '+' }}{{ record.amount }} 智点
+                    </div>
+                    <div class="record-balance">
+                        余额: {{ record.balanceAfter || 0 }} 智点
+                    </div>
                 </div>
             </div>
         </div>
@@ -107,8 +112,8 @@
                 <div class="stat-value">{{ filteredNetConsume }} 智点</div>
             </div>
             <div class="stat-item">
-                <div class="stat-label">记录数</div>
-                <div class="stat-value">{{ filteredRecords.length }}</div>
+                <div class="stat-label">剩余智点</div>
+                <div class="stat-value">{{ currentSmartPointsBalance }} 智点</div>
             </div>
         </div>
     </div>
@@ -222,6 +227,9 @@ const filteredTotalRecharge = computed(() => {
 
 // 计算筛选后的净消费
 const filteredNetConsume = computed(() => filteredTotalConsume.value - filteredTotalRecharge.value);
+
+// 获取当前智点余额
+const currentSmartPointsBalance = computed(() => userStore.smartPointsBalance || 0);
 
 // 重置筛选条件
 const resetFilters = () => {
@@ -362,6 +370,13 @@ defineExpose({
     color: #64748b;
 }
 
+.record-amount-section {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-end;
+    gap: 4px;
+}
+
 .record-amount {
     font-size: 14px;
     font-weight: 600;
@@ -378,6 +393,13 @@ defineExpose({
 .record-amount.recharge {
     color: #059669;
     background: #d1fae5;
+}
+
+.record-balance {
+    font-size: 12px;
+    color: #6b7280;
+    font-weight: 500;
+    white-space: nowrap;
 }
 
 .records-pagination {
@@ -528,6 +550,10 @@ defineExpose({
     .record-amount {
         font-size: 13px;
         padding: 4px 8px;
+    }
+
+    .record-balance {
+        font-size: 11px;
     }
 
     .records-stats {

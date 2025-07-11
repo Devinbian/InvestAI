@@ -3,6 +3,7 @@ import { ElMessage } from "element-plus";
 import { useChatHistoryStore } from "../store/chatHistory";
 import { authFetchEventSource } from "@/utils/request";
 import { api } from "@/api/api";
+import { processSSEData } from "@/utils/sseDecoder";
 import { generateMessageId } from "@/utils/formatters";
 
 export function useChatManager() {
@@ -139,17 +140,129 @@ export function useChatManager() {
           },
           onmessage: (event) => {
             try {
-              const data = event.data;
+              const rawData = event.data;
 
-              if (data.trim().length === 0) {
-                return;
-              }
+              // 🔍 详细调试日志：完整打印收到的字符流
+              console.group("📥 普通聊天：收到SSE数据");
+              console.log("原始数据:", rawData);
+              console.log("JSON格式:", JSON.stringify(rawData));
+              console.log("数据长度:", rawData.length);
+              console.log(
+                "字符码数组:",
+                Array.from(rawData).map((c) => c.charCodeAt(0)),
+              );
+              console.log("是否为空字符串:", rawData === "");
+              console.log("是否为空格:", rawData === " ");
+              console.log("trim后长度:", rawData.trim().length);
+              console.log("包含的特殊字符:", {
+                换行符: rawData.includes("\n"),
+                回车符: rawData.includes("\r"),
+                制表符: rawData.includes("\t"),
+                空格: rawData.includes(" "),
+              });
+
+              // 🔍 新增：字符流完整性分析
+              console.log("🔍 字符流完整性分析:");
+              console.log("- 数据是否为null/undefined:", rawData == null);
+              console.log("- 数据类型:", typeof rawData);
+              console.log(
+                "- 是否包含控制字符:",
+                /[\x00-\x1F\x7F-\x9F]/.test(rawData),
+              );
+              console.log(
+                "- 是否包含非ASCII字符:",
+                /[^\x00-\x7F]/.test(rawData),
+              );
+              console.log(
+                "- 首字符码点:",
+                rawData.length > 0 ? rawData.charCodeAt(0) : "N/A",
+              );
+              console.log(
+                "- 末字符码点:",
+                rawData.length > 0
+                  ? rawData.charCodeAt(rawData.length - 1)
+                  : "N/A",
+              );
+
+              // 🔍 新增：SSE协议分析
+              console.log("🔍 SSE协议分析:");
+              console.log("- Event对象:", event);
+              console.log("- Event.type:", event.type);
+              console.log("- Event.origin:", event.origin);
+              console.log("- Event.lastEventId:", event.lastEventId);
+              console.log("- Event.data原始类型:", typeof event.data);
+
+              console.groupEnd();
+
+              // 🔧 使用统一的SSE数据处理函数（包含Base64解密 + Markdown格式修复）
+              const data = processSSEData(rawData, "普通聊天");
+
+              // 不要忽略空格内容，SSE协议中空格也是有效数据
+              // if (data.trim().length === 0) {
+              //   return;
+              // }
 
               // 更新AI消息内容
               const lastMessage =
                 chatHistory.value[chatHistory.value.length - 1];
               if (lastMessage && lastMessage.role === "assistant") {
+                const beforeContent = lastMessage.content;
                 lastMessage.content += data;
+                const afterContent = lastMessage.content;
+
+                // 🔍 内容更新调试
+                console.group("📝 普通聊天：内容更新");
+                console.log("更新前内容长度:", beforeContent.length);
+                console.log("更新后内容长度:", afterContent.length);
+                console.log(
+                  "新增内容长度:",
+                  afterContent.length - beforeContent.length,
+                );
+                console.log("实际新增内容:", JSON.stringify(data));
+                console.log(
+                  "累积内容预览:",
+                  afterContent.substring(
+                    Math.max(0, afterContent.length - 100),
+                  ),
+                );
+
+                // 🔍 新增：累积内容差异分析
+                console.log("🔍 累积内容差异分析:");
+                const expectedLength = beforeContent.length + data.length;
+                const actualLength = afterContent.length;
+                console.log("- 预期长度:", expectedLength);
+                console.log("- 实际长度:", actualLength);
+                console.log("- 长度差异:", actualLength - expectedLength);
+                console.log(
+                  "- 是否有内容丢失:",
+                  actualLength !== expectedLength,
+                );
+
+                if (actualLength !== expectedLength) {
+                  console.warn("⚠️ 检测到内容长度异常！");
+                  console.log(
+                    "- 更新前内容末尾20字符:",
+                    JSON.stringify(beforeContent.slice(-20)),
+                  );
+                  console.log("- 新增数据:", JSON.stringify(data));
+                  console.log(
+                    "- 更新后内容末尾20字符:",
+                    JSON.stringify(afterContent.slice(-20)),
+                  );
+                }
+
+                // 🔍 简化调试：只记录字符长度，不进行不必要的编码
+                console.log("🔍 字符长度验证:");
+                console.log("- 更新前字符数:", beforeContent.length);
+                console.log("- 新增数据字符数:", data.length);
+                console.log("- 更新后字符数:", afterContent.length);
+                console.log(
+                  "- 字符数是否匹配:",
+                  afterContent.length === beforeContent.length + data.length,
+                );
+
+                console.groupEnd();
+
                 lastMessage.isGenerating = false; // 开始接收内容时取消生成状态
                 lastMessage.isStreamPaused = false; // 收到数据时取消暂停状态
 
@@ -177,6 +290,32 @@ export function useChatManager() {
             if (lastMessage && lastMessage.role === "assistant") {
               lastMessage.isGenerating = false;
               lastMessage.isStreamPaused = false;
+
+              // 🎯 流式内容完整汇总
+              console.group("🎯 普通聊天：流式内容完整汇总");
+              console.log("完整内容长度:", lastMessage.content.length);
+              console.log("完整内容:", lastMessage.content);
+              console.log(
+                "完整内容(JSON格式):",
+                JSON.stringify(lastMessage.content),
+              );
+              console.log(
+                "内容字符码数组:",
+                Array.from(lastMessage.content).map((c) => c.charCodeAt(0)),
+              );
+              console.log("内容统计:", {
+                总字符数: lastMessage.content.length,
+                换行符数量: (lastMessage.content.match(/\n/g) || []).length,
+                空格数量: (lastMessage.content.match(/ /g) || []).length,
+                标题数量: (lastMessage.content.match(/^#{1,6}\s/gm) || [])
+                  .length,
+                列表项数量: (lastMessage.content.match(/^[-*]\s/gm) || [])
+                  .length,
+                代码块数量: Math.floor(
+                  (lastMessage.content.match(/```/g) || []).length / 2,
+                ),
+              });
+              console.groupEnd();
             }
 
             // 保存聊天记录到存储

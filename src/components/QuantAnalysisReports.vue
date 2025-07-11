@@ -296,7 +296,15 @@ const filterKeyword = ref('');
 const currentPage = ref(1);
 const pageSize = ref(12);
 const showReportDetail = ref(false);
-const selectedReport = ref(null);
+const selectedReport = ref({
+    name: '',
+    code: '',
+    type: '',
+    createTime: '',
+    expireDate: '',
+    summary: '',
+    content: ''
+});
 
 // 移动端日期范围
 const startDate = ref('');

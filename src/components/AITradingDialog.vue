@@ -156,14 +156,12 @@ const plan = ref({
     expireDate: null,
 });
 
-
-onMounted(() => {
-    getStockPlan(stock.code).then((res) => {
+watch(() => props.stock, () => {
+    getStockPlan(props.stock.code).then((res) => {
         if (res.data.success) {
             plan.value = res.data.data;
         }
     });
-
 });
 
 // Emits
@@ -380,7 +378,15 @@ const getActualTime= ()=>{
     } else {
         actualEnd = quantEnd;
     }
-    return actualEnd
+    return actualEnd.toLocaleString('zh-CN', {
+        year: 'numeric',
+        month: '2-digit',
+        day: '2-digit',
+        hour: '2-digit',
+        minute: '2-digit',
+        second: '2-digit',
+        hour12: false,
+    }).replace(/\//g, '-');
 }
 
 // 获取有效期描述
@@ -507,13 +513,13 @@ const handleConfirm = async () => {
             return;
         }
 
-        excuteTradePlan({
+        exeuteTradePlan({
             code: props.stock.code,
             name: props.stock.name,
             quantity: form.quantity,
             orderType: form.orderType,
-            price: plan.buyPrice ?plan.buyPrice:stock.price,
-            sellPrice: plan.sellPrice,
+            price: plan.value.buyPrice?plan.value.buyPrice:props.stock.price,
+            sellPrice: plan.value.sellPrice?plan.value.sellPrice:props.stock.price,
             expireTime: getActualTime(),
         });
 

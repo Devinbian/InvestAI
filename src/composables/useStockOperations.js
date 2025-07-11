@@ -854,7 +854,7 @@ export function useStockOperations() {
   // 付费AI委托交易
   const showQuantAnalysisDialog = (stock, isChatMode) => {
     // 切换到聊天模式
-    if (isChatMode) {
+    if (isChatMode.value) {
       isChatMode.value = true;
     }
 

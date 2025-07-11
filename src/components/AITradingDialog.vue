@@ -132,7 +132,7 @@
 </template>
 
 <script setup>
-import { getStockPlan } from '@/api/api.js';
+import { getStockPlan,excuteTradePlan } from '@/api/api.js';
 import { ref, onMounted, reactive, watch, computed } from 'vue';
 import { useUserStore } from '../store/user';
 import { ArrowDown, ArrowUp } from '@element-plus/icons-vue';
@@ -360,6 +360,29 @@ const getActualValidityTime = () => {
     });
 };
 
+const getActualTime= ()=>{
+    const today = new Date();
+    const todayEnd = new Date(today);
+    todayEnd.setHours(15, 0, 0, 0); // 当日15:00收盘
+
+    let quantEnd;
+    if (plan.expireDate) {
+        quantEnd = new Date(plan.expireDate);
+    } else {
+        // 默认3天后
+        quantEnd = new Date();
+        quantEnd.setDate(quantEnd.getDate() + 3);
+        quantEnd.setHours(23, 59, 59, 999);
+    }
+    let actualEnd = todayEnd;
+    if (form.timeInForceType === 'DAY') {
+        actualEnd = todayEnd;
+    } else {
+        actualEnd = quantEnd;
+    }
+    return actualEnd
+}
+
 // 获取有效期描述
 const getValidityDescription = () => {
     const today = new Date();
@@ -454,26 +477,12 @@ const handleConfirm = async () => {
                 appendTo: 'body'
             }
         );
+  
     } catch {
         // 用户取消支付
         return;
     }
 
-    // 构建AI委托交易参数
-    const tradingParams = {
-        stock: props.stock,
-        action: form.action,
-        quantity: form.quantity,
-        orderType: form.orderType,
-        timeInForce: form.timeInForce,
-
-        // 委托价格设置
-        priceSettings: {
-            floatPercentage: form.priceFloatPercentage,
-            currentPrice: parseFloat(props.stock.price || props.stock.currentPrice),
-            priceRange: getPriceRangeText()
-        }
-    };
 
     try {
         loading.value = true;
@@ -498,14 +507,24 @@ const handleConfirm = async () => {
             return;
         }
 
+        excuteTradePlan({
+            code: props.stock.code,
+            name: props.stock.name,
+            quantity: form.quantity,
+            orderType: form.orderType,
+            price: plan.buyPrice ?plan.buyPrice:stock.price,
+            sellPrice: plan.sellPrice,
+            expireTime: getActualTime(),
+        });
+
         // 关闭对话框
         dialogVisible.value = false;
 
-        // 发送事件给父组件，不再包含消息内容
-        emit('ai-trading-confirmed', {
-            stock: props.stock,
-            tradingParams: tradingParams
-        });
+        // // 发送事件给父组件，不再包含消息内容
+        // emit('ai-trading-confirmed', {
+        //     stock: props.stock,
+        //     tradingParams: tradingParams
+        // });
 
     } catch (error) {
         ElMessage.error('设置失败，请稍后重试');

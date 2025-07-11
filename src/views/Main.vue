@@ -117,7 +117,7 @@
                         :message-index="idx" @interaction-action="handleInteractionAction"
                         @show-buy-dialog="showBuyDialog" @add-to-watchlist="addToWatchlist"
                         @remove-from-watchlist="removeFromWatchlist"
-                        @show-quant-analysis-dialog="showQuantAnalysisDialog"
+                        @show-quant-analysis-dialog="(stock) => showQuantAnalysisDialog(stock, isChatMode)"
                         @set-quant-analysis-reminder="setQuantAnalysisReminder" @stock-click="handleStockClick"
                         @watchlist-action-click="handleWatchlistActionClick"
                         @portfolio-action-click="handlePortfolioActionClick"
@@ -3329,6 +3329,8 @@ const updateWatchlistInChatHistory = () => {
 };
 
 const continueAnalysis = async (stockInfo, isPaid = false) => {
+    // 切换到聊天模式
+    isChatMode.value = true;
 
     // 如果是新聊天，创建聊天记录
     if (!chatHistoryStore.currentChatId) {
@@ -3458,8 +3460,8 @@ const handleStockAction = ({ action, stock }) => {
         removeWatchlist: () => removeFromWatchlist(stock.code),
         analysis: () => showPaidAnalysisDialog(stock, userStore, continueAnalysis),
         paidAnalysis: () => showPaidAnalysisDialog(stock, userStore, continueAnalysis),
-        aiTrading: () => showQuantAnalysisDialog(stock),
-        quantAnalysis: () => showQuantAnalysisDialog(stock),
+        aiTrading: () => showQuantAnalysisDialog(stock, isChatMode),
+        quantAnalysis: () => showQuantAnalysisDialog(stock, isChatMode),
         buy: () => showBuyDialog(stock, 'buy'),
         addPosition: () => showBuyDialog(stock, 'buy'),
         sell: () => showBuyDialog(stock, 'sell')

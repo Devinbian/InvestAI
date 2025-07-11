@@ -38,6 +38,9 @@ const api = {
   stockSelectApi: "/stock/select", // 加入自选股
   stockUnselectApi: "/stock/unselect", // 移除自选股
   stockSelectStatusApi: "/stock/select-status", // 是否已经加入了自选股
+
+  //record
+  analyzeRecordApi:"/record/analyze",// 量化分析报告记录
 };
 
 export default api;
@@ -122,3 +125,7 @@ export const stockSelectStatus = (params) => request.get(api.stockSelectStatusAp
 export const getUserPositionOverview = () => request.get(api.userPositionOverviewApi);
 
 export const exeuteTradePlan = (params) => request.post(api.executePlan, params);
+
+export const analyzeRecord=(params)=>request.get(api.analyzeRecordApi, {
+  params
+});

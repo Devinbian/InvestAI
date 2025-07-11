@@ -106,24 +106,24 @@
                     </div>
 
                     <div class="report-content">
-                        <h4 class="report-title">{{ report.title }}</h4>
+                        <h4 class="report-title">{{ report.name }}({{ report.code }})量化分析报告</h4>
                         <div class="report-info">
                             <div class="info-item">
                                 <span class="label">股票：</span>
-                                <span class="value">{{ report.stockName }}({{ report.stockCode }})</span>
+                                <span class="value">{{ report.name }}({{ report.code }})</span>
                             </div>
                             <div class="info-item">
                                 <span class="label">生成时间：</span>
-                                <span class="value">{{ formatDate(report.createdAt) }}</span>
+                                <span class="value">{{ formatDate(report.createTime) }}</span>
                             </div>
                             <div class="info-item">
                                 <span class="label">费用：</span>
-                                <span class="value cost">{{ report.cost }}智点</span>
+                                <span class="value cost">{{ 1}}智点</span>
                             </div>
                             <div class="info-item">
                                 <span class="label">有效期：</span>
-                                <span class="value" :class="getExpiryStatusClass(report.expiryDate)">
-                                    {{ formatExpiryDate(report.expiryDate) }}
+                                <span class="value" :class="getExpiryStatusClass(report.expireDate)">
+                                    {{ formatExpiryDate(report.expireDate) }}
                                 </span>
                             </div>
                         </div>
@@ -157,7 +157,7 @@
                 <div class="mobile-modal-header">
                     <div class="header-drag-handle"></div>
                     <div class="header-title-bar">
-                        <h3>{{ selectedReport?.title }}</h3>
+                        <h3>{{ selectedReport.name }}({{ selectedReport.code }})量化分析报告</h3>
                         <button class="mobile-close-btn" @click="showReportDetail = false">
                             <el-icon>
                                 <Close />
@@ -171,7 +171,7 @@
                             <div class="detail-info">
                                 <div class="info-row">
                                     <span class="label">股票：</span>
-                                    <span class="value">{{ selectedReport.stockName }}({{ selectedReport.stockCode
+                                    <span class="value">{{ selectedReport.name }}({{ selectedReport.code
                                     }})</span>
                                 </div>
                                 <div class="info-row">
@@ -182,24 +182,24 @@
                                 </div>
                                 <div class="info-row">
                                     <span class="label">生成时间：</span>
-                                    <span class="value">{{ formatDateTime(selectedReport.createdAt) }}</span>
+                                    <span class="value">{{ formatDateTime(selectedReport.createTime) }}</span>
                                 </div>
                                 <div class="info-row">
                                     <span class="label">分析费用：</span>
-                                    <span class="value cost">{{ selectedReport.cost }}智点</span>
+                                    <span class="value cost">{{ 1}}智点</span>
                                 </div>
                                 <div class="info-row">
                                     <span class="label">有效期：</span>
-                                    <span class="value" :class="getExpiryStatusClass(selectedReport.expiryDate)">
-                                        {{ formatExpiryDate(selectedReport.expiryDate) }}
+                                    <span class="value" :class="getExpiryStatusClass(selectedReport.expireDate)">
+                                        {{ formatExpiryDate(selectedReport.expireDate) }}
                                     </span>
                                 </div>
                             </div>
                         </div>
 
                         <div class="detail-content">
-                            <h4>报告摘要</h4>
-                            <p>{{ selectedReport.summary }}</p>
+                            <!-- <h4>报告摘要</h4>
+                            <p>{{ selectedReport.summary }}</p> -->
 
                             <h4>详细内容</h4>
                             <div class="report-content-text" v-html="selectedReport.content"></div>
@@ -219,14 +219,14 @@
         </div>
 
         <!-- PC端标准对话框 -->
-        <el-dialog v-else v-model="showReportDetail" :title="selectedReport?.title" width="800px"
+        <el-dialog v-else v-model="showReportDetail" :title="selectedReport.name + '(' + selectedReport.code + ')量化分析报告'" width="800px"
             class="report-detail-dialog">
             <div v-if="selectedReport" class="report-detail">
                 <div class="detail-header">
                     <div class="detail-info">
                         <div class="info-row">
                             <span class="label">股票：</span>
-                            <span class="value">{{ selectedReport.stockName }}({{ selectedReport.stockCode }})</span>
+                            <span class="value">{{ selectedReport.name }}({{ selectedReport.code }})</span>
                         </div>
                         <div class="info-row">
                             <span class="label">报告类型：</span>
@@ -236,24 +236,24 @@
                         </div>
                         <div class="info-row">
                             <span class="label">生成时间：</span>
-                            <span class="value">{{ formatDateTime(selectedReport.createdAt) }}</span>
+                            <span class="value">{{ formatDateTime(selectedReport.createTime) }}</span>
                         </div>
                         <div class="info-row">
                             <span class="label">分析费用：</span>
-                            <span class="value cost">{{ selectedReport.cost }}智点</span>
+                            <span class="value cost">{{ 1 }}智点</span>
                         </div>
                         <div class="info-row">
                             <span class="label">有效期：</span>
-                            <span class="value" :class="getExpiryStatusClass(selectedReport.expiryDate)">
-                                {{ formatExpiryDate(selectedReport.expiryDate) }}
+                            <span class="value" :class="getExpiryStatusClass(selectedReport.expireDate)">
+                                {{ formatExpiryDate(selectedReport.expireDate) }}
                             </span>
                         </div>
                     </div>
                 </div>
 
                 <div class="detail-content">
-                    <h4>报告摘要</h4>
-                    <p>{{ selectedReport.summary }}</p>
+                    <!-- <h4>报告摘要</h4>
+                    <p>{{ selectedReport.summary }}</p> -->
 
                     <h4>详细内容</h4>
                     <div class="report-content-text" v-html="selectedReport.content"></div>
@@ -274,6 +274,7 @@
 </template>
 
 <script setup>
+import {analyzeRecord} from '@/api/api.js';
 import { ref, computed, onMounted, watch } from 'vue';
 import { useUserStore } from '../store/user';
 import { ElMessage, ElMessageBox } from 'element-plus';
@@ -322,10 +323,30 @@ watch(filterDateRange, (newVal) => {
 });
 
 // 计算属性
-const reports = computed(() => {
-    // 执行数据迁移（仅在需要时）
-    userStore.migrateQuantAnalysisReports();
-    return userStore.quantAnalysisReports || [];
+// const reports = computed(() => {
+//     // 执行数据迁移（仅在需要时）
+//     userStore.migrateQuantAnalysisReports();
+//     return userStore.quantAnalysisReports || [];
+// });
+
+const reports=ref([]);
+onMounted(() => {
+    loading.value = true;
+    const params = {};
+    params.startDate = filterDateRange.value ? filterDateRange.value[0] : null;
+    params.endDate = filterDateRange.value ? filterDateRange.value[1] : null;
+    params.key = filterKeyword.value;
+    analyzeRecord(params).then(res => {
+        loading.value = false;
+        if (res.data.success) {
+            reports.value = res.data.data;
+            reports.value.forEach(report => {
+                report.type="quant-analysis"
+            })
+   
+        }
+    });
+
 });
 
 const filteredReports = computed(() => {
@@ -464,7 +485,7 @@ const handleReportAction = (command, report) => {
 
 const downloadReport = (report) => {
     // 模拟PDF下载
-    ElMessage.success(`正在下载 ${report.title} 报告...`);
+    ElMessage.success(`正在下载 ${report.name} 报告...`);
 
     // 实际项目中这里应该调用后端API生成并下载PDF
     setTimeout(() => {

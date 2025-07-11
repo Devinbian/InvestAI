@@ -256,7 +256,7 @@
                 </div>
                 <div class="guide-actions">
                     <el-button type="primary" size="small" @click="handleGuideAction">{{ guideActionText
-                    }}</el-button>
+                        }}</el-button>
                     <el-button size="small" @click="dismissGuide">稍后</el-button>
                 </div>
             </div>
@@ -318,6 +318,7 @@ import { getStockActionConfig } from '../config/stockActionConfig';
 import { api, recommendStock } from '@/api/api';
 import { authFetchEventSource } from '@/utils/request';
 import { eventListenerManager, timerManager, chatHistoryManager, performanceOptimizer } from '@/utils/performanceOptimizer';
+import { processSSEData } from '@/utils/sseDecoder';
 import { useMobileAdaptation } from '../composables/useMobileAdaptation';
 import { useChatManager } from '../composables/useChatManager';
 import { useVoiceInput } from '../composables/useVoiceInput';
@@ -2088,13 +2089,86 @@ const regenerateNormalMessage = async (messageIndex) => {
                     },
                     onmessage: (event) => {
                         try {
-                            const data = event.data;
-                            if (data.trim().length === 0) return;
+                            const rawData = event.data;
+
+                            // 🔍 详细调试日志：完整打印收到的字符流
+                            console.group('📥 重新生成：收到SSE数据');
+                            console.log('原始数据:', rawData);
+                            console.log('JSON格式:', JSON.stringify(rawData));
+                            console.log('数据长度:', rawData.length);
+                            console.log('字符码数组:', Array.from(rawData).map(c => c.charCodeAt(0)));
+                            console.log('是否为空字符串:', rawData === '');
+                            console.log('是否为空格:', rawData === ' ');
+                            console.log('trim后长度:', rawData.trim().length);
+                            console.log('包含的特殊字符:', {
+                                换行符: rawData.includes('\n'),
+                                回车符: rawData.includes('\r'),
+                                制表符: rawData.includes('\t'),
+                                空格: rawData.includes(' ')
+                            });
+
+                            // 🔍 新增：字符流完整性分析
+                            console.log("🔍 字符流完整性分析:");
+                            console.log("- 数据是否为null/undefined:", rawData == null);
+                            console.log("- 数据类型:", typeof rawData);
+                            console.log("- 是否包含控制字符:", /[\x00-\x1F\x7F-\x9F]/.test(rawData));
+                            console.log("- 是否包含非ASCII字符:", /[^\x00-\x7F]/.test(rawData));
+                            console.log("- 首字符码点:", rawData.length > 0 ? rawData.charCodeAt(0) : 'N/A');
+                            console.log("- 末字符码点:", rawData.length > 0 ? rawData.charCodeAt(rawData.length - 1) : 'N/A');
+
+                            // 🔍 新增：SSE协议分析
+                            console.log("🔍 SSE协议分析:");
+                            console.log("- Event对象:", event);
+                            console.log("- Event.type:", event.type);
+                            console.log("- Event.origin:", event.origin);
+                            console.log("- Event.lastEventId:", event.lastEventId);
+                            console.log("- Event.data原始类型:", typeof event.data);
+
+                            console.groupEnd();
+
+                            // 🔓 使用统一的SSE解密处理
+                            const data = processSSEData(rawData, "重新生成");
 
                             // 更新指定位置的AI消息内容
                             const currentTargetMessage = chatHistory.value[messageIndex];
                             if (currentTargetMessage && currentTargetMessage.role === 'assistant') {
+                                const beforeContent = currentTargetMessage.content;
                                 currentTargetMessage.content += data;
+                                const afterContent = currentTargetMessage.content;
+
+                                // 🔍 内容更新调试
+                                console.group('📝 重新生成：内容更新');
+                                console.log('更新前内容长度:', beforeContent.length);
+                                console.log('更新后内容长度:', afterContent.length);
+                                console.log('新增内容长度:', afterContent.length - beforeContent.length);
+                                console.log('实际新增内容:', JSON.stringify(data));
+                                console.log('累积内容预览:', afterContent.substring(Math.max(0, afterContent.length - 100)));
+
+                                // 🔍 新增：累积内容差异分析
+                                console.log("🔍 累积内容差异分析:");
+                                const expectedLength = beforeContent.length + data.length;
+                                const actualLength = afterContent.length;
+                                console.log("- 预期长度:", expectedLength);
+                                console.log("- 实际长度:", actualLength);
+                                console.log("- 长度差异:", actualLength - expectedLength);
+                                console.log("- 是否有内容丢失:", actualLength !== expectedLength);
+
+                                if (actualLength !== expectedLength) {
+                                    console.warn("⚠️ 检测到内容长度异常！");
+                                    console.log("- 更新前内容末尾20字符:", JSON.stringify(beforeContent.slice(-20)));
+                                    console.log("- 新增数据:", JSON.stringify(data));
+                                    console.log("- 更新后内容末尾20字符:", JSON.stringify(afterContent.slice(-20)));
+                                }
+
+                                // 🔍 简化调试：只记录字符长度，不进行不必要的编码
+                                console.log("🔍 字符长度验证:");
+                                console.log("- 更新前字符数:", beforeContent.length);
+                                console.log("- 新增数据字符数:", data.length);
+                                console.log("- 更新后字符数:", afterContent.length);
+                                console.log("- 字符数是否匹配:", afterContent.length === beforeContent.length + data.length);
+
+                                console.groupEnd();
+
                                 currentTargetMessage.isGenerating = false;
 
                                 // 滚动到底部
@@ -2116,6 +2190,22 @@ const regenerateNormalMessage = async (messageIndex) => {
                             finalTargetMessage.isGenerating = false;
                             finalTargetMessage.timestamp = Date.now();
                             chatHistory.value = [...chatHistory.value];
+
+                            // 🎯 流式内容完整汇总
+                            console.group('🎯 重新生成：流式内容完整汇总');
+                            console.log('完整内容长度:', finalTargetMessage.content.length);
+                            console.log('完整内容:', finalTargetMessage.content);
+                            console.log('完整内容(JSON格式):', JSON.stringify(finalTargetMessage.content));
+                            console.log('内容字符码数组:', Array.from(finalTargetMessage.content).map(c => c.charCodeAt(0)));
+                            console.log('内容统计:', {
+                                总字符数: finalTargetMessage.content.length,
+                                换行符数量: (finalTargetMessage.content.match(/\n/g) || []).length,
+                                空格数量: (finalTargetMessage.content.match(/ /g) || []).length,
+                                标题数量: (finalTargetMessage.content.match(/^#{1,6}\s/gm) || []).length,
+                                列表项数量: (finalTargetMessage.content.match(/^[-*]\s/gm) || []).length,
+                                代码块数量: Math.floor((finalTargetMessage.content.match(/```/g) || []).length / 2)
+                            });
+                            console.groupEnd();
                         }
 
                         // 保存聊天历史
@@ -2384,11 +2474,12 @@ const regenerateSmartReview = async (messageIndex) => {
                 },
                 onmessage: (event) => {
                     try {
-                        const data = event.data;
-                        if (data.trim().length === 0) return;
+                        const rawData = event.data;
+                        // 🔓 使用统一的SSE解密处理
+                        const data = processSSEData(rawData, "智能复盘");
 
-                        // 更新智能复盘消息内容
                         targetMessage.content += data;
+
                         targetMessage.isGenerating = false;
 
                         // 滚动到底部
@@ -2406,6 +2497,7 @@ const regenerateSmartReview = async (messageIndex) => {
                     targetMessage.isGenerating = false;
                     targetMessage.timestamp = Date.now();
                     chatHistory.value = [...chatHistory.value];
+
 
                     // 保存聊天历史
                     chatHistoryStore.updateCurrentChatMessagesWithoutLimit(chatHistory.value);
@@ -2804,15 +2896,104 @@ const regenerateNewsUpdate = async (messageIndex) => {
                     },
                     onmessage: (event) => {
                         try {
-                            const data = event.data;
-                            if (data.trim().length === 0) return;
+                            const rawData = event.data;
+
+                            // 🔍 详细调试日志：完整打印收到的字符流
+                            console.group('📥 Main.vue资讯推送：收到SSE数据');
+                            console.log('原始数据:', rawData);
+                            console.log('JSON格式:', JSON.stringify(rawData));
+                            console.log('数据长度:', rawData.length);
+                            console.log('字符码数组:', Array.from(rawData).map(c => c.charCodeAt(0)));
+                            console.log('是否为空字符串:', rawData === '');
+                            console.log('是否为空格:', rawData === ' ');
+                            console.log('trim后长度:', rawData.trim().length);
+                            console.log('包含的特殊字符:', {
+                                换行符: rawData.includes('\n'),
+                                回车符: rawData.includes('\r'),
+                                制表符: rawData.includes('\t'),
+                                空格: rawData.includes(' ')
+                            });
+
+                            // 🔍 新增：字符流完整性分析
+                            console.log("🔍 字符流完整性分析:");
+                            console.log("- 数据是否为null/undefined:", rawData == null);
+                            console.log("- 数据类型:", typeof rawData);
+                            console.log("- 是否包含控制字符:", /[\x00-\x1F\x7F-\x9F]/.test(rawData));
+                            console.log("- 是否包含非ASCII字符:", /[^\x00-\x7F]/.test(rawData));
+                            console.log("- 首字符码点:", rawData.length > 0 ? rawData.charCodeAt(0) : 'N/A');
+                            console.log("- 末字符码点:", rawData.length > 0 ? rawData.charCodeAt(rawData.length - 1) : 'N/A');
+
+                            // 🔍 新增：SSE协议分析
+                            console.log("🔍 SSE协议分析:");
+                            console.log("- Event对象:", event);
+                            console.log("- Event.type:", event.type);
+                            console.log("- Event.origin:", event.origin);
+                            console.log("- Event.lastEventId:", event.lastEventId);
+                            console.log("- Event.data原始类型:", typeof event.data);
+
+                            console.groupEnd();
+
+                            // 🔓 使用统一的SSE解密处理
+                            const data = processSSEData(rawData, "Main.vue资讯推送");
+                            const beforeContent = responseContent;
                             responseContent += data;
+                            const afterContent = responseContent;
+
+                            // 🔍 内容更新调试
+                            console.group('📝 Main.vue资讯推送：内容更新');
+                            console.log('更新前内容长度:', beforeContent.length);
+                            console.log('更新后内容长度:', afterContent.length);
+                            console.log('新增内容长度:', afterContent.length - beforeContent.length);
+                            console.log('实际新增内容:', JSON.stringify(data));
+                            console.log('累积内容预览:', afterContent.substring(Math.max(0, afterContent.length - 100)));
+
+                            // 🔍 新增：累积内容差异分析
+                            console.log("🔍 累积内容差异分析:");
+                            const expectedLength = beforeContent.length + data.length;
+                            const actualLength = afterContent.length;
+                            console.log("- 预期长度:", expectedLength);
+                            console.log("- 实际长度:", actualLength);
+                            console.log("- 长度差异:", actualLength - expectedLength);
+                            console.log("- 是否有内容丢失:", actualLength !== expectedLength);
+
+                            if (actualLength !== expectedLength) {
+                                console.warn("⚠️ 检测到内容长度异常！");
+                                console.log("- 更新前内容末尾20字符:", JSON.stringify(beforeContent.slice(-20)));
+                                console.log("- 新增数据:", JSON.stringify(data));
+                                console.log("- 更新后内容末尾20字符:", JSON.stringify(afterContent.slice(-20)));
+                            }
+
+                            // 🔍 简化调试：只记录字符长度，不进行不必要的编码
+                            console.log("🔍 字符长度验证:");
+                            console.log("- 更新前字符数:", beforeContent.length);
+                            console.log("- 新增数据字符数:", data.length);
+                            console.log("- 更新后字符数:", afterContent.length);
+                            console.log("- 字符数是否匹配:", afterContent.length === beforeContent.length + data.length);
+
+                            console.groupEnd();
                         } catch (err) {
                             console.error('🔄 资讯推送 - 解析消息时出错:', err);
                         }
                     },
                     onclose: () => {
                         console.log('🔄 资讯推送 - 流式连接已关闭');
+
+                        // 🎯 流式内容完整汇总
+                        console.group('🎯 Main.vue资讯推送：流式内容完整汇总');
+                        console.log('完整内容长度:', responseContent.length);
+                        console.log('完整内容:', responseContent);
+                        console.log('完整内容(JSON格式):', JSON.stringify(responseContent));
+                        console.log('内容字符码数组:', Array.from(responseContent).map(c => c.charCodeAt(0)));
+                        console.log('内容统计:', {
+                            总字符数: responseContent.length,
+                            换行符数量: (responseContent.match(/\n/g) || []).length,
+                            空格数量: (responseContent.match(/ /g) || []).length,
+                            标题数量: (responseContent.match(/^#{1,6}\s/gm) || []).length,
+                            列表项数量: (responseContent.match(/^[-*]\s/gm) || []).length,
+                            代码块数量: Math.floor((responseContent.match(/```/g) || []).length / 2)
+                        });
+                        console.groupEnd();
+
                         resolve({
                             data: {
                                 content: responseContent,
@@ -3375,13 +3556,12 @@ const continueAnalysis = async (stockInfo, isPaid = false) => {
             onmessage: (event) => {
                 // 处理每条消息
                 try {
-                    console.log('量化分析：收到数据:', event.data);
-                    let data = event.data;
-                    // 如果 data 是空格，则新增一个空格（SSE 协议规范：data: 后的第一个空格是固定分隔符，一定会被丢弃）
-                    // if (data.trim().length === 0) {
-                    //     data += ' ';
-                    // }
+                    const rawData = event.data;
+
+                    // 🔓 使用统一的SSE解密处理
+                    const data = processSSEData(rawData, "量化分析");
                     aiContent += data;
+
 
                     const lastMessage = chatHistory.value[chatHistory.value.length - 1];
                     lastMessage.content = aiContent;
@@ -3401,6 +3581,7 @@ const continueAnalysis = async (stockInfo, isPaid = false) => {
                 lastMessage.isGenerating = false; // 完全完成后取消生成状态
                 lastMessage.hasStockInfo = true; // 显示股票操作按钮
                 chatHistory.value = [...chatHistory.value]; // 触发响应式更新
+
                 console.log('量化分析完成，连接关闭');
             },
             onerror: (err) => {

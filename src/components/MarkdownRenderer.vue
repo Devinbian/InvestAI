@@ -1,5 +1,5 @@
 <template>
-    <div class="markdown-content" :class="{ 'compact-recap': isRecapMessage }" v-html="renderedContent"></div>
+    <div class="markdown-content" v-html="renderedContent"></div>
 </template>
 
 <script setup>
@@ -22,16 +22,7 @@ const md = new MarkdownIt({
     typographer: true  // 启用一些语言中性的替换和引号美化
 });
 
-// 检测是否为智能复盘消息
-const isRecapMessage = computed(() => {
-    if (!props.content) return false;
-    const contentStr = typeof props.content === 'string' ? props.content : String(props.content);
-    return contentStr.includes('智能复盘') || 
-           contentStr.includes('请帮我进行全面的智能投资复盘分析') ||
-           contentStr.includes('昨日市场复盘分析') ||
-           contentStr.includes('昨日复盘') ||
-           contentStr.includes('复盘分析');
-});
+
 
 // 计算渲染后的内容
 const renderedContent = computed(() => {
@@ -43,25 +34,25 @@ const renderedContent = computed(() => {
     // 添加调试信息
     if (process.env.NODE_ENV === 'development') {
         console.log('原始内容:', contentStr.substring(0, 200) + '...');
-        
+
         // 检查原始内容中的有序列表
         const originalOrderedLines = contentStr.split('\n').filter(line => line.includes('1.'));
         if (originalOrderedLines.length > 0) {
             console.log('原始内容中包含1.的行:', originalOrderedLines);
         }
-        
+
         // 检查伪代码示例的格式
         const pseudoCodeLines = contentStr.split('\n').filter(line => line.includes('伪代码示例'));
         if (pseudoCodeLines.length > 0) {
             console.log('原始内容中的伪代码示例:', pseudoCodeLines);
         }
-        
+
         // 检查是否包含多个#符号的行
         const hashLines = contentStr.split('\n').filter(line => line.includes('####'));
         if (hashLines.length > 0) {
             console.log('原始内容包含多个#符号的行:', hashLines);
         }
-        
+
         // 专门检查原始内容中的5级标题
         const originalFiveLevelHeaders = contentStr.split('\n').filter(line => line.includes('#####'));
         if (originalFiveLevelHeaders.length > 0) {
@@ -76,13 +67,13 @@ const renderedContent = computed(() => {
                 });
             });
         }
-        
+
         // 检查是否包含列表项
         const listLines = contentStr.split('\n').filter(line => /^\s*[-*+]\s/.test(line) || /^\s*\d+\.\s/.test(line));
         if (listLines.length > 0) {
             console.log('列表项:', listLines.slice(0, 5));
         }
-        
+
         // 检查是否有错误的列表项格式
         const incorrectListLines = contentStr.split('\n').filter(line => /^\s*[-*+][^\s]/.test(line));
         if (incorrectListLines.length > 0) {
@@ -131,10 +122,10 @@ const renderedContent = computed(() => {
     const lines = contentStr.split('\n');
     let orderedListCounter = 0;
     let inOrderedList = false;
-    
+
     for (let i = 0; i < lines.length; i++) {
         const line = lines[i];
-        
+
         // 检查是否是有序列表项
         if (/^\s*\d+\.\s/.test(line)) {
             if (!inOrderedList) {
@@ -145,7 +136,7 @@ const renderedContent = computed(() => {
                 // 继续有序列表
                 orderedListCounter++;
             }
-            
+
             // 替换数字
             lines[i] = line.replace(/^\s*\d+\./, (match) => {
                 const indent = match.match(/^\s*/)[0];
@@ -165,7 +156,7 @@ const renderedContent = computed(() => {
             inOrderedList = false;
         }
     }
-    
+
     contentStr = lines.join('\n')
         // 清理开头和结尾的多余换行符
         .replace(/^\n+/, '')
@@ -182,27 +173,27 @@ const renderedContent = computed(() => {
     // 添加预处理后的调试信息
     if (process.env.NODE_ENV === 'development') {
         console.log('预处理后内容:', contentStr.substring(0, 300) + '...');
-        
+
         // 检查预处理后的有序列表
         const processedOrderedLines = contentStr.split('\n').filter(line => line.includes('1.'));
         if (processedOrderedLines.length > 0) {
             console.log('预处理后包含1.的行:', processedOrderedLines);
         }
-        
+
         // 检查预处理后的代码块
         const codeBlockLines = contentStr.split('\n').filter(line => line.includes('```'));
         if (codeBlockLines.length > 0) {
             console.log('预处理后的代码块标记:', codeBlockLines);
         }
-        
 
-        
+
+
         // 检查预处理后的标题行
         const processedHashLines = contentStr.split('\n').filter(line => line.includes('####'));
         if (processedHashLines.length > 0) {
             console.log('预处理后的标题行:', processedHashLines);
         }
-        
+
         // 专门检查5级标题
         const fiveLevelHeaders = contentStr.split('\n').filter(line => line.includes('#####'));
         if (fiveLevelHeaders.length > 0) {
@@ -217,36 +208,36 @@ const renderedContent = computed(() => {
                 });
             });
         }
-        
+
         // 检查是否有正确的标题格式
         const correctHeaders = contentStr.split('\n').filter(line => /^#{1,6}\s/.test(line));
         if (correctHeaders.length > 0) {
             console.log('正确的标题格式:', correctHeaders);
         }
-        
+
         // 检查是否有错误的标题格式
         const incorrectHeaders = contentStr.split('\n').filter(line => /^#{1,6}[^\s#]/.test(line));
         if (incorrectHeaders.length > 0) {
             console.log('错误的标题格式:', incorrectHeaders);
         }
-        
+
         // 检查预处理后的列表项格式
         const processedListLines = contentStr.split('\n').filter(line => /^\s*[-*+]\s/.test(line));
         if (processedListLines.length > 0) {
             console.log('预处理后的正确列表项:', processedListLines.slice(0, 5));
         }
-        
+
         const processedIncorrectListLines = contentStr.split('\n').filter(line => /^\s*[-*+][^\s]/.test(line));
         if (processedIncorrectListLines.length > 0) {
             console.log('预处理后仍然错误的列表项:', processedIncorrectListLines.slice(0, 5));
         }
-        
+
         // 检查有序列表格式
         const orderedListLines = contentStr.split('\n').filter(line => /^\s*\d+\.\s/.test(line));
         if (orderedListLines.length > 0) {
             console.log('预处理后的正确有序列表项:', orderedListLines.slice(0, 5));
         }
-        
+
         const incorrectOrderedListLines = contentStr.split('\n').filter(line => /^\s*\d+\.[^\s]/.test(line));
         if (incorrectOrderedListLines.length > 0) {
             console.log('预处理后仍然错误的有序列表项:', incorrectOrderedListLines.slice(0, 5));
@@ -256,7 +247,7 @@ const renderedContent = computed(() => {
     try {
         // 使用markdown-it解析
         const htmlString = md.render(contentStr);
-        
+
         // 添加调试信息
         if (process.env.NODE_ENV === 'development') {
             console.log('markdown-it解析结果:', htmlString.substring(0, 300) + '...');
@@ -530,98 +521,7 @@ const renderedContent = computed(() => {
     margin: 8px 0;
 }
 
-/* 智能复盘消息的紧凑样式 */
-.markdown-content.compact-recap :deep(p) {
-    margin: 4px 0;
-    line-height: 1.4;
-}
 
-.markdown-content.compact-recap :deep(h1),
-.markdown-content.compact-recap :deep(h2),
-.markdown-content.compact-recap :deep(h3),
-.markdown-content.compact-recap :deep(h4),
-.markdown-content.compact-recap :deep(h5),
-.markdown-content.compact-recap :deep(h6) {
-    margin: 12px 0 6px 0;
-    font-weight: 600;
-    line-height: 1.3;
-}
-
-.markdown-content.compact-recap :deep(h3) {
-    font-size: 1.1em;
-    color: #2c3e50;
-    margin: 10px 0 4px 0;
-}
-
-.markdown-content.compact-recap :deep(h4) {
-    font-size: 1.05em;
-    color: #34495e;
-    margin: 8px 0 4px 0;
-}
-
-.markdown-content.compact-recap :deep(ul),
-.markdown-content.compact-recap :deep(ol) {
-    margin: 4px 0;
-    padding-left: 20px;
-}
-
-.markdown-content.compact-recap :deep(li) {
-    margin: 2px 0;
-    padding: 0;
-    line-height: 1.4;
-}
-
-.markdown-content.compact-recap :deep(ul li) {
-    list-style-type: none;
-    position: relative;
-    padding-left: 0;
-}
-
-.markdown-content.compact-recap :deep(ul li::before) {
-    content: "-";
-    position: absolute;
-    left: -16px;
-    color: inherit;
-}
-
-.markdown-content.compact-recap :deep(strong) {
-    font-weight: 600;
-    color: #2c3e50;
-}
-
-.markdown-content.compact-recap :deep(hr) {
-    margin: 6px 0;
-}
-
-/* 紧凑样式的代码块 */
-.markdown-content.compact-recap :deep(pre) {
-    margin: 8px 0;
-    padding: 10px;
-    font-size: 0.85em;
-}
-
-.markdown-content.compact-recap :deep(code) {
-    font-size: 0.85em;
-}
-
-/* 紧凑样式的有序列表计数器 */
-.markdown-content.compact-recap :deep(ol li) {
-    counter-increment: ordered-list-counter;
-    position: relative;
-    list-style-type: none;
-}
-
-.markdown-content.compact-recap :deep(ol li::before) {
-    content: counter(ordered-list-counter) ". ";
-    position: absolute;
-    left: -20px;
-    color: inherit;
-    font-weight: normal;
-}
-
-.markdown-content.compact-recap {
-    line-height: 1.4;
-}
 
 /* 响应式设计 */
 @media (max-width: 768px) {

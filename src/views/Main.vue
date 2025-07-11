@@ -256,7 +256,7 @@
                 </div>
                 <div class="guide-actions">
                     <el-button type="primary" size="small" @click="handleGuideAction">{{ guideActionText
-                        }}</el-button>
+                    }}</el-button>
                     <el-button size="small" @click="dismissGuide">稍后</el-button>
                 </div>
             </div>
@@ -3378,9 +3378,9 @@ const continueAnalysis = async (stockInfo, isPaid = false) => {
                     console.log('量化分析：收到数据:', event.data);
                     let data = event.data;
                     // 如果 data 是空格，则新增一个空格（SSE 协议规范：data: 后的第一个空格是固定分隔符，一定会被丢弃）
-                    if (data.trim().length === 0) {
-                        data += ' ';
-                    }
+                    // if (data.trim().length === 0) {
+                    //     data += ' ';
+                    // }
                     aiContent += data;
 
                     const lastMessage = chatHistory.value[chatHistory.value.length - 1];

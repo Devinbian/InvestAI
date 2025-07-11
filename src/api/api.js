@@ -39,7 +39,7 @@ const api = {
   stockUnselectApi: "/stock/unselect", // 移除自选股
   stockSelectStatusApi: "/stock/select-status", // 是否已经加入了自选股
  
-  stockOrderRecordApi: "/record/stock-order" // 获取股票委托记录
+  stockOrderRecordApi: "/record/stock-order", // 获取股票委托记录
 
   //record
   analyzeRecordApi:"/record/analyze",// 量化分析报告记录

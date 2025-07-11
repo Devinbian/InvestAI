@@ -132,7 +132,7 @@
 </template>
 
 <script setup>
-import { getStockPlan,excuteTradePlan } from '@/api/api.js';
+import { getStockPlan,exeuteTradePlan } from '@/api/api.js';
 import { ref, onMounted, reactive, watch, computed } from 'vue';
 import { useUserStore } from '../store/user';
 import { ArrowDown, ArrowUp } from '@element-plus/icons-vue';

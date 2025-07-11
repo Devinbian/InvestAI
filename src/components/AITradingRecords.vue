@@ -101,7 +101,7 @@
                     </div>
 
                     <div class="record-content">
-                        <h4 class="record-title">{{ record.stockInfo.name }}({{ record.stockInfo.code }})</h4>
+                        <h4 class="record-title">{{ record.name }}({{ record.code }})</h4>
                         <div class="record-info">
                             <div class="info-item">
                                 <span class="label">数量：</span>
@@ -109,11 +109,11 @@
                             </div>
                             <div class="info-item">
                                 <span class="label">预期价格：</span>
-                                <span class="value">¥{{ record.expectedPrice }}</span>
+                                <span class="value">¥{{ record.price }}</span>
                             </div>
                             <div class="info-item">
                                 <span class="label">总金额：</span>
-                                <span class="value amount">¥{{ record.totalAmount.toLocaleString() }}</span>
+                                <span class="value amount">¥{{ record.quantity*record.price }}</span>
                             </div>
                             <div v-if="record.profit !== undefined" class="info-item">
                                 <span class="label">盈亏：</span>
@@ -121,10 +121,10 @@
                                     {{ record.profit > 0 ? '+' : '' }}¥{{ record.profit }}
                                 </span>
                             </div>
-                            <div v-if="record.status === 'pending' && record.validityDate" class="info-item">
+                            <div v-if="record.status === 'pending' && record.expireTime" class="info-item">
                                 <span class="label">委托时效：</span>
-                                <span class="value" :class="getValidityStatusClass(record.validityDate)">
-                                    {{ formatValidityDate(record.validityDate) }}
+                                <span class="value" :class="getValidityStatusClass(record.expireTime)">
+                                    {{ formatValidityDate(record.expireTime) }}
                                 </span>
                             </div>
                         </div>
@@ -149,7 +149,7 @@
                                     撤销时间：{{ formatTime(record.cancelledAt) }}
                                 </div>
                                 <div v-else>
-                                    {{ formatTime(record.createdAt) }}
+                                    {{ formatTime(record.createTime) }}
                                 </div>
                             </div>
                             <el-button 
@@ -216,7 +216,8 @@
 </template>
 
 <script setup>
-import { ref, computed, watch } from 'vue';
+import {aiTradeRecord} from '@/api/api.js';
+import { ref, computed, watch ,onMounted }  from 'vue';
 import { useUserStore } from '../store/user';
 import { ElButton, ElMessage, ElMessageBox } from 'element-plus';
 import { Search, More, CircleCheck, Clock, CircleClose, Warning } from '@element-plus/icons-vue';
@@ -266,15 +267,29 @@ watch(filterDateRange, (newVal) => {
     }
 });
 
+
+
 // 获取AI交易记录
-const allRecords = computed(() => {
-    // 执行数据迁移（仅在需要时）
-    userStore.migrateAITradingRecords();
-    
-    const records = userStore.aiTradingRecords || [];
-    
-    return records;
+const allRecords=ref([]);
+onMounted(() => {
+    const params = {};
+    params.startDate = filterDateRange.value ? filterDateRange.value[0] : null;
+    params.endDate = filterDateRange.value ? filterDateRange.value[1] : null;
+    params.key = filterKeyword.value;
+    aiTradeRecord(params).then(res => {
+        if (res.data.success) {
+            allRecords.value = res.data.data;
+            allRecords.value.forEach(record => {
+                record.type==1?record.type='buy':record.type='sell';
+                if(record.status==1)record.status='pending';
+                else if(record.status==3)record.status='completed';
+                else if(record.status==4)record.status='cancelled';
+            });
+   
+        }
+    });
 });
+
 
 // 筛选后的记录
 const filteredRecords = computed(() => {

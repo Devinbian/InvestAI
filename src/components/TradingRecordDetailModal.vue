@@ -21,11 +21,11 @@
                         <div class="detail-grid">
                             <div class="detail-item">
                                 <label>股票名称</label>
-                                <span>{{ record.stockName || record.stockInfo?.name }}</span>
+                                <span>{{ record.name  }}</span>
                             </div>
                             <div class="detail-item">
                                 <label>股票代码</label>
-                                <span>{{ record.stockCode || record.stockInfo?.code }}</span>
+                                <span>{{ record.code  }}</span>
                             </div>
                             <div class="detail-item">
                                 <label>交易类型</label>
@@ -52,11 +52,11 @@
                             </div>
                             <div class="detail-item">
                                 <label>{{ record.price ? '成交价格' : '预期价格' }}</label>
-                                <span>¥{{ (record.price || record.expectedPrice)?.toFixed(2) }}</span>
+                                <span>¥{{ record.price }}</span>
                             </div>
                             <div class="detail-item">
                                 <label>交易金额</label>
-                                <span class="amount">¥{{ record.totalAmount?.toLocaleString() }}</span>
+                                <span class="amount">¥{{ record.price*record.quantity }}</span>
                             </div>
                             <div v-if="record.fee !== undefined" class="detail-item">
                                 <label>手续费</label>
@@ -77,7 +77,7 @@
                         <div class="detail-grid">
                             <div class="detail-item">
                                 <label>{{ isAIRecord ? '创建时间' : '执行时间' }}</label>
-                                <span>{{ formatDetailTime(record.createdAt || record.executedAt) }}</span>
+                                <span>{{ formatDetailTime(record.createTime || record.executedAt) }}</span>
                             </div>
                             <div v-if="record.executedAt && isAIRecord" class="detail-item">
                                 <label>执行时间</label>
@@ -151,11 +151,11 @@
                 <div class="detail-grid">
                     <div class="detail-item">
                         <label>股票名称</label>
-                        <span>{{ record.stockName || record.stockInfo?.name }}</span>
+                        <span>{{ record.name  }}</span>
                     </div>
                     <div class="detail-item">
                         <label>股票代码</label>
-                        <span>{{ record.stockCode || record.stockInfo?.code }}</span>
+                        <span>{{ record.code }}</span>
                     </div>
                     <div class="detail-item">
                         <label>交易类型</label>
@@ -182,11 +182,11 @@
                     </div>
                     <div class="detail-item">
                         <label>{{ record.price ? '成交价格' : '预期价格' }}</label>
-                        <span>¥{{ (record.price || record.expectedPrice)?.toFixed(2) }}</span>
+                        <span>¥{{ record.price  }}</span>
                     </div>
                     <div class="detail-item">
                         <label>交易金额</label>
-                        <span class="amount">¥{{ record.totalAmount?.toLocaleString() }}</span>
+                        <span class="amount">¥{{ record.price*record.quantity }}</span>
                     </div>
                     <div v-if="record.fee !== undefined" class="detail-item">
                         <label>手续费</label>
@@ -207,7 +207,7 @@
                 <div class="detail-grid">
                     <div class="detail-item">
                         <label>{{ isAIRecord ? '创建时间' : '执行时间' }}</label>
-                        <span>{{ formatDetailTime(record.createdAt || record.executedAt) }}</span>
+                        <span>{{ formatDetailTime(record.createTime || record.executedAt) }}</span>
                     </div>
                     <div v-if="record.executedAt && isAIRecord" class="detail-item">
                         <label>执行时间</label>
@@ -318,7 +318,7 @@ const dialogTitle = computed(() => {
     if (!props.record) return '交易详情';
     const typeText = isAIRecord.value ? 'AI委托' : '自助';
     const actionText = props.record.type === 'buy' ? '买入' : '卖出';
-    const stockName = props.record.stockName || props.record.stockInfo?.name;
+    const stockName = props.record.name 
     return `${typeText}${actionText} - ${stockName}`;
 });
 

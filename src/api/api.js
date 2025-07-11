@@ -41,6 +41,7 @@ const api = {
 
   //record
   analyzeRecordApi:"/record/analyze",// 量化分析报告记录
+  aiTradeRecordApi:"/record/ai-trade" //ai交易
 };
 
 export default api;
@@ -129,3 +130,7 @@ export const exeuteTradePlan = (params) => request.post(api.executePlan, params)
 export const analyzeRecord=(params)=>request.get(api.analyzeRecordApi, {
   params
 });
+
+export const aiTradeRecord=(params)=>request.get(api.aiTradeRecordApi,{
+  params
+})

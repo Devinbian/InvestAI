@@ -199,7 +199,7 @@
                             <div class="asset-change"
                                 :class="[message.assetData.totalProfitPercent >= 0 ? 'profit' : 'loss']">
                                 <span class="change-icon">{{ message.assetData.totalProfitPercent >= 0 ? '📈' : '📉'
-                                    }}</span>
+                                }}</span>
                                 <span class="change-label">今日盈亏：</span>
                                 <span class="change-text">
                                     {{ message.assetData.totalProfitPercent >= 0 ? '+' : '' }}¥{{
@@ -1895,6 +1895,11 @@ const isLastAIMessage = computed(() => {
         return false;
     }
 
+    // 如果是量化分析消息，不显示重新生成按钮
+    if (props.message.isQuantAnalysis) {
+        return false;
+    }
+
     // 获取聊天历史中的所有AI消息
     const aiMessages = props.chatHistory.filter(msg => msg.role === 'assistant');
 
@@ -1926,6 +1931,7 @@ const isLastAIMessage = computed(() => {
             lastAIMessageId: lastAIMessage.id,
             lastAIMessageTimestamp: lastAIMessage.timestamp,
             totalAIMessages: aiMessages.length,
+            isQuantAnalysis: props.message.isQuantAnalysis,
             isLast: isLast
         });
     }

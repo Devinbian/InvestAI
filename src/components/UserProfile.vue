@@ -403,7 +403,7 @@
                                                 </el-icon>
                                                 购买智点
                                             </el-button>
-                                            <el-button @click="showPointsHistory = true">
+                                            <el-button @click="openSmartPointsRecords">
                                                 <el-icon>
                                                     <List />
                                                 </el-icon>
@@ -1349,6 +1349,13 @@
             @close="showBindEmail = false"
             @success="handleEmailBindSuccess"
         />
+
+        <!-- 记录中心 -->
+        <RecordsCenter 
+            v-if="showRecordsCenter"
+            :initialTab="recordsCenterInitialTab"
+            @close="showRecordsCenter = false"
+        />
     </div>
 </template>
 
@@ -1360,6 +1367,7 @@ import { Edit, Close, CircleCheck, Warning, TrendCharts, Star, Plus, Switch, Lis
 import { getUserInfo, updateUserInfo, changePassword as changePasswordApi } from '@/api/api';
 import PhoneBindingDialog from './PhoneBindingDialog.vue';
 import EmailBindingDialog from './EmailBindingDialog.vue';
+import RecordsCenter from './RecordsCenter.vue';
 
 // 定义emit事件
 const emit = defineEmits(['close']);
@@ -1409,6 +1417,8 @@ const showStockRecharge = ref(false);
 const showSmartPointsRecharge = ref(false);
 const showTransferDialog = ref(false);
 const showPointsHistory = ref(false);
+const showRecordsCenter = ref(false);
+const recordsCenterInitialTab = ref('points');
 const selectedAmount = ref(null);
 const selectedPayment = ref(null);
 const customAmount = ref(null);
@@ -1532,6 +1542,12 @@ const viewPortfolio = () => {
     ElMessage.success(`您有 ${userStore.portfolio.length} 只持仓股票`);
     // 实际项目中可以emit事件或者路由跳转
     // emit('show-portfolio');
+};
+
+// 打开智点记录
+const openSmartPointsRecords = () => {
+    recordsCenterInitialTab.value = 'points';
+    showRecordsCenter.value = true;
 };
 
 const saveProfile = async () => {

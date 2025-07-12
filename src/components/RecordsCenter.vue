@@ -212,6 +212,14 @@ import SmartPointsRecords from './SmartPointsRecords.vue';
 import AITradingRecords from './AITradingRecords.vue';
 import UserTradingRecords from './UserTradingRecords.vue';
 
+// 定义props
+const props = defineProps({
+    initialTab: {
+        type: String,
+        default: 'reports'
+    }
+});
+
 // 定义emit事件
 const emit = defineEmits(['close']);
 
@@ -223,8 +231,16 @@ const isMobile = computed(() => {
     return window.innerWidth <= 768;
 });
 
-// 当前活跃的Tab
-const activeTab = ref('reports');
+// 当前活跃的Tab - 使用props.initialTab作为默认值
+const activeTab = ref(props.initialTab || 'reports');
+
+// 监听props.initialTab的变化，当父组件传入新的initialTab时更新activeTab
+watch(() => props.initialTab, (newTab) => {
+    if (newTab) {
+        activeTab.value = newTab;
+        console.log('RecordsCenter: 接收到新的initialTab:', newTab);
+    }
+}, { immediate: true });
 
 // 筛选器展开状态
 const filtersExpanded = ref(false);

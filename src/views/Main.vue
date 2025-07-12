@@ -266,7 +266,7 @@
         <UserProfile v-if="showUserProfile" @close="closeUserProfile" />
 
         <!-- 记录中心 -->
-        <RecordsCenter v-if="showRecordsCenter" @close="closeRecordsCenter" />
+        <RecordsCenter v-if="showRecordsCenter" :initialTab="recordsCenterInitialTab" @close="closeRecordsCenter" />
 
         <!-- 量化分析提醒设置对话框 -->
         <QuantReminderDialog v-model:visible="showQuantReminderDialog" :message="currentReminderMessage"
@@ -374,6 +374,7 @@ const {
 
 const showUserProfile = ref(false); // 控制是否显示个人中心
 const showRecordsCenter = ref(false); // 控制是否显示记录中心
+const recordsCenterInitialTab = ref('reports'); // 记录中心初始tab
 // 量化分析提醒相关状态已移至 useStockOperations
 const showChatShortcuts = ref(false); // 已废弃，快捷操作按钮现在直接显示
 
@@ -1330,7 +1331,10 @@ const handleCommand = async (command) => {
     await handleUserCommand(command, {
         onShowProfile: () => { showUserProfile.value = true; },
         onShowPreferences: () => { preferencesDialogVisible.value = true; },
-        onShowRecords: () => { showRecordsCenter.value = true; },
+        onShowRecords: () => { 
+            recordsCenterInitialTab.value = 'reports'; // 从命令打开时默认显示第一个tab
+            showRecordsCenter.value = true; 
+        },
         onResetPageState: () => {
             chatHistory.value = [];
             inputMessage.value = '';
@@ -1351,6 +1355,7 @@ const handleShowPreferences = () => {
 };
 
 const handleShowRecords = () => {
+    recordsCenterInitialTab.value = 'reports'; // 从个人头像下拉菜单打开时默认显示第一个tab
     showRecordsCenter.value = true;
 };
 

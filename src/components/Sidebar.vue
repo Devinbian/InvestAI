@@ -41,7 +41,7 @@
                 </div>
                 <!-- 2. 智能荐股 -->
                 <div class="tab-item" :class="{ 'active': activeTab === 'stocks' }" @click="activeTab = 'stocks'">
-                    <span class="tab-icon">🎯</span>
+                    <span class="tab-icon"> 📈 </span>
                     <span class="tab-text">智能荐股</span>
                 </div>
                 <!-- 3. 自选股 -->

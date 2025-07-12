@@ -18,15 +18,27 @@
         </div>
 
         <div class="recommendations-list">
-            <!-- PC端使用StockList -->
-            <StockList v-if="!isMobileView" :stocks="formattedRecommendations" :actions="recommendationActions"
-                :show-recommend-index="true" :show-recommend-tooltip="true" :show-basic-details="true"
-                :show-reason="true" :clickable="false" :is-mobile="isMobileView" @action-click="handleActionClick" />
+            <!-- 空状态提示 -->
+            <div v-if="formattedRecommendations.length === 0" class="empty-state">
+                <div class="empty-icon">
+                    📈
+                </div>
+                <div class="empty-title">暂无智能荐股数据</div>
+                <div class="empty-desc">请先在聊天中使用智能荐股功能，系统将根据您的投资偏好推荐优质股票</div>
+            </div>
 
-            <!-- 移动端使用MobileStockList -->
-            <MobileStockList v-else :stocks="formattedRecommendations" :actions="recommendationActions"
-                :show-recommend-index="true" :show-details="true" :clickable="false"
-                @action-click="handleActionClick" />
+            <!-- 有数据时显示列表 -->
+            <template v-else>
+                <!-- PC端使用StockList -->
+                <StockList v-if="!isMobileView" :stocks="formattedRecommendations" :actions="recommendationActions"
+                    :show-recommend-index="true" :show-recommend-tooltip="true" :show-basic-details="true"
+                    :show-reason="true" :clickable="false" :is-mobile="isMobileView" @action-click="handleActionClick" />
+
+                <!-- 移动端使用MobileStockList -->
+                <MobileStockList v-else :stocks="formattedRecommendations" :actions="recommendationActions"
+                    :show-recommend-index="true" :show-details="true" :clickable="false"
+                    @action-click="handleActionClick" />
+            </template>
         </div>
 
 
@@ -105,6 +117,16 @@ const handleActionClick = ({ action, stock }) => {
 
     // 直接转发到Main.vue的统一处理逻辑
     emit('action-click', { action, stock });
+};
+
+// 处理开始智能荐股 - 与快捷操作保持一致
+const handleStartRecommendation = () => {
+    // 发送智能荐股消息到聊天，触发完整的智能荐股流程
+    emit('send-to-chat', {
+        message: '智能荐股：根据我的投资偏好推荐优质股票',
+        type: 'smart_recommendation',
+        action: 'smart_recommendation' // 添加action标识，确保与快捷操作一致
+    });
 };
 
 // 这些业务逻辑已经移到Main.vue中统一处理，避免重复代码
@@ -243,6 +265,79 @@ onUnmounted(() => {
 
     .sidebar-container .recommendations-list {
         padding: 0 6px 12px 6px !important;
+    }
+}
+
+/* 空状态样式 - 参照自选股样式 */
+.empty-state {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: 40px 20px;
+    text-align: center;
+    height: 100%;
+}
+
+.empty-icon {
+    margin-bottom: 16px;
+    color: #d1d5db;
+}
+
+.empty-title {
+    font-size: 1rem;
+    font-weight: 500;
+    color: #6b7280;
+    margin-bottom: 8px;
+}
+
+.empty-desc {
+    font-size: 0.875rem;
+    color: #9ca3af;
+    line-height: 1.4;
+    max-width: 280px;
+}
+
+/* 移动端空状态优化 */
+@media (max-width: 768px) {
+    .empty-state {
+        padding: 30px 16px !important;
+        height: auto !important;
+        min-height: 200px !important;
+    }
+
+    .empty-icon {
+        font-size: 2.5rem !important;
+        margin-bottom: 12px !important;
+    }
+
+    .empty-title {
+        font-size: 0.9rem !important;
+        margin-bottom: 6px !important;
+    }
+
+    .empty-desc {
+        font-size: 0.8rem !important;
+        max-width: 240px !important;
+    }
+
+    /* 移动端侧边栏中的空状态进一步优化 */
+    .sidebar-container .empty-state {
+        padding: 32px 12px !important;
+        min-height: 200px !important;
+    }
+
+    .sidebar-container .empty-icon {
+        font-size: 2rem !important;
+    }
+
+    .sidebar-container .empty-title {
+        font-size: 0.85rem !important;
+    }
+
+    .sidebar-container .empty-desc {
+        font-size: 0.75rem !important;
+        max-width: 200px !important;
     }
 }
 </style>

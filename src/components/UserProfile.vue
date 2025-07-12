@@ -515,21 +515,64 @@
             </div>
 
             <!-- 编辑资料对话框 - PC端 -->
-            <el-dialog v-model="showEditProfilePC" title="编辑个人资料" width="500px" class="profile-dialog pc-only">
-                <el-form :model="editForm" :rules="editRules" ref="editFormRef" label-width="80px">
-                    <el-form-item label="用户名" prop="username">
-                        <el-input v-model="editForm.username" placeholder="请输入用户名" class="profile-input" />
-                    </el-form-item>
-                    <el-form-item label="昵称" prop="nickname">
-                        <el-input v-model="editForm.nickname" placeholder="请输入昵称" class="profile-input" />
-                    </el-form-item>
-                </el-form>
-                <template #footer>
-                    <el-button @click="showEditProfile = false" class="dialog-cancel-btn">取消</el-button>
-                    <el-button type="primary" @click="saveProfile" :loading="saving"
-                        class="dialog-submit-btn">保存</el-button>
-                </template>
-            </el-dialog>
+            <div class="profile-edit-overlay" v-if="showEditProfilePC && !isMobile()" @click="showEditProfile = false">
+                <div class="profile-edit-container" @click.stop>
+                    <!-- 头部 -->
+                    <div class="profile-edit-header">
+                        <h3>编辑个人资料</h3>
+                        <button class="close-btn" @click="showEditProfile = false">
+                            <el-icon>
+                                <Close />
+                            </el-icon>
+                        </button>
+                    </div>
+
+                    <!-- 内容 -->
+                    <div class="profile-edit-content">
+                        <div class="form-section">
+                            <div class="form-item">
+                                <label class="form-label">用户名</label>
+                                <input
+                                    v-model="editForm.username"
+                                    type="text"
+                                    placeholder="请输入用户名"
+                                    class="form-input"
+                                    :class="{ 'error': editErrors.username }"
+                                    @blur="validateEditForm"
+                                />
+                                <div v-if="editErrors.username" class="error-message">{{ editErrors.username }}</div>
+                            </div>
+
+                            <div class="form-item">
+                                <label class="form-label">昵称</label>
+                                <input
+                                    v-model="editForm.nickname"
+                                    type="text"
+                                    placeholder="请输入昵称"
+                                    class="form-input"
+                                    :class="{ 'error': editErrors.nickname }"
+                                    @blur="validateEditForm"
+                                />
+                                <div v-if="editErrors.nickname" class="error-message">{{ editErrors.nickname }}</div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- 底部按钮 -->
+                    <div class="profile-edit-footer">
+                        <button class="cancel-btn" @click="showEditProfile = false">取消</button>
+                        <button 
+                            class="confirm-btn" 
+                            :class="{ 'loading': saving, 'disabled': !canSaveProfile }"
+                            :disabled="!canSaveProfile"
+                            @click="saveProfile"
+                        >
+                            <span v-if="saving">保存中...</span>
+                            <span v-else>保存</span>
+                        </button>
+                    </div>
+                </div>
+            </div>
 
             <!-- 编辑资料原生弹窗 - 移动端 -->
             <div class="mobile-settings-overlay" v-if="showEditProfile" @click="showEditProfile = false">
@@ -593,27 +636,110 @@
             </div>
 
             <!-- 修改密码对话框 - PC端 -->
-            <el-dialog v-model="showChangePasswordPC" title="修改密码" width="400px" class="profile-dialog pc-only">
-                <el-form :model="passwordForm" :rules="passwordRules" ref="passwordFormRef" label-width="100px">
-                    <el-form-item label="当前密码" prop="currentPassword">
-                        <el-input v-model="passwordForm.currentPassword" type="password" show-password
-                            class="profile-input" />
-                    </el-form-item>
-                    <el-form-item label="新密码" prop="newPassword">
-                        <el-input v-model="passwordForm.newPassword" type="password" show-password
-                            class="profile-input" />
-                    </el-form-item>
-                    <el-form-item label="确认密码" prop="confirmPassword">
-                        <el-input v-model="passwordForm.confirmPassword" type="password" show-password
-                            class="profile-input" />
-                    </el-form-item>
-                </el-form>
-                <template #footer>
-                    <el-button @click="showChangePassword = false" class="dialog-cancel-btn">取消</el-button>
-                    <el-button type="primary" @click="changePassword" :loading="changingPassword"
-                        class="dialog-submit-btn">确认修改</el-button>
-                </template>
-            </el-dialog>
+            <div class="password-change-overlay" v-if="showChangePasswordPC && !isMobile()" @click="showChangePassword = false">
+                <div class="password-change-container" @click.stop>
+                    <!-- 头部 -->
+                    <div class="password-change-header">
+                        <h3>修改密码</h3>
+                        <button class="close-btn" @click="showChangePassword = false">
+                            <el-icon>
+                                <Close />
+                            </el-icon>
+                        </button>
+                    </div>
+
+                    <!-- 内容 -->
+                    <div class="password-change-content">
+                        <div class="form-section">
+                            <div class="form-item">
+                                <label class="form-label">当前密码</label>
+                                <div class="password-input-wrapper">
+                                    <input
+                                        v-model="passwordForm.currentPassword"
+                                        :type="showCurrentPasswordPC ? 'text' : 'password'"
+                                        placeholder="请输入当前密码"
+                                        class="form-input"
+                                        :class="{ 'error': passwordErrors.currentPassword }"
+                                        @blur="validatePasswordForm"
+                                    />
+                                    <button 
+                                        class="password-toggle-btn" 
+                                        type="button"
+                                        @click="showCurrentPasswordPC = !showCurrentPasswordPC"
+                                    >
+                                        <el-icon>
+                                            <component :is="showCurrentPasswordPC ? 'Hide' : 'View'" />
+                                        </el-icon>
+                                    </button>
+                                </div>
+                                <div v-if="passwordErrors.currentPassword" class="error-message">{{ passwordErrors.currentPassword }}</div>
+                            </div>
+
+                            <div class="form-item">
+                                <label class="form-label">新密码</label>
+                                <div class="password-input-wrapper">
+                                    <input
+                                        v-model="passwordForm.newPassword"
+                                        :type="showNewPasswordPC ? 'text' : 'password'"
+                                        placeholder="请输入新密码"
+                                        class="form-input"
+                                        :class="{ 'error': passwordErrors.newPassword }"
+                                        @blur="validatePasswordForm"
+                                    />
+                                    <button 
+                                        class="password-toggle-btn" 
+                                        type="button"
+                                        @click="showNewPasswordPC = !showNewPasswordPC"
+                                    >
+                                        <el-icon>
+                                            <component :is="showNewPasswordPC ? 'Hide' : 'View'" />
+                                        </el-icon>
+                                    </button>
+                                </div>
+                                <div v-if="passwordErrors.newPassword" class="error-message">{{ passwordErrors.newPassword }}</div>
+                            </div>
+
+                            <div class="form-item">
+                                <label class="form-label">确认密码</label>
+                                <div class="password-input-wrapper">
+                                    <input
+                                        v-model="passwordForm.confirmPassword"
+                                        :type="showConfirmPasswordPC ? 'text' : 'password'"
+                                        placeholder="请再次输入新密码"
+                                        class="form-input"
+                                        :class="{ 'error': passwordErrors.confirmPassword }"
+                                        @blur="validatePasswordForm"
+                                    />
+                                    <button 
+                                        class="password-toggle-btn" 
+                                        type="button"
+                                        @click="showConfirmPasswordPC = !showConfirmPasswordPC"
+                                    >
+                                        <el-icon>
+                                            <component :is="showConfirmPasswordPC ? 'Hide' : 'View'" />
+                                        </el-icon>
+                                    </button>
+                                </div>
+                                <div v-if="passwordErrors.confirmPassword" class="error-message">{{ passwordErrors.confirmPassword }}</div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- 底部按钮 -->
+                    <div class="password-change-footer">
+                        <button class="cancel-btn" @click="showChangePassword = false">取消</button>
+                        <button 
+                            class="confirm-btn" 
+                            :class="{ 'loading': changingPassword, 'disabled': !canChangePassword }"
+                            :disabled="!canChangePassword"
+                            @click="changePassword"
+                        >
+                            <span v-if="changingPassword">修改中...</span>
+                            <span v-else>确认修改</span>
+                        </button>
+                    </div>
+                </div>
+            </div>
 
             <!-- 修改密码原生弹窗 - 移动端 -->
             <div class="mobile-settings-overlay" v-if="showChangePassword" @click="showChangePassword = false">
@@ -1463,6 +1589,12 @@ const editForm = reactive({
     nickname: ''
 });
 
+// 编辑表单错误信息
+const editErrors = reactive({
+    username: '',
+    nickname: ''
+});
+
 const editRules = {
     username: [
         { min: 3, max: 20, message: '用户名长度在 3 到 20 个字符', trigger: 'blur' },
@@ -1479,6 +1611,18 @@ const passwordForm = reactive({
     newPassword: '',
     confirmPassword: ''
 });
+
+// 密码表单错误信息
+const passwordErrors = reactive({
+    currentPassword: '',
+    newPassword: '',
+    confirmPassword: ''
+});
+
+// PC端密码显示状态
+const showCurrentPasswordPC = ref(false);
+const showNewPasswordPC = ref(false);
+const showConfirmPasswordPC = ref(false);
 
 const passwordRules = {
     currentPassword: [
@@ -1549,6 +1693,74 @@ const openSmartPointsRecords = () => {
     recordsCenterInitialTab.value = 'points';
     showRecordsCenter.value = true;
 };
+
+// 验证编辑表单
+const validateEditForm = () => {
+    // 重置错误信息
+    editErrors.username = '';
+    editErrors.nickname = '';
+    
+    // 验证用户名
+    if (!editForm.username.trim()) {
+        editErrors.username = '请输入用户名';
+    } else if (editForm.username.length < 3 || editForm.username.length > 20) {
+        editErrors.username = '用户名长度在 3 到 20 个字符';
+    } else if (!/^[a-zA-Z0-9_]+$/.test(editForm.username)) {
+        editErrors.username = '用户名只能包含字母、数字和下划线';
+    }
+    
+    // 验证昵称
+    if (!editForm.nickname.trim()) {
+        editErrors.nickname = '请输入昵称';
+    } else if (editForm.nickname.length < 2 || editForm.nickname.length > 20) {
+        editErrors.nickname = '昵称长度在 2 到 20 个字符';
+    }
+};
+
+// 验证密码表单
+const validatePasswordForm = () => {
+    // 重置错误信息
+    passwordErrors.currentPassword = '';
+    passwordErrors.newPassword = '';
+    passwordErrors.confirmPassword = '';
+    
+    // 验证当前密码
+    if (!passwordForm.currentPassword.trim()) {
+        passwordErrors.currentPassword = '请输入当前密码';
+    }
+    
+    // 验证新密码
+    if (!passwordForm.newPassword.trim()) {
+        passwordErrors.newPassword = '请输入新密码';
+    } else if (passwordForm.newPassword.length < 6 || passwordForm.newPassword.length > 20) {
+        passwordErrors.newPassword = '密码长度在 6 到 20 个字符';
+    }
+    
+    // 验证确认密码
+    if (!passwordForm.confirmPassword.trim()) {
+        passwordErrors.confirmPassword = '请确认新密码';
+    } else if (passwordForm.confirmPassword !== passwordForm.newPassword) {
+        passwordErrors.confirmPassword = '两次输入的密码不一致';
+    }
+};
+
+// 检查是否可以保存个人资料
+const canSaveProfile = computed(() => {
+    return editForm.username.trim() && 
+           editForm.nickname.trim() && 
+           !editErrors.username && 
+           !editErrors.nickname;
+});
+
+// 检查是否可以修改密码
+const canChangePassword = computed(() => {
+    return passwordForm.currentPassword.trim() && 
+           passwordForm.newPassword.trim() && 
+           passwordForm.confirmPassword.trim() && 
+           !passwordErrors.currentPassword && 
+           !passwordErrors.newPassword && 
+           !passwordErrors.confirmPassword;
+});
 
 const saveProfile = async () => {
     saving.value = true;
@@ -1950,22 +2162,27 @@ onMounted(() => {
 }
 
 .close-btn {
-    width: 40px;
-    height: 40px;
-    border-radius: 50%;
-    background: rgba(255, 255, 255, 0.9);
+    width: 40px !important;
+    height: 40px !important;
+    border-radius: 50% !important;
+    background: rgba(255, 255, 255, 0.9) !important;
     backdrop-filter: blur(8px);
-    border: 1px solid rgba(0, 0, 0, 0.1);
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    color: #6b7280;
+    border: 1px solid rgba(0, 0, 0, 0.1) !important;
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    color: #6b7280 !important;
     transition: all 0.2s ease;
+    min-width: 40px !important;
+    min-height: 40px !important;
+    max-width: 40px !important;
+    max-height: 40px !important;
+    padding: 0 !important;
 }
 
 .close-btn:hover {
-    background: rgba(255, 255, 255, 1);
-    color: #18181b;
+    background: rgba(255, 255, 255, 1) !important;
+    color: #18181b !important;
     transform: scale(1.05);
 }
 
@@ -3460,15 +3677,27 @@ onMounted(() => {
     }
 
     .close-btn {
-        width: 32px;
-        height: 32px;
-        border-radius: 50%;
-        background: rgba(0, 0, 0, 0.5);
-        color: white;
-        border: none;
-        display: flex;
-        align-items: center;
-        justify-content: center;
+        width: 32px !important;
+        height: 32px !important;
+        border-radius: 50% !important;
+        background: rgba(255, 255, 255, 0.9) !important;
+        color: #6b7280 !important;
+        border: 1px solid rgba(0, 0, 0, 0.1) !important;
+        display: flex !important;
+        align-items: center !important;
+        justify-content: center !important;
+        transition: all 0.2s ease;
+        min-width: 32px !important;
+        min-height: 32px !important;
+        max-width: 32px !important;
+        max-height: 32px !important;
+        padding: 0 !important;
+    }
+
+    .close-btn:hover {
+        background: rgba(255, 255, 255, 1) !important;
+        color: #18181b !important;
+        transform: scale(1.05);
     }
 
     /* 移动端原生充值/购买弹窗样式 */
@@ -4762,5 +4991,271 @@ onMounted(() => {
         z-index: -1 !important;
         pointer-events: none !important;
     }
+}
+
+/* ================ PC端原生弹窗样式 ================ */
+/* 编辑个人资料弹窗样式 */
+.profile-edit-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: rgba(0, 0, 0, 0.5);
+    z-index: 2000;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    backdrop-filter: blur(4px);
+}
+
+.profile-edit-container {
+    background: white;
+    border-radius: 16px;
+    width: 90%;
+    max-width: 480px;
+    max-height: 90vh;
+    overflow: hidden;
+    box-shadow: 0 20px 40px rgba(0, 0, 0, 0.15);
+    animation: slideUp 0.3s ease-out;
+}
+
+.profile-edit-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 20px 24px;
+    border-bottom: 1px solid #f3f4f6;
+}
+
+.profile-edit-header h3 {
+    margin: 0;
+    font-size: 1.125rem;
+    font-weight: 600;
+    color: #18181b;
+}
+
+.profile-edit-content {
+    padding: 24px;
+    max-height: 60vh;
+    overflow-y: auto;
+}
+
+.profile-edit-footer {
+    padding: 20px 24px;
+    border-top: 1px solid #f3f4f6;
+    display: flex;
+    gap: 12px;
+}
+
+/* 修改密码弹窗样式 */
+.password-change-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: rgba(0, 0, 0, 0.5);
+    z-index: 2000;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    backdrop-filter: blur(4px);
+}
+
+.password-change-container {
+    background: white;
+    border-radius: 16px;
+    width: 90%;
+    max-width: 480px;
+    max-height: 90vh;
+    overflow: hidden;
+    box-shadow: 0 20px 40px rgba(0, 0, 0, 0.15);
+    animation: slideUp 0.3s ease-out;
+}
+
+.password-change-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 20px 24px;
+    border-bottom: 1px solid #f3f4f6;
+}
+
+.password-change-header h3 {
+    margin: 0;
+    font-size: 1.125rem;
+    font-weight: 600;
+    color: #18181b;
+}
+
+.password-change-content {
+    padding: 24px;
+    max-height: 60vh;
+    overflow-y: auto;
+}
+
+.password-change-footer {
+    padding: 20px 24px;
+    border-top: 1px solid #f3f4f6;
+    display: flex;
+    gap: 12px;
+}
+
+/* 共用样式 */
+@keyframes slideUp {
+    from {
+        opacity: 0;
+        transform: translateY(20px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+/* 修改密码弹窗和编辑资料弹窗的关闭按钮样式 */
+.password-change-container .close-btn,
+.profile-edit-container .close-btn {
+    background: none !important;
+    border: none !important;
+    padding: 8px !important;
+    cursor: pointer !important;
+    border-radius: 8px !important;
+    color: #6b7280 !important;
+    transition: all 0.2s ease !important;
+    width: auto !important;
+    height: auto !important;
+    min-width: auto !important;
+    min-height: auto !important;
+    max-width: none !important;
+    max-height: none !important;
+    backdrop-filter: none !important;
+    transform: none !important;
+}
+
+.password-change-container .close-btn:hover,
+.profile-edit-container .close-btn:hover {
+    background: #f3f4f6 !important;
+    color: #18181b !important;
+    transform: none !important;
+}
+
+.form-section {
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+}
+
+.form-item {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+
+.form-label {
+    font-size: 0.875rem;
+    font-weight: 500;
+    color: #374151;
+}
+
+.form-input {
+    width: 100%;
+    height: 48px;
+    padding: 0 16px;
+    border: 1px solid #d1d5db;
+    border-radius: 8px;
+    font-size: 1rem;
+    background: white;
+    transition: all 0.2s ease;
+    box-sizing: border-box;
+}
+
+.form-input:focus {
+    outline: none;
+    border-color: #3b82f6;
+    box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+}
+
+.form-input.error {
+    border-color: #ef4444;
+}
+
+.form-input.error:focus {
+    border-color: #ef4444;
+    box-shadow: 0 0 0 3px rgba(239, 68, 68, 0.1);
+}
+
+.password-input-wrapper {
+    position: relative;
+}
+
+.password-toggle-btn {
+    position: absolute;
+    right: 12px;
+    top: 50%;
+    transform: translateY(-50%);
+    background: none;
+    border: none;
+    color: #6b7280;
+    cursor: pointer;
+    padding: 4px;
+    border-radius: 4px;
+    transition: color 0.2s ease;
+}
+
+.password-toggle-btn:hover {
+    color: #18181b;
+}
+
+.error-message {
+    font-size: 0.75rem;
+    color: #ef4444;
+    margin-top: 4px;
+}
+
+.cancel-btn {
+    flex: 1;
+    height: 48px;
+    background: #f3f4f6;
+    color: #6b7280;
+    border: none;
+    border-radius: 8px;
+    font-size: 1rem;
+    font-weight: 500;
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+.cancel-btn:hover {
+    background: #e5e7eb;
+    color: #374151;
+}
+
+.confirm-btn {
+    flex: 2;
+    height: 48px;
+    background: #18181b;
+    color: white;
+    border: none;
+    border-radius: 8px;
+    font-size: 1rem;
+    font-weight: 500;
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+.confirm-btn:hover:not(.disabled):not(.loading) {
+    background: #000000;
+}
+
+.confirm-btn.disabled {
+    background: #9ca3af;
+    cursor: not-allowed;
+}
+
+.confirm-btn.loading {
+    background: #6b7280;
+    cursor: not-allowed;
 }
 </style>

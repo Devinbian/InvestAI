@@ -224,8 +224,8 @@ const showMobileUserMenu = () => {
 .pc-user-menu {
     display: flex;
 
-    // 移动端隐藏PC端菜单
-    @include mobile-and-tablet {
+    // 移动端隐藏PC端菜单 - 使用768px断点保持一致性
+    @media (max-width: 768px) {
         display: none !important;
     }
 }
@@ -233,8 +233,8 @@ const showMobileUserMenu = () => {
 .mobile-user-avatar {
     display: none;
 
-    // 移动端显示头像按钮
-    @include mobile-and-tablet {
+    // 移动端显示头像按钮 - 使用768px断点保持一致性
+    @media (max-width: 768px) {
         display: flex !important;
         width: 32px !important;
         height: 32px !important;

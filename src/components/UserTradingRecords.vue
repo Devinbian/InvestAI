@@ -106,7 +106,7 @@
                                 <span class="value">{{ record.quantity }}股</span>
                             </div>
                             <div class="info-item">
-                                <span class="label">成交价格：</span>
+                                <span class="label">委托价格：</span>
                                 <span class="value">¥{{ record.price.toFixed(2) }}</span>
                             </div>
                             <div class="info-item">
@@ -209,7 +209,7 @@
 </template>
 
 <script setup>
-import { ref, computed, watch, onMounted } from 'vue';
+import { ref, computed, watch, onMounted, onUnmounted } from 'vue';
 import { useUserStore } from '../store/user';
 import { ElButton, ElSelect, ElOption, ElDatePicker, ElInput, ElPagination, ElMessage, ElMessageBox, ElTag, ElDropdown, ElDropdownMenu, ElDropdownItem, ElIcon } from 'element-plus';
 import { Search, More, CircleCheck, Clock, CircleClose, Warning } from '@element-plus/icons-vue';
@@ -221,6 +221,17 @@ const emit = defineEmits(['data-loaded']);
 
 onMounted(() => {
     getStockOrderRecordRequest();
+    
+    // 启动时间更新定时器，每分钟更新一次
+    timeUpdateInterval = setInterval(() => {
+        currentTime.value = new Date();
+    }, 60000);
+});
+
+onUnmounted(() => {
+    if (timeUpdateInterval) {
+        clearInterval(timeUpdateInterval);
+    }
 });
 
 const userStore = useUserStore();
@@ -246,6 +257,10 @@ const endDate = ref('');
 // 详情弹窗相关
 const detailModalVisible = ref(false);
 const selectedRecord = ref(null);
+
+// 时间更新相关
+const currentTime = ref(new Date());
+let timeUpdateInterval = null;
 
 // 获取交易记录
 const allRecords = ref([]);
@@ -393,35 +408,50 @@ const getStatusText = (status) => {
     return statusMap[status] || status;
 };
 
-// 格式化时间
-const formatTime = (dateString) => {
-    const date = new Date(dateString);
-    const now = new Date();
-    const diffTime = now - date;
-    const diffDays = Math.floor(diffTime / (1000 * 60 * 60 * 24));
+// 格式化时间 - 使用响应式时间基准
+const formatTime = computed(() => {
+    return (dateString) => {
+        if (!dateString) return '';
+        
+        // 触发响应式更新
+        currentTime.value;
+        
+        const date = new Date(dateString);
+        const now = new Date();
+        
+        // 设置时间到当天的开始，用于准确计算天数差
+        const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+        const recordDate = new Date(date.getFullYear(), date.getMonth(), date.getDate());
+        
+        const diffTime = today - recordDate;
+        const diffDays = Math.floor(diffTime / (1000 * 60 * 60 * 24));
 
-    if (diffDays === 0) {
-        return '今天 ' + date.toLocaleTimeString('zh-CN', {
-            hour: '2-digit',
-            minute: '2-digit'
-        });
-    } else if (diffDays === 1) {
-        return '昨天 ' + date.toLocaleTimeString('zh-CN', {
-            hour: '2-digit',
-            minute: '2-digit'
-        });
-    } else if (diffDays < 7) {
-        return diffDays + '天前';
-    } else {
-        return date.toLocaleDateString('zh-CN', {
-            year: 'numeric',
-            month: '2-digit',
-            day: '2-digit',
-            hour: '2-digit',
-            minute: '2-digit'
-        });
-    }
-};
+        if (diffDays === 0) {
+            return '今天 ' + date.toLocaleTimeString('zh-CN', {
+                hour: '2-digit',
+                minute: '2-digit'
+            });
+        } else if (diffDays === 1) {
+            return '昨天 ' + date.toLocaleTimeString('zh-CN', {
+                hour: '2-digit',
+                minute: '2-digit'
+            });
+        } else if (diffDays < 7) {
+            return diffDays + '天前 ' + date.toLocaleTimeString('zh-CN', {
+                hour: '2-digit',
+                minute: '2-digit'
+            });
+        } else {
+            return date.toLocaleString('zh-CN', {
+                year: 'numeric',
+                month: '2-digit',
+                day: '2-digit',
+                hour: '2-digit',
+                minute: '2-digit'
+            });
+        }
+    };
+});
 
 // 查看记录详情
 const viewRecord = (record) => {

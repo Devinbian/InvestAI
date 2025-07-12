@@ -108,7 +108,7 @@
                                 <span class="value">{{ record.quantity }}股</span>
                             </div>
                             <div class="info-item">
-                                <span class="label">预期价格：</span>
+                                <span class="label">委托价格：</span>
                                 <span class="value">¥{{ record.price }}</span>
                             </div>
                             <div class="info-item">
@@ -149,7 +149,7 @@
                                     撤销时间：{{ formatTime(record.cancelledAt) }}
                                 </div>
                                 <div v-else>
-                                    {{ formatTime(record.createTime) }}
+                                    {{ formatTime(record.createdAt) }}
                                 </div>
                             </div>
                             <el-button 
@@ -216,8 +216,8 @@
 </template>
 
 <script setup>
-import {aiTradeRecord} from '@/api/api.js';
-import { ref, computed, watch ,onMounted }  from 'vue';
+import {aiTradeRecord, cancelStockOrder} from '@/api/api.js';
+import { ref, computed, watch ,onMounted, onUnmounted }  from 'vue';
 import { useUserStore } from '../store/user';
 import { ElButton, ElMessage, ElMessageBox } from 'element-plus';
 import { Search, More, CircleCheck, Clock, CircleClose, Warning } from '@element-plus/icons-vue';
@@ -250,6 +250,10 @@ const endDate = ref('');
 const detailModalVisible = ref(false);
 const selectedRecord = ref(null);
 
+// 时间更新相关
+const currentTime = ref(new Date());
+let timeUpdateInterval = null;
+
 // 监听移动端日期变化，同步到filterDateRange
 watch([startDate, endDate], ([start, end]) => {
     if (start && end) {
@@ -274,24 +278,54 @@ watch(filterDateRange, (newVal) => {
 
 // 获取AI交易记录
 const allRecords=ref([]);
-onMounted(() => {
+
+// 获取数据的方法
+const fetchData = async () => {
     const params = {};
     params.startDate = filterDateRange.value ? filterDateRange.value[0] : null;
     params.endDate = filterDateRange.value ? filterDateRange.value[1] : null;
     params.key = filterKeyword.value;
-    aiTradeRecord(params).then(res => {
+    
+    try {
+        const res = await aiTradeRecord(params);
         if (res.data.success) {
             allRecords.value = res.data.data;
+            console.log('获取到的AI交易记录原始数据:', res.data.data);
             allRecords.value.forEach(record => {
                 record.type==1?record.type='buy':record.type='sell';
                 if(record.status==1)record.status='pending';
                 else if(record.status==3)record.status='completed';
                 else if(record.status==4)record.status='cancelled';
+                // 确保有createdAt字段，如果没有则使用createTime
+                if (!record.createdAt && record.createTime) {
+                    record.createdAt = record.createTime;
+                }
             });
+            console.log('处理后的AI交易记录:', allRecords.value);
         }
-    }).catch(error => {
+    } catch (error) {
         console.error('获取AI交易记录失败:', error);
-    });
+    }
+};
+
+// 刷新数据的方法
+const refreshData = async () => {
+    await fetchData();
+};
+
+onMounted(async () => {
+    await fetchData();
+    
+    // 启动时间更新定时器，每分钟更新一次
+    timeUpdateInterval = setInterval(() => {
+        currentTime.value = new Date();
+    }, 60000);
+});
+
+onUnmounted(() => {
+    if (timeUpdateInterval) {
+        clearInterval(timeUpdateInterval);
+    }
 });
 
 
@@ -322,8 +356,8 @@ const filteredRecords = computed(() => {
     if (filterKeyword.value) {
         const keyword = filterKeyword.value.toLowerCase();
         filtered = filtered.filter(record =>
-            record.stockInfo.name.toLowerCase().includes(keyword) ||
-            record.stockInfo.code.toLowerCase().includes(keyword)
+            record.name.toLowerCase().includes(keyword) ||
+            record.code.toLowerCase().includes(keyword)
         );
     }
 
@@ -393,35 +427,50 @@ const getStatusClass = (status) => {
     return classMap[status] || '';
 };
 
-// 格式化时间
-const formatTime = (dateString) => {
-    const date = new Date(dateString);
-    const now = new Date();
-    const diffTime = now - date;
-    const diffDays = Math.floor(diffTime / (1000 * 60 * 60 * 24));
+// 格式化时间 - 使用响应式时间基准
+const formatTime = computed(() => {
+    return (dateString) => {
+        if (!dateString) return '';
+        
+        // 触发响应式更新
+        currentTime.value;
+        
+        const date = new Date(dateString);
+        const now = new Date();
+        
+        // 设置时间到当天的开始，用于准确计算天数差
+        const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+        const recordDate = new Date(date.getFullYear(), date.getMonth(), date.getDate());
+        
+        const diffTime = today - recordDate;
+        const diffDays = Math.floor(diffTime / (1000 * 60 * 60 * 24));
 
-    if (diffDays === 0) {
-        return '今天 ' + date.toLocaleTimeString('zh-CN', {
-            hour: '2-digit',
-            minute: '2-digit'
-        });
-    } else if (diffDays === 1) {
-        return '昨天 ' + date.toLocaleTimeString('zh-CN', {
-            hour: '2-digit',
-            minute: '2-digit'
-        });
-    } else if (diffDays < 7) {
-        return diffDays + '天前';
-    } else {
-        return date.toLocaleDateString('zh-CN', {
-            year: 'numeric',
-            month: '2-digit',
-            day: '2-digit',
-            hour: '2-digit',
-            minute: '2-digit'
-        });
-    }
-};
+        if (diffDays === 0) {
+            return '今天 ' + date.toLocaleTimeString('zh-CN', {
+                hour: '2-digit',
+                minute: '2-digit'
+            });
+        } else if (diffDays === 1) {
+            return '昨天 ' + date.toLocaleTimeString('zh-CN', {
+                hour: '2-digit',
+                minute: '2-digit'
+            });
+        } else if (diffDays < 7) {
+            return diffDays + '天前 ' + date.toLocaleTimeString('zh-CN', {
+                hour: '2-digit',
+                minute: '2-digit'
+            });
+        } else {
+            return date.toLocaleString('zh-CN', {
+                year: 'numeric',
+                month: '2-digit',
+                day: '2-digit',
+                hour: '2-digit',
+                minute: '2-digit'
+            });
+        }
+    };
+});
 
 // 格式化有效期显示
 const formatValidityDate = (validityDate) => {
@@ -482,21 +531,37 @@ const handleRecordAction = async (command, record) => {
 };
 
 // 撤单操作
-const cancelOrder = (tradeId) => {
-    const success = userStore.cancelAITradingOrder(tradeId);
+const cancelOrder = async (tradeId) => {
+    console.log('开始撤销AI委托交易，ID:', tradeId, '类型:', typeof tradeId);
     
-    if (success) {
-        ElMessage.success('撤单成功');
-    } else {
-        ElMessage.error('撤单失败');
+    try {
+        // 使用通用的股票订单撤销接口
+        console.log('调用cancelStockOrder API...');
+        const res = await cancelStockOrder({ stockOrderId: tradeId });
+        console.log('cancelStockOrder API响应:', res);
+        
+        if (res && res.data && res.data.success) {
+            ElMessage.success('撤单成功');
+            console.log('撤单成功，开始刷新数据...');
+            // 重新获取数据
+            await refreshData();
+        } else {
+            console.error('撤单失败，API响应:', res);
+            ElMessage.error('撤单失败');
+        }
+    } catch (error) {
+        console.error('撤销AI委托交易失败:', error);
+        ElMessage.error('撤单失败: ' + error.message);
     }
 };
 
 // 处理撤销委托按钮点击
 const handleCancelOrder = async (record) => {
+    console.log('点击撤销委托按钮，记录:', record);
+    
     try {
         await ElMessageBox.confirm(
-            `确定要撤销这笔委托吗？\n\n股票：${record.stockInfo.name}(${record.stockInfo.code})\n类型：${record.type === 'buy' ? '买入' : '卖出'}\n数量：${record.quantity}股\n价格：¥${record.expectedPrice}`,
+            `确定要撤销这笔委托吗？\n\n股票：${record.name}(${record.code})\n类型：${record.type === 'buy' ? '买入' : '卖出'}\n数量：${record.quantity}股\n价格：¥${record.price}`,
             '撤销委托确认',
             {
                 confirmButtonText: '确定撤销',
@@ -506,9 +571,11 @@ const handleCancelOrder = async (record) => {
             }
         );
         
-        cancelOrder(record.id);
+        console.log('用户确认撤销，开始执行撤销操作...');
+        await cancelOrder(record.id);
     } catch (error) {
         // 用户取消操作
+        console.log('用户取消撤销操作或撤销失败:', error);
     }
 };
 

@@ -43,7 +43,8 @@ const api = {
 
   //record
   analyzeRecordApi:"/record/analyze",// 量化分析报告记录
-  aiTradeRecordApi:"/record/ai-trade" //ai交易
+  aiTradeRecordApi:"/record/ai-trade", //ai交易
+  cancelAiTradeApi:"/record/ai-trade/cancel" // AI交易撤销
 };
 
 export default api;
@@ -140,3 +141,6 @@ export const analyzeRecord=(params)=>request.get(api.analyzeRecordApi, {
 export const aiTradeRecord=(params)=>request.get(api.aiTradeRecordApi,{
   params
 })
+
+// 撤销AI交易
+export const cancelAiTrade = (params) => request.post(api.cancelAiTradeApi, params);

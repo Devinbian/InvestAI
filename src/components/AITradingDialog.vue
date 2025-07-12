@@ -3,15 +3,22 @@
         :top="isMobile ? '5vh' : '15vh'" class="ai-trading-dialog" :class="{ 'mobile-dialog': isMobile }"
         destroy-on-close append-to-body :z-index="11000" :close-on-click-modal="false"
         :modal-class="isMobile ? 'mobile-modal' : ''">
+        <!-- 空状态处理 -->
+        <div v-if="!stock" class="empty-stock-info">
+            <div class="empty-icon">⚠️</div>
+            <p>股票信息加载中...</p>
+            <p class="debug-text">请确保已正确选择股票</p>
+        </div>
+
         <div v-if="stock" class="ai-trading-content">
             <!-- 股票信息头部 -->
             <div class="stock-header">
                 <div class="stock-left">
                     <div class="stock-name-section">
-                        <h3>{{ stock.name }}</h3>
-                        <span class="stock-code">{{ stock.code }}</span>
+                        <h3>{{ stock.name || '未知股票' }}</h3>
+                        <span class="stock-code">{{ stock.code || '000000' }}</span>
                     </div>
-                    <span class="current-price">¥{{ stock.price || stock.currentPrice }}</span>
+                    <span class="current-price">¥{{ stock.price || stock.currentPrice || '0.00' }}</span>
                 </div>
                 <div class="stock-right">
                     <span class="cost-label">服务费用</span>
@@ -51,7 +58,7 @@
                         <div class="price-controls">
                             <div class="price-item">
                                 <div class="current-price-display">
-                                    <span v-if="plan.buyPrice" class="price-value">¥{{ plan.buyPrice }}</span>
+                                    <span v-if="plan && plan.buyPrice" class="price-value">¥{{ plan.buyPrice }}</span>
                                     <span v-else class="price-value">¥{{ stock.price || stock.currentPrice }}</span>
                                 </div>
                             </div>
@@ -156,12 +163,22 @@ const plan = ref({
     expireDate: null,
 });
 
-watch(() => props.stock, () => {
-    getStockPlan(props.stock.code).then((res) => {
-        if (res.data.success) {
-            plan.value = res.data.data;
-        }
-    });
+watch(() => props.stock, (newStock) => {
+    console.log('🔍 AITradingDialog - stock changed:', newStock);
+    
+    if (newStock && newStock.code) {
+        getStockPlan(newStock.code).then((res) => {
+            console.log('📊 AITradingDialog - getStockPlan response:', res);
+            if (res.data.success) {
+                plan.value = res.data.data;
+                console.log('✅ AITradingDialog - plan updated:', plan.value);
+            }
+        }).catch(error => {
+            console.error('❌ AITradingDialog - getStockPlan error:', error);
+        });
+    } else {
+        console.warn('⚠️ AITradingDialog - invalid stock data:', newStock);
+    }
 });
 
 // Emits
@@ -307,8 +324,8 @@ const getTodayEndTime = () => {
 
 // 获取量化分析有效期时间
 const getQuantValidityTime = () => {
-    if (plan.expireDate) {
-        const endTime = new Date(plan.expireDate);
+    if (plan.value && plan.value.expireDate) {
+        const endTime = new Date(plan.value.expireDate);
         return endTime.toLocaleString('zh-CN', {
             month: '2-digit',
             day: '2-digit',
@@ -335,8 +352,8 @@ const getActualValidityTime = () => {
     todayEnd.setHours(15, 0, 0, 0); // 当日15:00收盘
 
     let quantEnd;
-    if (plan.expireDate) {
-        quantEnd = new Date(plan.expireDate);
+    if (plan.value && plan.value.expireDate) {
+        quantEnd = new Date(plan.value.expireDate);
     } else {
         // 默认3天后
         quantEnd = new Date();
@@ -364,8 +381,8 @@ const getActualTime= ()=>{
     todayEnd.setHours(15, 0, 0, 0); // 当日15:00收盘
 
     let quantEnd;
-    if (plan.expireDate) {
-        quantEnd = new Date(plan.expireDate);
+    if (plan.value && plan.value.expireDate) {
+        quantEnd = new Date(plan.value.expireDate);
     } else {
         // 默认3天后
         quantEnd = new Date();
@@ -396,8 +413,8 @@ const getValidityDescription = () => {
     todayEnd.setHours(15, 0, 0, 0); // 当日15:00收盘
 
     let quantEnd;
-    if (plan.expireDate) {
-        quantEnd = new Date(plan.expireDate);
+    if (plan.value && plan.value.expireDate) {
+        quantEnd = new Date(plan.value.expireDate);
     } else {
         // 默认3天后
         quantEnd = new Date();
@@ -518,8 +535,8 @@ const handleConfirm = async () => {
             name: props.stock.name,
             quantity: form.quantity,
             orderType: form.orderType,
-            price: plan.value.buyPrice?plan.value.buyPrice:props.stock.price,
-            sellPrice: plan.value.sellPrice?plan.value.sellPrice:props.stock.price,
+            price: (plan.value && plan.value.buyPrice) ? plan.value.buyPrice : props.stock.price,
+            sellPrice: (plan.value && plan.value.sellPrice) ? plan.value.sellPrice : props.stock.price,
             expireTime: getActualTime(),
         });
 
@@ -595,7 +612,10 @@ const fixWechatScroll = () => {
 
 // 监听对话框打开，初始化表单
 watch(() => props.modelValue, (newVal) => {
+    console.log('🔍 AITradingDialog - modelValue changed:', newVal, 'stock:', props.stock);
+    
     if (newVal && props.stock) {
+        console.log('✅ AITradingDialog - initializing with stock:', props.stock);
         initAITradingFromPreferences();
 
         // 初始化量化分析有效期（默认3天）
@@ -639,6 +659,40 @@ watch(() => props.modelValue, (newVal) => {
 
 .ai-trading-content {
     padding: 0;
+}
+
+/* 空状态样式 */
+.empty-stock-info {
+    padding: 40px 24px;
+    text-align: center;
+    color: #6b7280;
+}
+
+.empty-icon {
+    font-size: 48px;
+    margin-bottom: 16px;
+}
+
+.debug-text {
+    font-size: 12px;
+    color: #9ca3af;
+    margin-top: 8px;
+}
+
+/* 调试信息样式 */
+.debug-info {
+    background: #f3f4f6;
+    padding: 12px;
+    margin: 16px 24px;
+    border-radius: 8px;
+    font-size: 12px;
+    color: #374151;
+    border-left: 4px solid #3b82f6;
+}
+
+.debug-info p {
+    margin: 4px 0;
+    word-break: break-all;
 }
 
 /* 股票信息头部 */

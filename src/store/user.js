@@ -17,18 +17,18 @@ export const useUserStore = defineStore("user", {
     ), // 可用余额（用于计算可用资金）
 
     // 记录中心数据 - 注意：大部分已迁移到API，仅保留必要的本地数据
-    // quantAnalysisReports: JSON.parse(
-    //   localStorage.getItem("quantAnalysisReports") || "[]",
-    // ), // 量化分析报告记录 - 已废弃，现使用API获取
+    quantAnalysisReports: JSON.parse(
+      localStorage.getItem("quantAnalysisReports") || "[]",
+    ), // 量化分析报告记录
     smartPointsTransactions: JSON.parse(
       localStorage.getItem("smartPointsTransactions") || "[]",
     ), // 智点交易记录 - 仍在使用，本地存储智点消费记录
-    // aiTradingRecords: JSON.parse(
-    //   localStorage.getItem("aiTradingRecords") || "[]",
-    // ), // AI委托交易记录 - 已废弃，现使用API获取
-    // userTradingRecords: JSON.parse(
-    //   localStorage.getItem("userTradingRecords") || "[]",
-    // ), // 用户自助交易记录 - 已废弃，现使用API获取
+    aiTradingRecords: JSON.parse(
+      localStorage.getItem("aiTradingRecords") || "[]",
+    ), // AI委托交易记录
+    userTradingRecords: JSON.parse(
+      localStorage.getItem("userTradingRecords") || "[]",
+    ), // 用户自助交易记录 - 已废弃，现使用API获取
 
     // 委托单管理 - 仍在使用
     pendingOrders: JSON.parse(localStorage.getItem("pendingOrders") || "[]"), // 待成交委托单

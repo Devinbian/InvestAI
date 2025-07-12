@@ -47,14 +47,12 @@
                         <el-option label="全部类型" value="" />
                         <el-option label="量化分析" value="quant-analysis" />
                         <el-option label="AI委托交易" value="ai-trading" />
-                        <el-option label="股票分析" value="stock-analysis" />
                     </el-select>
                     <!-- 移动端使用原生控件 -->
                     <select v-else v-model="filterType" class="mobile-select">
                         <option value="">全部类型</option>
                         <option value="quant-analysis">量化分析</option>
                         <option value="ai-trading">AI委托交易</option>
-                        <option value="stock-analysis">股票分析</option>
                     </select>
                 </div>
                 <div class="filter-group">
@@ -115,8 +113,8 @@
                                 @click.stop
                                 class="report-checkbox">
                             </el-checkbox>
-                            <el-tag :type="getReportTypeColor(report.type)" size="small">
-                                {{ getReportTypeName(report.type) }}
+                            <el-tag :type="getReportTypeColor(report.sourceType)" size="small">
+                                {{ getReportTypeName(report.sourceType) }}
                             </el-tag>
                         </div>
                         <div class="report-actions" @click.stop>
@@ -208,8 +206,8 @@
                                 </div>
                                 <div class="info-row">
                                     <span class="label">报告类型：</span>
-                                    <el-tag :type="getReportTypeColor(selectedReport.type)" size="small">
-                                        {{ getReportTypeName(selectedReport.type) }}
+                                    <el-tag :type="getReportTypeColor(selectedReport.sourceType)" size="small">
+                                        {{ getReportTypeName(selectedReport.sourceType) }}
                                     </el-tag>
                                 </div>
                                 <div class="info-row">
@@ -265,8 +263,8 @@
                         </div>
                         <div class="info-row">
                             <span class="label">报告类型：</span>
-                            <el-tag :type="getReportTypeColor(selectedReport.type)" size="small">
-                                {{ getReportTypeName(selectedReport.type) }}
+                            <el-tag :type="getReportTypeColor(selectedReport.sourceType)" size="small">
+                                {{ getReportTypeName(selectedReport.sourceType) }}
                             </el-tag>
                         </div>
                         <div class="info-row">
@@ -396,9 +394,19 @@ onMounted(() => {
         loading.value = false;
         if (res.data.success) {
             reports.value = res.data.data;
+            // 为每个报告设置来源类型
             reports.value.forEach(report => {
-                report.type="quant-analysis"
-            })
+                // 根据报告的生成方式设置来源类型
+                // 如果报告有关联的AI委托交易记录，则来源为AI委托交易
+                // 否则来源为用户主动点击的量化分析
+                if (report.aiTradingId || report.fromAITrading) {
+                    report.sourceType = "ai-trading";
+                } else {
+                    report.sourceType = "quant-analysis";
+                }
+                // 保持向后兼容，设置type字段
+                report.type = report.sourceType;
+            });
         }
     }).catch(error => {
         loading.value = false;
@@ -409,9 +417,9 @@ onMounted(() => {
 const filteredReports = computed(() => {
     let filtered = reports.value;
 
-    // 按类型筛选
+    // 按来源类型筛选
     if (filterType.value) {
-        filtered = filtered.filter(report => report.type === filterType.value);
+        filtered = filtered.filter(report => report.sourceType === filterType.value);
     }
 
     // 按日期范围筛选
@@ -449,22 +457,20 @@ const paginatedReports = computed(() => {
 });
 
 // 方法
-const getReportTypeName = (type) => {
+const getReportTypeName = (sourceType) => {
     const typeMap = {
         'quant-analysis': '量化分析',
-        'ai-trading': 'AI委托交易',
-        'stock-analysis': '股票分析'
+        'ai-trading': 'AI委托交易'
     };
-    return typeMap[type] || type;
+    return typeMap[sourceType] || sourceType;
 };
 
-const getReportTypeColor = (type) => {
+const getReportTypeColor = (sourceType) => {
     const colorMap = {
         'quant-analysis': 'primary',
-        'ai-trading': 'success',
-        'stock-analysis': 'warning'
+        'ai-trading': 'success'
     };
-    return colorMap[type] || 'info';
+    return colorMap[sourceType] || 'info';
 };
 
 const formatDate = (dateTime) => {

@@ -325,6 +325,7 @@ import { useVoiceInput } from '../composables/useVoiceInput';
 import { useStockOperations } from '../composables/useStockOperations';
 import { useAuthentication } from '../composables/useAuthentication';
 import { formatCurrency, generateMessageId } from '@/utils/formatters';
+import { detectStockQuery } from '@/utils/stockQueryDetector';
 
 const userStore = useUserStore();
 const chatHistoryStore = useChatHistoryStore();
@@ -1913,6 +1914,13 @@ const determineMessageType = (aiMessage, messageIndex) => {
 
     if (userMessage?.content) {
         const userContent = userMessage.content.toLowerCase();
+
+        // 个股查询检测 - 新增优先级检查
+        const stockQueryDetection = detectStockQuery(userMessage.content);
+        if (stockQueryDetection.isStockQuery) {
+            console.log('🔍 基于用户消息判断 - 个股查询:', stockQueryDetection);
+            return 'individual_stock_query';
+        }
 
         // 基于用户消息内容判断
         if (userContent.includes('智能荐股') || userContent.includes('推荐') ||

@@ -4,6 +4,7 @@ import { useChatHistoryStore } from "../store/chatHistory";
 import { authFetchEventSource } from "@/utils/request";
 import { api } from "@/api/api";
 import { processSSEData } from "@/utils/sseDecoder";
+import { detectStockQuery, extractStockInfoFromContent } from "@/utils/stockQueryDetector";
 import { generateMessageId } from "@/utils/formatters";
 
 export function useChatManager() {
@@ -316,6 +317,44 @@ export function useChatManager() {
                 ),
               });
               console.groupEnd();
+
+              // 🔍 检测是否为个股查询消息
+              const userMessage = chatHistory.value[chatHistory.value.length - 2];
+              if (userMessage && userMessage.role === "user") {
+                const stockQueryDetection = detectStockQuery(userMessage.content);
+                if (stockQueryDetection.isStockQuery) {
+                  console.log("🔍 检测到个股查询消息，添加股票操作按钮:", stockQueryDetection);
+                  
+                  // 设置消息类型和股票信息
+                  lastMessage.messageType = "individual_stock_query";
+                  lastMessage.hasStockInfo = true;
+                  lastMessage.isStockQuery = true;
+                  lastMessage.stockQueryInfo = stockQueryDetection;
+                  
+                  // 使用智能提取函数获取股票信息
+                  const extractedInfo = extractStockInfoFromContent(
+                    lastMessage.content,
+                    userMessage.content,
+                    stockQueryDetection
+                  );
+                  
+                  // 构建股票信息对象
+                  const stockData = {
+                    name: extractedInfo.name,
+                    code: extractedInfo.code,
+                    price: "0.00",
+                    change: "0.00",
+                    changePercent: "0.00%",
+                    queryType: stockQueryDetection.queryType,
+                    confidence: stockQueryDetection.confidence,
+                    extractionSource: extractedInfo.source
+                  };
+                  
+                  lastMessage.stockInfo = stockData;
+                  
+                  console.log("🔍 已为个股查询消息添加股票信息:", stockData);
+                }
+              }
             }
 
             // 保存聊天记录到存储

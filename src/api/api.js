@@ -8,6 +8,20 @@ const api = {
   logoutApi: "/logout",
 
   getUserInfoApi: "/user/info", // 获取用户信息
+  updateUserInfoApi: "/user/update", // 更新用户信息
+  
+  // 手机绑定相关
+  sendPhoneCodeApi: "/user/send-phone-code", // 发送手机验证码
+  bindPhoneApi: "/user/bind-phone", // 绑定手机号
+  unbindPhoneApi: "/user/unbind-phone", // 解绑手机号
+  
+  // 邮箱绑定相关
+  sendEmailCodeApi: "/user/send-email-code", // 发送邮箱验证码
+  bindEmailApi: "/user/bind-email", // 绑定邮箱
+  unbindEmailApi: "/user/unbind-email", // 解绑邮箱
+  
+  // 密码修改
+  changePasswordApi: "/user/change-password", // 修改密码
 
   // user portrait
   getUserPortraitApi: "/user-portrait/detail",
@@ -77,6 +91,30 @@ export const createConversation = () => request.post(api.createConversationApi);
 
 // 获取用户信息
 export const getUserInfo = () => request.get(api.getUserInfoApi);
+
+// 更新用户信息
+export const updateUserInfo = (params) => request.post(api.updateUserInfoApi, params);
+
+// 发送手机验证码
+export const sendPhoneCode = (params) => request.post(api.sendPhoneCodeApi, params);
+
+// 绑定手机号
+export const bindPhone = (params) => request.post(api.bindPhoneApi, params);
+
+// 解绑手机号
+export const unbindPhone = (params) => request.post(api.unbindPhoneApi, params);
+
+// 发送邮箱验证码
+export const sendEmailCode = (params) => request.post(api.sendEmailCodeApi, params);
+
+// 绑定邮箱
+export const bindEmail = (params) => request.post(api.bindEmailApi, params);
+
+// 解绑邮箱
+export const unbindEmail = (params) => request.post(api.unbindEmailApi, params);
+
+// 修改密码
+export const changePassword = (params) => request.post(api.changePasswordApi, params);
 
 // 股票实时数据
 export const getStockRealtimeData = (params) => request.get(api.stockRealtimeDataApi, {

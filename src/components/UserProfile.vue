@@ -80,29 +80,34 @@
                                 <p class="status-item-desc">已完成实名认证</p>
                             </div>
                         </div>
-                        <div class="status-item verified">
+                        <div class="status-item" :class="{ 'verified': userStore.isPhoneBound(), 'pending': !userStore.isPhoneBound() }">
                             <div class="status-item-icon">
                                 <el-icon>
-                                    <CircleCheck />
+                                    <CircleCheck v-if="userStore.isPhoneBound()" />
+                                    <Warning v-else />
                                 </el-icon>
                             </div>
                             <div class="status-item-info">
                                 <h4 class="status-item-title">手机验证</h4>
-                                <p class="status-item-desc">手机号已验证</p>
+                                <p class="status-item-desc">{{ userStore.isPhoneBound() ? '手机号已验证' : '手机号未验证' }}</p>
+                            </div>
+                            <div class="status-item-action" v-if="!userStore.isPhoneBound()">
+                                <el-button type="primary" size="small" @click="showBindPhone = true">去验证</el-button>
                             </div>
                         </div>
-                        <div class="status-item pending">
+                        <div class="status-item" :class="{ 'verified': userStore.isEmailBound(), 'pending': !userStore.isEmailBound() }">
                             <div class="status-item-icon">
                                 <el-icon>
-                                    <Warning />
+                                    <CircleCheck v-if="userStore.isEmailBound()" />
+                                    <Warning v-else />
                                 </el-icon>
                             </div>
                             <div class="status-item-info">
                                 <h4 class="status-item-title">邮箱验证</h4>
-                                <p class="status-item-desc">邮箱未验证</p>
+                                <p class="status-item-desc">{{ userStore.isEmailBound() ? '邮箱已验证' : '邮箱未验证' }}</p>
                             </div>
-                            <div class="status-item-action">
-                                <el-button type="primary" size="small">去验证</el-button>
+                            <div class="status-item-action" v-if="!userStore.isEmailBound()">
+                                <el-button type="primary" size="small" @click="showBindEmail = true">去验证</el-button>
                             </div>
                         </div>
                     </div>
@@ -512,14 +517,11 @@
             <!-- 编辑资料对话框 - PC端 -->
             <el-dialog v-model="showEditProfilePC" title="编辑个人资料" width="500px" class="profile-dialog pc-only">
                 <el-form :model="editForm" :rules="editRules" ref="editFormRef" label-width="80px">
+                    <el-form-item label="用户名" prop="username">
+                        <el-input v-model="editForm.username" placeholder="请输入用户名" class="profile-input" />
+                    </el-form-item>
                     <el-form-item label="昵称" prop="nickname">
                         <el-input v-model="editForm.nickname" placeholder="请输入昵称" class="profile-input" />
-                    </el-form-item>
-                    <el-form-item label="手机号" prop="phone">
-                        <el-input v-model="editForm.phone" placeholder="请输入手机号" class="profile-input" />
-                    </el-form-item>
-                    <el-form-item label="邮箱" prop="email">
-                        <el-input v-model="editForm.email" placeholder="请输入邮箱" class="profile-input" />
                     </el-form-item>
                 </el-form>
                 <template #footer>
@@ -545,28 +547,19 @@
                     <!-- 内容 -->
                     <div class="mobile-settings-content">
                         <div class="mobile-profile-section">
+                            <div class="mobile-profile-item" @click="showEditField('username')">
+                                <div class="profile-item-left">
+                                    <span class="profile-item-label">用户名</span>
+                                    <span class="profile-item-value">{{ editForm.username || '请输入用户名' }}</span>
+                                </div>
+                                <el-icon class="profile-item-arrow">
+                                    <ArrowRight />
+                                </el-icon>
+                            </div>
                             <div class="mobile-profile-item" @click="showEditField('nickname')">
                                 <div class="profile-item-left">
                                     <span class="profile-item-label">昵称</span>
                                     <span class="profile-item-value">{{ editForm.nickname || '请输入昵称' }}</span>
-                                </div>
-                                <el-icon class="profile-item-arrow">
-                                    <ArrowRight />
-                                </el-icon>
-                            </div>
-                            <div class="mobile-profile-item" @click="showEditField('phone')">
-                                <div class="profile-item-left">
-                                    <span class="profile-item-label">手机号</span>
-                                    <span class="profile-item-value">{{ editForm.phone || '请输入手机号' }}</span>
-                                </div>
-                                <el-icon class="profile-item-arrow">
-                                    <ArrowRight />
-                                </el-icon>
-                            </div>
-                            <div class="mobile-profile-item" @click="showEditField('email')">
-                                <div class="profile-item-left">
-                                    <span class="profile-item-label">邮箱</span>
-                                    <span class="profile-item-value">{{ editForm.email || '请输入邮箱' }}</span>
                                 </div>
                                 <el-icon class="profile-item-arrow">
                                     <ArrowRight />
@@ -1206,28 +1199,28 @@
                                     <ArrowRight />
                                 </el-icon>
                             </div>
-                            <div class="mobile-security-item">
+                            <div class="mobile-security-item" @click="showBindPhone = true; showSecuritySettings = false">
                                 <div class="security-info">
                                     <el-icon class="security-icon">
                                         <Phone />
                                     </el-icon>
                                     <div class="security-text">
                                         <div class="security-title">手机绑定</div>
-                                        <div class="security-desc">已绑定：{{ userStore.userInfo?.phone || '未绑定' }}</div>
+                                        <div class="security-desc">{{ userStore.userInfo?.phone ? `已绑定：${formatPhoneDisplay(userStore.userInfo.phone)}` : '点击绑定手机号' }}</div>
                                     </div>
                                 </div>
                                 <el-icon class="security-arrow">
                                     <ArrowRight />
                                 </el-icon>
                             </div>
-                            <div class="mobile-security-item">
+                            <div class="mobile-security-item" @click="showBindEmail = true; showSecuritySettings = false">
                                 <div class="security-info">
                                     <el-icon class="security-icon">
                                         <Message />
                                     </el-icon>
                                     <div class="security-text">
                                         <div class="security-title">邮箱绑定</div>
-                                        <div class="security-desc">已绑定：{{ userStore.userInfo?.email || '未绑定' }}</div>
+                                        <div class="security-desc">{{ userStore.userInfo?.email ? `已绑定：${formatEmailDisplay(userStore.userInfo.email)}` : '点击绑定邮箱' }}</div>
                                     </div>
                                 </div>
                                 <el-icon class="security-arrow">
@@ -1340,6 +1333,22 @@
                 </div>
             </div>
         </div>
+
+        <!-- 手机绑定对话框 -->
+        <PhoneBindingDialog 
+            :visible="showBindPhone"
+            :currentPhone="userStore.userInfo?.phone"
+            @close="showBindPhone = false"
+            @success="handlePhoneBindSuccess"
+        />
+
+        <!-- 邮箱绑定对话框 -->
+        <EmailBindingDialog 
+            :visible="showBindEmail"
+            :currentEmail="userStore.userInfo?.email"
+            @close="showBindEmail = false"
+            @success="handleEmailBindSuccess"
+        />
     </div>
 </template>
 
@@ -1348,7 +1357,9 @@ import { ref, reactive, computed, onMounted } from 'vue';
 import { useUserStore } from '../store/user';
 import { ElMessage } from 'element-plus';
 import { Edit, Close, CircleCheck, Warning, TrendCharts, Star, Plus, Switch, List, Bell, Lock, QuestionFilled, ArrowRight, Phone, Message, UserFilled, VideoPlay, ChatDotSquare, EditPen, View, Hide } from '@element-plus/icons-vue';
-import { getUserInfo } from '@/api/api';
+import { getUserInfo, updateUserInfo, changePassword as changePasswordApi } from '@/api/api';
+import PhoneBindingDialog from './PhoneBindingDialog.vue';
+import EmailBindingDialog from './EmailBindingDialog.vue';
 
 // 定义emit事件
 const emit = defineEmits(['close']);
@@ -1438,20 +1449,17 @@ const userInfo = reactive({
 
 // 编辑表单
 const editForm = reactive({
-    nickname: '',
-    phone: '',
-    email: ''
+    username: '',
+    nickname: ''
 });
 
 const editRules = {
+    username: [
+        { min: 3, max: 20, message: '用户名长度在 3 到 20 个字符', trigger: 'blur' },
+        { pattern: /^[a-zA-Z0-9_]+$/, message: '用户名只能包含字母、数字和下划线', trigger: 'blur' }
+    ],
     nickname: [
         { min: 2, max: 20, message: '昵称长度在 2 到 20 个字符', trigger: 'blur' }
-    ],
-    phone: [
-        { pattern: /^1[3-9]\d{9}$/, message: '请输入有效的手机号', trigger: 'blur' }
-    ],
-    email: [
-        { type: 'email', message: '请输入有效的邮箱地址', trigger: 'blur' }
     ]
 };
 
@@ -1529,38 +1537,117 @@ const viewPortfolio = () => {
 const saveProfile = async () => {
     saving.value = true;
 
-    setTimeout(() => {
-        userStore.setUserInfo({
-            ...userStore.userInfo,
-            nickname: editForm.nickname,
-            phone: editForm.phone,
-            email: editForm.email
+    try {
+        const response = await updateUserInfo({
+            username: editForm.username,
+            nickname: editForm.nickname
         });
 
-        ElMessage.success('个人资料保存成功');
-        showEditProfile.value = false;
+        if (response.success) {
+            userStore.setUserInfo({
+                ...userStore.userInfo,
+                username: editForm.username,
+                nickname: editForm.nickname
+            });
+
+            ElMessage.success('个人资料保存成功');
+            showEditProfile.value = false;
+        } else {
+            ElMessage.error(response.message || '保存失败');
+        }
+    } catch (error) {
+        console.error('保存个人资料失败:', error);
+        ElMessage.error('保存失败，请重试');
+    } finally {
         saving.value = false;
-    }, 1000);
+    }
 };
 
 const changePassword = async () => {
     changingPassword.value = true;
 
-    setTimeout(() => {
-        ElMessage.success('密码修改成功');
-        showChangePassword.value = false;
-        changingPassword.value = false;
-
-        Object.keys(passwordForm).forEach(key => {
-            passwordForm[key] = '';
+    try {
+        const response = await changePasswordApi({
+            currentPassword: passwordForm.currentPassword,
+            newPassword: passwordForm.newPassword,
+            confirmPassword: passwordForm.confirmPassword
         });
-    }, 1000);
+
+        if (response.success) {
+            ElMessage.success('密码修改成功');
+            showChangePassword.value = false;
+            Object.keys(passwordForm).forEach(key => {
+                passwordForm[key] = '';
+            });
+        } else {
+            ElMessage.error(response.message || '密码修改失败');
+        }
+    } catch (error) {
+        console.error('密码修改失败:', error);
+        ElMessage.error('密码修改失败，请重试');
+    } finally {
+        changingPassword.value = false;
+    }
+};
+
+// 处理手机绑定成功
+const handlePhoneBindSuccess = async (phone) => {
+    try {
+        // 更新用户信息
+        userStore.setUserInfo({
+            ...userStore.userInfo,
+            phone: phone
+        });
+        
+        // 重新获取用户信息
+        await initUserInfo();
+        
+        ElMessage.success('手机号绑定成功');
+    } catch (error) {
+        console.error('更新用户信息失败:', error);
+        ElMessage.error('信息更新失败，请刷新页面');
+    }
+};
+
+// 处理邮箱绑定成功
+const handleEmailBindSuccess = async (email) => {
+    try {
+        // 更新用户信息
+        userStore.setUserInfo({
+            ...userStore.userInfo,
+            email: email
+        });
+        
+        // 重新获取用户信息
+        await initUserInfo();
+        
+        ElMessage.success('邮箱绑定成功');
+    } catch (error) {
+        console.error('更新用户信息失败:', error);
+        ElMessage.error('信息更新失败，请刷新页面');
+    }
+};
+
+// 格式化手机号显示（移动端用）
+const formatPhoneDisplay = (phone) => {
+    if (!phone) return '';
+    return phone.replace(/(\d{3})(\d{4})(\d{4})/, '$1****$3');
+};
+
+// 格式化邮箱显示（移动端用）
+const formatEmailDisplay = (email) => {
+    if (!email) return '';
+    const [localPart, domain] = email.split('@');
+    if (localPart.length <= 3) {
+        return email;
+    }
+    const hiddenPart = '*'.repeat(Math.min(localPart.length - 3, 4));
+    return `${localPart.substring(0, 3)}${hiddenPart}@${domain}`;
 };
 
 const initEditForm = () => {
+    editForm.username = userStore.userInfo?.username || '';
     editForm.nickname = userStore.userInfo?.nickname || '';
-    editForm.phone = userStore.userInfo?.phone || '';
-    editForm.email = userStore.userInfo?.email || '';
 };
 
 const getFinalAmount = () => {
@@ -1731,27 +1818,24 @@ const saveFieldEdit = () => {
 
 const getFieldTitle = () => {
     const titles = {
-        nickname: '编辑昵称',
-        phone: '编辑手机号',
-        email: '编辑邮箱'
+        username: '编辑用户名',
+        nickname: '编辑昵称'
     };
     return titles[currentEditField.value] || '';
 };
 
 const getFieldInputType = () => {
     const types = {
-        nickname: 'text',
-        phone: 'tel',
-        email: 'email'
+        username: 'text',
+        nickname: 'text'
     };
     return types[currentEditField.value] || 'text';
 };
 
 const getFieldPlaceholder = () => {
     const placeholders = {
-        nickname: '请输入昵称',
-        phone: '请输入手机号',
-        email: '请输入邮箱'
+        username: '请输入用户名',
+        nickname: '请输入昵称'
     };
     return placeholders[currentEditField.value] || '';
 };
@@ -1766,21 +1850,19 @@ const validateField = () => {
     }
 
     switch (currentEditField.value) {
+        case 'username':
+            if (value.length < 3 || value.length > 20) {
+                fieldError.value = '用户名长度在 3 到 20 个字符';
+                return false;
+            }
+            if (!/^[a-zA-Z0-9_]+$/.test(value)) {
+                fieldError.value = '用户名只能包含字母、数字和下划线';
+                return false;
+            }
+            break;
         case 'nickname':
             if (value.length < 2 || value.length > 20) {
                 fieldError.value = '昵称长度在 2 到 20 个字符';
-                return false;
-            }
-            break;
-        case 'phone':
-            if (!/^1[3-9]\d{9}$/.test(value)) {
-                fieldError.value = '请输入有效的手机号';
-                return false;
-            }
-            break;
-        case 'email':
-            if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(value)) {
-                fieldError.value = '请输入有效的邮箱地址';
                 return false;
             }
             break;
@@ -4253,6 +4335,7 @@ onMounted(() => {
 
 .mobile-security-item:active {
     background: #f9fafb;
+    transform: scale(0.98);
 }
 
 .security-info {

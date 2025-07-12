@@ -67,6 +67,42 @@ export const useUserStore = defineStore("user", {
       }
     },
 
+    // 更新用户手机号
+    updateUserPhone(phone) {
+      this.userInfo = {
+        ...this.userInfo,
+        phone: phone
+      };
+      try {
+        localStorage.setItem("userInfo", JSON.stringify(this.userInfo));
+      } catch (error) {
+        console.error("Failed to save phone to localStorage:", error);
+      }
+    },
+
+    // 更新用户邮箱
+    updateUserEmail(email) {
+      this.userInfo = {
+        ...this.userInfo,
+        email: email
+      };
+      try {
+        localStorage.setItem("userInfo", JSON.stringify(this.userInfo));
+      } catch (error) {
+        console.error("Failed to save email to localStorage:", error);
+      }
+    },
+
+    // 检查手机号是否已绑定
+    isPhoneBound() {
+      return !!(this.userInfo?.phone);
+    },
+
+    // 检查邮箱是否已绑定
+    isEmailBound() {
+      return !!(this.userInfo?.email);
+    },
+
     logout(clearOnboarding = true) {
       this.token = "";
       this.userInfo = {};

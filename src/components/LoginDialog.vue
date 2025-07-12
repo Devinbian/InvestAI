@@ -50,7 +50,7 @@
 
                 <!-- 第三方登录按钮 -->
                 <div class="third-party-login">
-                    <el-button class="wechat-login-btn" @click="handleWechatLogin" :loading="wechatLoginLoading">
+                    <el-button class="wechat-login-btn" @click="handleWechatLogin" :loading="wechatLoginLoading" disabled>
                         <div class="wechat-icon">
                             <svg width="40" height="40" viewBox="0 0 1024 1024" fill="currentColor">
                                 <path

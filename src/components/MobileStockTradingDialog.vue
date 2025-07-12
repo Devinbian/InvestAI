@@ -487,7 +487,7 @@ const confirmTrade = async () => {
             // 买入逻辑
             const buyResult = userStore.buyStock(props.stock, tradingForm.quantity, tradePrice);
             if (buyResult.success) {
-                alert(`买入委托已提交！\n委托编号：${createdOrder.id.slice(-8)}\n${props.stock.name} ${tradingForm.quantity}股`);
+                alert(`买入委托已提交！\n委托编号：${createdOrder.id.slice(-8)}\n${props.stock.name} ${tradingForm.quantity}股\n可在记录中心的用户自助交易记录中查看`);
             } else {
                 alert(buyResult.message);
                 return;
@@ -496,7 +496,7 @@ const confirmTrade = async () => {
             // 卖出逻辑
             const sellResult = userStore.sellStock(props.stock.code, tradingForm.quantity, tradePrice);
             if (sellResult.success) {
-                alert(`卖出成功！\n${props.stock.name} ${tradingForm.quantity}股`);
+                alert(`卖出委托已提交！\n${props.stock.name} ${tradingForm.quantity}股\n可在记录中心的用户自助交易记录中查看`);
             } else {
                 alert('持仓数量不足');
                 return;

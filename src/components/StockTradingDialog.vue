@@ -786,7 +786,7 @@ const confirmTrade = async () => {
     }
 
     if(res && res.data && res.data.success){
-        ElMessage.success('委托已提交');
+        ElMessage.success('委托已提交，可在记录中心的用户自助交易记录中查看');
         tradingLoading.value = false;
         handleClose();
     }else{

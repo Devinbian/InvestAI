@@ -638,7 +638,7 @@ const handleConfirm = async () => {
                 },
                 balanceAfter: userStore.smartPointsBalance,
             });
-            ElMessage.success('支付成功，正在设置AI委托交易...');
+            ElMessage.success('支付成功，正在设置AI委托交易...委托记录可在记录中心查看');
         } else {
             ElMessage.error('支付失败，智点余额不足');
             return;

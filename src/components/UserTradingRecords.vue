@@ -248,7 +248,7 @@ const filterStatus = ref('');
 const filterDateRange = ref(null);
 const filterKeyword = ref('');
 const currentPage = ref(1);
-const pageSize = ref(10);
+const pageSize = ref(12);
 
 // 移动端日期范围
 const startDate = ref('');
@@ -354,7 +354,8 @@ const filteredRecords = computed(() => {
         );
     }
 
-    return records;
+    // 按创建时间倒序排列
+    return records.sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
 });
 
 // 监听筛选结果变化，实时更新badge数量

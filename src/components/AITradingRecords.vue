@@ -240,7 +240,7 @@ const filterStatus = ref('');
 const filterDateRange = ref(null);
 const filterKeyword = ref('');
 const currentPage = ref(1);
-const pageSize = ref(10);
+const pageSize = ref(12);
 
 // 移动端日期范围
 const startDate = ref('');

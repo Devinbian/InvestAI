@@ -51,7 +51,7 @@
                                 <span>{{ record.quantity }}股</span>
                             </div>
                             <div class="detail-item">
-                                <label>{{ record.price ? '成交价格' : '预期价格' }}</label>
+                                <label>委托价格</label>
                                 <span>¥{{ record.price }}</span>
                             </div>
                             <div class="detail-item">
@@ -181,7 +181,7 @@
                         <span>{{ record.quantity }}股</span>
                     </div>
                     <div class="detail-item">
-                        <label>{{ record.price ? '成交价格' : '预期价格' }}</label>
+                        <label>委托价格</label>
                         <span>¥{{ record.price  }}</span>
                     </div>
                     <div class="detail-item">

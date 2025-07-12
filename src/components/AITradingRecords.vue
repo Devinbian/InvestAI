@@ -544,7 +544,7 @@ const handleRecordAction = async (command, record) => {
             viewRecord(record);
             break;
         case 'cancel':
-            await cancelOrder(record.id);
+            await cancelOrder(record.stockOrderId);
             break;
     }
 };
@@ -591,7 +591,7 @@ const handleCancelOrder = async (record) => {
         );
         
         console.log('用户确认撤销，开始执行撤销操作...');
-        await cancelOrder(record.id);
+        await cancelOrder(record.stockOrderId);
     } catch (error) {
         // 用户取消操作
         console.log('用户取消撤销操作或撤销失败:', error);
@@ -600,7 +600,7 @@ const handleCancelOrder = async (record) => {
 
 // 处理详情弹窗中的取消记录操作
 const handleCancelRecord = (record) => {
-    cancelOrder(record.id);
+    cancelOrder(record.stockOrderId);
     detailModalVisible.value = false;
 };
 

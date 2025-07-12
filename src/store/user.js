@@ -667,6 +667,15 @@ export const useUserStore = defineStore("user", {
           fee: 5.0,
           profit: 2.5,
           analysis: "基于AI算法分析，该股票具有较好的投资价值，建议买入。",
+          strategy: "基于平安银行的技术分析和基本面分析的多因子量化策略，结合RSI、MACD等技术指标和财务指标进行综合评估",
+          factors: [
+            { name: "RSI指标", value: "58.3", weight: "25%" },
+            { name: "MACD信号", value: "看涨", weight: "20%" },
+            { name: "成交量", value: "活跃", weight: "15%" },
+            { name: "PE估值", value: "偏低", weight: "25%" },
+            { name: "ROE", value: "12.8%", weight: "15%" }
+          ],
+          riskLevel: "中风险",
           executedAt: new Date(
             Date.now() - 3 * 24 * 60 * 60 * 1000,
           ).toISOString(),
@@ -685,6 +694,15 @@ export const useUserStore = defineStore("user", {
           expectedPrice: 35.8,
           totalAmount: 17900,
           analysis: "AI模型建议在此价位卖出，预期短期内可能出现调整。",
+          strategy: "基于招商银行的技术面和资金面分析，结合市场情绪和政策预期的综合量化策略",
+          factors: [
+            { name: "RSI指标", value: "72.1", weight: "25%" },
+            { name: "MACD信号", value: "看跌", weight: "20%" },
+            { name: "成交量", value: "放量", weight: "15%" },
+            { name: "PE估值", value: "偏高", weight: "25%" },
+            { name: "净利润增长", value: "8.5%", weight: "15%" }
+          ],
+          riskLevel: "中风险",
           createdAt: new Date(Date.now() - 2 * 60 * 60 * 1000).toISOString(), // 2小时前创建
           validityDate: new Date(
             Date.now() + 22 * 60 * 60 * 1000,

@@ -16,6 +16,8 @@
     "dompurify": "^3.2.6",
     "element-plus": "^2.5.3",
     "highlight.js": "^11.11.1",
+    "html2canvas": "^1.4.1",
+    "jspdf": "^3.0.1",
     "markdown-it": "^14.1.0",
     "marked": "^16.0.0",
     "mockjs": "^1.1.0",

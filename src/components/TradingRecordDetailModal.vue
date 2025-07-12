@@ -110,6 +110,50 @@
                         </div>
                     </div>
 
+                    <!-- 量化策略信息 (仅AI记录) -->
+                    <div v-if="isAIRecord && (record.strategy || record.factors || record.riskLevel)" class="detail-section">
+                        <h4 class="section-title">量化策略信息</h4>
+                        
+                        <!-- 交易策略 -->
+                        <div v-if="record.strategy" class="strategy-info">
+                            <div class="strategy-header">
+                                <span class="strategy-icon">🎯</span>
+                                <span class="strategy-title">交易策略</span>
+                            </div>
+                            <div class="strategy-content">
+                                {{ record.strategy }}
+                            </div>
+                        </div>
+                        
+                        <!-- 量化因子 -->
+                        <div v-if="record.factors && record.factors.length > 0" class="factors-info">
+                            <div class="factors-header">
+                                <span class="factors-icon">📊</span>
+                                <span class="factors-title">量化因子</span>
+                            </div>
+                            <div class="factors-content">
+                                <div v-for="(factor, index) in record.factors" :key="index" class="factor-item">
+                                    <span class="factor-name">{{ factor.name }}</span>
+                                    <span class="factor-value">{{ factor.value }}</span>
+                                    <span v-if="factor.weight" class="factor-weight">权重: {{ factor.weight }}</span>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- 风险等级 -->
+                        <div v-if="record.riskLevel" class="risk-info">
+                            <div class="risk-header">
+                                <span class="risk-icon">⚠️</span>
+                                <span class="risk-title">风险等级</span>
+                            </div>
+                            <div class="risk-content">
+                                <el-tag :type="getRiskLevelColor(record.riskLevel)" size="small">
+                                    {{ record.riskLevel }}
+                                </el-tag>
+                            </div>
+                        </div>
+                    </div>
+
                     <!-- 备注信息 -->
                     <div v-if="record.note || record.reason" class="detail-section">
                         <h4 class="section-title">{{ record.note ? '备注' : '交易原因' }}</h4>
@@ -235,6 +279,50 @@
                 <h4 class="section-title">AI分析</h4>
                 <div class="analysis-content">
                     <p>{{ record.analysis }}</p>
+                </div>
+            </div>
+
+            <!-- 量化策略信息 (仅AI记录) -->
+            <div v-if="isAIRecord && (record.strategy || record.factors || record.riskLevel)" class="detail-section">
+                <h4 class="section-title">量化策略信息</h4>
+                
+                <!-- 交易策略 -->
+                <div v-if="record.strategy" class="strategy-info">
+                    <div class="strategy-header">
+                        <span class="strategy-icon">🎯</span>
+                        <span class="strategy-title">交易策略</span>
+                    </div>
+                    <div class="strategy-content">
+                        {{ record.strategy }}
+                    </div>
+                </div>
+                
+                <!-- 量化因子 -->
+                <div v-if="record.factors && record.factors.length > 0" class="factors-info">
+                    <div class="factors-header">
+                        <span class="factors-icon">📊</span>
+                        <span class="factors-title">量化因子</span>
+                    </div>
+                    <div class="factors-content">
+                        <div v-for="(factor, index) in record.factors" :key="index" class="factor-item">
+                            <span class="factor-name">{{ factor.name }}</span>
+                            <span class="factor-value">{{ factor.value }}</span>
+                            <span v-if="factor.weight" class="factor-weight">权重: {{ factor.weight }}</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 风险等级 -->
+                <div v-if="record.riskLevel" class="risk-info">
+                    <div class="risk-header">
+                        <span class="risk-icon">⚠️</span>
+                        <span class="risk-title">风险等级</span>
+                    </div>
+                    <div class="risk-content">
+                        <el-tag :type="getRiskLevelColor(record.riskLevel)" size="small">
+                            {{ record.riskLevel }}
+                        </el-tag>
+                    </div>
                 </div>
             </div>
 
@@ -417,6 +505,20 @@ const getValidityStatusClass = (validityDate) => {
         return 'expiring-soon';
     } else {
         return 'valid';
+    }
+};
+
+// 获取风险等级颜色
+const getRiskLevelColor = (level) => {
+    switch (level) {
+        case '高风险':
+            return 'danger';
+        case '中风险':
+            return 'warning';
+        case '低风险':
+            return 'success';
+        default:
+            return 'info';
     }
 };
 
@@ -806,6 +908,168 @@ const handleCancel = () => {
 .expired {
     color: #dc2626;
     font-weight: 600;
+}
+
+/* 量化策略信息样式 */
+.strategy-info,
+.factors-info,
+.risk-info {
+    margin-bottom: 16px;
+    padding: 12px;
+    background: #f8fafc;
+    border-radius: 8px;
+    border: 1px solid #e2e8f0;
+}
+
+.strategy-header,
+.factors-header,
+.risk-header {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin-bottom: 8px;
+}
+
+.strategy-icon,
+.factors-icon,
+.risk-icon {
+    font-size: 16px;
+}
+
+.strategy-title,
+.factors-title,
+.risk-title {
+    font-size: 14px;
+    font-weight: 600;
+    color: #1e293b;
+}
+
+.strategy-content {
+    font-size: 13px;
+    color: #64748b;
+    line-height: 1.5;
+}
+
+.factors-content {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+
+.factor-item {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 6px 8px;
+    background: white;
+    border-radius: 4px;
+    border: 1px solid #e2e8f0;
+}
+
+.factor-name {
+    font-size: 12px;
+    font-weight: 500;
+    color: #374151;
+    min-width: 60px;
+}
+
+.factor-value {
+    font-size: 12px;
+    color: #1e293b;
+    font-weight: 600;
+}
+
+.factor-weight {
+    font-size: 11px;
+    color: #6b7280;
+    margin-left: auto;
+}
+
+.risk-content {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+/* 移动端量化策略信息样式 */
+.mobile-modal-container .strategy-info,
+.mobile-modal-container .factors-info,
+.mobile-modal-container .risk-info {
+    margin-bottom: 12px;
+    padding: 10px;
+    background: #f8fafc;
+    border-radius: 6px;
+    border: 1px solid #e2e8f0;
+}
+
+.mobile-modal-container .strategy-header,
+.mobile-modal-container .factors-header,
+.mobile-modal-container .risk-header {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    margin-bottom: 6px;
+}
+
+.mobile-modal-container .strategy-icon,
+.mobile-modal-container .factors-icon,
+.mobile-modal-container .risk-icon {
+    font-size: 14px;
+}
+
+.mobile-modal-container .strategy-title,
+.mobile-modal-container .factors-title,
+.mobile-modal-container .risk-title {
+    font-size: 13px;
+    font-weight: 600;
+    color: #1e293b;
+}
+
+.mobile-modal-container .strategy-content {
+    font-size: 12px;
+    color: #64748b;
+    line-height: 1.4;
+}
+
+.mobile-modal-container .factors-content {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+}
+
+.mobile-modal-container .factor-item {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    padding: 4px 6px;
+    background: white;
+    border-radius: 4px;
+    border: 1px solid #e2e8f0;
+}
+
+.mobile-modal-container .factor-name {
+    font-size: 11px;
+    font-weight: 500;
+    color: #374151;
+    min-width: 50px;
+}
+
+.mobile-modal-container .factor-value {
+    font-size: 11px;
+    color: #1e293b;
+    font-weight: 600;
+}
+
+.mobile-modal-container .factor-weight {
+    font-size: 10px;
+    color: #6b7280;
+    margin-left: auto;
+}
+
+.mobile-modal-container .risk-content {
+    display: flex;
+    align-items: center;
+    gap: 6px;
 }
 
 /* 响应式设计 - 桌面端 */

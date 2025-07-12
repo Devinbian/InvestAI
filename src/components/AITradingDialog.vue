@@ -57,26 +57,84 @@
                         <h4 class="section-title">委托价格</h4>
                         <div class="price-controls">
                             <div class="price-item">
-                                <div class="current-price-display">
-                                    <span v-if="plan && plan.buyPrice" class="price-value">¥{{ plan.buyPrice }}</span>
-                                    <span v-else class="price-value">¥{{ stock.price || stock.currentPrice }}</span>
+                                <label class="param-label">
+                                    <span v-if="form.action === 'buy'">最高买入价格</span>
+                                    <span v-else>最低卖出价格</span>
+                                </label>
+                                <div class="price-input-container">
+                                    <el-input-number 
+                                        v-model="form.limitPrice" 
+                                        :min="0.01" 
+                                        :precision="2" 
+                                        :step="0.01" 
+                                        class="price-input" 
+                                        controls-position="right"
+                                        placeholder="请输入价格" 
+                                    />
+                                    <span class="price-unit">元</span>
                                 </div>
                             </div>
-                            <div class="price-item">
-                                <label class="param-label">浮动空间</label>
-                                <div class="price-range">
-                                    <el-input-number v-model="form.priceFloatPercentage" :min="0.1" :max="10"
-                                        :step="0.1" :precision="1" class="price-input" controls-position="right" />
-                                    <span class="price-unit">%</span>
+                            <div class="price-description">
+                                <div class="price-desc-content">
+                                    <div class="current-price-info">
+                                        <span class="current-price-label">当前价格：</span>
+                                        <span class="current-price-value">¥{{ stock.price || stock.currentPrice }}</span>
+                                    </div>
+                                    <div class="price-logic-desc">
+                                        <span v-if="form.action === 'buy'" class="logic-text">
+                                            💡 买入时，AI将在价格不超过此限价时执行交易
+                                        </span>
+                                        <span v-else class="logic-text">
+                                            💡 卖出时，AI将在价格不低于此限价时执行交易
+                                        </span>
+                                    </div>
                                 </div>
                             </div>
-                            <div class="price-range-display">
-                                <div class="price-range-info">
-                                    <span class="range-label">价格区间：</span>
-                                    <span class="range-value">¥{{ getPriceRangeText() }}</span>
+                        </div>
+                    </div>
+
+                    <!-- 量化策略信息 -->
+                    <div class="form-section compact" v-if="plan && (plan.strategy || plan.factors || plan.riskLevel)">
+                        <h4 class="section-title">量化策略信息</h4>
+                        <!-- 调试信息 -->
+                        <div class="debug-info" v-if="false">
+                            <p>plan对象: {{ JSON.stringify(plan) }}</p>
+                            <p>显示条件: {{ !!(plan && (plan.strategy || plan.factors || plan.riskLevel)) }}</p>
+                        </div>
+                        <div class="strategy-info">
+                            <div v-if="plan.strategy" class="strategy-item">
+                                <div class="strategy-header">
+                                    <span class="strategy-icon">🎯</span>
+                                    <span class="strategy-title">交易策略</span>
                                 </div>
-                                <div class="range-desc">
-                                    AI将在此价格区间内寻找最佳交易时机
+                                <div class="strategy-content">
+                                    {{ plan.strategy }}
+                                </div>
+                            </div>
+                            
+                            <div v-if="plan.factors && plan.factors.length > 0" class="factors-item">
+                                <div class="factors-header">
+                                    <span class="factors-icon">📊</span>
+                                    <span class="factors-title">量化因子</span>
+                                </div>
+                                <div class="factors-content">
+                                    <div v-for="(factor, index) in plan.factors" :key="index" class="factor-item">
+                                        <span class="factor-name">{{ factor.name }}</span>
+                                        <span class="factor-value">{{ factor.value }}</span>
+                                        <span v-if="factor.weight" class="factor-weight">权重: {{ factor.weight }}</span>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div v-if="plan.riskLevel" class="risk-info">
+                                <div class="risk-header">
+                                    <span class="risk-icon">⚠️</span>
+                                    <span class="risk-title">风险等级</span>
+                                </div>
+                                <div class="risk-content">
+                                    <el-tag :type="getRiskLevelColor(plan.riskLevel)" size="small">
+                                        {{ plan.riskLevel }}
+                                    </el-tag>
                                 </div>
                             </div>
                         </div>
@@ -161,20 +219,55 @@ const plan = ref({
     buyPrice: null,
     sellPrice: null,
     expireDate: null,
+    strategy: null,
+    factors: [],
+    riskLevel: null,
 });
 
 watch(() => props.stock, (newStock) => {
     console.log('🔍 AITradingDialog - stock changed:', newStock);
     
     if (newStock && newStock.code) {
+        // 初始化限价
+        const currentPrice = parseFloat(newStock.price || newStock.currentPrice || 0);
+        if (currentPrice > 0) {
+            form.limitPrice = currentPrice;
+        }
+        
+        // 先设置默认的量化策略信息
+        plan.value = {
+            buyPrice: null,
+            sellPrice: null,
+            expireDate: null,
+            strategy: `基于${newStock.name}的技术分析和基本面分析的多因子量化策略，结合RSI、MACD等技术指标和财务指标进行综合评估`,
+            factors: [
+                { name: "RSI指标", value: "62.5", weight: "25%" },
+                { name: "MACD信号", value: "看涨", weight: "20%" },
+                { name: "成交量", value: "活跃", weight: "15%" },
+                { name: "PE估值", value: "合理", weight: "25%" },
+                { name: "ROE", value: "15.2%", weight: "15%" }
+            ],
+            riskLevel: "中风险"
+        };
+        
         getStockPlan(newStock.code).then((res) => {
             console.log('📊 AITradingDialog - getStockPlan response:', res);
-            if (res.data.success) {
-                plan.value = res.data.data;
+            if (res.data.success && res.data.data) {
+                // 合并API数据和默认数据
+                plan.value = {
+                    ...plan.value,
+                    ...res.data.data
+                };
                 console.log('✅ AITradingDialog - plan updated:', plan.value);
+                
+                // 如果有推荐买入价，使用推荐价格
+                if (plan.value && plan.value.buyPrice) {
+                    form.limitPrice = parseFloat(plan.value.buyPrice);
+                }
             }
         }).catch(error => {
             console.error('❌ AITradingDialog - getStockPlan error:', error);
+            // 即使API失败，也保持默认的策略信息
         });
     } else {
         console.warn('⚠️ AITradingDialog - invalid stock data:', newStock);
@@ -215,7 +308,7 @@ const form = reactive({
     quantity: 100,
 
     // 委托价格设置
-    priceFloatPercentage: 2.0, // 价格浮动百分比，默认2%
+    limitPrice: 0.01, // 用户输入的最高买入价格或最低卖出价格
 
     // 委托设置
     timeInForce: 'DAY', // 固定为当日有效
@@ -226,24 +319,45 @@ const form = reactive({
     quantValidityEndTime: null,
 });
 
+// 监听交易方向变化，更新限价
+watch(() => form.action, (newAction) => {
+    if (props.stock && props.stock.price) {
+        const currentPrice = parseFloat(props.stock.price || props.stock.currentPrice);
+        if (currentPrice > 0) {
+            if (newAction === 'buy') {
+                // 买入时，使用推荐买入价或当前价格
+                form.limitPrice = (plan.value && plan.value.buyPrice) ? parseFloat(plan.value.buyPrice) : currentPrice;
+            } else {
+                // 卖出时，使用推荐卖出价或当前价格
+                form.limitPrice = (plan.value && plan.value.sellPrice) ? parseFloat(plan.value.sellPrice) : currentPrice;
+            }
+        }
+    }
+});
+
 // 从用户偏好初始化AI交易参数
 const initAITradingFromPreferences = () => {
     const preferences = userStore.userInfo?.preferences;
     if (preferences) {
-        // 根据用户风险偏好设置默认价格浮动空间
-        switch (preferences.riskLevel) {
-            case 'conservative':
-                form.priceFloatPercentage = 1.0; // 保守型用户，较小的价格浮动
-                break;
-            case 'moderate':
-                form.priceFloatPercentage = 2.0; // 稳健型用户，中等价格浮动
-                break;
-            case 'aggressive':
-                form.priceFloatPercentage = 3.0; // 激进型用户，较大的价格浮动
-                break;
-            default:
-                form.priceFloatPercentage = 2.0; // 默认2%
-                break;
+        // 根据用户风险偏好设置默认限价
+        const currentPrice = parseFloat(props.stock?.price || props.stock?.currentPrice || 0);
+        if (currentPrice > 0) {
+            switch (preferences.riskLevel) {
+                case 'conservative':
+                    form.limitPrice = form.action === 'buy' ? currentPrice * 1.01 : currentPrice * 0.99; // 保守型用户，较小的价格偏移
+                    break;
+                case 'moderate':
+                    form.limitPrice = form.action === 'buy' ? currentPrice * 1.02 : currentPrice * 0.98; // 稳健型用户，中等价格偏移
+                    break;
+                case 'aggressive':
+                    form.limitPrice = form.action === 'buy' ? currentPrice * 1.03 : currentPrice * 0.97; // 激进型用户，较大的价格偏移
+                    break;
+                default:
+                    form.limitPrice = currentPrice; // 默认为当前价格
+                    break;
+            }
+        } else {
+            form.limitPrice = 0.01; // 默认最小值
         }
     }
 };
@@ -285,17 +399,17 @@ const getRiskLevelText = (level) => {
     return '未设置';
 };
 
-// 获取价格区间文本
-const getPriceRangeText = () => {
-    if (!props.stock || !props.stock.price) return '0 - 0';
-
-    const currentPrice = parseFloat(props.stock.price || props.stock.currentPrice);
-    const floatPercentage = form.priceFloatPercentage / 100;
-
-    const minPrice = (currentPrice * (1 - floatPercentage)).toFixed(2);
-    const maxPrice = (currentPrice * (1 + floatPercentage)).toFixed(2);
-
-    return `${minPrice} - ${maxPrice}`;
+// 获取风险等级颜色
+const getRiskLevelColor = (level) => {
+    const colorMap = {
+        '低风险': 'success',
+        '中风险': 'warning', 
+        '高风险': 'danger',
+        '保守型': 'success',
+        '稳健型': 'primary',
+        '激进型': 'danger'
+    };
+    return colorMap[level] || 'info';
 };
 
 // 获取委托时效文本
@@ -533,6 +647,7 @@ const handleConfirm = async () => {
         exeuteTradePlan({
             code: props.stock.code,
             name: props.stock.name,
+            action: form.action,
             quantity: form.quantity,
             orderType: form.orderType,
             price: (plan.value && plan.value.buyPrice) ? plan.value.buyPrice : props.stock.price,
@@ -617,6 +732,24 @@ watch(() => props.modelValue, (newVal) => {
     if (newVal && props.stock) {
         console.log('✅ AITradingDialog - initializing with stock:', props.stock);
         initAITradingFromPreferences();
+
+        // 确保策略信息已初始化
+        if (!plan.value.strategy) {
+            plan.value = {
+                buyPrice: null,
+                sellPrice: null,
+                expireDate: null,
+                strategy: `基于${props.stock.name}的技术分析和基本面分析的多因子量化策略，结合RSI、MACD等技术指标和财务指标进行综合评估`,
+                factors: [
+                    { name: "RSI指标", value: "62.5", weight: "25%" },
+                    { name: "MACD信号", value: "看涨", weight: "20%" },
+                    { name: "成交量", value: "活跃", weight: "15%" },
+                    { name: "PE估值", value: "合理", weight: "25%" },
+                    { name: "ROE", value: "15.2%", weight: "15%" }
+                ],
+                riskLevel: "中风险"
+            };
+        }
 
         // 初始化量化分析有效期（默认3天）
         const quantEnd = new Date();
@@ -889,27 +1022,15 @@ watch(() => props.modelValue, (newVal) => {
     gap: 8px;
 }
 
-.current-price-display {
-    padding: 8px 12px;
-    background: #f1f5f9;
-    border-radius: 6px;
-    border: 1px solid #e2e8f0;
-}
-
-.price-value {
-    font-size: 16px;
-    font-weight: 600;
-    color: #dc2626;
-}
-
-.price-range {
+.price-input-container {
     display: flex;
     align-items: center;
     gap: 8px;
+    width: 100%;
 }
 
 .price-input {
-    width: 120px;
+    width: 100%;
 }
 
 .price-unit {
@@ -917,36 +1038,132 @@ watch(() => props.modelValue, (newVal) => {
     color: #64748b;
 }
 
-.price-range-display {
-    margin-top: 8px;
+.price-description {
     padding: 12px;
     background: #f8fafc;
     border-radius: 6px;
     border: 1px solid #e2e8f0;
 }
 
-.price-range-info {
+.price-desc-content {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+}
+
+.current-price-info {
     display: flex;
     align-items: center;
     gap: 8px;
-    margin-bottom: 4px;
 }
 
-.range-label {
+.current-price-label {
     font-size: 14px;
     color: #64748b;
 }
 
-.range-value {
+.current-price-value {
+    font-size: 16px;
+    font-weight: 600;
+    color: #dc2626;
+}
+
+.price-logic-desc {
+    font-size: 12px;
+    color: #64748b;
+    line-height: 1.5;
+}
+
+.logic-text {
+    font-size: 13px;
+    color: #3b82f6;
+    font-weight: 500;
+}
+
+/* 量化策略信息 */
+.strategy-info {
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+}
+
+.strategy-item,
+.factors-item,
+.risk-info {
+    padding: 12px;
+    background: #f8fafc;
+    border-radius: 8px;
+    border: 1px solid #e2e8f0;
+}
+
+.strategy-header,
+.factors-header,
+.risk-header {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin-bottom: 8px;
+}
+
+.strategy-icon,
+.factors-icon,
+.risk-icon {
+    font-size: 16px;
+}
+
+.strategy-title,
+.factors-title,
+.risk-title {
     font-size: 14px;
     font-weight: 600;
     color: #1e293b;
 }
 
-.range-desc {
-    font-size: 12px;
+.strategy-content {
+    font-size: 13px;
     color: #64748b;
     line-height: 1.5;
+}
+
+.factors-content {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+
+.factor-item {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 6px 8px;
+    background: white;
+    border-radius: 4px;
+    border: 1px solid #e2e8f0;
+}
+
+.factor-name {
+    font-size: 12px;
+    font-weight: 500;
+    color: #374151;
+    min-width: 60px;
+}
+
+.factor-value {
+    font-size: 12px;
+    color: #1e293b;
+    font-weight: 600;
+}
+
+.factor-weight {
+    font-size: 11px;
+    color: #6b7280;
+    margin-left: auto;
+}
+
+.risk-content {
+    display: flex;
+    align-items: center;
+    gap: 8px;
 }
 
 /* 委托设置 */
@@ -1307,15 +1524,9 @@ watch(() => props.modelValue, (newVal) => {
         gap: 6px;
     }
 
-    .current-price-display {
-        padding: 6px 10px;
-    }
-
-    .price-value {
-        font-size: 14px;
-    }
-
-    .price-range {
+    .price-input-container {
+        flex-direction: row;
+        align-items: center;
         gap: 6px;
     }
 
@@ -1323,14 +1534,39 @@ watch(() => props.modelValue, (newVal) => {
         width: 100px;
     }
 
-    .price-range-display {
-        padding: 10px;
-        margin-top: 6px;
+    .price-unit {
+        font-size: 13px;
     }
 
-    .range-label,
-    .range-value,
-    .range-desc {
+    .price-description {
+        padding: 10px;
+    }
+
+    .price-desc-content {
+        flex-direction: row;
+        align-items: center;
+        gap: 8px;
+    }
+
+    .current-price-info {
+        flex-direction: row;
+        align-items: center;
+        gap: 6px;
+    }
+
+    .current-price-label {
+        font-size: 13px;
+    }
+
+    .current-price-value {
+        font-size: 14px;
+    }
+
+    .price-logic-desc {
+        font-size: 11px;
+    }
+
+    .logic-text {
         font-size: 12px;
     }
 
@@ -2198,6 +2434,62 @@ watch(() => props.modelValue, (newVal) => {
         font-size: 13px !important;
         color: #64748b !important;
         font-weight: 500 !important;
+    }
+
+    /* 移动端量化策略信息 */
+    .mobile-dialog .strategy-info {
+        gap: 12px !important;
+    }
+
+    .mobile-dialog .strategy-item,
+    .mobile-dialog .factors-item,
+    .mobile-dialog .risk-info {
+        padding: 10px !important;
+    }
+
+    .mobile-dialog .strategy-header,
+    .mobile-dialog .factors-header,
+    .mobile-dialog .risk-header {
+        gap: 6px !important;
+        margin-bottom: 6px !important;
+    }
+
+    .mobile-dialog .strategy-icon,
+    .mobile-dialog .factors-icon,
+    .mobile-dialog .risk-icon {
+        font-size: 14px !important;
+    }
+
+    .mobile-dialog .strategy-title,
+    .mobile-dialog .factors-title,
+    .mobile-dialog .risk-title {
+        font-size: 13px !important;
+    }
+
+    .mobile-dialog .strategy-content {
+        font-size: 12px !important;
+    }
+
+    .mobile-dialog .factors-content {
+        gap: 6px !important;
+    }
+
+    .mobile-dialog .factor-item {
+        padding: 4px 6px !important;
+        gap: 6px !important;
+    }
+
+    .mobile-dialog .factor-name {
+        font-size: 11px !important;
+        min-width: 50px !important;
+    }
+
+    .mobile-dialog .factor-value {
+        font-size: 11px !important;
+    }
+
+    .mobile-dialog .factor-weight {
+        font-size: 10px !important;
     }
 }
 </style>

@@ -7,13 +7,32 @@
                 <p>系统自动保留最近3个月的报告，超期自动清理</p>
             </div>
             <div class="header-right">
-                <el-button @click="exportAllReports" type="primary" :disabled="reports.length === 0"
-                    class="pc-action-btn">
-                    <el-icon>
-                        <Download />
-                    </el-icon>
-                    批量导出
-                </el-button>
+                <div class="batch-actions" v-if="selectedReports.length > 0">
+                    <span class="selected-count">已选择 {{ selectedReports.length }} 个报告</span>
+                    <el-button @click="exportSelectedReports" type="primary" :disabled="downloadingPDF"
+                        :loading="downloadingPDF" size="small">
+                        <el-icon v-if="!downloadingPDF">
+                            <Download />
+                        </el-icon>
+                        {{ downloadingPDF ? '正在导出...' : '导出选中' }}
+                    </el-button>
+                    <el-button @click="clearSelection" size="small">取消选择</el-button>
+                </div>
+                <div class="normal-actions" v-else>
+                    <el-button @click="toggleSelectMode" type="default" :disabled="reports.length === 0" class="pc-action-btn">
+                        <el-icon>
+                            <Select />
+                        </el-icon>
+                        批量选择
+                    </el-button>
+                    <el-button @click="exportAllReports" type="primary" :disabled="reports.length === 0 || downloadingPDF"
+                        :loading="downloadingPDF" class="pc-action-btn">
+                        <el-icon v-if="!downloadingPDF">
+                            <Download />
+                        </el-icon>
+                        {{ downloadingPDF ? '正在生成...' : '全部导出' }}
+                    </el-button>
+                </div>
             </div>
         </div>
 
@@ -65,6 +84,10 @@
                 <div class="filter-group">
                     <el-button @click="resetFilters" class="pc-filter-btn">重置</el-button>
                 </div>
+                <div class="filter-group" v-if="selectMode">
+                    <el-button @click="selectAllReports" class="pc-filter-btn">全选</el-button>
+                    <el-button @click="deselectAllReports" class="pc-filter-btn">全不选</el-button>
+                </div>
             </div>
         </div>
 
@@ -79,10 +102,19 @@
             </div>
 
             <div v-else class="reports-grid">
-                <div v-for="report in paginatedReports" :key="report.id" class="report-card"
-                    @click="viewReport(report)">
+                <div v-for="report in paginatedReports" :key="report.id" 
+                    class="report-card" 
+                    :class="{ 'selected': selectedReports.includes(report.id), 'selectable': selectMode }"
+                    @click="handleReportClick(report)">
                     <div class="report-header">
                         <div class="report-type">
+                            <el-checkbox 
+                                v-if="selectMode" 
+                                :model-value="selectedReports.includes(report.id)"
+                                @change="toggleReportSelection(report.id)"
+                                @click.stop
+                                class="report-checkbox">
+                            </el-checkbox>
                             <el-tag :type="getReportTypeColor(report.type)" size="small">
                                 {{ getReportTypeName(report.type) }}
                             </el-tag>
@@ -202,17 +234,20 @@
                             <p>{{ selectedReport.summary }}</p> -->
 
                             <h4>详细内容</h4>
-                            <div class="report-content-text" v-html="selectedReport.content"></div>
+                            <div class="report-content-text">
+                                <MarkdownRenderer :content="selectedReport.content" />
+                            </div>
                         </div>
                     </div>
                 </div>
                 <div class="mobile-modal-footer">
-                    <el-button @click="showReportDetail = false">关闭</el-button>
-                    <el-button type="primary" @click="downloadReport(selectedReport)">
-                        <el-icon>
+                    <el-button @click="showReportDetail = false" :disabled="downloadingPDF">关闭</el-button>
+                    <el-button type="primary" @click="downloadReport(selectedReport)" 
+                        :loading="downloadingPDF" :disabled="downloadingPDF">
+                        <el-icon v-if="!downloadingPDF">
                             <Download />
                         </el-icon>
-                        下载PDF
+                        {{ downloadingPDF ? '生成中...' : '下载PDF' }}
                     </el-button>
                 </div>
             </div>
@@ -256,17 +291,20 @@
                     <p>{{ selectedReport.summary }}</p> -->
 
                     <h4>详细内容</h4>
-                    <div class="report-content-text" v-html="selectedReport.content"></div>
+                    <div class="report-content-text">
+                        <MarkdownRenderer :content="selectedReport.content" />
+                    </div>
                 </div>
             </div>
 
             <template #footer>
-                <el-button @click="showReportDetail = false">关闭</el-button>
-                <el-button type="primary" @click="downloadReport(selectedReport)">
-                    <el-icon>
+                <el-button @click="showReportDetail = false" :disabled="downloadingPDF">关闭</el-button>
+                <el-button type="primary" @click="downloadReport(selectedReport)" 
+                    :loading="downloadingPDF" :disabled="downloadingPDF">
+                    <el-icon v-if="!downloadingPDF">
                         <Download />
                     </el-icon>
-                    下载PDF
+                    {{ downloadingPDF ? '生成中...' : '下载PDF' }}
                 </el-button>
             </template>
         </el-dialog>
@@ -278,7 +316,9 @@ import {analyzeRecord} from '@/api/api.js';
 import { ref, computed, onMounted, watch } from 'vue';
 import { useUserStore } from '../store/user';
 import { ElMessage, ElMessageBox } from 'element-plus';
-import { Download, Search, More, CircleCheck, Close } from '@element-plus/icons-vue';
+import { Download, Search, More, CircleCheck, Close, Select } from '@element-plus/icons-vue';
+import MarkdownRenderer from './MarkdownRenderer.vue';
+import { generateReportPDF } from '@/utils/pdfGenerator.js';
 
 // 定义emit事件
 const emit = defineEmits(['data-loaded']);
@@ -293,6 +333,7 @@ const isMobile = computed(() => {
 
 // 响应式数据
 const loading = ref(false);
+const downloadingPDF = ref(false);
 const filterType = ref('');
 const filterDateRange = ref(null);
 const filterKeyword = ref('');
@@ -308,6 +349,10 @@ const selectedReport = ref({
     summary: '',
     content: ''
 });
+
+// 批量选择相关
+const selectMode = ref(false);
+const selectedReports = ref([]);
 
 // 移动端日期范围
 const startDate = ref('');
@@ -486,6 +531,44 @@ const viewReport = (report) => {
     showReportDetail.value = true;
 };
 
+// 批量选择相关方法
+const toggleSelectMode = () => {
+    selectMode.value = !selectMode.value;
+    if (!selectMode.value) {
+        selectedReports.value = [];
+    }
+};
+
+const toggleReportSelection = (reportId) => {
+    const index = selectedReports.value.indexOf(reportId);
+    if (index > -1) {
+        selectedReports.value.splice(index, 1);
+    } else {
+        selectedReports.value.push(reportId);
+    }
+};
+
+const clearSelection = () => {
+    selectedReports.value = [];
+    selectMode.value = false;
+};
+
+const handleReportClick = (report) => {
+    if (selectMode.value) {
+        toggleReportSelection(report.id);
+    } else {
+        viewReport(report);
+    }
+};
+
+const selectAllReports = () => {
+    selectedReports.value = paginatedReports.value.map(report => report.id);
+};
+
+const deselectAllReports = () => {
+    selectedReports.value = [];
+};
+
 const handleReportAction = (command, report) => {
     switch (command) {
         case 'view':
@@ -500,14 +583,44 @@ const handleReportAction = (command, report) => {
     }
 };
 
-const downloadReport = (report) => {
-    // 模拟PDF下载
-    ElMessage.success(`正在下载 ${report.name} 报告...`);
+const downloadReport = async (report) => {
+    if (!report.content) {
+        ElMessage.error('报告内容为空，无法下载');
+        return;
+    }
 
-    // 实际项目中这里应该调用后端API生成并下载PDF
-    setTimeout(() => {
-        ElMessage.success('报告下载完成');
-    }, 2000);
+    if (downloadingPDF.value) {
+        ElMessage.warning('正在生成PDF，请稍等...');
+        return;
+    }
+
+    try {
+        downloadingPDF.value = true;
+        ElMessage.info(`正在生成 ${report.name} 的PDF报告...`);
+        
+        // 生成PDF文件名
+        const filename = `${report.name}(${report.code})量化分析报告_${new Date().toISOString().split('T')[0]}.pdf`;
+        
+        // 调用PDF生成器
+        await generateReportPDF(report.content, {
+            filename: filename,
+            title: `${report.name}(${report.code})量化分析报告`,
+            stockInfo: {
+                name: report.name,
+                code: report.code,
+                                            createdAt: report.createTime  // 传递报告生成时间
+            },
+            watermark: true
+        });
+        
+        ElMessage.success('PDF报告下载完成');
+        
+    } catch (error) {
+        console.error('PDF生成失败:', error);
+        ElMessage.error('PDF生成失败，请稍后重试');
+    } finally {
+        downloadingPDF.value = false;
+    }
 };
 
 const deleteReport = async (report) => {
@@ -531,18 +644,149 @@ const deleteReport = async (report) => {
     }
 };
 
-const exportAllReports = () => {
+const exportSelectedReports = async () => {
+    if (selectedReports.value.length === 0) {
+        ElMessage.warning('请先选择要导出的报告');
+        return;
+    }
+
+    // 获取选中的报告对象
+    const selectedReportObjects = reports.value.filter(report => 
+        selectedReports.value.includes(report.id)
+    );
+
+    try {
+        await ElMessageBox.confirm(
+            `确定要导出选中的 ${selectedReports.value.length} 个报告吗？这可能需要一些时间。`,
+            '批量导出确认',
+            {
+                confirmButtonText: '确定导出',
+                cancelButtonText: '取消',
+                type: 'info'
+            }
+        );
+
+        downloadingPDF.value = true;
+        ElMessage.info(`正在批量生成 ${selectedReports.value.length} 个PDF报告...`);
+        
+        let successCount = 0;
+        let failCount = 0;
+        
+        // 逐个生成PDF，避免浏览器卡死
+        for (let i = 0; i < selectedReportObjects.length; i++) {
+            const report = selectedReportObjects[i];
+            
+            try {
+                if (report.content) {
+                    const filename = `${report.name}(${report.code})量化分析报告_${new Date().toISOString().split('T')[0]}.pdf`;
+                    
+                    await generateReportPDF(report.content, {
+                        filename: filename,
+                        title: `${report.name}(${report.code})量化分析报告`,
+                        stockInfo: {
+                            name: report.name,
+                            code: report.code,
+                            createdAt: report.createTime  // 传递报告生成时间
+                        },
+                        watermark: true
+                    });
+                    
+                    successCount++;
+                    
+                    // 添加小延时，避免浏览器卡死
+                    await new Promise(resolve => setTimeout(resolve, 500));
+                } else {
+                    failCount++;
+                    console.warn(`报告 ${report.name} 内容为空，跳过`);
+                }
+            } catch (error) {
+                failCount++;
+                console.error(`生成报告 ${report.name} 失败:`, error);
+            }
+        }
+        
+        if (successCount > 0) {
+            ElMessage.success(`批量导出完成！成功：${successCount}个，失败：${failCount}个`);
+            // 导出成功后清除选择
+            clearSelection();
+        } else {
+            ElMessage.error('批量导出失败，请检查报告内容');
+        }
+        
+    } catch {
+        // 用户取消导出
+    } finally {
+        downloadingPDF.value = false;
+    }
+};
+
+const exportAllReports = async () => {
     if (filteredReports.value.length === 0) {
         ElMessage.warning('没有可导出的报告');
         return;
     }
 
-    ElMessage.success(`正在导出 ${filteredReports.value.length} 个报告...`);
+    try {
+        await ElMessageBox.confirm(
+            `确定要导出全部 ${filteredReports.value.length} 个报告吗？这可能需要一些时间。`,
+            '全部导出确认',
+            {
+                confirmButtonText: '确定导出',
+                cancelButtonText: '取消',
+                type: 'info'
+            }
+        );
 
-    // 实际项目中这里应该调用后端API批量导出
-    setTimeout(() => {
-        ElMessage.success('批量导出完成');
-    }, 3000);
+        downloadingPDF.value = true;
+        ElMessage.info(`正在批量生成 ${filteredReports.value.length} 个PDF报告...`);
+        
+        let successCount = 0;
+        let failCount = 0;
+        
+        // 逐个生成PDF，避免浏览器卡死
+        for (let i = 0; i < filteredReports.value.length; i++) {
+            const report = filteredReports.value[i];
+            
+            try {
+                if (report.content) {
+                    const filename = `${report.name}(${report.code})量化分析报告_${new Date().toISOString().split('T')[0]}.pdf`;
+                    
+                    await generateReportPDF(report.content, {
+                        filename: filename,
+                        title: `${report.name}(${report.code})量化分析报告`,
+                        stockInfo: {
+                            name: report.name,
+                            code: report.code,
+                            createdAt: report.createTime  // 传递报告生成时间
+                        },
+                        watermark: true
+                    });
+                    
+                    successCount++;
+                    
+                    // 添加小延时，避免浏览器卡死
+                    await new Promise(resolve => setTimeout(resolve, 500));
+                } else {
+                    failCount++;
+                    console.warn(`报告 ${report.name} 内容为空，跳过`);
+                }
+            } catch (error) {
+                failCount++;
+                console.error(`生成报告 ${report.name} 失败:`, error);
+            }
+        }
+        
+        if (successCount > 0) {
+            ElMessage.success(`批量导出完成！成功：${successCount}个，失败：${failCount}个`);
+        } else {
+            ElMessage.error('批量导出失败，请检查报告内容');
+        }
+        
+    } catch {
+        // 用户取消导出
+    } finally {
+        downloadingPDF.value = false;
+    }
 };
 
 // 暴露数据给父组件
@@ -583,6 +827,23 @@ defineExpose({
 }
 
 .header-right {
+    display: flex;
+    gap: 12px;
+}
+
+.batch-actions {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+}
+
+.selected-count {
+    font-size: 0.875rem;
+    color: #3182ce;
+    font-weight: 500;
+}
+
+.normal-actions {
     display: flex;
     gap: 12px;
 }
@@ -693,10 +954,34 @@ defineExpose({
     transform: translateY(-2px);
 }
 
+.report-card.selectable {
+    cursor: pointer;
+}
+
+.report-card.selected {
+    border-color: #3b82f6;
+    background: #f0f9ff;
+    box-shadow: 0 4px 12px rgba(59, 130, 246, 0.15);
+}
+
+.report-card.selected:hover {
+    background: #e0f2fe;
+}
+
 .report-header {
     display: flex;
     justify-content: space-between;
     align-items: center;
+}
+
+.report-type {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.report-checkbox {
+    margin-right: 8px;
 }
 
 .report-actions .el-button {
@@ -836,9 +1121,9 @@ defineExpose({
     background: #f8fafc;
     border-radius: 8px;
     padding: 16px;
-    line-height: 1.6;
-    color: #374151;
-    white-space: pre-wrap;
+    max-height: 60vh;
+    overflow-y: auto;
+    border: 1px solid #e2e8f0;
 }
 
 /* PC端按钮样式 */
@@ -1211,10 +1496,29 @@ defineExpose({
     background: #f8fafc;
     border-radius: 6px;
     padding: 10px 12px;
-    line-height: 1.4;
-    color: #374151;
-    white-space: pre-wrap;
-    font-size: 12px;
+    max-height: 50vh;
+    overflow-y: auto;
+    border: 1px solid #e2e8f0;
+    -webkit-overflow-scrolling: touch;
+}
+
+/* 滚动条样式 */
+.report-content-text::-webkit-scrollbar {
+    width: 6px;
+}
+
+.report-content-text::-webkit-scrollbar-track {
+    background: #f1f1f1;
+    border-radius: 3px;
+}
+
+.report-content-text::-webkit-scrollbar-thumb {
+    background: #c1c1c1;
+    border-radius: 3px;
+}
+
+.report-content-text::-webkit-scrollbar-thumb:hover {
+    background: #a8a8a8;
 }
 
 /* 有效期状态样式 */

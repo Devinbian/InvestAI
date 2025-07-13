@@ -148,10 +148,11 @@
                                 <label class="param-label">委托时效选择</label>
                                 <div class="time-option-selector">
                                     <el-radio-group v-model="form.timeInForceType" class="time-options">
-                                        <el-radio value="DAY" class="time-option">
-                                            <div class="option-content">
+                                        <el-radio value="DAY" class="time-option" :disabled="isAfterMarketClose()">
+                                            <div class="option-content" :class="{ 'disabled-option': isAfterMarketClose() }">
                                                 <span class="option-title">当日有效</span>
                                                 <span class="option-time">{{ getTodayEndTime() }}</span>
+                                                <span v-if="isAfterMarketClose()" class="disabled-reason">（已过收盘时间）</span>
                                             </div>
                                         </el-radio>
                                         <el-radio value="QUANT" class="time-option">
@@ -283,6 +284,7 @@ const userStore = useUserStore();
 // 响应式数据
 const loading = ref(false);
 const scrollContainer = ref(null);
+let timeCheckTimer = null;
 
 // 检测移动端和微信浏览器
 const isMobile = computed(() => {
@@ -421,6 +423,14 @@ const getTimeInForceText = (timeInForce) => {
         'GTD': '指定日期'
     };
     return timeInForceMap[timeInForce] || timeInForce;
+};
+
+// 判断当前时间是否已超过收盘时间
+const isAfterMarketClose = () => {
+    const now = new Date();
+    const todayEnd = new Date(now);
+    todayEnd.setHours(15, 0, 0, 0); // 设置为当日15:00收盘
+    return now > todayEnd;
 };
 
 // 获取当日收盘时间
@@ -577,8 +587,34 @@ const getValidityReason = () => {
     }
 };
 
+// 启动时间检查定时器
+const startTimeCheckTimer = () => {
+    // 清除之前的定时器
+    if (timeCheckTimer) {
+        clearInterval(timeCheckTimer);
+    }
+    
+    // 每分钟检查一次时间
+    timeCheckTimer = setInterval(() => {
+        // 如果当前选择的是当日有效，但已经超过收盘时间，自动切换
+        if (form.timeInForceType === 'DAY' && isAfterMarketClose()) {
+            form.timeInForceType = 'QUANT';
+            ElMessage.warning('已超过收盘时间，自动切换为量化有效期内');
+        }
+    }, 60000); // 每分钟检查一次
+};
+
+// 停止时间检查定时器
+const stopTimeCheckTimer = () => {
+    if (timeCheckTimer) {
+        clearInterval(timeCheckTimer);
+        timeCheckTimer = null;
+    }
+};
+
 // 处理取消
 const handleCancel = () => {
+    stopTimeCheckTimer();
     dialogVisible.value = false;
 };
 
@@ -599,6 +635,30 @@ const handleConfirm = async () => {
     if (form.quantity < 100 || form.quantity % 100 !== 0) {
         ElMessage.error('交易数量必须是100的整数倍');
         return;
+    }
+
+    // 时间验证：如果选择当日有效但已超过收盘时间，阻止提交
+    if (form.timeInForceType === 'DAY' && isAfterMarketClose()) {
+        try {
+            await ElMessageBox.confirm(
+                '您选择的"当日有效"委托已超过收盘时间（15:00），无法提交。是否自动切换为"量化有效期内"并继续委托？',
+                '委托时效已过期',
+                {
+                    confirmButtonText: '切换为量化有效期内',
+                    cancelButtonText: '取消委托',
+                    type: 'warning',
+                    customClass: 'high-z-index-dialog',
+                    appendTo: 'body'
+                }
+            );
+            
+            // 用户确认切换，自动切换到量化有效期内
+            form.timeInForceType = 'QUANT';
+            ElMessage.success('已自动切换为量化有效期内，继续委托流程');
+        } catch {
+            // 用户取消，停止委托流程
+            return;
+        }
     }
 
     // 支付确认提示
@@ -656,6 +716,7 @@ const handleConfirm = async () => {
         });
 
         // 关闭对话框
+        stopTimeCheckTimer();
         dialogVisible.value = false;
 
         // // 发送事件给父组件，不再包含消息内容
@@ -757,10 +818,23 @@ watch(() => props.modelValue, (newVal) => {
         quantEnd.setHours(23, 59, 59, 999);
         form.quantValidityEndTime = quantEnd.toISOString();
 
+        // 检查是否超过收盘时间，如果是则自动选择量化有效期内
+        if (isAfterMarketClose()) {
+            form.timeInForceType = 'QUANT';
+        } else {
+            form.timeInForceType = 'DAY';
+        }
+
         // 延迟应用微信浏览器滚动修复
         setTimeout(() => {
             fixWechatScroll();
         }, 300);
+
+        // 启动时间检查定时器，每分钟检查一次是否超过收盘时间
+        startTimeCheckTimer();
+    } else if (!newVal) {
+        // 弹窗关闭时清理定时器
+        stopTimeCheckTimer();
     }
 });
 </script>
@@ -1231,6 +1305,18 @@ watch(() => props.modelValue, (newVal) => {
     height: 6px;
 }
 
+.time-option.is-disabled :deep(.el-radio__inner) {
+    background-color: #f5f5f5;
+    border-color: #d9d9d9;
+    cursor: not-allowed;
+}
+
+.time-option.is-disabled:hover .option-content {
+    border-color: #e2e8f0;
+    background: #f8f9fa;
+    cursor: not-allowed;
+}
+
 .option-content {
     display: flex;
     flex-direction: column;
@@ -1267,6 +1353,23 @@ watch(() => props.modelValue, (newVal) => {
     font-size: 12px;
     color: #dc2626;
     font-weight: 500;
+}
+
+.disabled-option {
+    opacity: 0.5;
+    cursor: not-allowed !important;
+}
+
+.disabled-option .option-title,
+.disabled-option .option-time {
+    color: #9ca3af !important;
+}
+
+.disabled-reason {
+    font-size: 11px;
+    color: #ef4444;
+    margin-top: 2px;
+    display: block;
 }
 
 .actual-validity-display {

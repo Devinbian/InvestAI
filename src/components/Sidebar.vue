@@ -554,6 +554,11 @@ defineExpose({
     -webkit-overflow-scrolling: touch;
     overscroll-behavior: contain;
     contain: layout;
+    /* 确保内容区域文本可以被选择 */
+    -webkit-user-select: text !important;
+    -moz-user-select: text !important;
+    -ms-user-select: text !important;
+    user-select: text !important;
 }
 
 .tab-panel {
@@ -573,6 +578,11 @@ defineExpose({
     /* 为弹窗提供定位基准 */
     /* 确保内容可以超出容器高度 */
     height: auto;
+    /* 确保面板内容文本可以被选择 */
+    -webkit-user-select: text !important;
+    -moz-user-select: text !important;
+    -ms-user-select: text !important;
+    user-select: text !important;
 }
 
 /* 移动端底部安全区域处理 */
@@ -956,6 +966,11 @@ defineExpose({
         -webkit-overflow-scrolling: touch !important;
         overscroll-behavior: contain !important;
         scrollbar-width: thin !important;
+        /* 确保移动端内容文本可以被选择 */
+        -webkit-user-select: text !important;
+        -moz-user-select: text !important;
+        -ms-user-select: text !important;
+        user-select: text !important;
     }
 
     /* 移动端滚动条样式 */
@@ -1018,6 +1033,11 @@ defineExpose({
         height: auto !important;
         min-height: 0 !important;
         flex: none !important;
+        /* 确保移动端面板内容文本可以被选择 */
+        -webkit-user-select: text !important;
+        -moz-user-select: text !important;
+        -ms-user-select: text !important;
+        user-select: text !important;
     }
 
     /* 移动端移除组件外层容器的样式 */

@@ -3440,36 +3440,11 @@ const handleSidebarInteraction = async (data) => {
         message = String(message || '请提供具体的市场分析和投资建议');
     }
 
-    // 生成响应消息
-    const responses = [
-        "根据您的风险偏好和投资目标，我建议您可以关注以下股票。",
-        "从技术面分析，该股票目前处于上升趋势，但需要注意风险控制。",
-        "根据基本面分析，该公司的财务状况良好，具有长期投资价值。",
-        "建议您关注该行业的龙头企业，它们通常具有更好的抗风险能力。",
-        "从估值角度来看，目前该股票的PE处于历史低位，具有投资价值。",
-        "感谢您的提问，我会根据市场情况为您提供专业的投资建议。"
-    ];
-
-    const newMessages = [
-        { id: generateMessageId(), role: 'user', content: message, timestamp: Date.now() },
-        {
-            id: generateMessageId(),
-            role: 'assistant',
-            content: responses[Math.floor(Math.random() * responses.length)],
-            hasStockInfo: false,
-            timestamp: Date.now()
-        }
-    ];
-
-    // 直接添加消息，不限制消息数量以避免用户消息被清空
-    chatHistory.value.push(...newMessages);
-    chatHistory.value = [...chatHistory.value]; // 触发响应式更新
-
-    // 同步到chatHistoryStore，确保用户消息被保存
-    chatHistoryStore.updateCurrentChatMessagesWithoutLimit(chatHistory.value);
-
-    await nextTick();
-    scrollToBottom();
+    // 设置输入框内容并调用真实的聊天接口
+    inputMessage.value = message;
+    
+    // 调用真实的聊天接口
+    await chatSendMessage(userStore, isMobileView, mobileAdaptation, scrollToBottom);
 
     ElMessage.success('已为您分析相关内容');
 };
@@ -4043,36 +4018,12 @@ ${message.interactionData.newsItems.map(news => `- ${news.title}: ${news.summary
     }
 
     if (analysisPrompt) {
-        // 生成分析响应
-        const responses = [
-            "根据您的风险偏好和投资目标，我建议您可以关注以下股票。",
-            "从技术面分析，该股票目前处于上升趋势，但需要注意风险控制。",
-            "根据基本面分析，该公司的财务状况良好，具有长期投资价值。",
-            "建议您关注该行业的龙头企业，它们通常具有更好的抗风险能力。",
-            "从估值角度来看，目前该股票的PE处于历史低位，具有投资价值。",
-            "感谢您的提问，我会根据市场情况为您提供专业的投资建议。"
-        ];
+        // 设置输入框内容并调用真实的聊天接口
+        inputMessage.value = analysisPrompt;
+        
+        // 调用真实的聊天接口
+        await chatSendMessage(userStore, isMobileView, mobileAdaptation, scrollToBottom);
 
-        const newMessages = [
-            { id: generateMessageId(), role: 'user', content: action.description || analysisPrompt, timestamp: Date.now() },
-            {
-                id: generateMessageId(),
-                role: 'assistant',
-                content: responses[Math.floor(Math.random() * responses.length)],
-                hasStockInfo: false,
-                timestamp: Date.now()
-            }
-        ];
-
-        // 直接添加交互分析消息，不限制消息数量
-        chatHistory.value.push(...newMessages);
-        chatHistory.value = [...chatHistory.value]; // 触发响应式更新
-
-        // 同步到chatHistoryStore，确保用户消息被保存
-        chatHistoryStore.updateCurrentChatMessagesWithoutLimit(chatHistory.value);
-
-        await nextTick();
-        scrollToBottom();
         ElMessage.success(`已为您生成分析结果`);
     }
 };
@@ -5097,7 +5048,41 @@ textarea,
 .markdown-content,
 .markdown-content *,
 .message-text,
-.message-text * {
+.message-text *,
+/* 侧边栏内容区域文本选择 */
+.sidebar-container .tab-content,
+.sidebar-container .tab-content *,
+.sidebar-container .tab-panel,
+.sidebar-container .tab-panel *,
+.sidebar-container .stock-name,
+.sidebar-container .stock-code,
+.sidebar-container .stock-price,
+.sidebar-container .stock-change,
+.sidebar-container .stock-details,
+.sidebar-container .detail-item,
+.sidebar-container .detail-label,
+.sidebar-container .detail-value,
+.sidebar-container .card-title,
+.sidebar-container .update-time,
+.sidebar-container .empty-title,
+.sidebar-container .empty-desc,
+.sidebar-container .asset-label,
+.sidebar-container .asset-value,
+.sidebar-container .asset-change,
+.sidebar-container .index-name,
+.sidebar-container .index-value,
+.sidebar-container .index-change,
+.sidebar-container .recommendation-reason,
+.sidebar-container .notification-title,
+.sidebar-container .notification-content,
+.sidebar-container .notification-time,
+.sidebar-container .message-text,
+.sidebar-container .message-content,
+.sidebar-container .group-title,
+.sidebar-container .section-title,
+.sidebar-container .info-item,
+.sidebar-container .info-label,
+.sidebar-container .info-value {
     -webkit-user-select: text !important;
     -khtml-user-select: text !important;
     -moz-user-select: text !important;
@@ -5112,7 +5097,26 @@ textarea,
 .chat-message-content .message-text,
 .chat-message-content .message-text *,
 .chat-message-content .markdown-content,
-.chat-message-content .markdown-content * {
+.chat-message-content .markdown-content *,
+/* 侧边栏内容的所有子元素 */
+.sidebar-container .tab-content *,
+.sidebar-container .tab-panel *,
+.sidebar-container .stock-item,
+.sidebar-container .stock-item *,
+.sidebar-container .market-index-card,
+.sidebar-container .market-index-card *,
+.sidebar-container .account-summary,
+.sidebar-container .account-summary *,
+.sidebar-container .recommendations-list,
+.sidebar-container .recommendations-list *,
+.sidebar-container .watchlist-content,
+.sidebar-container .watchlist-content *,
+.sidebar-container .portfolio-content,
+.sidebar-container .portfolio-content *,
+.sidebar-container .notification-item,
+.sidebar-container .notification-item *,
+.sidebar-container .empty-state,
+.sidebar-container .empty-state * {
     -webkit-user-select: text !important;
     -khtml-user-select: text !important;
     -moz-user-select: text !important;

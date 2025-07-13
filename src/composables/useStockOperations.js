@@ -1,7 +1,6 @@
 import { ref, nextTick, computed } from "vue";
 import { ElMessage, ElMessageBox } from "element-plus";
 import { recommendStock, api } from "@/api/api";
-import { mockApi } from "@/api/mock";
 import {
   getRiskLevelText,
   getExperienceText,
@@ -239,13 +238,13 @@ export function useStockOperations() {
 
       console.log("✅ 智能荐股API处理成功:", stockList);
 
-      // 获取推荐内容文本
-      const mockRes = await mockApi.sendMessage(message);
+      // 智能荐股只显示股票卡片，不需要文字内容
+      const recommendationText = "";
 
       // 更新最后一条AI消息为荐股结果
       const lastMessage = chatHistory.value[chatHistory.value.length - 1];
       if (lastMessage && lastMessage.role === "assistant") {
-        lastMessage.content = mockRes.data.content;
+        lastMessage.content = recommendationText;
         lastMessage.isGenerating = false;
         lastMessage.hasStockInfo = true;
         lastMessage.isRecommendation = true;
@@ -868,12 +867,12 @@ export function useStockOperations() {
           (msg) => msg.messageId === message.messageId,
         );
         if (messageIndex !== -1) {
-          // 获取mock内容作为文本描述
-          const mockRes = await mockApi.sendMessage(requestMessage);
+          // 刷新荐股也只显示股票卡片，不需要文字内容
+          const refreshedRecommendationText = "";
 
           chatHistory.value[messageIndex] = {
             ...chatHistory.value[messageIndex],
-            content: mockRes.data.content,
+            content: refreshedRecommendationText,
             hasStockInfo: true,
             isRecommendation: true,
             stockList: stockList,

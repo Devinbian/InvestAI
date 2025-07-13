@@ -94,22 +94,11 @@ export const mockApi = {
       });
     }
 
-    // 通用AI响应
-    const responses = [
-      "根据您的风险偏好和投资目标，我建议您可以关注以下股票。",
-      "从技术面分析，该股票目前处于上升趋势，但需要注意风险控制。",
-      "根据基本面分析，该公司的财务状况良好，具有长期投资价值。",
-      "建议您关注该行业的龙头企业，它们通常具有更好的抗风险能力。",
-      "从估值角度来看，目前该股票的PE处于历史低位，具有投资价值。",
-      "感谢您的提问，我会根据市场情况为您提供专业的投资建议。",
-      "投资需要谨慎，建议您分散投资，控制风险。",
-      "根据当前市场环境，建议您关注具有长期增长潜力的优质股票。",
-    ];
-
+    // 通用AI响应 - 已移除随机响应，改为简单的确认响应
     const response = {
       id: generateMessageId(),
       role: "assistant",
-      content: responses[Math.floor(Math.random() * responses.length)],
+      content: "正在为您分析相关内容...",
       hasStockInfo: false,
     };
 

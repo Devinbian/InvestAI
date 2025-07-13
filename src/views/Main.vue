@@ -284,7 +284,6 @@ import { useRouter, useRoute } from 'vue-router';
 import { useUserStore } from '../store/user';
 import { useChatHistoryStore } from '../store/chatHistory';
 import { ElMessage, ElMessageBox } from 'element-plus';
-import { wechatLoginApi } from '../api/mock';
 import Sidebar from '../components/Sidebar.vue';
 import UserProfile from '../components/UserProfile.vue';
 import RecordsCenter from '../components/RecordsCenter.vue';

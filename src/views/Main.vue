@@ -2,7 +2,7 @@
     <div class="main-modern" :class="{ 'onboarding-active': showOnboarding, 'with-chat-history': showChatHistory }">
         <!-- 顶部导航栏 -->
         <TopNavbar @show-login="showLogin" @show-profile="handleShowProfile" @show-preferences="handleShowPreferences"
-            @show-records="handleShowRecords" @show-mobile-menu="showMobileUserMenu" />
+            @show-records="handleShowRecords" @show-mobile-menu="showMobileUserMenu" @go-home="handleGoHome" />
 
         <!-- 聊天历史记录 -->
         <ChatHistory v-if="userStore.isLoggedIn" :visible="showChatHistory"
@@ -1357,6 +1357,51 @@ const handleShowPreferences = () => {
 const handleShowRecords = () => {
     recordsCenterInitialTab.value = 'reports'; // 从个人头像下拉菜单打开时默认显示第一个tab
     showRecordsCenter.value = true;
+};
+
+// 处理返回主页事件，重置聊天模式状态
+const handleGoHome = () => {
+    console.log('🏠 处理返回主页事件');
+    
+    // 重置聊天模式状态
+    isChatMode.value = false;
+    
+    // 清空输入框
+    inputMessage.value = '';
+    
+    // 停止任何正在进行的生成
+    if (isGenerating.value) {
+        stopGeneration();
+    }
+    
+    // 清空当前聊天历史记录，确保下次创建新会话
+    chatHistory.value = [];
+    
+    // 清除当前会话ID，确保下次发送消息时创建新会话
+    chatHistoryStore.clearCurrentChat();
+    
+    // 关闭聊天历史面板
+    showChatHistory.value = false;
+    
+    // 重置其他可能的状态
+    showUserProfile.value = false;
+    showRecordsCenter.value = false;
+    
+    // 移动端：关闭侧边栏
+    if (isMobileView.value && sidebarRef.value) {
+        mobileAdaptation.closeMobileSidebar(sidebarRef);
+    }
+    
+    // 滚动到顶部
+    nextTick(() => {
+        scrollToTop();
+        // 重置移动端布局
+        if (isMobileView.value) {
+            mobileAdaptation.resetMobileLayout(false, scrollToTop);
+        }
+    });
+    
+    console.log('✅ 已重置到主页状态，下次发送消息将创建新会话');
 };
 
 // 发送消息 - 使用组合式函数

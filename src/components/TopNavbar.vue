@@ -1,6 +1,6 @@
 <template>
     <header class="modern-navbar">
-        <div class="navbar-left">
+        <div class="navbar-left" @click="handleGoHome">
             <img src="/logo.png" class="modern-logo" alt="InvestAI Logo" />
             <span class="app-title">智投小助</span>
         </div>
@@ -49,7 +49,8 @@ const emit = defineEmits([
     'show-profile',
     'show-preferences',
     'show-records',
-    'show-mobile-menu'
+    'show-mobile-menu',
+    'go-home'
 ]);
 
 // 使用store和router
@@ -116,6 +117,27 @@ const handleCommand = async (command) => {
 const showMobileUserMenu = () => {
     emit('show-mobile-menu');
 };
+
+// 处理logo和标题点击，返回主页
+const handleGoHome = async () => {
+    try {
+        // 如果当前已经在主页，发射事件让父组件处理状态重置
+        if (router.currentRoute.value.name === 'Main') {
+            emit('go-home');
+            return;
+        }
+
+        // 导航到主页并发射事件
+        await router.push('/');
+        emit('go-home');
+        
+        // 可选：显示返回主页的提示
+        // ElMessage.success('已返回主页');
+        
+    } catch (error) {
+        console.error('导航到主页失败:', error);
+    }
+};
 </script>
 
 <style lang="scss" scoped>
@@ -149,6 +171,16 @@ const showMobileUserMenu = () => {
     display: flex;
     align-items: center;
     gap: 12px;
+    cursor: pointer;
+    transition: opacity 0.2s ease;
+    
+    &:hover {
+        opacity: 0.8;
+    }
+    
+    &:active {
+        opacity: 0.6;
+    }
 }
 
 .modern-logo {
@@ -159,6 +191,12 @@ const showMobileUserMenu = () => {
     background: rgba(255, 255, 255, 0.9);
     padding: 2px;
     box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+    transition: transform 0.2s ease, box-shadow 0.2s ease;
+    
+    .navbar-left:hover & {
+        transform: scale(1.05);
+        box-shadow: 0 4px 8px rgba(0, 0, 0, 0.15);
+    }
 }
 
 .app-title {
@@ -166,6 +204,11 @@ const showMobileUserMenu = () => {
     font-weight: 700;
     color: #18181b;
     letter-spacing: 0.5px;
+    transition: color 0.2s ease;
+    
+    .navbar-left:hover & {
+        color: #3b82f6;
+    }
 }
 
 .navbar-right {

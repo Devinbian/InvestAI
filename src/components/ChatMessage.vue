@@ -588,6 +588,37 @@ const getMessageStatusClass = (content) => {
     return '';
 };
 
+// 从消息中提取股票代码
+const getStockCodeFromMessage = (message) => {
+    let stockCode = null;
+
+    // 对于量化分析消息，直接使用 stockInfo
+    if (message.isQuantAnalysis && message.stockInfo && message.stockInfo.code) {
+        stockCode = message.stockInfo.code;
+        return stockCode;
+    }
+
+    // 对于其他消息，优先使用 stockInfo
+    if (message.stockInfo && message.stockInfo.code) {
+        stockCode = message.stockInfo.code;
+    } else {
+        // 降级方案：尝试从消息内容中提取股票代码
+        const content = message.content || '';
+        const codeMatch = content.match(/\((\d{6})\)/);
+        stockCode = codeMatch ? codeMatch[1] : null;
+    }
+
+    console.log('🔍 提取股票代码:', {
+        hasStockInfo: !!message.stockInfo,
+        stockInfoCode: message.stockInfo?.code,
+        contentCode: stockCode,
+        isQuantAnalysis: message.isQuantAnalysis,
+        messageContent: message.content?.substring(0, 100) + '...'
+    });
+
+    return stockCode;
+};
+
 // 获取股票代码的计算属性
 const currentStockCode = computed(() => {
     return getStockCodeFromMessage(props.message);
@@ -663,37 +694,6 @@ const getReminderButtonClass = (message) => {
 };
 
 // 旧的按钮样式和文本方法已移除，现在使用简单的CSS类和模板直接判断
-
-// 从消息中提取股票代码
-const getStockCodeFromMessage = (message) => {
-    let stockCode = null;
-
-    // 对于量化分析消息，直接使用 stockInfo
-    if (message.isQuantAnalysis && message.stockInfo && message.stockInfo.code) {
-        stockCode = message.stockInfo.code;
-        return stockCode;
-    }
-
-    // 对于其他消息，优先使用 stockInfo
-    if (message.stockInfo && message.stockInfo.code) {
-        stockCode = message.stockInfo.code;
-    } else {
-        // 降级方案：尝试从消息内容中提取股票代码
-        const content = message.content || '';
-        const codeMatch = content.match(/\((\d{6})\)/);
-        stockCode = codeMatch ? codeMatch[1] : null;
-    }
-
-    console.log('🔍 提取股票代码:', {
-        hasStockInfo: !!message.stockInfo,
-        stockInfoCode: message.stockInfo?.code,
-        contentCode: stockCode,
-        isQuantAnalysis: message.isQuantAnalysis,
-        messageContent: message.content?.substring(0, 100) + '...'
-    });
-
-    return stockCode;
-};
 
 // 聊天消息中的股票操作配置
 const getChatStockActions = (message) => {

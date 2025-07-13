@@ -144,7 +144,7 @@
                             </div>
                             <div class="info-item">
                                 <span class="label">生成时间：</span>
-                                <span class="value">{{ formatDate(report.createTime) }}</span>
+                                <span class="value">{{ formatDateTime(report.createTime) }}</span>
                             </div>
                             <div class="info-item">
                                 <span class="label">费用：</span>
@@ -317,6 +317,7 @@ import { ElMessage, ElMessageBox } from 'element-plus';
 import { Download, Search, More, CircleCheck, Close, Select } from '@element-plus/icons-vue';
 import MarkdownRenderer from './MarkdownRenderer.vue';
 import { generateReportPDF } from '@/utils/pdfGenerator.js';
+import { formatDate, formatDateTime, formatExpiryDate, getExpiryStatusClass } from '@/utils/formatters.js';
 
 // 定义emit事件
 const emit = defineEmits(['data-loaded']);
@@ -473,57 +474,9 @@ const getReportTypeColor = (sourceType) => {
     return colorMap[sourceType] || 'info';
 };
 
-const formatDate = (dateTime) => {
-    return dateTime.split(' ')[0];
-};
 
-const formatDateTime = (dateTime) => {
-    return dateTime.replace('T', ' ').substring(0, 19);
-};
 
-// 格式化有效期显示
-const formatExpiryDate = (expiryDate) => {
-    if (!expiryDate) return '永久有效';
-    
-    const expiry = new Date(expiryDate);
-    const now = new Date();
-    const diffTime = expiry - now;
-    const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
-    
-    if (diffDays < 0) {
-        return '已过期';
-    } else if (diffDays === 0) {
-        return '今日过期';
-    } else if (diffDays === 1) {
-        return '明日过期';
-    } else if (diffDays <= 7) {
-        return `${diffDays}天后过期`;
-    } else {
-        return expiry.toLocaleDateString('zh-CN', {
-            year: 'numeric',
-            month: 'short',
-            day: 'numeric'
-        }) + '过期';
-    }
-};
 
-// 获取有效期状态样式类
-const getExpiryStatusClass = (expiryDate) => {
-    if (!expiryDate) return '';
-    
-    const expiry = new Date(expiryDate);
-    const now = new Date();
-    const diffTime = expiry - now;
-    const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
-    
-    if (diffDays < 0) {
-        return 'expired';
-    } else if (diffDays <= 7) {
-        return 'expiring-soon';
-    } else {
-        return 'valid';
-    }
-};
 
 const resetFilters = () => {
     filterType.value = '';

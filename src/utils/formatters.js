@@ -77,3 +77,98 @@ export const formatPriceChange = (change, changePercent) => {
 export const generateMessageId = () => {
   return `msg_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
 };
+
+/**
+ * 格式化日期显示（只显示日期部分）
+ * @param {string|Date} dateTime - 日期时间字符串或Date对象
+ * @returns {string} 格式化后的日期字符串 YYYY-MM-DD
+ */
+export const formatDate = (dateTime) => {
+  if (!dateTime) return '';
+  
+  const date = new Date(dateTime);
+  if (isNaN(date.getTime())) return '';
+  
+  const year = date.getFullYear();
+  const month = String(date.getMonth() + 1).padStart(2, '0');
+  const day = String(date.getDate()).padStart(2, '0');
+  
+  return `${year}-${month}-${day}`;
+};
+
+/**
+ * 格式化日期时间显示（完整的日期时间）
+ * @param {string|Date} dateTime - 日期时间字符串或Date对象
+ * @returns {string} 格式化后的日期时间字符串 YYYY-MM-DD HH:mm:ss
+ */
+export const formatDateTime = (dateTime) => {
+  if (!dateTime) return '';
+  
+  const date = new Date(dateTime);
+  if (isNaN(date.getTime())) return '';
+  
+  const year = date.getFullYear();
+  const month = String(date.getMonth() + 1).padStart(2, '0');
+  const day = String(date.getDate()).padStart(2, '0');
+  const hours = String(date.getHours()).padStart(2, '0');
+  const minutes = String(date.getMinutes()).padStart(2, '0');
+  const seconds = String(date.getSeconds()).padStart(2, '0');
+  
+  return `${year}-${month}-${day} ${hours}:${minutes}:${seconds}`;
+};
+
+/**
+ * 格式化有效期显示
+ * @param {string|Date} expiryDate - 有效期日期字符串或Date对象
+ * @returns {string} 格式化后的有效期描述
+ */
+export const formatExpiryDate = (expiryDate) => {
+  if (!expiryDate) return '永久有效';
+  
+  const expiry = new Date(expiryDate);
+  if (isNaN(expiry.getTime())) return '永久有效';
+  
+  const now = new Date();
+  const diffTime = expiry - now;
+  const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+  
+  if (diffDays < 0) {
+    return '已过期';
+  } else if (diffDays === 0) {
+    return '今日过期';
+  } else if (diffDays === 1) {
+    return '明日过期';
+  } else if (diffDays <= 7) {
+    return `${diffDays}天后过期`;
+  } else {
+    return expiry.toLocaleDateString('zh-CN', {
+      year: 'numeric',
+      month: 'short',
+      day: 'numeric'
+    }) + '过期';
+  }
+};
+
+/**
+ * 获取有效期状态样式类
+ * @param {string|Date} expiryDate - 有效期日期字符串或Date对象
+ * @returns {string} 有效期状态样式类名
+ */
+export const getExpiryStatusClass = (expiryDate) => {
+  if (!expiryDate) return '';
+  
+  const expiry = new Date(expiryDate);
+  if (isNaN(expiry.getTime())) return '';
+  
+  const now = new Date();
+  const diffTime = expiry - now;
+  const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+  
+  if (diffDays < 0) {
+    return 'expired';
+  } else if (diffDays <= 7) {
+    return 'expiring-soon';
+  } else {
+    return 'valid';
+  }
+};

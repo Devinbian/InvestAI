@@ -356,14 +356,9 @@ export default {
             // 设置分类配置
             settingCategories: [
                 {
-                    id: 'market',
-                    name: '市场动态',
-                    description: '股价变动、板块异动等'
-                },
-                {
-                    id: 'news',
-                    name: '财经资讯',
-                    description: '政策新闻、公司公告等'
+                    id: 'trade',
+                    name: '交易记录',
+                    description: '买卖记录、委托状态等'
                 },
                 {
                     id: 'alert',
@@ -371,23 +366,28 @@ export default {
                     description: '价格预警、风险评估等'
                 },
                 {
+                    id: 'market',
+                    name: '实时行情',
+                    description: '股价变动、板块异动、技术信号等'
+                },
+                {
+                    id: 'news',
+                    name: '财经资讯',
+                    description: '政策新闻、公司公告、宏观数据等'
+                },
+                {
                     id: 'system',
                     name: '系统通知',
                     description: '系统更新、功能通知等'
-                },
-                {
-                    id: 'trade',
-                    name: '交易记录',
-                    description: '买卖记录、委托状态等'
                 }
             ],
 
             categories: [
                 { id: 'all', name: '全部', icon: '📬', count: 0 },
-                { id: 'market', name: '市场', icon: '📈', count: 0 },
-                { id: 'news', name: '资讯', icon: '📰', count: 0 },
-                { id: 'alert', name: '提醒', icon: '⚠️', count: 0 },
                 { id: 'trade', name: '交易', icon: '💰', count: 0 },
+                { id: 'alert', name: '提醒', icon: '⚠️', count: 0 },
+                { id: 'market', name: '行情', icon: '📈', count: 0 },
+                { id: 'news', name: '资讯', icon: '📰', count: 0 },
                 { id: 'system', name: '系统', icon: '⚙️', count: 0 }
             ],
             notifications: []

@@ -273,7 +273,7 @@
                     <div class="filter-options">
                         <select v-model="filterType" class="filter-select">
                             <option value="">全部类型</option>
-                            <option value="market">市场动态</option>
+                            <option value="market">实时行情</option>
                             <option value="news">财经资讯</option>
                             <option value="alert">风险提醒</option>
                             <option value="system">系统通知</option>
@@ -372,21 +372,11 @@
                     <h4>消息推送开关</h4>
                     <div class="setting-item">
                         <div class="setting-info">
-                            <div class="setting-title">市场动态推送</div>
-                            <div class="setting-desc">股价变动、板块异动、指数波动等</div>
+                            <div class="setting-title">交易记录推送</div>
+                            <div class="setting-desc">买卖记录、委托状态、资金变动等</div>
                         </div>
-                        <div class="setting-switch" :class="{ active: pushSettings.market }"
-                            @click="togglePushSetting('market')">
-                            <div class="switch-handle"></div>
-                        </div>
-                    </div>
-                    <div class="setting-item">
-                        <div class="setting-info">
-                            <div class="setting-title">财经资讯推送</div>
-                            <div class="setting-desc">政策新闻、公司公告、行业分析等</div>
-                        </div>
-                        <div class="setting-switch" :class="{ active: pushSettings.news }"
-                            @click="togglePushSetting('news')">
+                        <div class="setting-switch" :class="{ active: pushSettings.trade }"
+                            @click="togglePushSetting('trade')">
                             <div class="switch-handle"></div>
                         </div>
                     </div>
@@ -402,21 +392,31 @@
                     </div>
                     <div class="setting-item">
                         <div class="setting-info">
-                            <div class="setting-title">系统通知推送</div>
-                            <div class="setting-desc">系统更新、设置变更、功能通知等</div>
+                            <div class="setting-title">实时行情推送</div>
+                            <div class="setting-desc">股价变动、板块异动、技术信号等</div>
                         </div>
-                        <div class="setting-switch" :class="{ active: pushSettings.system }"
-                            @click="togglePushSetting('system')">
+                        <div class="setting-switch" :class="{ active: pushSettings.market }"
+                            @click="togglePushSetting('market')">
                             <div class="switch-handle"></div>
                         </div>
                     </div>
                     <div class="setting-item">
                         <div class="setting-info">
-                            <div class="setting-title">交易记录推送</div>
-                            <div class="setting-desc">买卖记录、委托状态、资金变动等</div>
+                            <div class="setting-title">财经资讯推送</div>
+                            <div class="setting-desc">政策新闻、公司公告、宏观数据等</div>
                         </div>
-                        <div class="setting-switch" :class="{ active: pushSettings.trade }"
-                            @click="togglePushSetting('trade')">
+                        <div class="setting-switch" :class="{ active: pushSettings.news }"
+                            @click="togglePushSetting('news')">
+                            <div class="switch-handle"></div>
+                        </div>
+                    </div>
+                    <div class="setting-item">
+                        <div class="setting-info">
+                            <div class="setting-title">系统通知推送</div>
+                            <div class="setting-desc">系统更新、设置变更、功能通知等</div>
+                        </div>
+                        <div class="setting-switch" :class="{ active: pushSettings.system }"
+                            @click="togglePushSetting('system')">
                             <div class="switch-handle"></div>
                         </div>
                     </div>
@@ -517,16 +517,16 @@ const pushSettings = ref({
 // 消息分类
 const messageCategories = ref([
     { key: 'all', name: '全部', icon: '📋', iconClass: 'all-icon' },
-    { key: 'market', name: '市场', icon: '📈', iconClass: 'market-icon' },
-    { key: 'news', name: '资讯', icon: '📰', iconClass: 'news-icon' },
+    { key: 'trade', name: '交易', icon: '💰', iconClass: 'trade-icon' },
     { key: 'alert', name: '提醒', icon: '⚠️', iconClass: 'alert-icon' },
-    { key: 'system', name: '系统', icon: '⚙️', iconClass: 'system-icon' },
-    { key: 'trade', name: '交易', icon: '💰', iconClass: 'trade-icon' }
+    { key: 'market', name: '行情', icon: '📈', iconClass: 'market-icon' },
+    { key: 'news', name: '资讯', icon: '📰', iconClass: 'news-icon' },
+    { key: 'system', name: '系统', icon: '⚙️', iconClass: 'system-icon' }
 ]);
 
 // 生成模拟消息数据的函数
 const generateMockMessages = () => {
-    const types = ['market', 'news', 'alert', 'system', 'trade'];
+    const types = ['trade', 'alert', 'market', 'news', 'system'];
     const priorities = ['urgent', 'high', 'medium', 'low'];
     const messages = [];
 
@@ -796,7 +796,7 @@ const getMessageTypeName = (type) => {
     const typeMap = {
         'news': '财经资讯',
         'alert': '风险提醒',
-        'market': '市场动态',
+        'market': '实时行情',
         'system': '系统通知',
         'trade': '交易记录'
     };

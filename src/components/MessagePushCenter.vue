@@ -275,7 +275,7 @@
                             <div class="filter-controls">
                                 <select v-model="filterType" class="filter-select">
                                     <option value="">全部类型</option>
-                                    <option value="market">市场动态</option>
+                                    <option value="market">实时行情</option>
                                     <option value="news">财经资讯</option>
                                     <option value="alert">风险提醒</option>
                                     <option value="system">系统通知</option>
@@ -392,22 +392,11 @@
                             <div class="settings-grid">
                                 <div class="setting-item">
                                     <div class="setting-info">
-                                        <div class="setting-title">市场动态</div>
-                                        <div class="setting-desc">股价变动、板块异动等</div>
+                                        <div class="setting-title">交易记录</div>
+                                        <div class="setting-desc">买卖记录、委托状态等</div>
                                     </div>
-                                    <div :class="['toggle-switch', { active: settings.market }]"
-                                        @click="toggleSetting('market')">
-                                        <div class="toggle-handle"></div>
-                                    </div>
-                                </div>
-
-                                <div class="setting-item">
-                                    <div class="setting-info">
-                                        <div class="setting-title">财经资讯</div>
-                                        <div class="setting-desc">政策新闻、公司公告等</div>
-                                    </div>
-                                    <div :class="['toggle-switch', { active: settings.news }]"
-                                        @click="toggleSetting('news')">
+                                    <div :class="['toggle-switch', { active: settings.trade }]"
+                                        @click="toggleSetting('trade')">
                                         <div class="toggle-handle"></div>
                                     </div>
                                 </div>
@@ -425,22 +414,33 @@
 
                                 <div class="setting-item">
                                     <div class="setting-info">
-                                        <div class="setting-title">系统通知</div>
-                                        <div class="setting-desc">系统更新、功能通知等</div>
+                                        <div class="setting-title">实时行情</div>
+                                        <div class="setting-desc">股价变动、板块异动、技术信号等</div>
                                     </div>
-                                    <div :class="['toggle-switch', { active: settings.system }]"
-                                        @click="toggleSetting('system')">
+                                    <div :class="['toggle-switch', { active: settings.market }]"
+                                        @click="toggleSetting('market')">
                                         <div class="toggle-handle"></div>
                                     </div>
                                 </div>
 
                                 <div class="setting-item">
                                     <div class="setting-info">
-                                        <div class="setting-title">交易记录</div>
-                                        <div class="setting-desc">买卖记录、委托状态等</div>
+                                        <div class="setting-title">财经资讯</div>
+                                        <div class="setting-desc">政策新闻、公司公告、宏观数据等</div>
                                     </div>
-                                    <div :class="['toggle-switch', { active: settings.trade }]"
-                                        @click="toggleSetting('trade')">
+                                    <div :class="['toggle-switch', { active: settings.news }]"
+                                        @click="toggleSetting('news')">
+                                        <div class="toggle-handle"></div>
+                                    </div>
+                                </div>
+
+                                <div class="setting-item">
+                                    <div class="setting-info">
+                                        <div class="setting-title">系统通知</div>
+                                        <div class="setting-desc">系统更新、功能通知等</div>
+                                    </div>
+                                    <div :class="['toggle-switch', { active: settings.system }]"
+                                        @click="toggleSetting('system')">
                                         <div class="toggle-handle"></div>
                                     </div>
                                 </div>
@@ -552,11 +552,11 @@ const filterPriority = ref('');
 // 分类配置
 const categories = ref([
     { key: 'all', name: '全部', icon: '📋' },
-    { key: 'market', name: '市场', icon: '📈' },
-    { key: 'news', name: '资讯', icon: '📰' },
+    { key: 'trade', name: '交易', icon: '💰' },
     { key: 'alert', name: '提醒', icon: '⚠️' },
-    { key: 'system', name: '系统', icon: '⚙️' },
-    { key: 'trade', name: '交易', icon: '💰' }
+    { key: 'market', name: '行情', icon: '📈' },
+    { key: 'news', name: '资讯', icon: '📰' },
+    { key: 'system', name: '系统', icon: '⚙️' }
 ]);
 
 // 设置
@@ -574,7 +574,7 @@ const settings = ref({
 
 // 生成模拟数据
 const generateMockMessages = () => {
-    const types = ['market', 'news', 'alert', 'system', 'trade'];
+    const types = ['trade', 'alert', 'market', 'news', 'system'];
     const priorities = ['urgent', 'high', 'medium', 'low'];
     const messages = [];
 
@@ -824,7 +824,7 @@ const getTagClass = (type) => {
 
 const getTypeName = (type) => {
     const typeMap = {
-        market: '市场动态',
+        market: '实时行情',
         news: '财经资讯',
         alert: '风险提醒',
         system: '系统通知',

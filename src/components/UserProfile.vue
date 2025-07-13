@@ -474,17 +474,10 @@
                                 <div class="notification-settings">
                                     <div class="notification-item">
                                         <div class="notification-info">
-                                            <h4>市场动态推送</h4>
-                                            <p>股价变动、板块异动、指数波动等</p>
+                                            <h4>交易记录推送</h4>
+                                            <p>买卖记录、委托状态、资金变动等</p>
                                         </div>
-                                        <el-switch v-model="notificationSettings.marketAlert" />
-                                    </div>
-                                    <div class="notification-item">
-                                        <div class="notification-info">
-                                            <h4>财经资讯推送</h4>
-                                            <p>政策新闻、公司公告、行业分析等</p>
-                                        </div>
-                                        <el-switch v-model="notificationSettings.newsAlert" />
+                                        <el-switch v-model="notificationSettings.tradeAlert" />
                                     </div>
                                     <div class="notification-item">
                                         <div class="notification-info">
@@ -495,17 +488,24 @@
                                     </div>
                                     <div class="notification-item">
                                         <div class="notification-info">
+                                            <h4>实时行情推送</h4>
+                                            <p>股价变动、板块异动、技术信号等</p>
+                                        </div>
+                                        <el-switch v-model="notificationSettings.marketAlert" />
+                                    </div>
+                                    <div class="notification-item">
+                                        <div class="notification-info">
+                                            <h4>财经资讯推送</h4>
+                                            <p>政策新闻、公司公告、宏观数据等</p>
+                                        </div>
+                                        <el-switch v-model="notificationSettings.newsAlert" />
+                                    </div>
+                                    <div class="notification-item">
+                                        <div class="notification-info">
                                             <h4>系统通知推送</h4>
                                             <p>系统更新、设置变更、功能通知等</p>
                                         </div>
                                         <el-switch v-model="notificationSettings.systemAlert" />
-                                    </div>
-                                    <div class="notification-item">
-                                        <div class="notification-info">
-                                            <h4>交易记录推送</h4>
-                                            <p>买卖记录、委托状态、资金变动等</p>
-                                        </div>
-                                        <el-switch v-model="notificationSettings.tradeAlert" />
                                     </div>
                                 </div>
                             </div>
@@ -1185,21 +1185,11 @@
                             <div class="mobile-section-title">消息推送开关</div>
                             <div class="mobile-notification-item">
                                 <div class="notification-info">
-                                    <div class="notification-title">市场动态推送</div>
-                                    <div class="notification-desc">股价变动、板块异动、指数波动等</div>
+                                    <div class="notification-title">交易记录推送</div>
+                                    <div class="notification-desc">买卖记录、委托状态、资金变动等</div>
                                 </div>
-                                <div class="notification-switch" :class="{ active: notificationSettings.marketAlert }"
-                                    @click="notificationSettings.marketAlert = !notificationSettings.marketAlert">
-                                    <div class="switch-handle"></div>
-                                </div>
-                            </div>
-                            <div class="mobile-notification-item">
-                                <div class="notification-info">
-                                    <div class="notification-title">财经资讯推送</div>
-                                    <div class="notification-desc">政策新闻、公司公告、行业分析等</div>
-                                </div>
-                                <div class="notification-switch" :class="{ active: notificationSettings.newsAlert }"
-                                    @click="notificationSettings.newsAlert = !notificationSettings.newsAlert">
+                                <div class="notification-switch" :class="{ active: notificationSettings.tradeAlert }"
+                                    @click="notificationSettings.tradeAlert = !notificationSettings.tradeAlert">
                                     <div class="switch-handle"></div>
                                 </div>
                             </div>
@@ -1215,21 +1205,31 @@
                             </div>
                             <div class="mobile-notification-item">
                                 <div class="notification-info">
-                                    <div class="notification-title">系统通知推送</div>
-                                    <div class="notification-desc">系统更新、设置变更、功能通知等</div>
+                                    <div class="notification-title">实时行情推送</div>
+                                    <div class="notification-desc">股价变动、板块异动、技术信号等</div>
                                 </div>
-                                <div class="notification-switch" :class="{ active: notificationSettings.systemAlert }"
-                                    @click="notificationSettings.systemAlert = !notificationSettings.systemAlert">
+                                <div class="notification-switch" :class="{ active: notificationSettings.marketAlert }"
+                                    @click="notificationSettings.marketAlert = !notificationSettings.marketAlert">
                                     <div class="switch-handle"></div>
                                 </div>
                             </div>
                             <div class="mobile-notification-item">
                                 <div class="notification-info">
-                                    <div class="notification-title">交易记录推送</div>
-                                    <div class="notification-desc">买卖记录、委托状态、资金变动等</div>
+                                    <div class="notification-title">财经资讯推送</div>
+                                    <div class="notification-desc">政策新闻、公司公告、宏观数据等</div>
                                 </div>
-                                <div class="notification-switch" :class="{ active: notificationSettings.tradeAlert }"
-                                    @click="notificationSettings.tradeAlert = !notificationSettings.tradeAlert">
+                                <div class="notification-switch" :class="{ active: notificationSettings.newsAlert }"
+                                    @click="notificationSettings.newsAlert = !notificationSettings.newsAlert">
+                                    <div class="switch-handle"></div>
+                                </div>
+                            </div>
+                            <div class="mobile-notification-item">
+                                <div class="notification-info">
+                                    <div class="notification-title">系统通知推送</div>
+                                    <div class="notification-desc">系统更新、设置变更、功能通知等</div>
+                                </div>
+                                <div class="notification-switch" :class="{ active: notificationSettings.systemAlert }"
+                                    @click="notificationSettings.systemAlert = !notificationSettings.systemAlert">
                                     <div class="switch-handle"></div>
                                 </div>
                             </div>

@@ -261,6 +261,8 @@ const handleLogin = async () => {
                     localStorage.setItem("smartPointsBalance", user?.point || 0);
                     localStorage.setItem("availableBalance", user?.availableBalance || 0);
 
+                    // 自选股
+                    userStore.setWatchList(res.data.data?.selectStockList || []);
                     closeDialog();
 
                     emit('login-success', {

@@ -314,7 +314,7 @@ import StockActionButtons from '../components/StockActionButtons.vue';
 import CopyrightFooter from '../components/CopyrightFooter.vue';
 import { getStockListConfig } from '../config/stockListConfig';
 import { getStockActionConfig } from '../config/stockActionConfig';
-import { api, recommendStock } from '@/api/api';
+import { api, recommendStock, stockSelect, stockUnselect } from '@/api/api';
 import { authFetchEventSource } from '@/utils/request';
 import { eventListenerManager, timerManager, chatHistoryManager, performanceOptimizer } from '@/utils/performanceOptimizer';
 import { processSSEData } from '@/utils/sseDecoder';
@@ -3493,18 +3493,36 @@ const handleSidebarInteraction = async (data) => {
     ElMessage.success('已为您分析相关内容');
 };
 
+
+
+// 加入自选股
+const stockSelectRequest = async (code) => {
+ return await stockSelect({code: code});
+}
+
+// 移除自选股
+const stockUnselectRequest = async (code) => {
+ return await stockUnselect({code: code});
+}
+
 // 自选股相关方法
-const addToWatchlist = (stockInfo) => {
-    if (userStore.addToWatchlist(stockInfo)) {
-        // 更新聊天历史中的自选股数据
-        updateWatchlistInChatHistory();
-    }
+const addToWatchlist = async (stockInfo) => {
+    const res = await stockSelectRequest(stockInfo.code);
+    if (res && res.data && res.data.success) {
+       if (userStore.addToWatchlist(stockInfo)) {
+            // 更新聊天历史中的自选股数据
+            updateWatchlistInChatHistory();
+        }
+    } 
 };
 
-const removeFromWatchlist = (stockCode) => {
-    if (userStore.removeFromWatchlist(stockCode)) {
-        // 更新聊天历史中的自选股数据
-        updateWatchlistInChatHistory();
+const removeFromWatchlist = async (stockCode) => {
+    const res = await stockUnselectRequest(stockCode);
+    if (res && res.data && res.data.success) {
+        if (userStore.removeFromWatchlist(stockCode)) {
+            // 更新聊天历史中的自选股数据
+            updateWatchlistInChatHistory();
+        }
     }
 };
 

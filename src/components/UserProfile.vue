@@ -207,11 +207,11 @@
                         </div>
                     </div>
                     <div class="user-info">
-                        <h2 class="user-name">{{ userStore.userInfo?.nickname || '未设置昵称' }}</h2>
+                        <h2 class="user-name">{{ userInfo.nickname || '未设置昵称' }}</h2>
                         <p class="user-desc">{{ getUserLevelText() }} · 注册于 {{ getRegistrationDate() }}</p>
                         <div class="user-stats">
                             <div class="stat-item">
-                                <span class="stat-value">¥{{ (userStore.balance || 0).toFixed(2) }}</span>
+                                <span class="stat-value">¥{{ userInfo.balance || 0 }}</span>
                                 <span class="stat-label">股票交易账户</span>
                                 <el-button type="primary" size="small" @click="showStockRecharge = true"
                                     class="recharge-btn">
@@ -219,7 +219,7 @@
                                 </el-button>
                             </div>
                             <div class="stat-item">
-                                <span class="stat-value">{{ (userStore.smartPointsBalance || 0).toFixed(0) }}</span>
+                                <span class="stat-value">{{ (userInfo.smartPointsBalance || 0).toFixed(0) }}</span>
                                 <span class="stat-label">智点余额</span>
                                 <el-button type="success" size="small" @click="showSmartPointsRecharge = true"
                                     class="recharge-btn">
@@ -227,11 +227,11 @@
                                 </el-button>
                             </div>
                             <div class="stat-item">
-                                <span class="stat-value">{{ (userStore.watchlist || []).length }}</span>
+                                <span class="stat-value">{{ userInfo.selectStockCount }}</span>
                                 <span class="stat-label">自选股</span>
                             </div>
                             <div class="stat-item">
-                                <span class="stat-value">{{ (userStore.portfolio || []).length }}</span>
+                                <span class="stat-value">{{ userInfo.positionCount }}</span>
                                 <span class="stat-label">持仓股票</span>
                             </div>
                         </div>
@@ -258,19 +258,19 @@
                                 <div class="info-grid">
                                     <div class="info-item">
                                         <label class="info-label">用户名</label>
-                                        <span class="info-value">{{ userStore.userInfo?.username || '未设置' }}</span>
+                                        <span class="info-value">{{ userInfo.username || '未设置' }}</span>
                                     </div>
                                     <div class="info-item">
                                         <label class="info-label">昵称</label>
-                                        <span class="info-value">{{ userStore.userInfo?.nickname || '未设置' }}</span>
+                                        <span class="info-value">{{ userInfo.nickname || '未设置' }}</span>
                                     </div>
                                     <div class="info-item">
                                         <label class="info-label">手机号</label>
-                                        <span class="info-value">{{ userStore.userInfo?.phone || '未绑定' }}</span>
+                                        <span class="info-value">{{ userInfo.phone || '未绑定' }}</span>
                                     </div>
                                     <div class="info-item">
                                         <label class="info-label">邮箱</label>
-                                        <span class="info-value">{{ userStore.userInfo?.email || '未绑定' }}</span>
+                                        <span class="info-value">{{ userInfo.email || '未绑定' }}</span>
                                     </div>
                                     <div class="info-item">
                                         <label class="info-label">注册时间</label>
@@ -1573,14 +1573,18 @@ const notificationSettings = reactive({
 
 const userInfo = reactive({
     nickname: '',
+    username: '',
     phone: '',
     email: '',
     userLevel: '',
     registrationDate: '',
     lastLoginTime: '',
     balance: 0,
+    smartPointsBalance: 0,
     watchlist: [],
-    portfolio: []
+    portfolio: [],
+    selectStockCount: 0,
+    positionCount: 0
 });
 
 // 编辑表单
@@ -2110,9 +2114,14 @@ const initUserInfo = async () => {
         userStore.setAvailableBalance(res.data.data.user.availableBalance);
         userStore.setSmartPointsBalance(res.data.data.user.point);
         userInfo.nickname = res.data.data.nickname || '';
+        userInfo.username = res.data.data.username || '';
+        userInfo.balance = res.data.data.user.balance || 0;
+        userInfo.smartPointsBalance = res.data.data.user.point || 0;
         userInfo.phone = res.data.data.phone || '';
         userInfo.registrationDate = res.data.data?.registerTime.substring(0, 10) || '';
         userInfo.lastLoginTime = res.data.data?.lastLoginTime.substring(0, 10) || '';
+        userInfo.selectStockCount = res.data.data?.selectStockCount || 0;
+        userInfo.positionCount = res.data.data?.positionCount || 0;
     } else {
         userStore.setBalance(0);
         userStore.setAvailableBalance(0);

@@ -31,12 +31,12 @@
             <!-- 自选股列表 -->
             <div v-else class="watchlist-list">
                 <!-- PC端使用StockList -->
-                <StockList v-if="!isMobileView" :stocks="watchlistStocks" :actions="watchlistActions"
+                <StockList v-if="!isMobileView" :stocks="watchlistStockList" :actions="watchlistActions"
                     :show-watchlist-status="true" :show-basic-details="true" :clickable="false"
                     :is-mobile="isMobileView" @action-click="handleActionClick" />
 
                 <!-- 移动端使用MobileStockList -->
-                <MobileStockList v-else :stocks="watchlistStocks" :actions="watchlistActions" :show-details="true"
+                <MobileStockList v-else :stocks="watchlistStockList" :actions="watchlistActions" :show-details="true"
                     :clickable="false" @action-click="handleActionClick" />
             </div>
         </div>
@@ -58,6 +58,7 @@ import MobileStockList from './MobileStockList.vue';
 import { getStockListConfig } from '../config/stockListConfig';
 import { getStockActionConfig } from '../config/stockActionConfig';
 import { useMobileDetection } from '../composables/useResponsiveBreakpoints';
+import { getStockSelectList, stockUnselectAll } from '@/api/api';
 
 // 定义emit
 const emit = defineEmits(['send-to-chat', 'show-buy-dialog', 'action-click']);
@@ -75,30 +76,43 @@ const watchlistActions = computed(() => {
     });
 });
 
-// 处理自选股数据，添加实时价格信息
-const watchlistStocks = computed(() => {
-    return userStore.watchlist.map(stock => {
-        const currentPrice = getCurrentPrice(stock);
-        const priceChangeData = getPriceChangeData(stock);
+// 自选股列表
+const watchlistStockList = ref([]);
 
-        // 生成或使用现有的目标价格
-        const targetPrice = stock.targetPrice || generateTargetPrice(currentPrice);
+// 自选股列表方法
+const getStockSelectListRequest = async () => {
+    let res = await getStockSelectList();
+    if (res && res.data && res.data.success) {
+        let stockList = []; 
+        const data = res.data.data || [];
+        data.forEach(item => {
+            stockList.push({
+                name: item.name,
+                code: item.code,
+                recommendIndex: item.recommendScore,
+                recommendLevel: item.recommendLevel,
+                price: item.latestPrice, // 当前价格
+                change: item.change || 0, // 涨跌额
+                changePercent: item.changePercent || 0, // 涨跌幅
+                changePercent: (item.rise || 0).concat('%'), // 涨跌幅
+                targetPrice: item.targetPrice,
+                riskLevel: item.riskLevel,
+                industry: item.industry,
+                reason: item.recommendReason,
+                addedAt: item.createTime,
+                expectedReturn: item.expectedBenefits,  
+            });
+        });
+        stockList.sort((a, b) => b.addedAt - a.addedAt);
+        watchlistStockList.value = stockList;
+        userStore.setWatchList(stockList);
+    }
+}
 
-        return {
-            ...stock,
-            price: currentPrice,
-            change: priceChangeData.change,
-            changePercent: priceChangeData.changePercent,
-            // 确保包含必要的显示字段，与推荐股票保持一致
-            industry: stock.industry || '未分类',
-            recommendLevel: stock.recommendLevel || '中性',
-            // 添加推荐相关字段以保持样式一致
-            targetPrice: targetPrice,
-            expectedReturn: stock.expectedReturn || generateExpectedReturn(currentPrice, targetPrice),
-            riskLevel: stock.riskLevel || mapRecommendLevelToRisk(stock.recommendLevel || '中性')
-        };
-    });
-});
+// 移除所有自选股
+const stockUnselectAllRequest = async () => {
+    return await stockUnselectAll();
+}
 
 // 股票操作按钮点击事件处理 - 统一转发到Main.vue处理
 const handleActionClick = ({ action, stock }) => {
@@ -108,173 +122,39 @@ const handleActionClick = ({ action, stock }) => {
     emit('action-click', { action, stock });
 };
 
-// 模拟获取当前价格（实际应该从API获取）
-const getCurrentPrice = (stock) => {
-    // 模拟价格波动
-    const basePrice = parseFloat(stock.price);
-    const fluctuation = (Math.random() - 0.5) * 2; // -1% 到 +1% 的波动
-    const currentPrice = basePrice * (1 + fluctuation / 100);
-    return currentPrice.toFixed(2);
-};
-
-// 获取价格变化数据
-const getPriceChangeData = (stock) => {
-    // 如果已经有变化数据，直接返回
-    if (stock.change !== undefined && stock.changePercent !== undefined) {
-        return {
-            change: stock.change,
-            changePercent: stock.changePercent
-        };
-    }
-
-    // 模拟价格变化数据
-    const currentPrice = parseFloat(getCurrentPrice(stock));
-    const basePrice = parseFloat(stock.price);
-    const change = currentPrice - basePrice;
-    const changePercent = ((change / basePrice) * 100).toFixed(2);
-
-    return {
-        change: change >= 0 ? `+${change.toFixed(2)}` : change.toFixed(2),
-        changePercent: parseFloat(changePercent) >= 0 ? `+${changePercent}%` : `${changePercent}%`
-    };
-};
-
-// 生成目标价格（基于当前价格的合理估算）
-const generateTargetPrice = (currentPrice) => {
-    const price = parseFloat(currentPrice);
-    const targetMultiplier = 1.1 + (Math.random() * 0.3); // 1.1-1.4倍
-    return (price * targetMultiplier).toFixed(2);
-};
-
-// 生成预期收益
-const generateExpectedReturn = (currentPrice, targetPrice) => {
-    const current = parseFloat(currentPrice);
-    const target = parseFloat(targetPrice);
-    const returnPercent = ((target - current) / current * 100).toFixed(1);
-    return `+${returnPercent}%`;
-};
-
-// 将推荐等级映射到风险等级
-const mapRecommendLevelToRisk = (recommendLevel) => {
-    const riskMap = {
-        '强烈推荐': '较低',
-        '推荐': '中等',
-        '中性': '中等',
-        '谨慎': '较高',
-        '不推荐': '高'
-    };
-    return riskMap[recommendLevel] || '中等';
-};
-
-// 获取价格变化样式类
-const getPriceChangeClass = (stock) => {
-    let change = stock.change || 0;
-
-    // 如果change是字符串，解析数字
-    if (typeof change === 'string') {
-        change = parseFloat(change.replace(/[+%]/g, '')) || 0;
-    }
-
-    return {
-        'positive': change > 0,
-        'negative': change < 0,
-        'neutral': change === 0
-    };
-};
-
-// 获取价格变化文本
-const getPriceChangeText = (stock) => {
-    // 处理字符串格式的change和changePercent
-    let change = stock.change || 0;
-    let changePercent = stock.changePercent || 0;
-
-    // 如果是字符串，直接返回
-    if (typeof change === 'string' && typeof changePercent === 'string') {
-        return `${change} (${changePercent})`;
-    }
-
-    // 如果是数字，格式化显示
-    const changeText = change > 0 ? `+${change}` : change.toString();
-    const percentText = changePercent > 0 ? `+${changePercent}%` : `${changePercent}%`;
-    return `${changeText} (${percentText})`;
-};
-
-// 格式化添加时间
-const formatAddedTime = (addedAt) => {
-    const date = new Date(addedAt);
-    const now = new Date();
-    const diffTime = now - date;
-    const diffDays = Math.floor(diffTime / (1000 * 60 * 60 * 24));
-
-    if (diffDays === 0) {
-        return '今天添加';
-    } else if (diffDays === 1) {
-        return '昨天添加';
-    } else if (diffDays < 7) {
-        return `${diffDays}天前添加`;
-    } else {
-        return date.toLocaleDateString('zh-CN', {
-            month: 'short',
-            day: 'numeric'
-        });
-    }
-};
-
-// analyzeStock方法已移除，股票点击功能已禁用
-
-// 这些业务逻辑已经移到Main.vue中统一处理，避免重复代码
-
-// 从自选股中移除
-const removeFromWatchlist = async (stockCode) => {
-    try {
-        await ElMessageBox.confirm(
-            '确定要从自选股中移除这只股票吗？',
-            '确认移除',
-            {
-                confirmButtonText: '确定',
-                cancelButtonText: '取消',
-                type: 'warning',
-            }
-        );
-
-        if (userStore.removeFromWatchlist(stockCode)) {
-            ElMessage.success('已从自选股中移除');
-        }
-    } catch {
-        // 用户取消操作
-    }
-};
 
 // 清空所有自选股
 const clearAllWatchlist = async () => {
-    try {
-        await ElMessageBox.confirm(
-            '确定要清空所有自选股吗？此操作不可恢复。',
-            '确认清空',
-            {
-                confirmButtonText: '确定',
-                cancelButtonText: '取消',
-                type: 'warning',
-            }
-        );
-
-        userStore.watchlist.splice(0);
-        localStorage.setItem('watchlist', JSON.stringify([]));
-        ElMessage.success('已清空所有自选股');
-    } catch {
-        // 用户取消操作
-    }
+    const confirm = await ElMessageBox.confirm(
+        '确定要清空所有自选股吗？此操作不可恢复。',
+        '确认清空',
+        {
+            confirmButtonText: '确定',
+            cancelButtonText: '取消',
+            type: 'warning',
+        }
+    );
+    if(confirm){
+        const res = await stockUnselectAllRequest();
+        if (res && res.data && res.data.success) {
+            watchlistStockList.value = [];
+            userStore.setWatchList([]);
+            ElMessage.success('已清空所有自选股');
+        }
+    }  
 };
 
 // 刷新自选股数据
-const refreshWatchlist = () => {
+const refreshWatchlist = async () => {
     // 这里可以调用API刷新股票价格等数据
+    await getStockSelectListRequest();
     ElMessage.success('自选股数据已刷新');
 };
 
 // 生命周期
 onMounted(() => {
     // 移动端检测由useMobileDetection自动处理
+    getStockSelectListRequest();
 });
 
 onUnmounted(() => {

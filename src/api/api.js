@@ -8,7 +8,7 @@ const api = {
   logoutApi: "/logout",
 
   getUserInfoApi: "/user/info", // 获取用户信息
-  updateUserInfoApi: "/user/update", // 更新用户信息
+  updateUserInfoApi: "/user/update-info", // 更新用户信息
   
   // 手机绑定相关
   sendPhoneCodeApi: "/user/send-phone-code", // 发送手机验证码
@@ -21,7 +21,7 @@ const api = {
   unbindEmailApi: "/user/unbind-email", // 解绑邮箱
   
   // 密码修改
-  changePasswordApi: "/user/change-password", // 修改密码
+  changePasswordApi: "/user/update-password", // 修改密码
 
   // user portrait
   getUserPortraitApi: "/user-portrait/detail",
@@ -49,9 +49,11 @@ const api = {
   recommendStocksApi: "/stock/recommend", // 获取推荐股票
 
 
+  stockSelectListApi: "/stock/selectList", // 自选股列表
   stockSelectApi: "/stock/select", // 加入自选股
   stockUnselectApi: "/stock/unselect", // 移除自选股
   stockSelectStatusApi: "/stock/select-status", // 是否已经加入了自选股
+  stockUnselectAllApi: "/stock/unselect-all", // 移除自选股
  
   stockOrderRecordApi: "/record/stock-order", // 获取股票委托记录
 
@@ -148,6 +150,10 @@ export const getCanCancelStockOrder = (params) => request.get(api.canCancelStock
   params
 });
 
+//  自选股列表
+export const getStockSelectList = () => request.get(api.stockSelectListApi);
+
+
 // 加入自选股
 export const stockSelect = (params) => request.get(api.stockSelectApi, {
   params
@@ -157,6 +163,9 @@ export const stockSelect = (params) => request.get(api.stockSelectApi, {
 export const stockUnselect = (params) => request.get(api.stockUnselectApi, {
   params
 });
+
+// 移除所有自选股
+export const stockUnselectAll = () => request.post(api.stockUnselectAllApi);
 
 // 是否已经加入了自选股
 export const stockSelectStatus = (params) => request.get(api.stockSelectStatusApi, {

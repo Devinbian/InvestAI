@@ -314,7 +314,7 @@ import StockActionButtons from '../components/StockActionButtons.vue';
 import CopyrightFooter from '../components/CopyrightFooter.vue';
 import { getStockListConfig } from '../config/stockListConfig';
 import { getStockActionConfig } from '../config/stockActionConfig';
-import { api, recommendStock } from '@/api/api';
+import { api, recommendStock, stockSelect, stockUnselect, getStockSelectList } from '@/api/api';
 import { authFetchEventSource } from '@/utils/request';
 import { eventListenerManager, timerManager, chatHistoryManager, performanceOptimizer } from '@/utils/performanceOptimizer';
 import { processSSEData } from '@/utils/sseDecoder';
@@ -2376,12 +2376,13 @@ const regenerateWatchlistView = async (messageIndex) => {
         await new Promise(resolve => setTimeout(resolve, 500));
 
         // 第三步：获取用户真实的自选股数据
-        const watchlistData = userStore.watchlist.map(stock => generateWatchlistStockData(stock));
+        await getStockSelectListRequest();
+        const watchlistData = watchlistStockList.value;
 
         console.log('🔄 自选股数据生成完成，开始更新消息');
 
         // 第四步：更新AI消息
-        const assistantMessage = userStore.watchlist.length === 0
+        const assistantMessage = watchlistData.length === 0
             ? `📋 **我的自选股列表**
 
 您当前还没有添加任何自选股。您可以通过以下方式添加股票：
@@ -2389,7 +2390,7 @@ const regenerateWatchlistView = async (messageIndex) => {
 - 使用"智能荐股"功能查找并添加股票`
             : `📋 **我的自选股列表**
 
-您当前关注 **${userStore.watchlist.length}** 只股票，详细信息如下：`;
+您当前关注 **${watchlistData.length}** 只股票，详细信息如下：`;
 
         targetMessage.content = assistantMessage;
         targetMessage.isGenerating = false;
@@ -2400,11 +2401,11 @@ const regenerateWatchlistView = async (messageIndex) => {
         targetMessage.messageType = 'watchlist_view'; // 设置消息类型备份
         targetMessage.hasInteractionButtons = false;
         targetMessage.watchlistStats = {
-            total: userStore.watchlist.length,
-            upCount: watchlistData.length > 0 ? watchlistData.filter(s => s.changePct >= 0).length : 0,
-            downCount: watchlistData.length > 0 ? watchlistData.filter(s => s.changePct < 0).length : 0,
-            bestPerformer: watchlistData.length > 0 ? watchlistData.sort((a, b) => b.changePct - a.changePct)[0] : null,
-            worstPerformer: watchlistData.length > 0 ? watchlistData.sort((a, b) => a.changePct - b.changePct)[0] : null,
+            total: watchlistData.length,
+            upCount: watchlistData.length > 0 ? watchlistData.filter(s => s.change >= 0).length : 0,
+            downCount: watchlistData.length > 0 ? watchlistData.filter(s => s.change < 0).length : 0,
+            bestPerformer: watchlistData.length > 0 ? watchlistData.sort((a, b) => b.rise - a.rise)[0] : null,
+            worstPerformer: watchlistData.length > 0 ? watchlistData.sort((a, b) => a.rise - b.rise)[0] : null,
             updateTime: new Date().toLocaleString('zh-CN')
         };
         targetMessage.timestamp = Date.now();
@@ -3152,6 +3153,40 @@ const handleShareMessage = async (event) => {
     }
 };
 
+// 自选股列表
+const watchlistStockList = ref([]);
+
+// 自选股列表方法
+const getStockSelectListRequest = async () => {
+    let res = await getStockSelectList();
+    if (res && res.data && res.data.success) {
+        let stockList = []; 
+        const data = res.data.data || [];
+        data.forEach(item => {
+            stockList.push({
+                name: item.name,
+                code: item.code,
+                recommendIndex: item.recommendScore,
+                recommendLevel: item.recommendLevel,
+                price: item.latestPrice, // 当前价格
+                change: item.change || 0, // 涨跌额
+                changePercent: item.changePercent || 0, // 涨跌幅
+                changePercent: (item.rise || 0).concat('%'), // 涨跌幅
+                targetPrice: item.targetPrice,
+                riskLevel: item.riskLevel,
+                industry: item.industry,
+                reason: item.recommendReason,
+                addedAt: item.createTime,
+                expectedReturn: item.expectedBenefits,  
+            });
+        });
+        stockList.sort((a, b) => b.addedAt - a.addedAt);
+        watchlistStockList.value = stockList;
+        userStore.setWatchList(stockList);
+    }
+}
+
+
 // 检查股票是否在自选股中
 const isInWatchlist = (stock) => {
     if (!stock || !stock.code) return false;
@@ -3332,10 +3367,11 @@ const handleWatchlistView = async () => {
         }
 
         // 获取用户真实的自选股数据
-        const watchlistData = userStore.watchlist.map(stock => generateWatchlistStockData(stock));
+        await getStockSelectListRequest();
+        const watchlistData = watchlistStockList.value;
 
         // 更新最后一条AI消息为自选股列表
-        const assistantMessage = userStore.watchlist.length === 0
+        const assistantMessage = watchlistData.length === 0
             ? `📋 **我的自选股列表**
 
 您当前还没有添加任何自选股。您可以通过以下方式添加股票：
@@ -3344,7 +3380,7 @@ const handleWatchlistView = async () => {
 - 使用"股票查询"功能查找并添加股票`
             : `📋 **我的自选股列表**
 
-您当前关注 **${userStore.watchlist.length}** 只股票，详细信息如下：`;
+您当前关注 **${watchlistData.length}** 只股票，详细信息如下：`;
 
         const lastMessage = chatHistory.value[chatHistory.value.length - 1];
         if (lastMessage && lastMessage.role === 'assistant') {
@@ -3356,11 +3392,11 @@ const handleWatchlistView = async () => {
             lastMessage.messageType = 'watchlist_view'; // 设置消息类型备份
             lastMessage.hasInteractionButtons = false;
             lastMessage.watchlistStats = {
-                total: userStore.watchlist.length,
-                upCount: watchlistData.length > 0 ? watchlistData.filter(s => s.changePct >= 0).length : 0,
-                downCount: watchlistData.length > 0 ? watchlistData.filter(s => s.changePct < 0).length : 0,
-                bestPerformer: watchlistData.length > 0 ? watchlistData.sort((a, b) => b.changePct - a.changePct)[0] : null,
-                worstPerformer: watchlistData.length > 0 ? watchlistData.sort((a, b) => a.changePct - b.changePct)[0] : null,
+                total: watchlistData.length,
+                upCount: watchlistData.length > 0 ? watchlistData.filter(s => s.change >= 0).length : 0,
+                downCount: watchlistData.length > 0 ? watchlistData.filter(s => s.change < 0).length : 0,
+                bestPerformer: watchlistData.length > 0 ? watchlistData.sort((a, b) => b.rise - a.rise)[0] : null,
+                worstPerformer: watchlistData.length > 0 ? watchlistData.sort((a, b) => a.rise - b.rise)[0] : null,
                 updateTime: new Date().toLocaleString('zh-CN')
             };
             chatHistory.value = [...chatHistory.value]; // 触发响应式更新
@@ -3371,7 +3407,7 @@ const handleWatchlistView = async () => {
 
         await nextTick();
         scrollToBottom();
-        if (userStore.watchlist.length === 0) {
+        if (watchlistData.length === 0) {
             ElMessage.info('您还没有添加自选股，请先添加股票到自选列表');
         } else {
             ElMessage.success('已显示您的自选股列表');
@@ -3493,18 +3529,37 @@ const handleSidebarInteraction = async (data) => {
     ElMessage.success('已为您分析相关内容');
 };
 
+
+
+// 加入自选股
+const stockSelectRequest = async (code) => {
+ return await stockSelect({code: code});
+}
+
+// 移除自选股
+const stockUnselectRequest = async (code) => {
+ return await stockUnselect({code: code});
+}
+
 // 自选股相关方法
-const addToWatchlist = (stockInfo) => {
-    if (userStore.addToWatchlist(stockInfo)) {
-        // 更新聊天历史中的自选股数据
-        updateWatchlistInChatHistory();
-    }
+const addToWatchlist = async (stockInfo) => {
+    const res = await stockSelectRequest(stockInfo.code);
+    if (res && res.data && res.data.success) {
+       if (userStore.addToWatchlist(stockInfo)) {
+            // 更新聊天历史中的自选股数据
+            updateWatchlistInChatHistory();
+        }
+    } 
 };
 
-const removeFromWatchlist = (stockCode) => {
-    if (userStore.removeFromWatchlist(stockCode)) {
-        // 更新聊天历史中的自选股数据
-        updateWatchlistInChatHistory();
+const removeFromWatchlist = async (stockCode) => {
+    const res = await stockUnselectRequest(stockCode);
+    if (res && res.data && res.data.success) {
+        if (userStore.removeFromWatchlist(stockCode)) {
+
+            // 更新聊天历史中的自选股数据
+            updateWatchlistInChatHistory();
+        }
     }
 };
 

@@ -165,6 +165,11 @@ export const useUserStore = defineStore("user", {
       return this.watchlist.some((item) => item.code === stockCode);
     },
 
+    setWatchList(watchlist){
+      this.watchlist = watchlist;
+      localStorage.setItem("watchlist", JSON.stringify(this.watchlist));
+    },
+
     // 清理持仓数据（清除mock数据污染）
     clearPortfolio() {
       this.portfolio = [];

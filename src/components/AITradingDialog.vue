@@ -254,6 +254,9 @@ watch(() => props.stock, (newStock) => {
         getStockPlan(newStock.code).then((res) => {
             console.log('📊 AITradingDialog - getStockPlan response:', res);
             if (res.data.success && res.data.data) {
+                if(res.data.data.factors){
+                    res.data.data.factors = JSON.parse(res.data.data.factors);
+                }
                 // 合并API数据和默认数据
                 plan.value = {
                     ...plan.value,

@@ -91,7 +91,6 @@ const getStockSelectListRequest = async () => {
                 code: item.code,
                 recommendIndex: item.recommendScore,
                 recommendLevel: item.recommendLevel,
-                price: item.price || item.targetPrice, // 当前价格
                 price: item.latestPrice, // 当前价格
                 change: item.change || 0, // 涨跌额
                 changePercent: item.changePercent || 0, // 涨跌幅

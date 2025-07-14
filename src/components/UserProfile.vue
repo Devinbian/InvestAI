@@ -213,7 +213,7 @@
                             <div class="stat-item">
                                 <span class="stat-value">¥{{ userInfo.balance || 0 }}</span>
                                 <span class="stat-label">股票交易账户</span>
-                                <el-button type="primary" size="small" @click="showStockRecharge = true"
+                                <el-button type="primary" size="small" :disabled="true" @click="showStockRecharge = true"
                                     class="recharge-btn">
                                     充值
                                 </el-button>
@@ -347,7 +347,7 @@
                                             <span class="amount">{{ (userStore.balance || 0).toFixed(2) }}</span>
                                         </div>
                                         <div class="balance-actions">
-                                            <el-button type="primary" @click="showStockRecharge = true">
+                                            <el-button type="primary" :disabled="true" @click="showStockRecharge = true">
                                                 <el-icon>
                                                     <Plus />
                                                 </el-icon>
@@ -364,7 +364,7 @@
                                     <div class="account-stats">
                                         <div class="stat-row">
                                             <span class="stat-label">今日盈亏：</span>
-                                            <span class="stat-value profit">+¥1,234.56</span>
+                                            <span class="stat-value profit">-</span>
                                         </div>
                                         <div class="stat-row">
                                             <span class="stat-label">总资产：</span>
@@ -372,7 +372,7 @@
                                         </div>
                                         <div class="stat-row">
                                             <span class="stat-label">持仓市值：</span>
-                                            <span class="stat-value">¥{{ getPortfolioValue().toFixed(2) }}</span>
+                                            <span class="stat-value"> - </span>
                                         </div>
                                     </div>
                                 </div>
@@ -1494,11 +1494,14 @@ import { getUserInfo, updateUserInfo, changePassword as changePasswordApi } from
 import PhoneBindingDialog from './PhoneBindingDialog.vue';
 import EmailBindingDialog from './EmailBindingDialog.vue';
 import RecordsCenter from './RecordsCenter.vue';
+import { useRouter } from 'vue-router';
 
 // 定义emit事件
 const emit = defineEmits(['close']);
 
 const userStore = useUserStore();
+
+const router = useRouter();
 
 // 检测是否为移动端
 const isMobile = () => {
@@ -1766,6 +1769,7 @@ const canChangePassword = computed(() => {
            !passwordErrors.confirmPassword;
 });
 
+// 保存用户信息
 const saveProfile = async () => {
     saving.value = true;
 
@@ -1775,17 +1779,16 @@ const saveProfile = async () => {
             nickname: editForm.nickname
         });
 
-        if (response.success) {
+        if (response && response.data && response.data.success) {
             userStore.setUserInfo({
                 ...userStore.userInfo,
                 username: editForm.username,
                 nickname: editForm.nickname
             });
-
+            userInfo.nickname = editForm.nickname;
+            userInfo.username = editForm.username;
             ElMessage.success('个人资料保存成功');
             showEditProfile.value = false;
-        } else {
-            ElMessage.error(response.message || '保存失败');
         }
     } catch (error) {
         console.error('保存个人资料失败:', error);
@@ -1795,24 +1798,32 @@ const saveProfile = async () => {
     }
 };
 
+// 修改密码
 const changePassword = async () => {
     changingPassword.value = true;
 
     try {
         const response = await changePasswordApi({
-            currentPassword: passwordForm.currentPassword,
+            password: passwordForm.currentPassword,
             newPassword: passwordForm.newPassword,
             confirmPassword: passwordForm.confirmPassword
         });
 
-        if (response.success) {
-            ElMessage.success('密码修改成功');
+        if (response && response.data && response.data.success) {
+            ElMessage.success('密码修改成功，请重新登录');
             showChangePassword.value = false;
             Object.keys(passwordForm).forEach(key => {
                 passwordForm[key] = '';
             });
-        } else {
-            ElMessage.error(response.message || '密码修改失败');
+            // 1. 退出登录
+            userStore.logout();
+            // 2. 跳转登录页（带提示）
+            await router.push('/');
+            // 3. 延迟刷新页面，确保完全重置状态
+            setTimeout(() => {
+                window.location.reload();
+            }, 500);
+
         }
     } catch (error) {
         console.error('密码修改失败:', error);
@@ -1875,11 +1886,6 @@ const formatEmailDisplay = (email) => {
     }
     const hiddenPart = '*'.repeat(Math.min(localPart.length - 3, 4));
     return `${localPart.substring(0, 3)}${hiddenPart}@${domain}`;
-};
-
-const initEditForm = () => {
-    editForm.username = userStore.userInfo?.username || '';
-    editForm.nickname = userStore.userInfo?.nickname || '';
 };
 
 const getFinalAmount = () => {
@@ -2122,6 +2128,9 @@ const initUserInfo = async () => {
         userInfo.lastLoginTime = res.data.data?.lastLoginTime.substring(0, 10) || '';
         userInfo.selectStockCount = res.data.data?.selectStockCount || 0;
         userInfo.positionCount = res.data.data?.positionCount || 0;
+        // 更新
+        editForm.nickname = res.data.data.nickname || '';
+        editForm.username = res.data.data.username || '';
     } else {
         userStore.setBalance(0);
         userStore.setAvailableBalance(0);
@@ -2130,7 +2139,6 @@ const initUserInfo = async () => {
 };
 
 onMounted(() => {
-    initEditForm();
     initUserInfo();
 });
 </script>

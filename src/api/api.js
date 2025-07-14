@@ -8,7 +8,7 @@ const api = {
   logoutApi: "/logout",
 
   getUserInfoApi: "/user/info", // 获取用户信息
-  updateUserInfoApi: "/user/update", // 更新用户信息
+  updateUserInfoApi: "/user/update-info", // 更新用户信息
   
   // 手机绑定相关
   sendPhoneCodeApi: "/user/send-phone-code", // 发送手机验证码
@@ -21,7 +21,7 @@ const api = {
   unbindEmailApi: "/user/unbind-email", // 解绑邮箱
   
   // 密码修改
-  changePasswordApi: "/user/change-password", // 修改密码
+  changePasswordApi: "/user/update-password", // 修改密码
 
   // user portrait
   getUserPortraitApi: "/user-portrait/detail",

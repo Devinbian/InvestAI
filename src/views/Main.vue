@@ -256,7 +256,7 @@
                 </div>
                 <div class="guide-actions">
                     <el-button type="primary" size="small" @click="handleGuideAction">{{ guideActionText
-                        }}</el-button>
+                    }}</el-button>
                     <el-button size="small" @click="dismissGuide">稍后</el-button>
                 </div>
             </div>
@@ -1330,9 +1330,9 @@ const handleCommand = async (command) => {
     await handleUserCommand(command, {
         onShowProfile: () => { showUserProfile.value = true; },
         onShowPreferences: () => { preferencesDialogVisible.value = true; },
-        onShowRecords: () => { 
+        onShowRecords: () => {
             recordsCenterInitialTab.value = 'reports'; // 从命令打开时默认显示第一个tab
-            showRecordsCenter.value = true; 
+            showRecordsCenter.value = true;
         },
         onResetPageState: () => {
             chatHistory.value = [];
@@ -1361,36 +1361,36 @@ const handleShowRecords = () => {
 // 处理返回主页事件，重置聊天模式状态
 const handleGoHome = () => {
     console.log('🏠 处理返回主页事件');
-    
+
     // 重置聊天模式状态
     isChatMode.value = false;
-    
+
     // 清空输入框
     inputMessage.value = '';
-    
+
     // 停止任何正在进行的生成
     if (isGenerating.value) {
         stopGeneration();
     }
-    
+
     // 清空当前聊天历史记录，确保下次创建新会话
     chatHistory.value = [];
-    
+
     // 清除当前会话ID，确保下次发送消息时创建新会话
     chatHistoryStore.clearCurrentChat();
-    
+
     // 关闭聊天历史面板
     showChatHistory.value = false;
-    
+
     // 重置其他可能的状态
     showUserProfile.value = false;
     showRecordsCenter.value = false;
-    
+
     // 移动端：关闭侧边栏
     if (isMobileView.value && sidebarRef.value) {
         mobileAdaptation.closeMobileSidebar(sidebarRef);
     }
-    
+
     // 滚动到顶部
     nextTick(() => {
         scrollToTop();
@@ -1399,7 +1399,7 @@ const handleGoHome = () => {
             mobileAdaptation.resetMobileLayout(false, scrollToTop);
         }
     });
-    
+
     console.log('✅ 已重置到主页状态，下次发送消息将创建新会话');
 };
 
@@ -3486,7 +3486,7 @@ const handleSidebarInteraction = async (data) => {
 
     // 设置输入框内容并调用真实的聊天接口
     inputMessage.value = message;
-    
+
     // 调用真实的聊天接口
     await chatSendMessage(userStore, isMobileView, mobileAdaptation, scrollToBottom);
 
@@ -4064,7 +4064,7 @@ ${message.interactionData.newsItems.map(news => `- ${news.title}: ${news.summary
     if (analysisPrompt) {
         // 设置输入框内容并调用真实的聊天接口
         inputMessage.value = analysisPrompt;
-        
+
         // 调用真实的聊天接口
         await chatSendMessage(userStore, isMobileView, mobileAdaptation, scrollToBottom);
 
@@ -5126,7 +5126,53 @@ textarea,
 .sidebar-container .section-title,
 .sidebar-container .info-item,
 .sidebar-container .info-label,
-.sidebar-container .info-value {
+.sidebar-container .info-value,
+/* 个人中心和记录中心弹窗文本选择 */
+.user-profile,
+.user-profile *,
+.user-profile .user-name,
+.user-profile .user-desc,
+.user-profile .stat-value,
+.user-profile .stat-label,
+.user-profile .info-value,
+.user-profile .info-label,
+.user-profile .info-row-value,
+.user-profile .info-row-label,
+.user-profile .mobile-user-details,
+.user-profile .mobile-user-details *,
+.user-profile .balance-amount,
+.user-profile .balance-label,
+.user-profile .status-item-title,
+.user-profile .status-item-desc,
+.user-profile .version-label,
+.user-profile .version-value,
+.records-center,
+.records-center *,
+.records-center .header-info,
+.records-center .header-info *,
+.records-center .tab-content,
+.records-center .tab-content *,
+.records-center .tab-panel,
+.records-center .tab-panel *,
+.records-center .record-item,
+.records-center .record-item *,
+.records-center .record-title,
+.records-center .record-content,
+.records-center .record-time,
+.records-center .record-amount,
+.records-center .record-description,
+.records-center .report-card,
+.records-center .report-card *,
+.records-center .trading-record,
+.records-center .trading-record *,
+.records-center .points-record,
+.records-center .points-record *,
+.records-center .empty-text,
+.records-center .empty-text *,
+.records-center .records-stats,
+.records-center .records-stats *,
+.records-center .stat-value,
+.records-center .stat-label {
     -webkit-user-select: text !important;
     -khtml-user-select: text !important;
     -moz-user-select: text !important;
@@ -5160,7 +5206,127 @@ textarea,
 .sidebar-container .notification-item,
 .sidebar-container .notification-item *,
 .sidebar-container .empty-state,
-.sidebar-container .empty-state * {
+.sidebar-container .empty-state *,
+/* 个人中心和记录中心弹窗的所有子元素 */
+.user-profile-overlay,
+.user-profile-overlay *,
+.user-profile .profile-content,
+.user-profile .profile-content *,
+.user-profile .mobile-content,
+.user-profile .mobile-content *,
+.user-profile .tab-content,
+.user-profile .tab-content *,
+.user-profile .info-section,
+.user-profile .info-section *,
+.user-profile .info-grid,
+.user-profile .info-grid *,
+.user-profile .mobile-info-card,
+.user-profile .mobile-info-card *,
+.user-profile .mobile-balance-card,
+.user-profile .mobile-balance-card *,
+.user-profile .mobile-status-card,
+.user-profile .mobile-status-card *,
+.user-profile .mobile-settings-card,
+.user-profile .mobile-settings-card *,
+.records-center-overlay,
+.records-center-overlay *,
+.records-center .records-content,
+.records-center .records-content *,
+.records-center .mobile-records-content,
+.records-center .mobile-records-content *,
+.records-center .mobile-tab-panel,
+.records-center .mobile-tab-panel *,
+.records-center .records-list,
+.records-center .records-list *,
+.records-center .records-grid,
+.records-center .records-grid *,
+.records-center .mobile-records-container,
+.records-center .mobile-records-container *,
+/* 记录中心子组件 */
+.smart-points-records,
+.smart-points-records *,
+.quant-analysis-reports,
+.quant-analysis-reports *,
+.ai-trading-records,
+.ai-trading-records *,
+.user-trading-records,
+.user-trading-records *,
+.smart-points-records .record-item,
+.smart-points-records .record-item *,
+.smart-points-records .record-title,
+.smart-points-records .record-content,
+.smart-points-records .record-time,
+.smart-points-records .record-amount,
+.smart-points-records .record-description,
+.smart-points-records .empty-text,
+.smart-points-records .empty-text *,
+.smart-points-records .records-stats,
+.smart-points-records .records-stats *,
+.quant-analysis-reports .report-card,
+.quant-analysis-reports .report-card *,
+.quant-analysis-reports .report-title,
+.quant-analysis-reports .report-content,
+.quant-analysis-reports .report-time,
+.quant-analysis-reports .report-description,
+.ai-trading-records .record-card,
+.ai-trading-records .record-card *,
+.ai-trading-records .trading-record,
+.ai-trading-records .trading-record *,
+.user-trading-records .record-card,
+.user-trading-records .record-card *,
+.user-trading-records .trading-record,
+.user-trading-records .trading-record *,
+/* 其他弹窗组件文本选择 */
+.phone-binding-overlay,
+.phone-binding-overlay *,
+.phone-binding-container,
+.phone-binding-container *,
+.phone-binding-container .binding-content,
+.phone-binding-container .binding-content *,
+.phone-binding-container .current-phone-value,
+.phone-binding-container .tip-item,
+.phone-binding-container .tip-item *,
+.email-binding-overlay,
+.email-binding-overlay *,
+.email-binding-container,
+.email-binding-container *,
+.email-binding-container .binding-content,
+.email-binding-container .binding-content *,
+.email-binding-container .current-email-value,
+.email-binding-container .tip-item,
+.email-binding-container .tip-item *,
+.auth-dialog,
+.auth-dialog *,
+.auth-container,
+.auth-container *,
+.auth-main-title,
+.auth-main-subtitle,
+.recovery-dialog,
+.recovery-dialog *,
+.recovery-container,
+.recovery-container *,
+.recovery-title,
+.recovery-subtitle,
+.preferences-dialog,
+.preferences-dialog *,
+.preferences-container,
+.preferences-container *,
+.preferences-title,
+.preferences-subtitle,
+.ai-trading-dialog,
+.ai-trading-dialog *,
+.ai-trading-content,
+.ai-trading-content *,
+.stock-header,
+.stock-header *,
+.stock-name-section,
+.stock-name-section *,
+.buy-dialog,
+.buy-dialog *,
+.trading-interface,
+.trading-interface *,
+.stock-basic-info,
+.stock-basic-info * {
     -webkit-user-select: text !important;
     -khtml-user-select: text !important;
     -moz-user-select: text !important;

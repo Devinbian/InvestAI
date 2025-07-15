@@ -221,7 +221,7 @@
                             <div class="stat-item">
                                 <span class="stat-value">{{ (userInfo.smartPointsBalance || 0).toFixed(0) }}</span>
                                 <span class="stat-label">智点余额</span>
-                                <el-button type="success" size="small" @click="showSmartPointsRecharge = true"
+                                <el-button type="success" size="small" :disabled="true" @click="showSmartPointsRecharge = true"
                                     class="recharge-btn">
                                     购买
                                 </el-button>
@@ -353,7 +353,7 @@
                                                 </el-icon>
                                                 充值
                                             </el-button>
-                                            <el-button @click="showTransferDialog = true">
+                                            <el-button :disabled="true" @click="showTransferDialog = true">
                                                 <el-icon>
                                                     <Switch />
                                                 </el-icon>
@@ -397,7 +397,7 @@
                                             <span class="currency">智点</span>
                                         </div>
                                         <div class="balance-actions">
-                                            <el-button type="success" @click="showSmartPointsRecharge = true">
+                                            <el-button type="success" :disabled="true"@click="showSmartPointsRecharge = true">
                                                 <el-icon>
                                                     <Plus />
                                                 </el-icon>
@@ -418,7 +418,7 @@
                                         </div>
                                         <div class="stat-row">
                                             <span class="stat-label">本月消费：</span>
-                                            <span class="stat-value">120智点</span>
+                                            <span class="stat-value">-</span>
                                         </div>
                                         <div class="stat-row">
                                             <span class="stat-label">可用服务：</span>

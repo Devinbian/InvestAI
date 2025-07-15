@@ -278,8 +278,8 @@ const orderStatusMap = {
 const getStockOrderRecordRequest = async () => {
     const param ={
         key: filterKeyword.value,
-        startDate: filterKeyword.value ? filterDateRange.value[0] : '',
-        endDate: filterKeyword.value ? filterDateRange.value[1] : '',
+        startDate: filterDateRange.value ? filterDateRange.value[0] : '',
+        endDate: filterDateRange.value ? filterDateRange.value[1] : '',
         direction: filterType.value,
         orderStatus: filterStatus.value,       
     }

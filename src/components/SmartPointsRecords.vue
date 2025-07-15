@@ -52,7 +52,7 @@
         <div v-if="filteredRecords.length > 0" class="records-list">
             <div v-for="record in paginatedRecords" :key="record.id" class="record-item">
                 <div class="record-icon">
-                    <svg v-if="record.type === 'consumption'" width="20" height="20" viewBox="0 0 24 24" fill="none">
+                    <svg v-if="record.typeDesc === 'consumption'" width="20" height="20" viewBox="0 0 24 24" fill="none">
                         <path d="M12 2v20M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6" stroke="#ef4444"
                             stroke-width="2" />
                     </svg>
@@ -67,8 +67,8 @@
                 </div>
                 <div class="record-amount-section">
                     <div class="record-amount"
-                        :class="{ 'consume': record.type === 'consumption', 'recharge': record.type === 'recharge' }">
-                        {{ record.type === 'consumption' ? '-' : '+' }}{{ record.amount }} 智点
+                        :class="{ 'consume': record.typeDesc === 'consumption', 'recharge': record.typeDesc === 'recharge' }">
+                        {{ record.amount }} 智点
                     </div>
                     <div class="record-balance">
                         余额: {{ record.balanceAfter || 0 }} 智点
@@ -123,11 +123,27 @@
 import { ref, computed, watch, onMounted } from 'vue';
 import { useUserStore } from '../store/user';
 import { Search } from '@element-plus/icons-vue';
+import { getPointRecord } from '@/api/api';
 
 // 定义emit事件
 const emit = defineEmits(['data-loaded']);
 
 const userStore = useUserStore();
+
+onMounted(() => {
+    getPointRecordRequest();
+});
+
+// 获取智点记录
+const allRecords = ref([]);
+
+// 智点类型标签类型
+const pointDescMap = {
+    0: 'recharge',
+    1: 'recharge',
+    2: 'consumption',
+    3: 'consumption',
+}
 
 // 移动端检测
 const isMobile = computed(() => {
@@ -145,6 +161,36 @@ const pageSize = ref(20);
 // 移动端日期范围
 const startDate = ref('');
 const endDate = ref('');
+
+// 获取智点记录
+const getPointRecordRequest = async () => {
+    const param ={
+        key: filterKeyword.value,
+        startDate: filterDateRange.value ? filterDateRange.value[0] : '',
+        endDate: filterDateRange.value ? filterDateRange.value[1] : '',
+        type: filterType.value,     
+    }
+    let res = await getPointRecord(param);
+    if (res && res.data && res.data.success) {
+        const data = res.data.data || [];
+        let pointList = [];
+        data.forEach((item) => {
+            let point = {
+                id: item.id,
+                type: item.type,
+                typeDesc: pointDescMap[item.type] || '', // 智点类型描述
+                description: item.reason,
+                amount: item.amount,
+                balanceAfter: item.afterPoint,
+                createdAt: item.createTime,
+            }
+            pointList.push(point);
+        });
+        // 根据时间倒序
+        pointList.sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
+        allRecords.value = pointList; 
+    }
+}
 
 // 监听移动端日期变化，同步到filterDateRange
 watch([startDate, endDate], ([start, end]) => {
@@ -166,8 +212,6 @@ watch(filterDateRange, (newVal) => {
     }
 });
 
-// 获取智点记录
-const allRecords = computed(() => userStore.smartPointsTransactions || []);
 
 // 筛选后的记录
 const filteredRecords = computed(() => {
@@ -175,7 +219,7 @@ const filteredRecords = computed(() => {
 
     // 按类型筛选
     if (filterType.value) {
-        filtered = filtered.filter(record => record.type === filterType.value);
+        filtered = filtered.filter(record => record.typeDesc === filterType.value);
     }
 
     // 按日期范围筛选
@@ -214,14 +258,14 @@ const paginatedRecords = computed(() => {
 // 计算筛选后的总消费
 const filteredTotalConsume = computed(() => {
     return filteredRecords.value
-        .filter(record => record.type === 'consumption')
-        .reduce((total, record) => total + record.amount, 0);
+        .filter(record => record.typeDesc === 'consumption')
+        .reduce((total, record) => total + Math.abs(record.amount), 0);
 });
 
 // 计算筛选后的总充值
 const filteredTotalRecharge = computed(() => {
     return filteredRecords.value
-        .filter(record => record.type === 'recharge')
+        .filter(record => record.typeDesc === 'recharge')
         .reduce((total, record) => total + record.amount, 0);
 });
 
@@ -229,7 +273,7 @@ const filteredTotalRecharge = computed(() => {
 const filteredNetConsume = computed(() => filteredTotalConsume.value - filteredTotalRecharge.value);
 
 // 获取当前智点余额
-const currentSmartPointsBalance = computed(() => userStore.smartPointsBalance || 0);
+const currentSmartPointsBalance = computed(() => filteredTotalRecharge.value - filteredTotalConsume.value);
 
 // 重置筛选条件
 const resetFilters = () => {

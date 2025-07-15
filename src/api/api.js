@@ -58,6 +58,7 @@ const api = {
   stockUnselectAllApi: "/stock/unselect-all", // 移除自选股
  
   stockOrderRecordApi: "/record/stock-order", // 获取股票委托记录
+  pointRecordApi: "/record/point", // 获取点数记录
 
   //record
   analyzeRecordApi:"/record/analyze",// 量化分析报告记录
@@ -196,3 +197,8 @@ export const cancelAiTrade = (params) => request.post(api.cancelAiTradeApi, para
 
 // 获取用户资产
 export const getUserAsset = () => request.get(api.userAssetApi);
+
+// 获取用户智点记录
+export const getPointRecord = (params) => request.get(api.pointRecordApi, {
+  params
+});

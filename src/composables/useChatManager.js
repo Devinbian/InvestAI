@@ -279,7 +279,7 @@ export function useChatManager() {
               console.error("解析消息时出错:", err);
             }
           },
-          onclose: () => {
+          onclose: async () => {
             console.log("流式连接已关闭");
             isGenerating.value = false;
             isStreamPaused.value = false;
@@ -321,7 +321,7 @@ export function useChatManager() {
               // 🔍 检测是否为个股查询消息
               const userMessage = chatHistory.value[chatHistory.value.length - 2];
               if (userMessage && userMessage.role === "user") {
-                const stockQueryDetection = detectStockQuery(userMessage.content);
+                const stockQueryDetection = await detectStockQuery(userMessage.content);
                 if (stockQueryDetection.isStockQuery) {
                   console.log("🔍 检测到个股查询消息，添加股票操作按钮:", stockQueryDetection);
                   
@@ -332,7 +332,7 @@ export function useChatManager() {
                   lastMessage.stockQueryInfo = stockQueryDetection;
                   
                   // 使用智能提取函数获取股票信息
-                  const extractedInfo = extractStockInfoFromContent(
+                  const extractedInfo = await extractStockInfoFromContent(
                     lastMessage.content,
                     userMessage.content,
                     stockQueryDetection

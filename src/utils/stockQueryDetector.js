@@ -1,6 +1,8 @@
 // 个股查询检测工具
 // 用于识别用户输入是否为个股查询消息
 
+import { findStockExact, findStockFuzzy, initStockDatabase } from './stockDatabase.js';
+
 // 股票代码正则表达式
 const STOCK_CODE_PATTERNS = [
   /\b(\d{6})\b/g,           // 6位数字股票代码
@@ -52,7 +54,7 @@ const EXCLUDE_KEYWORDS = [
  * @param {string} message - 用户输入的消息
  * @returns {Object} 检测结果
  */
-export function detectStockQuery(message) {
+export async function detectStockQuery(message) {
   if (!message || typeof message !== 'string') {
     return {
       isStockQuery: false,
@@ -62,6 +64,9 @@ export function detectStockQuery(message) {
       reason: '无效输入'
     };
   }
+
+  // 确保股票数据库已初始化
+  await initStockDatabase();
 
   const cleanMessage = message.trim();
   const lowerMessage = cleanMessage.toLowerCase();
@@ -152,23 +157,46 @@ export function detectStockQuery(message) {
     reasons.push(`检测到股票代码: ${stockCodes.join(', ')}`);
   }
 
-  // 2. 检测股票名称
+  // 2. 使用股票数据库进行精确和模糊匹配
+  const databaseMatches = await searchInStockDatabase(cleanMessage);
+  if (databaseMatches.exact.length > 0) {
+    confidence += 60;
+    stockInfo = {
+      codes: databaseMatches.exact.map(s => s.code),
+      names: databaseMatches.exact.map(s => s.name),
+      type: 'database_exact'
+    };
+    queryType = 'database_exact_query';
+    reasons.push(`数据库精确匹配: ${databaseMatches.exact.map(s => s.name).join(', ')}`);
+  } else if (databaseMatches.fuzzy.length > 0 && databaseMatches.fuzzy[0].confidence > 80) {
+    confidence += 45;
+    stockInfo = {
+      codes: databaseMatches.fuzzy.map(s => s.code),
+      names: databaseMatches.fuzzy.map(s => s.name),
+      type: 'database_fuzzy'
+    };
+    queryType = 'database_fuzzy_query';
+    reasons.push(`数据库模糊匹配: ${databaseMatches.fuzzy.slice(0, 3).map(s => `${s.name}(${s.confidence}%)`).join(', ')}`);
+  }
+
+  // 3. 传统股票名称检测（作为补充）
   const stockNames = extractStockNames(cleanMessage);
   if (stockNames.length > 0) {
-    confidence += 40;
+    confidence += 30; // 降低传统方法的权重
     if (!stockInfo) {
       stockInfo = {
         names: stockNames,
-        type: 'name'
+        type: 'pattern'
       };
-      queryType = 'name_query';
+      queryType = 'pattern_query';
     } else {
-      stockInfo.names = stockNames;
+      if (!stockInfo.names) stockInfo.names = [];
+      stockInfo.names.push(...stockNames);
     }
-    reasons.push(`检测到股票名称: ${stockNames.join(', ')}`);
+    reasons.push(`模式匹配股票名称: ${stockNames.join(', ')}`);
   }
 
-  // 3. 检测查询关键词
+  // 4. 检测查询关键词
   const queryKeywords = QUERY_KEYWORDS.filter(keyword => 
     lowerMessage.includes(keyword)
   );
@@ -177,13 +205,13 @@ export function detectStockQuery(message) {
     reasons.push(`检测到查询关键词: ${queryKeywords.join(', ')}`);
   }
 
-  // 4. 消息长度和结构分析
-  if (cleanMessage.length < 50 && (stockCodes.length > 0 || stockNames.length > 0)) {
+  // 5. 消息长度和结构分析
+  if (cleanMessage.length < 50 && (stockCodes.length > 0 || stockNames.length > 0 || (stockInfo && (stockInfo.codes || stockInfo.names)))) {
     confidence += 15;
     reasons.push('消息简洁且包含股票标识');
   }
 
-  // 5. 特殊模式检测
+  // 6. 特殊模式检测
   if (detectSpecialPatterns(cleanMessage)) {
     confidence += 20;
     reasons.push('检测到特殊查询模式');
@@ -200,6 +228,86 @@ export function detectStockQuery(message) {
     reasons,
     message: cleanMessage
   };
+}
+
+/**
+ * 在股票数据库中搜索
+ * @param {string} message - 用户输入消息
+ * @returns {Object} 搜索结果
+ */
+async function searchInStockDatabase(message) {
+  const results = {
+    exact: [],
+    fuzzy: []
+  };
+
+  // 提取可能的股票标识符
+  const tokens = extractPossibleStockTokens(message);
+  
+  for (const token of tokens) {
+    // 精确匹配
+    const exactMatch = findStockExact(token);
+    if (exactMatch) {
+      results.exact.push(exactMatch);
+    } else {
+      // 模糊匹配
+      const fuzzyMatches = findStockFuzzy(token);
+      results.fuzzy.push(...fuzzyMatches);
+    }
+  }
+
+  // 去重
+  results.exact = results.exact.filter((item, index, self) => 
+    index === self.findIndex(t => t.code === item.code)
+  );
+  
+  results.fuzzy = results.fuzzy.filter((item, index, self) => 
+    index === self.findIndex(t => t.code === item.code)
+  ).sort((a, b) => b.confidence - a.confidence);
+
+  return results;
+}
+
+/**
+ * 提取可能的股票标识符
+ * @param {string} message - 用户输入消息  
+ * @returns {Array} 可能的股票标识符列表
+ */
+function extractPossibleStockTokens(message) {
+  const tokens = new Set();
+  
+  // 1. 6位数字代码
+  const codeMatches = message.match(/\d{6}/g);
+  if (codeMatches) {
+    codeMatches.forEach(code => tokens.add(code));
+  }
+  
+  // 2. 中文字符组合（2-8个字符）
+  const chineseMatches = message.match(/[\u4e00-\u9fa5]{2,8}/g);
+  if (chineseMatches) {
+    chineseMatches.forEach(name => {
+      tokens.add(name);
+      // 也尝试去掉可能的后缀
+      const withoutSuffix = name.replace(/(股份|集团|科技|控股|实业|发展|建设|能源|医药|电子|通信|银行|保险|证券|地产|汽车|钢铁|化工|电力|煤炭|有色|机械|食品|纺织|建材|交通|传媒|军工|环保|新能源|生物|互联网|5G|AI|芯片|A股|B股|H股)$/, '');
+      if (withoutSuffix !== name && withoutSuffix.length >= 2) {
+        tokens.add(withoutSuffix);
+      }
+    });
+  }
+  
+  // 3. 完整的股票名称（代码）模式
+  const fullMatches = message.match(/([\u4e00-\u9fa5]{2,8})\s*[（(](\d{6})[)）]/g);
+  if (fullMatches) {
+    fullMatches.forEach(match => {
+      const parts = match.match(/([\u4e00-\u9fa5]{2,8})\s*[（(](\d{6})[)）]/);
+      if (parts) {
+        tokens.add(parts[1]); // 股票名称
+        tokens.add(parts[2]); // 股票代码
+      }
+    });
+  }
+  
+  return [...tokens];
 }
 
 /**
@@ -330,26 +438,54 @@ export function formatStockQueryResult(detection) {
  * @param {Object} detectionResult - 检测结果
  * @returns {Object} 提取的股票信息
  */
-export function extractStockInfoFromContent(aiContent, userContent, detectionResult) {
+export async function extractStockInfoFromContent(aiContent, userContent, detectionResult) {
   let stockName = "未知股票";
   let stockCode = "000000";
   
+  console.log('🔍 开始提取股票信息:', {
+    aiContentLength: aiContent?.length || 0,
+    userContent,
+    detectionResult: detectionResult ? {
+      isStockQuery: detectionResult.isStockQuery,
+      confidence: detectionResult.confidence,
+      stockInfo: detectionResult.stockInfo
+    } : null
+  });
+  
   // 1. 优先从检测结果中获取
-  if (detectionResult.stockInfo) {
+  if (detectionResult?.stockInfo) {
     if (detectionResult.stockInfo.codes && detectionResult.stockInfo.codes.length > 0) {
       stockCode = detectionResult.stockInfo.codes[0].replace(/^(SH|SZ)/, '').replace(/\.(SH|SZ)$/, '');
+      console.log('✅ 从检测结果获取股票代码:', stockCode);
     }
     if (detectionResult.stockInfo.names && detectionResult.stockInfo.names.length > 0) {
       stockName = detectionResult.stockInfo.names[0];
+      console.log('✅ 从检测结果获取股票名称:', stockName);
     }
   }
   
   // 2. 从AI回复中提取完整格式：股票名称(代码)
-  const fullStockMatch = aiContent.match(/([\u4e00-\u9fa5]{2,8})\s*[（(](\d{6})[)）]/);
-  if (fullStockMatch) {
-    stockName = fullStockMatch[1];
-    stockCode = fullStockMatch[2];
-    return { name: stockName, code: stockCode, source: 'ai_full_match' };
+  if (aiContent) {
+    const fullStockMatch = aiContent.match(/([\u4e00-\u9fa5]{2,8})\s*[（(](\d{6})[)）]/);
+    if (fullStockMatch) {
+      stockName = fullStockMatch[1];
+      stockCode = fullStockMatch[2];
+      console.log('✅ 从AI回复提取完整格式:', { name: stockName, code: stockCode });
+      return { name: stockName, code: stockCode, source: 'ai_full_match' };
+    }
+    
+    // 额外尝试：从AI回复的标题中提取
+    const lines = aiContent.split('\n');
+    const firstLine = lines[0]?.trim();
+    if (firstLine) {
+      const titleMatch = firstLine.match(/([\u4e00-\u9fa5]{2,8})\s*[（(](\d{6})[)）]/);
+      if (titleMatch) {
+        stockName = titleMatch[1];
+        stockCode = titleMatch[2];
+        console.log('✅ 从AI回复标题提取:', { name: stockName, code: stockCode });
+        return { name: stockName, code: stockCode, source: 'ai_title_match' };
+      }
+    }
   }
   
   // 3. 从用户输入中提取完整格式
@@ -357,56 +493,86 @@ export function extractStockInfoFromContent(aiContent, userContent, detectionRes
   if (userFullMatch) {
     stockName = userFullMatch[1];
     stockCode = userFullMatch[2];
+    console.log('✅ 从用户输入提取完整格式:', { name: stockName, code: stockCode });
     return { name: stockName, code: stockCode, source: 'user_full_match' };
   }
   
   // 4. 分别提取名称和代码
-  // 提取股票名称
+  // 如果还没有获取到股票名称，从用户输入中提取
   if (stockName === "未知股票") {
-    // 从用户输入中提取
+    // 从用户输入中提取股票名称（优化的模式）
     const userNamePatterns = [
+      // 简单的中文股票名称（2-8个字符）
+      /^([\u4e00-\u9fa5]{2,8})$/,
+      // 股票名称+查询词的模式
       /([\u4e00-\u9fa5]{2,8})(?=[分析怎么样如何走势趋势前景投资买入卖出持有建议意见看法评价研究报告数据财报基本面技术面涨跌涨幅跌幅涨停跌停突破支撑阻力买点卖点机会风险估值业绩盈利亏损])/,
-      /^([\u4e00-\u9fa5]{2,8})/,
-      /(茅台|平安|腾讯|阿里|美团|京东|拼多多|字节|小米|华为|比亚迪|宁德时代|五粮液|招商|万科|格力|美的)/
+      // 知名股票名称匹配
+      /(中粮糖业|茅台|平安|腾讯|阿里|美团|京东|拼多多|字节|小米|华为|比亚迪|宁德时代|五粮液|招商|万科|格力|美的|南宁糖业|贵糖股份)/
     ];
     
     for (const pattern of userNamePatterns) {
       const match = userContent.match(pattern);
       if (match) {
         stockName = match[1];
+        console.log('✅ 从用户输入提取股票名称:', stockName);
         break;
       }
     }
     
-    // 从AI回复中提取
-    if (stockName === "未知股票") {
+    // 从AI回复中提取股票名称
+    if (stockName === "未知股票" && aiContent) {
       const aiNamePatterns = [
         /([\u4e00-\u9fa5]{2,8})(?=\s*[（(]?\d{6}[)）]?|是|的|股票|公司)/,
         /(?:关于|分析|看好|推荐|建议|关注)([\u4e00-\u9fa5]{2,8})/,
-        /([\u4e00-\u9fa5]{2,8})(?=\s*(?:股票|公司|集团|股份))/
+        /([\u4e00-\u9fa5]{2,8})(?=\s*(?:股票|公司|集团|股份))/,
+        // 新增：基本信息格式
+        /股票名称[：:]\s*([\u4e00-\u9fa5]{2,8})/,
+        // 新增：标题格式
+        /^([\u4e00-\u9fa5]{2,8})\s+基本信息/
       ];
       
       for (const pattern of aiNamePatterns) {
         const match = aiContent.match(pattern);
         if (match) {
           stockName = match[1];
+          console.log('✅ 从AI回复提取股票名称:', stockName);
           break;
         }
       }
     }
   }
   
-  // 提取股票代码
+  // 如果还没有获取到股票代码，尝试提取
   if (stockCode === "000000") {
-    // 从AI回复中提取
-    const aiCodeMatch = aiContent.match(/[（(]?(\d{6})[)）]?/);
-    if (aiCodeMatch) {
-      stockCode = aiCodeMatch[1];
-    } else {
-      // 从用户输入中提取
+    // 从AI回复中提取股票代码（更强的模式）
+    if (aiContent) {
+      const aiCodePatterns = [
+        // 标准括号格式
+        /[（(](\d{6})[)）]/,
+        // 股票代码：格式
+        /股票代码[：:]\s*(\d{6})/,
+        // 代码：格式
+        /代码[：:]\s*(\d{6})/,
+        // 单独的6位数字（在没有其他6位数字干扰的情况下）
+        /\b(\d{6})\b/
+      ];
+      
+      for (const pattern of aiCodePatterns) {
+        const match = aiContent.match(pattern);
+        if (match) {
+          stockCode = match[1];
+          console.log('✅ 从AI回复提取股票代码:', stockCode);
+          break;
+        }
+      }
+    }
+    
+    // 从用户输入中提取股票代码
+    if (stockCode === "000000") {
       const userCodeMatch = userContent.match(/(\d{6})/);
       if (userCodeMatch) {
         stockCode = userCodeMatch[1];
+        console.log('✅ 从用户输入提取股票代码:', stockCode);
       }
     }
   }
@@ -419,22 +585,43 @@ export function extractStockInfoFromContent(aiContent, userContent, detectionRes
       if (/^\d{6}$/.test(match)) {
         stockCode = match;
         stockName = `股票${match}`;
+        console.log('✅ 智能匹配提取代码:', stockCode);
       } else {
         stockName = match;
+        console.log('✅ 智能匹配提取名称:', stockName);
       }
     }
   }
   
-  // 6. 最终清理
+  // 6. 特殊处理：如果有股票名称但没有代码，尝试查找数据库
+  if (stockName !== "未知股票" && stockCode === "000000") {
+    try {
+      // 尝试从数据库中查找对应的代码
+      const { findStockExact } = await import('./stockDatabase.js');
+      const exactMatch = findStockExact(stockName);
+      if (exactMatch && exactMatch.code) {
+        stockCode = exactMatch.code;
+        console.log('✅ 从数据库查找到股票代码:', stockCode);
+      }
+    } catch (error) {
+      console.warn('⚠️ 数据库查找失败:', error.message);
+    }
+  }
+  
+  // 7. 最终清理
   if (stockName === "未知股票" && stockCode !== "000000") {
     stockName = `股票${stockCode}`;
   }
   
-  return { 
+  const result = { 
     name: stockName, 
     code: stockCode, 
     source: 'intelligent_extraction' 
   };
+  
+  console.log('🎯 最终提取结果:', result);
+  
+  return result;
 }
 
 // 导出默认检测函数

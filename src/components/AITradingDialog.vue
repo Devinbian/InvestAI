@@ -77,8 +77,8 @@
                             <div class="price-description">
                                 <div class="price-desc-content">
                                     <div class="current-price-info">
-                                        <span class="current-price-label">当前价格：</span>
-                                        <span class="current-price-value">¥{{ stock.price || stock.currentPrice }}</span>
+                                        <span class="current-price-label">预计资金：</span>
+                                        <span class="current-price-value">¥{{ estimatedAmount.toFixed(2) }}</span>
                                     </div>
                                     <div class="price-logic-desc">
                                         <span v-if="form.action === 'buy'" class="logic-text">
@@ -338,6 +338,13 @@ watch(() => form.action, (newAction) => {
             }
         }
     }
+});
+
+// 计算预计资金
+const estimatedAmount = computed(() => {
+    const price = parseFloat(form.limitPrice) || 0;
+    const quantity = parseInt(form.quantity) || 0;
+    return price * quantity;
 });
 
 // 从用户偏好初始化AI交易参数

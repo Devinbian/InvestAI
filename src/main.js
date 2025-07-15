@@ -9,6 +9,8 @@ import router from "./router";
 import "./assets/global-messagebox.css";
 // 导入性能优化工具
 import { performanceOptimizer } from "./utils/performanceOptimizer";
+// 导入股票数据库
+import { initStockDatabase } from "./utils/stockDatabase.js";
 
 // 微信环境检测和处理
 function detectEnvironment() {
@@ -368,6 +370,13 @@ app.use(createPinia());
 app.use(router);
 app.use(ElementPlus, {
   locale: zhCn,
+});
+
+// 初始化股票数据库（异步进行，不阻塞应用启动）
+initStockDatabase().then(() => {
+  console.log("📊 股票数据库初始化完成");
+}).catch(error => {
+  console.warn("📊 股票数据库初始化失败，将使用内置数据", error);
 });
 
 app.mount("#app");

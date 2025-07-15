@@ -113,7 +113,7 @@
                         :active-reminders-count="activeReminders.filter(r => r.isActive).length"
                         :active-reminders="activeReminders" :is-in-watchlist="isInWatchlist"
                         :format-currency="formatCurrency" :format-recommendation-time="formatRecommendationTime"
-                        :is-stream-paused="isStreamPaused" :session-title="currentChatTitle" :chat-history="chatHistory"
+                        :is-stream-paused="isStreamPaused" :chat-history="chatHistory"
                         :message-index="idx" @interaction-action="handleInteractionAction"
                         @show-buy-dialog="showBuyDialog" @add-to-watchlist="addToWatchlist"
                         @remove-from-watchlist="removeFromWatchlist"

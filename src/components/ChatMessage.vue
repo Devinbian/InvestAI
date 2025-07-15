@@ -520,11 +520,7 @@ const props = defineProps({
         type: Boolean,
         default: false
     },
-    // 新增props用于分享功能
-    sessionTitle: {
-        type: String,
-        default: 'AI 智能分析'
-    },
+    // 聊天历史和消息索引用于分享功能
     chatHistory: {
         type: Array,
         default: () => []
@@ -988,8 +984,8 @@ const handleShareMessage = async () => {
         ctx.font = 'bold 24px -apple-system, BlinkMacSystemFont, "PingFang SC", sans-serif';
         ctx.textAlign = 'left';
 
-        // 使用会话标题
-        const title = props.sessionTitle || 'AI 智能分析';
+        // 使用智能生成的分享标题
+        const title = generateShareTitle();
         ctx.fillText(title, 40, headerY);
 
         // 绘制时间和来源信息
@@ -1143,7 +1139,7 @@ const handleShareMessage = async () => {
             ctx.fillStyle = '#333333';
             ctx.font = 'bold 24px -apple-system, BlinkMacSystemFont, "PingFang SC", "Microsoft YaHei", sans-serif';
             ctx.textAlign = 'left';
-            const title = props.sessionTitle || 'AI 智能分析';
+            const title = generateShareTitle();
             ctx.fillText(title, 40, headerY);
 
             ctx.fillStyle = '#999999';
@@ -2159,6 +2155,97 @@ const wrapUserMessage = (ctx, text, maxWidth) => {
     });
 
     return lines;
+};
+
+// 智能生成分享标题
+const generateShareTitle = () => {
+    const message = props.message;
+    
+    // 1. 基于消息类型生成标题
+    if (message.messageType) {
+        switch (message.messageType) {
+            case 'smart_recommendation':
+                return 'AI智能荐股推荐';
+            case 'watchlist_view':
+                return '我的自选股列表';
+            case 'asset_analysis':
+                return '投资组合分析';
+            case 'news_update':
+                return '今日财经资讯';
+            case 'smart_review':
+                return '智能投资复盘';
+            case 'individual_stock_query':
+                // 如果是个股查询，尝试使用股票信息
+                if (message.stockInfo && message.stockInfo.name) {
+                    return `${message.stockInfo.name}(${message.stockInfo.code})分析`;
+                }
+                return '个股分析报告';
+        }
+    }
+    
+    // 2. 基于消息特征生成标题
+    if (message.isQuantAnalysis && message.stockInfo) {
+        return `${message.stockInfo.name}(${message.stockInfo.code})量化分析`;
+    }
+    
+    if (message.hasStockInfo || message.stockList || message.isRecommendation) {
+        return 'AI智能荐股推荐';
+    }
+    
+    if (message.isWatchlistDisplay || message.watchlistData || message.hasWatchlistInfo) {
+        return '我的自选股列表';
+    }
+    
+    if (message.hasAssetInfo || message.assetData || message.isAssetAnalysis) {
+        return '投资组合分析';
+    }
+    
+    if (message.isNewsUpdate) {
+        return '今日财经资讯';
+    }
+    
+    // 3. 基于用户消息内容生成标题
+    const userMessage = getPreviousUserMessage();
+    if (userMessage && userMessage !== '用户提问') {
+        // 提取用户消息的前20个字符作为标题
+        let title = userMessage.substring(0, 20);
+        if (userMessage.length > 20) {
+            title += '...';
+        }
+        return title;
+    }
+    
+    // 4. 基于AI消息内容生成标题
+    if (message.content) {
+        const content = message.content;
+        
+        // 检查常见的AI回复模式
+        if (content.includes('📊 **智能荐股**') || content.includes('智能荐股')) {
+            return 'AI智能荐股推荐';
+        }
+        
+        if (content.includes('📋 **我的自选股列表**') || content.includes('自选股列表')) {
+            return '我的自选股列表';
+        }
+        
+        if (content.includes('💼 **资产分析**') || content.includes('资产分析')) {
+            return '投资组合分析';
+        }
+        
+        if (content.includes('📰 **财经资讯**') || content.includes('财经资讯')) {
+            return '今日财经资讯';
+        }
+        
+        // 提取AI消息的前20个字符作为标题
+        let title = content.replace(/[#*\-\n]/g, '').trim().substring(0, 20);
+        if (content.length > 20) {
+            title += '...';
+        }
+        return title || 'AI分析报告';
+    }
+    
+    // 5. 默认标题
+    return 'AI智能分析';
 };
 </script>
 

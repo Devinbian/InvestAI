@@ -54,7 +54,7 @@
                     <div class="card-content">
                         <span class="card-label">今日盈亏</span>
                         <span class="card-value" :class="userAssetInfo.todayProfitLoss >= 0 ? 'positive' : 'negative'">
-                            {{ userAssetInfo.todayProfitLoss >= 0 ? '+' : '' }}¥{{ Math.abs(userAssetInfo.todayProfitLoss).toFixed(2) }}
+                            {{ userAssetInfo.todayProfitLoss >= 0 ? '+' : '-' }}¥{{ Math.abs(userAssetInfo.todayProfitLoss).toFixed(2) }}
                         </span>
                     </div>
                 </div>

@@ -85,7 +85,7 @@
                                         {{ getPositionProfitLoss(stock) >= 0 ? '+' : '-' }}¥{{
                                             Math.abs(getPositionProfitLoss(stock)).toFixed(2) }}
                                         ({{ getPositionProfitPercent(stock) >= 0 ? '+' : '-' }}{{
-                                            getPositionProfitPercent(stock).toFixed(2) }}%)
+                                            Math.abs(getPositionProfitPercent(stock)).toFixed(2) }}%)
                                     </span>
                                 </div>
                             </div>
@@ -419,12 +419,14 @@ const formatTime = computed(() => {
 });
 
 const getPositionProfitLoss = (stock) => {
+    if(stock.profit) return stock.profit;
     if (!stock.quantity || !stock.avgPrice) return 0;
     const currentPrice = getCurrentPrice(stock);
     return (currentPrice - stock.avgPrice) * stock.quantity;
 };
 
 const getPositionProfitPercent = (stock) => {
+    if(stock.profitPercent) return stock.profitPercent;
     if (!stock.avgPrice) return 0;
     const currentPrice = getCurrentPrice(stock);
     return ((currentPrice - stock.avgPrice) / stock.avgPrice) * 100;

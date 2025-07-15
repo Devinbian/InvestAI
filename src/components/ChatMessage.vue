@@ -203,13 +203,13 @@
                         <div class="total-asset-card">
                             <div class="asset-amount">
                                 <span class="amount-label">总资产</span>
-                                <span class="amount-value">¥{{ formatCurrency(message.assetData.totalAssets) }}</span>
+                                <span class="amount-value">¥{{ message.assetData.totalAssets }}</span>
                             </div>
                             <div class="asset-change"
                                 :class="[message.assetData.totalProfitPercent >= 0 ? 'profit' : 'loss']">
                                 <span class="change-icon">{{ message.assetData.totalProfitPercent >= 0 ? '📈' : '📉'
                                     }}</span>
-                                <span class="change-label">今日盈亏：</span>
+                                <span class="change-label">总盈亏：</span>
                                 <span class="change-text">
                                     {{ message.assetData.totalProfitPercent >= 0 ? '+' : '' }}¥{{
                                         message.assetData.totalProfit }}
@@ -225,14 +225,14 @@
                             <div class="stat-icon cash">💵</div>
                             <div class="stat-info">
                                 <div class="stat-label">可用资金</div>
-                                <div class="stat-value">¥{{ formatCurrency(message.assetData.balance) }}</div>
+                                <div class="stat-value">¥{{ message.assetData.balance }}</div>
                             </div>
                         </div>
                         <div class="stat-item">
                             <div class="stat-icon portfolio">📊</div>
                             <div class="stat-info">
                                 <div class="stat-label">持仓市值</div>
-                                <div class="stat-value">¥{{ formatCurrency(message.assetData.portfolioValue) }}</div>
+                                <div class="stat-value">¥{{ message.assetData.portfolioValue }}</div>
                             </div>
                         </div>
                         <div class="stat-item">
@@ -1695,7 +1695,7 @@ const drawStockCard = (ctx, stock, x, y, width, type = 'recommend') => {
             const profitPercent = ((stock.price - stock.avgPrice) / stock.avgPrice * 100);
             const isProfit = profitLoss >= 0;
 
-            ctx.fillStyle = isProfit ? '#10b981' : '#ef4444';
+            ctx.fillStyle = isProfit ? '#ef4444' : '#10b981';
             ctx.textAlign = 'right';
             ctx.fillText(
                 `${isProfit ? '+' : ''}¥${profitLoss.toFixed(2)} (${isProfit ? '+' : ''}${profitPercent.toFixed(2)}%)`,
@@ -3701,11 +3701,11 @@ const wrapUserMessage = (ctx, text, maxWidth) => {
 }
 
 .asset-change.profit {
-    color: #67c23a;
+    color: #f56c6c;
 }
 
 .asset-change.loss {
-    color: #f56c6c;
+    color: #67c23a;
 }
 
 .change-icon {

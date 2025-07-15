@@ -1,6 +1,6 @@
 import { ref, nextTick, computed } from "vue";
 import { ElMessage, ElMessageBox } from "element-plus";
-import { recommendStock, api } from "@/api/api";
+import { recommendStock, api, getUserAsset } from "@/api/api";
 import {
   getRiskLevelText,
   getExperienceText,
@@ -649,6 +649,59 @@ export function useStockOperations() {
     };
   };
 
+// 用户资产详情
+let userAssetInfo = {
+    totalAssets: 0,
+    totalProfitPercent: 0,
+    totalProfit: 0,
+    balance: 0, // 可用余额
+    portfolioValue: 0,
+    portfolioCount: 0,
+    watchlistCount: 0,
+    portfolioData: [],
+    watchlistData: []
+}
+
+// 获取用户资产
+const getUserAssetRequest = async () => {
+    let res = await getUserAsset();
+    if (res && res.data && res.data.success) {
+        let data = res.data.data || {};
+        let portfolioData = data.position?.positionList || [];
+        for (const item of portfolioData) {
+          item.changePercent = `${item.changeRatio}`;
+          item.code = item.stockCode;
+          item.name = item.stockName;
+          item.quantity = item.totalVolume;
+          item.costValue = item.avgCostPrice;
+          item.profit = item.profitLoss;
+          item.profitPercent = item.profitLossRatio;
+          item.avgPrice = item.avgCostPrice;
+        }
+        let watchlistData = data.selectedStock || [];
+        for (const item of watchlistData) {
+          item.addedAt = item.createTime;
+          item.expectedReturn = item.expectedBenefits
+          item.currentPrice = item.latestPrice
+          item.change= Number(item.change);
+          item.changePercent = Number(item.rise);
+        }
+
+        let assetInfo = {
+            totalAssets: data.position?.totalAsset || 0,
+            totalProfitPercent: data.position?.totalProfitLossRatio,
+            totalProfit: data.position?.totalProfitLoss,
+            balance: data.position?.availableBalance,
+            portfolioValue: data.position?.positionMarketValue,
+            portfolioCount: data.positionCount,
+            portfolioData: portfolioData,
+            watchlistCount: data.selectStockCount,
+            watchlistData: watchlistData
+        }
+        userAssetInfo = assetInfo;
+    }
+}
+
   // 我的资产分析功能
   const handleAssetAnalysis = async (
     userStore,
@@ -690,51 +743,9 @@ export function useStockOperations() {
       return;
     }
 
-    // 只使用用户的真实持仓数据，不使用mock数据
-    const portfolioForAnalysis = [...userStore.portfolio];
-
-    // 构建资产分析消息，包含用户的实际资产数据
-    const totalAssets = userStore.getTotalAssets();
-    const portfolioCount = portfolioForAnalysis.length;
-    const watchlistCount = userStore.watchlist.length;
-
-    // 计算持仓盈亏
-    const portfolioData = portfolioForAnalysis.map((position) => {
-      const currentPrice = getCurrentStockPrice(position.code); // 获取当前价格
-      const marketValue = position.quantity * currentPrice;
-      const costValue = position.quantity * position.avgPrice;
-      const profit = marketValue - costValue;
-      const profitPercent = ((profit / costValue) * 100).toFixed(2);
-
-      return {
-        ...position,
-        currentPrice,
-        marketValue,
-        costValue,
-        profit,
-        profitPercent: parseFloat(profitPercent),
-      };
-    });
-
-    // 计算总盈亏
-    const totalProfit = portfolioData.reduce(
-      (sum, item) => sum + item.profit,
-      0,
-    );
-    const totalCostValue = portfolioData.reduce(
-      (sum, item) => sum + item.costValue,
-      0,
-    );
-    const totalProfitPercent =
-      totalCostValue > 0
-        ? ((totalProfit / totalCostValue) * 100).toFixed(2)
-        : "0.00";
-
-    // 计算持仓市值
-    const portfolioValue = portfolioData.reduce(
-      (sum, item) => sum + item.marketValue,
-      0,
-    );
+    // 请求接口
+    await getUserAssetRequest();
+    console.log(JSON.stringify(userAssetInfo))
 
     // 检查是否被中断
     if (isStillGenerating && !isStillGenerating()) {
@@ -752,22 +763,15 @@ export function useStockOperations() {
       lastMessage.isAssetAnalysis = true;
       lastMessage.messageType = "asset_analysis"; // 设置消息类型备份
       lastMessage.assetData = {
-        totalAssets,
-        balance: totalAssets - portfolioValue, // 可用资金 = 总资产 - 持仓市值
-        portfolioCount,
-        watchlistCount,
-        portfolioData: portfolioData.map((item) => ({
-          ...item,
-          price: item.currentPrice.toFixed(2),
-          change: (item.currentPrice - item.avgPrice).toFixed(2),
-          changePercent: `${item.profitPercent}%`,
-        })),
-        watchlistData: userStore.watchlist.map((stock) =>
-          generateWatchlistStockData(stock),
-        ),
-        totalProfit,
-        totalProfitPercent: parseFloat(totalProfitPercent),
-        portfolioValue,
+        totalAssets: userAssetInfo.totalAssets,
+        balance: userAssetInfo.balance, // 可用资金 = 总资产 - 持仓市值
+        portfolioCount: userAssetInfo.portfolioCount,
+        watchlistCount: userAssetInfo.watchlistCount,
+        portfolioData: userAssetInfo.portfolioData,
+        watchlistData: userAssetInfo.watchlistData,
+        totalProfit: userAssetInfo.totalProfit,
+        totalProfitPercent: userAssetInfo.totalProfitPercent,
+        portfolioValue: userAssetInfo.portfolioValue,
       };
       chatHistory.value = [...chatHistory.value]; // 触发响应式更新
     }

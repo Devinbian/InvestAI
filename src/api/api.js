@@ -23,6 +23,8 @@ const api = {
   // 密码修改
   changePasswordApi: "/user/update-password", // 修改密码
 
+  userAssetApi: "/user/asset", // 获取用户资产
+
   // user portrait
   getUserPortraitApi: "/user-portrait/detail",
   updateUserPortraitApi: "/user-portrait/update", 
@@ -191,3 +193,6 @@ export const aiTradeRecord=(params)=>request.get(api.aiTradeRecordApi,{
 
 // 撤销AI交易
 export const cancelAiTrade = (params) => request.post(api.cancelAiTradeApi, params);
+
+// 获取用户资产
+export const getUserAsset = () => request.get(api.userAssetApi);

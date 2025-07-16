@@ -318,41 +318,69 @@ export function useChatManager() {
               });
               console.groupEnd();
 
-              // 🔍 检测是否为个股查询消息
+              // 🔍 检测是否为个股查询消息 - 完全依赖validateStock API
               const userMessage = chatHistory.value[chatHistory.value.length - 2];
               if (userMessage && userMessage.role === "user") {
-                const stockQueryDetection = await detectStockQuery(userMessage.content);
-                if (stockQueryDetection.isStockQuery) {
-                  console.log("🔍 检测到个股查询消息，添加股票操作按钮:", stockQueryDetection);
+                try {
+                  console.log("🔍 开始API检测个股查询:", userMessage.content);
                   
-                  // 设置消息类型和股票信息
-                  lastMessage.messageType = "individual_stock_query";
-                  lastMessage.hasStockInfo = true;
-                  lastMessage.isStockQuery = true;
-                  lastMessage.stockQueryInfo = stockQueryDetection;
+                  const stockQueryDetection = await detectStockQuery(userMessage.content);
                   
-                  // 使用智能提取函数获取股票信息
-                  const extractedInfo = await extractStockInfoFromContent(
-                    lastMessage.content,
-                    userMessage.content,
-                    stockQueryDetection
-                  );
-                  
-                  // 构建股票信息对象
-                  const stockData = {
-                    name: extractedInfo.name,
-                    code: extractedInfo.code,
-                    price: "0.00",
-                    change: "0.00",
-                    changePercent: "0.00%",
-                    queryType: stockQueryDetection.queryType,
-                    confidence: stockQueryDetection.confidence,
-                    extractionSource: extractedInfo.source
-                  };
-                  
-                  lastMessage.stockInfo = stockData;
-                  
-                  console.log("🔍 已为个股查询消息添加股票信息:", stockData);
+                  // 优先使用API验证结果，但如果API失败则允许本地检测结果
+                  if (stockQueryDetection.isStockQuery) {
+                    if (stockQueryDetection.queryType === 'api_validated') {
+                      console.log("✅ API确认为个股查询，添加股票操作按钮:", stockQueryDetection);
+                    } else if (stockQueryDetection.queryType === 'local_detection') {
+                      console.log("⚠️ API验证失败，但本地检测认为是个股查询，仍显示操作按钮:", stockQueryDetection);
+                    }
+                    
+                    // 设置消息类型和股票信息
+                    lastMessage.messageType = "individual_stock_query";
+                    lastMessage.hasStockInfo = true;
+                    lastMessage.isStockQuery = true;
+                    lastMessage.stockQueryInfo = stockQueryDetection;
+                    
+                    // 使用智能提取函数获取股票信息
+                    const extractedInfo = await extractStockInfoFromContent(
+                      lastMessage.content,
+                      userMessage.content,
+                      stockQueryDetection
+                    );
+                    
+                    // 构建股票信息对象
+                    const stockData = {
+                      name: extractedInfo.name,
+                      code: extractedInfo.code,
+                      price: "0.00",
+                      change: "0.00",
+                      changePercent: "0.00%",
+                      queryType: stockQueryDetection.queryType,
+                      confidence: stockQueryDetection.confidence,
+                      extractionSource: extractedInfo.source,
+                      apiValidated: stockQueryDetection.queryType === 'api_validated'
+                    };
+                    
+                    lastMessage.stockInfo = stockData;
+                    
+                    console.log("✅ 已为个股查询添加股票信息:", stockData);
+                  } else {
+                    console.log("❌ 既未通过API验证也未通过本地检测，不显示股票操作按钮:", {
+                      isStockQuery: stockQueryDetection.isStockQuery,
+                      queryType: stockQueryDetection.queryType,
+                      reason: stockQueryDetection.reason
+                    });
+                    
+                    // 明确设置为不显示股票操作按钮
+                    lastMessage.hasStockInfo = false;
+                    lastMessage.stockInfo = null;
+                    lastMessage.isStockQuery = false;
+                  }
+                } catch (error) {
+                  console.error("❌ 个股查询API检测失败:", error);
+                  // API调用失败时也不显示股票操作按钮
+                  lastMessage.hasStockInfo = false;
+                  lastMessage.stockInfo = null;
+                  lastMessage.isStockQuery = false;
                 }
               }
             }

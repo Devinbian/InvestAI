@@ -603,7 +603,7 @@ onMounted(() => {
     }
 
     // 添加调试函数到全局，方便测试
-    window.debugWatchlistRegenerate = () => {
+    window.debugWatchlistRegenerate = async () => {
         console.log('🔧 调试：自选股重新生成功能');
         console.log('当前聊天历史长度:', chatHistory.value.length);
         console.log('当前聊天历史:', chatHistory.value.map(msg => ({
@@ -632,7 +632,7 @@ onMounted(() => {
         if (watchlistMessages.length > 0) {
             const latestMessage = watchlistMessages[watchlistMessages.length - 1];
             console.log('最新的自选股消息:', latestMessage);
-            console.log('消息类型判断:', determineMessageType(latestMessage));
+            console.log('消息类型判断:', await determineMessageType(latestMessage));
 
             // 检查消息索引
             const messageIndex = chatHistory.value.findIndex(msg => msg.id === latestMessage.id);
@@ -665,7 +665,7 @@ onMounted(() => {
     };
 
     // 添加通用的重新生成调试函数
-    window.debugRegenerate = (messageType = 'watchlist') => {
+    window.debugRegenerate = async (messageType = 'watchlist') => {
         console.log(`🔧 调试：${messageType} 重新生成功能`);
         console.log('当前isGenerating状态:', isGenerating.value);
 
@@ -715,7 +715,7 @@ onMounted(() => {
         if (targetMessages.length > 0) {
             const latestMessage = targetMessages[targetMessages.length - 1];
             console.log(`最新的${messageType}消息:`, latestMessage);
-            console.log('消息类型判断:', determineMessageType(latestMessage));
+            console.log('消息类型判断:', await determineMessageType(latestMessage));
             console.log('消息的isGenerating状态:', latestMessage.isGenerating);
             console.log('消息的content长度:', latestMessage.content?.length || 0);
 
@@ -1850,7 +1850,7 @@ const handleRegenerateMessage = async (data) => {
         });
 
         // 使用统一的消息类型判断逻辑
-        const messageType = determineMessageType(currentMessage, messageIndex);
+        const messageType = await determineMessageType(currentMessage, messageIndex);
         console.log('🔄 重新生成消息类型判断结果:', messageType);
 
         // 设置生成状态
@@ -1903,7 +1903,7 @@ const handleRegenerateMessage = async (data) => {
 };
 
 // 确定消息类型 - 使用更准确的判断逻辑
-const determineMessageType = (aiMessage, messageIndex) => {
+const determineMessageType = async (aiMessage, messageIndex) => {
     console.log('🔍 消息类型判断 - AI消息详情:', {
         messageType: aiMessage.messageType, // 预设的消息类型
         hasStockInfo: aiMessage.hasStockInfo,
@@ -1964,11 +1964,19 @@ const determineMessageType = (aiMessage, messageIndex) => {
     if (userMessage?.content) {
         const userContent = userMessage.content.toLowerCase();
 
-        // 个股查询检测 - 新增优先级检查
-        const stockQueryDetection = detectStockQuery(userMessage.content);
-        if (stockQueryDetection.isStockQuery) {
-            console.log('🔍 基于用户消息判断 - 个股查询:', stockQueryDetection);
-            return 'individual_stock_query';
+        // 个股查询检测 - 优先API验证，允许本地检测后备
+        try {
+            const stockQueryDetection = await detectStockQuery(userMessage.content);
+            if (stockQueryDetection.isStockQuery) {
+                if (stockQueryDetection.queryType === 'api_validated') {
+                    console.log('🔍 基于API验证判断 - 个股查询:', stockQueryDetection);
+                } else if (stockQueryDetection.queryType === 'local_detection') {
+                    console.log('🔍 基于本地检测判断 - 个股查询:', stockQueryDetection);
+                }
+                return 'individual_stock_query';
+            }
+        } catch (error) {
+            console.error('❌ 个股查询检测失败:', error);
         }
 
         // 基于用户消息内容判断

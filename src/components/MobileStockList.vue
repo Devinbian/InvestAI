@@ -1803,4 +1803,72 @@ onUnmounted(() => {
         transform: none;
     }
 }
+
+/* 移动端股票卡片中的操作按钮区域 */
+.mobile-actions {
+    margin-top: 12px;
+    padding-top: 12px;
+    border-top: 1px solid #e2e8f0;
+    overflow: hidden; /* 防止内容溢出 */
+}
+
+/* 针对移动端股票操作按钮的特殊优化 */
+.mobile-actions :deep(.stock-action-buttons) {
+    display: flex !important;
+    flex-wrap: nowrap !important; /* 保持一行显示 */
+    gap: 4px !important; /* 减小间距 */
+    width: 100% !important;
+    box-sizing: border-box !important;
+    overflow-x: auto !important; /* 如果内容过宽允许横向滚动 */
+    overflow-y: hidden !important;
+    -webkit-overflow-scrolling: touch !important; /* iOS平滑滚动 */
+}
+
+/* 移动端股票操作按钮尺寸限制 */
+.mobile-actions :deep(.stock-action-btn) {
+    flex: 0 0 auto !important; /* 不伸缩，保持内容宽度 */
+    min-width: 0 !important; /* 允许按钮收缩 */
+    padding: 5px 8px !important; /* 适当增加内边距 */
+    font-size: 0.7rem !important; /* 增大字体 */
+    height: 30px !important; /* 增加高度 */
+    white-space: nowrap !important;
+    overflow: hidden !important;
+    text-overflow: ellipsis !important;
+    box-sizing: border-box !important;
+    justify-content: center !important;
+    max-width: 95px !important; /* 增加单个按钮最大宽度 */
+}
+
+/* 价格标签在移动端的优化 */
+.mobile-actions :deep(.price-tag-container) {
+    margin-left: 3px !important;
+    gap: 1px !important;
+    flex-direction: column !important; /* 恢复纵向排列价格标签 */
+}
+
+.mobile-actions :deep(.price-tag) {
+    font-size: 0.5rem !important;
+    padding: 1px 3px !important;
+    line-height: 1.1 !important;
+    border-radius: 3px !important;
+}
+
+.mobile-actions :deep(.price-tag.original-price) {
+    display: inline-block !important; /* 恢复显示原价 */
+}
+
+/* 按钮图标和文字间距优化 */
+.mobile-actions :deep(.stock-action-btn) {
+    gap: 2px !important;
+}
+
+.mobile-actions :deep(.icon-text) {
+    font-size: 11px !important;
+}
+
+/* 移动端按钮内部SVG图标优化 */
+.mobile-actions :deep(.stock-action-btn svg) {
+    width: 12px !important;
+    height: 12px !important;
+}
 </style>

@@ -13,7 +13,7 @@ let flag = true;
 const request = axios.create({
   // API 请求的默认前缀
   baseURL: headUrl,
-  timeout: 6000, // 请求超时时间
+  timeout: 600000, // 请求超时时间
 });
 
 // request interceptor

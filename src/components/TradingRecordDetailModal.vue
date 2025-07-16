@@ -47,16 +47,16 @@
                         <h4 class="section-title">交易信息</h4>
                         <div class="detail-grid">
                             <div class="detail-item">
-                                <label>交易数量</label>
-                                <span>{{ record.quantity }}股</span>
+                                <label>{{ record.status === 'completed' ? '成交数量' : '委托数量' }}</label>
+                                <span>{{ record.status === 'completed' ? record.tradeQuantity : record.quantity }}股</span>
                             </div>
                             <div class="detail-item">
-                                <label>委托价格</label>
-                                <span>¥{{ record.price }}</span>
+                                <label>{{ record.status === 'completed' ? '成交价格' : '委托价格' }}</label>
+                                <span>¥{{ record.status === 'completed' ? record.tradePrice : record.price  }}</span>
                             </div>
                             <div class="detail-item">
-                                <label>交易金额</label>
-                                <span class="amount">¥{{ record.price*record.quantity }}</span>
+                                <label>{{ record.status === 'completed' ? '成交金额' : '交易金额' }}</label>
+                                <span class="amount">¥{{ record.status === 'completed' ? (record.tradePrice * record.tradeQuantity).toFixed(2) : (record.price * record.quantity).toFixed(2) }}</span>
                             </div>
                             <div v-if="record.fee !== undefined" class="detail-item">
                                 <label>手续费</label>
@@ -76,11 +76,11 @@
                         <h4 class="section-title">时间信息</h4>
                         <div class="detail-grid">
                             <div class="detail-item">
-                                <label>{{ isAIRecord ? '创建时间' : '执行时间' }}</label>
-                                <span>{{ formatDetailTime(record.createTime || record.executedAt) }}</span>
+                                <label>创建时间</label>
+                                <span>{{ formatDetailTime(record.createTime) }}</span>
                             </div>
-                            <div v-if="record.executedAt && isAIRecord" class="detail-item">
-                                <label>执行时间</label>
+                            <div v-if="record.executedAt && record.status ==='completed'" class="detail-item">
+                                <label>成交时间</label>
                                 <span>{{ formatDetailTime(record.executedAt) }}</span>
                             </div>
                             <div v-if="record.updatedAt" class="detail-item">
@@ -91,7 +91,7 @@
                                 class="detail-item">
                                 <label>委托时效</label>
                                 <span :class="getValidityStatusClass(record.validityDate)">
-                                    {{ formatValidityDate(record.validityDate) }}
+                                    {{ record.validityDate }}
                                 </span>
                             </div>
                             <div v-if="isAIRecord && record.status === 'cancelled' && record.cancelledAt"
@@ -221,16 +221,16 @@
                 <h4 class="section-title">交易信息</h4>
                 <div class="detail-grid">
                     <div class="detail-item">
-                        <label>交易数量</label>
-                        <span>{{ record.quantity }}股</span>
+                        <label>{{ record.status === 'completed' ? '成交数量' : '委托数量' }}</label>
+                        <span>{{ record.status === 'completed' ? record.tradeQuantity : record.quantity }}股</span>
                     </div>
                     <div class="detail-item">
-                        <label>委托价格</label>
-                        <span>¥{{ record.price  }}</span>
+                        <label>{{ record.status === 'completed' ? '成交价格' : '委托价格' }}</label>
+                        <span>¥{{ record.status === 'completed' ? record.tradePrice : record.price  }}</span>
                     </div>
                     <div class="detail-item">
-                        <label>交易金额</label>
-                        <span class="amount">¥{{ record.price*record.quantity }}</span>
+                        <label>{{ record.status === 'completed' ? '成交金额' : '交易金额' }}</label>
+                        <span class="amount">¥{{ record.status === 'completed' ? (record.tradePrice * record.tradeQuantity).toFixed(2) : (record.price * record.quantity).toFixed(2) }}</span>
                     </div>
                     <div v-if="record.fee !== undefined" class="detail-item">
                         <label>手续费</label>
@@ -250,11 +250,11 @@
                 <h4 class="section-title">时间信息</h4>
                 <div class="detail-grid">
                     <div class="detail-item">
-                        <label>{{ isAIRecord ? '创建时间' : '执行时间' }}</label>
-                        <span>{{ formatDetailTime(record.createTime || record.executedAt) }}</span>
+                        <label>创建时间</label>
+                        <span>{{ formatDetailTime(record.createTime) }}</span>
                     </div>
-                    <div v-if="record.executedAt && isAIRecord" class="detail-item">
-                        <label>执行时间</label>
+                    <div v-if="record.executedAt && record.status ==='completed'" class="detail-item">
+                        <label>成交时间</label>
                         <span>{{ formatDetailTime(record.executedAt) }}</span>
                     </div>
                     <div v-if="record.updatedAt" class="detail-item">
@@ -264,7 +264,7 @@
                     <div v-if="isAIRecord && record.status === 'pending' && record.validityDate" class="detail-item">
                         <label>委托时效</label>
                         <span :class="getValidityStatusClass(record.validityDate)">
-                            {{ formatValidityDate(record.validityDate) }}
+                            {{ record.validityDate }}
                         </span>
                     </div>
                     <div v-if="record.status === 'cancelled' && record.cancelledAt" class="detail-item">

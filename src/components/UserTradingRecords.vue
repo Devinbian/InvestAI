@@ -99,10 +99,10 @@
                     </div>
 
                     <div class="record-content">
-                        <h4 class="record-title">{{ record.stockName }}({{ record.stockCode }})</h4>
+                        <h4 class="record-title">{{ record.name }}({{ record.code }})</h4>
                         <div class="record-info">
                             <div class="info-item">
-                                <span class="label">数量：</span>
+                                <span class="label">委托数量：</span>
                                 <span class="value">{{ record.quantity }}股</span>
                             </div>
                             <div class="info-item">
@@ -111,7 +111,7 @@
                             </div>
                             <div class="info-item">
                                 <span class="label">交易金额：</span>
-                                <span class="value amount">¥{{ record.totalAmount.toLocaleString() }}</span>
+                                <span class="value amount">¥{{ record.totalAmount.toFixed(2) }}</span>
                             </div>
                             <div class="info-item">
                                 <span class="label">手续费：</span>
@@ -273,6 +273,11 @@ const orderStatusMap = {
     5: 'failed',
 }
 
+// 交易方向标签类型
+const orderDirectionMap = {
+    1: 'buy',
+    2: 'sell'
+}
 
 // 获取股票委托记录
 const getStockOrderRecordRequest = async () => {
@@ -292,22 +297,23 @@ const getStockOrderRecordRequest = async () => {
 
 const formatPortfolioStocks = (records) => {
     records = records || [];
-    return records.map(record => {  
-        // 全部成交则计算实际成交额，否则计算委托成交额
-        let totalAmount = record.status === 3 ? record.tradePrice * record.tradeQuantity : record.price * record.quantity;
+    return records.map(record => {
         return {
             id: record.id,
-            stockCode: record.code,
-            stockName: record.stockName,
-            totalAmount: totalAmount,
+            code: record.code,
+            name: record.stockName,
+            totalAmount: record.price * record.quantity,
             createdAt: record.createTime,
             fee: record.serviceFee || 0,
-            price: record.status === 3 ? record.tradePrice : record.price,
-            quantity: record.status === 3 ? record.tradeQuantity: record.quantity,
+            price: record.price,
+            quantity:record.quantity,
             type: record.direction,
             status: record.status,
             cancelledAt: record.status === 4 ? record.updateTime : '',
             executedAt: record.tradeTime,
+            tradePrice: record.tradePrice,
+            tradeQuantity: record.tradeQuantity,
+            tradeAmount: (record.tradePrice || 0) * (record.tradeQuantity || 0).toFixed(2),
         }
     })
 };
@@ -349,8 +355,8 @@ const filteredRecords = computed(() => {
     if (filterKeyword.value) {
         const keyword = filterKeyword.value.toLowerCase();
         records = records.filter(record =>
-            record.stockName.toLowerCase().includes(keyword) ||
-            record.stockCode.toLowerCase().includes(keyword)
+            record.name.toLowerCase().includes(keyword) ||
+            record.code.toLowerCase().includes(keyword)
         );
     }
 
@@ -456,32 +462,34 @@ const formatTime = computed(() => {
 
 // 查看记录详情
 const viewRecord = (record) => {
-    // record.type = record.type === 1 ? 'buy' : 'sell';
-    // record.status = orderStatusMap[record.status];
-    // selectedRecord.value = record;
-    // detailModalVisible.value = true;
+    let data = {
+            id: record.id,
+            code: record.code,
+            name: record.name,
+            createTime: record.createdAt,
+            fee: record.fee || 0,
+            price: record.price,
+            quantity: record.quantity,
+            type: orderDirectionMap[record.type],
+            status: orderStatusMap[record.status],
+            cancelledAt: record.cancelledAt,
+            executedAt: record.executedAt,
+            tradePrice: record.tradePrice,
+            tradeQuantity: record.tradeQuantity,
+    };
+    selectedRecord.value = data;
+    detailModalVisible.value = true;
 };
 
 // 处理记录操作
 const handleRecordAction = async (command, record) => {
     switch (command) {
         case 'view':
-            //viewRecord(record);
+            viewRecord(record);
             break;
         case 'cancel':
-            //cancelTransaction(record.id);
+            handleCancelOrder(record.id);
             break;
-    }
-};
-
-// 取消交易操作
-const cancelTransaction = (recordId) => {
-    const success = userStore.cancelUserTradingRecord(recordId);
-
-    if (success) {
-        ElMessage.success('撤单成功');
-    } else {
-        ElMessage.error('撤单失败');
     }
 };
 
@@ -515,7 +523,7 @@ const handleCancelOrder = async (orderId) => {
 
 // 处理详情弹窗中的取消记录操作
 const handleCancelRecord = (record) => {
-    cancelTransaction(record.id);
+    handleCancelOrder(record.id);
     detailModalVisible.value = false;
 };
 

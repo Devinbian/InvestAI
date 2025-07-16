@@ -104,7 +104,7 @@
                         <h4 class="record-title">{{ record.name }}({{ record.code }})</h4>
                         <div class="record-info">
                             <div class="info-item">
-                                <span class="label">数量：</span>
+                                <span class="label">委托数量：</span>
                                 <span class="value">{{ record.quantity }}股</span>
                             </div>
                             <div class="info-item">
@@ -112,8 +112,8 @@
                                 <span class="value">¥{{ record.price }}</span>
                             </div>
                             <div class="info-item">
-                                <span class="label">总金额：</span>
-                                <span class="value amount">¥{{ record.quantity*record.price }}</span>
+                                <span class="label">交易金额：</span>
+                                <span class="value amount">¥{{ (record.quantity * record.price).toFixed(2) }}</span>
                             </div>
                             <div v-if="record.profit !== undefined" class="info-item">
                                 <span class="label">盈亏：</span>
@@ -292,6 +292,10 @@ const fetchData = async () => {
             allRecords.value = res.data.data;
             console.log('获取到的AI交易记录原始数据:', res.data.data);
             allRecords.value.forEach(record => {
+                record.cancelledAt = record.cancelTime;
+                record.executedAt = record.tradeTime;
+                record.validityDate = record.expireTime;
+                record.fee = record.serviceFee || 0;
                 record.type==1?record.type='buy':record.type='sell';
                 if(record.status==1)record.status='pending';
                 else if(record.status==3)record.status='completed';
@@ -544,7 +548,7 @@ const handleRecordAction = async (command, record) => {
             viewRecord(record);
             break;
         case 'cancel':
-            await cancelOrder(record.stockOrderId);
+            await handleCancelOrder(record);
             break;
     }
 };
@@ -580,7 +584,7 @@ const handleCancelOrder = async (record) => {
     
     try {
         await ElMessageBox.confirm(
-            `确定要撤销这笔委托吗？\n\n股票：${record.name}(${record.code})\n类型：${record.type === 'buy' ? '买入' : '卖出'}\n数量：${record.quantity}股\n价格：¥${record.price}`,
+            `确定要撤销这笔委托吗？`,
             '撤销委托确认',
             {
                 confirmButtonText: '确定撤销',
@@ -600,7 +604,7 @@ const handleCancelOrder = async (record) => {
 
 // 处理详情弹窗中的取消记录操作
 const handleCancelRecord = (record) => {
-    cancelOrder(record.stockOrderId);
+    handleCancelOrder(record);
     detailModalVisible.value = false;
 };
 

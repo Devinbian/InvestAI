@@ -63,7 +63,9 @@ const api = {
   //record
   analyzeRecordApi:"/record/analyze",// 量化分析报告记录
   aiTradeRecordApi:"/record/ai-trade", //ai交易
-  cancelAiTradeApi:"/record/ai-trade/cancel" // AI交易撤销
+  cancelAiTradeApi:"/record/ai-trade/cancel", // AI交易撤销
+
+  validateStockApi: "/stock/validate", // 验证是否为股票
 };
 
 export default api;
@@ -200,5 +202,10 @@ export const getUserAsset = () => request.get(api.userAssetApi);
 
 // 获取用户智点记录
 export const getPointRecord = (params) => request.get(api.pointRecordApi, {
+  params
+});
+
+// 验证是否为股票
+export const validateStock = (params) => request.get(api.validateStockApi, {
   params
 });

@@ -986,28 +986,14 @@ const getUserAssetRequest = async () => {
 
   // 付费AI委托交易
   const showQuantAnalysisDialog = (stock, isChatMode) => {
+    // 切换到聊天模式
+    if (isChatMode.value) {
+      isChatMode.value = true;
+    }
 
-    ElMessageBox.confirm(
-      `AI委托交易 ${stock.name}(${stock.code}) 促销价仅需 1 智点（原价3智点），是否继续？`,
-      "付费服务确认",
-      {
-        confirmButtonText: "确认支付 1 智点",
-        cancelButtonText: "取消",
-        type: "warning",
-        customClass: "paid-service-dialog high-z-index-dialog",
-        appendTo: "body",
-      },
-    ).then(() => {
-        // 切换到聊天模式
-        if (isChatMode.value) {
-          isChatMode.value = true;
-        }
-
-        // 显示AI委托交易设置对话框
-        showAITradingDialog.value = true;
-        selectedStockForAITrading.value = stock;
-
-    })
+    // 显示AI委托交易设置对话框
+    showAITradingDialog.value = true;
+    selectedStockForAITrading.value = stock;
   };
 
   // 处理AI委托交易确认事件

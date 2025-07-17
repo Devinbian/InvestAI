@@ -14,8 +14,8 @@
         <div v-if="stock && isQuantAnalyzing" class="quant-analyzing-container">
             <div class="quant-analyzing-content">
                 <div class="stock-info-mini">
-                    <h3>{{ stock.name || '未知股票' }}</h3>
-                    <span class="stock-code">{{ stock.code || '000000' }}</span>
+                    <h3>{{ stock.name || '' }}</h3>
+                    <span class="stock-code">{{ stock.code || '' }}</span>
                 </div>
 
                 <div class="analyzing-animation">
@@ -68,8 +68,8 @@
             <div class="stock-header">
                 <div class="stock-left">
                     <div class="stock-name-section">
-                        <h3>{{ stock.name || '未知股票' }}</h3>
-                        <span class="stock-code">{{ stock.code || '000000' }}</span>
+                        <h3>{{ stock.name || '' }}</h3>
+                        <span class="stock-code">{{ stock.code || '' }}</span>
                     </div>
                     <span class="current-price">¥{{ stock.price || stock.currentPrice || '0.00' }}</span>
                 </div>
@@ -245,9 +245,9 @@
         <template #footer>
             <div class="dialog-footer">
                 <el-button @click="handleCancel">取消</el-button>
-                <el-button type="primary" @click="handleConfirm" :loading="loading">
-                    <span class="confirm-text">确认委托 (1智点)</span>
-                    <span class="confirm-text-mobile">确认 (1智点)</span>
+                <el-button :disabled=" !quantAnalysisCompleted " type="primary" @click="handleConfirm" :loading="loading">
+                    <span v-if= "!isMobile" class="confirm-text">确认委托 (1智点)</span>
+                    <span v-else class="confirm-text-mobile">确认 (1智点)</span>
                 </el-button>
             </div>
         </template>
@@ -297,14 +297,15 @@ const startQuantAnalysis = () => {
     // 步骤进度定时器
     stepTimer = setInterval(() => {
         if (currentStep.value < 4) {
+            progressPercent.value = Math.min((currentStep.value / 4) * 100, 100);
+            console.log('🚀 AITradingDialog - 步骤进度:', progressPercent.value);
+            console.log('🚀 AITradingDialog - 当前步骤:', currentStep.value);
             currentStep.value++;
-            progressPercent.value = (currentStep.value / 4) * 100;
-
             if (currentStep.value <= analysisTips.length) {
-                currentTip.value = analysisTips[currentStep.value - 1];
+                currentTip.value = analysisTips[currentStep.value];
             }
         }
-    }, 1000);
+    }, 2000);
 
     // 真正调用后台量化分析接口
     if (props.stock && props.stock.code) {
@@ -325,13 +326,13 @@ const performRealQuantAnalysis = async (stockCode) => {
         }
         console.log('📊 AITradingDialog - 使用会话ID:', conversationId);
 
-        let quantAnalysisCompleted = false;
+        quantAnalysisCompleted.value = false;
         let quantAnalysisResult = '';
 
         // 完成量化分析的处理函数
         const finishQuantAnalysis = () => {
-            if (!quantAnalysisCompleted) {
-                quantAnalysisCompleted = true;
+            if (!quantAnalysisCompleted.value) {
+                quantAnalysisCompleted.value = true;
 
                 // 确保动画至少运行4.5秒
                 const minAnimationTime = 4500;
@@ -371,17 +372,6 @@ const performRealQuantAnalysis = async (stockCode) => {
                     if (data && data.content) {
                         quantAnalysisResult += data.content;
                         console.log('📈 AITradingDialog - receiving quant analysis data:', data.content.substring(0, 100) + '...');
-
-                        // 根据接收到的内容更新进度提示
-                        if (data.content.includes('技术指标') || data.content.includes('RSI') || data.content.includes('MACD')) {
-                            currentTip.value = '正在分析技术指标RSI、MACD、KDJ...';
-                        } else if (data.content.includes('基本面') || data.content.includes('财务') || data.content.includes('PE')) {
-                            currentTip.value = '正在评估基本面财务指标...';
-                        } else if (data.content.includes('风险') || data.content.includes('收益')) {
-                            currentTip.value = '正在计算风险收益比...';
-                        } else if (data.content.includes('策略') || data.content.includes('建议')) {
-                            currentTip.value = '正在生成最优交易策略...';
-                        }
                     }
                 } catch (error) {
                     console.error('❌ AITradingDialog - error processing SSE data:', error);
@@ -544,15 +534,15 @@ const isQuantAnalyzing = ref(false);
 const currentStep = ref(0);
 const progressPercent = ref(0);
 const currentTip = ref('');
+const quantAnalysisCompleted = ref(false)
 
 // 分析提示语
 const analysisTips = [
     '正在获取实时市场数据...',
-    '分析技术指标RSI、MACD、KDJ...',
-    '评估基本面财务指标...',
-    '计算风险收益比...',
-    '生成最优交易策略...',
-    '策略验证完成，准备委托设置'
+    '正在分析技术指标RSI、MACD、KDJ...',
+    '正在评估基本面财务指标...',
+    '正在生成最优交易策略...',
+    '正在验证交易策略...'
 ];
 
 let analysisTimer = null;

@@ -10,7 +10,60 @@
             <p class="debug-text">请确保已正确选择股票</p>
         </div>
 
-        <div v-if="stock" class="ai-trading-content">
+        <!-- 量化分析加载状态 -->
+        <div v-if="stock && isQuantAnalyzing" class="quant-analyzing-container">
+            <div class="quant-analyzing-content">
+                <div class="stock-info-mini">
+                    <h3>{{ stock.name || '未知股票' }}</h3>
+                    <span class="stock-code">{{ stock.code || '000000' }}</span>
+                </div>
+
+                <div class="analyzing-animation">
+                    <div class="analyzing-icon">
+                        <div class="spinner"></div>
+                        <div class="analyzing-symbol">📊</div>
+                    </div>
+                    <div class="analyzing-text">
+                        <h4>正在进行量化分析...</h4>
+                        <p class="analyzing-desc">AI正在分析{{ stock.name }}的技术指标和基本面数据，为您制定最优交易策略</p>
+                        <p class="real-analysis-hint">🤖 正在调用后台AI引擎进行实时量化分析</p>
+                    </div>
+                </div>
+
+                <div class="analyzing-progress">
+                    <div class="progress-steps">
+                        <div class="step" :class="{ 'active': currentStep >= 1, 'completed': currentStep > 1 }">
+                            <div class="step-icon">📈</div>
+                            <span class="step-text">技术分析</span>
+                        </div>
+                        <div class="step" :class="{ 'active': currentStep >= 2, 'completed': currentStep > 2 }">
+                            <div class="step-icon">💰</div>
+                            <span class="step-text">基本面分析</span>
+                        </div>
+                        <div class="step" :class="{ 'active': currentStep >= 3, 'completed': currentStep > 3 }">
+                            <div class="step-icon">🎯</div>
+                            <span class="step-text">策略生成</span>
+                        </div>
+                        <div class="step" :class="{ 'active': currentStep >= 4, 'completed': currentStep > 4 }">
+                            <div class="step-icon">✅</div>
+                            <span class="step-text">完成</span>
+                        </div>
+                    </div>
+                    <div class="progress-bar">
+                        <div class="progress-fill" :style="{ width: progressPercent + '%' }"></div>
+                    </div>
+                </div>
+
+                <div class="analyzing-tips">
+                    <div class="tip-item">
+                        <span class="tip-icon">💡</span>
+                        <span class="tip-text">{{ currentTip }}</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div v-if="stock && !isQuantAnalyzing" class="ai-trading-content">
             <!-- 股票信息头部 -->
             <div class="stock-header">
                 <div class="stock-left">
@@ -62,15 +115,8 @@
                                     <span v-else>最低卖出价格</span>
                                 </label>
                                 <div class="price-input-container">
-                                    <el-input-number 
-                                        v-model="form.limitPrice" 
-                                        :min="0.01" 
-                                        :precision="2" 
-                                        :step="0.01" 
-                                        class="price-input" 
-                                        controls-position="right"
-                                        placeholder="请输入价格" 
-                                    />
+                                    <el-input-number v-model="form.limitPrice" :min="0.01" :precision="2" :step="0.01"
+                                        class="price-input" controls-position="right" placeholder="请输入价格" />
                                     <span class="price-unit">元</span>
                                 </div>
                             </div>
@@ -87,6 +133,15 @@
                                         <span v-else class="logic-text">
                                             💡 卖出时，AI将在价格不低于此限价时执行交易
                                         </span>
+                                        <!-- 显示价格调整信息 -->
+                                        <div v-if="userAdjustedPrice && userPriceOffset[form.action] !== 0"
+                                            class="price-adjustment-info">
+                                            <span class="adjustment-icon">👤</span>
+                                            <span class="adjustment-text">
+                                                您已调整价格{{ userPriceOffset[form.action] > 0 ? '+' : '' }}{{
+                                                    (userPriceOffset[form.action] * 100).toFixed(1) }}%
+                                            </span>
+                                        </div>
                                     </div>
                                 </div>
                             </div>
@@ -111,7 +166,7 @@
                                     {{ plan.strategy }}
                                 </div>
                             </div>
-                            
+
                             <div v-if="plan.factors && plan.factors.length > 0" class="factors-item">
                                 <div class="factors-header">
                                     <span class="factors-icon">📊</span>
@@ -149,10 +204,12 @@
                                 <div class="time-option-selector">
                                     <el-radio-group v-model="form.timeInForceType" class="time-options">
                                         <el-radio value="DAY" class="time-option" :disabled="isAfterMarketClose()">
-                                            <div class="option-content" :class="{ 'disabled-option': isAfterMarketClose() }">
+                                            <div class="option-content"
+                                                :class="{ 'disabled-option': isAfterMarketClose() }">
                                                 <span class="option-title">当日有效</span>
                                                 <span class="option-time">{{ getTodayEndTime() }}</span>
-                                                <span v-if="isAfterMarketClose()" class="disabled-reason">（已过收盘时间）</span>
+                                                <span v-if="isAfterMarketClose()"
+                                                    class="disabled-reason">（已过收盘时间）</span>
                                             </div>
                                         </el-radio>
                                         <el-radio value="QUANT" class="time-option">
@@ -198,11 +255,15 @@
 </template>
 
 <script setup>
-import { getStockPlan,exeuteTradePlan } from '@/api/api.js';
-import { ref, onMounted, reactive, watch, computed } from 'vue';
+import { getStockPlan, exeuteTradePlan } from '@/api/api.js';
+import { ref, onMounted, reactive, watch, computed, nextTick } from 'vue';
 import { useUserStore } from '../store/user';
+import { useChatHistoryStore } from '../store/chatHistory';
 import { ArrowDown, ArrowUp } from '@element-plus/icons-vue';
 import { ElMessage, ElMessageBox } from 'element-plus';
+import { authFetchEventSource } from '@/utils/request';
+import { processSSEData } from '@/utils/sseDecoder';
+import { headUrl } from '@/config/baseUrl';
 
 // Props
 const props = defineProps({
@@ -225,16 +286,224 @@ const plan = ref({
     riskLevel: null,
 });
 
+// 开始量化分析动画和真实分析
+const startQuantAnalysis = () => {
+    isQuantAnalyzing.value = true;
+    currentStep.value = 0;
+    progressPercent.value = 0;
+    currentTip.value = analysisTips[0];
+    analysisStartTime = Date.now(); // 记录开始时间
+
+    // 步骤进度定时器
+    stepTimer = setInterval(() => {
+        if (currentStep.value < 4) {
+            currentStep.value++;
+            progressPercent.value = (currentStep.value / 4) * 100;
+
+            if (currentStep.value <= analysisTips.length) {
+                currentTip.value = analysisTips[currentStep.value - 1];
+            }
+        }
+    }, 1000);
+
+    // 真正调用后台量化分析接口
+    if (props.stock && props.stock.code) {
+        performRealQuantAnalysis(props.stock.code);
+    }
+};
+
+// 执行真实的量化分析
+const performRealQuantAnalysis = async (stockCode) => {
+    try {
+        console.log('🚀 AITradingDialog - starting real quant analysis for:', stockCode);
+
+        // 获取当前会话ID，如果没有则创建新会话
+        let conversationId = chatHistoryStore.currentChatId;
+        if (!conversationId) {
+            console.log('📊 AITradingDialog - 创建新会话用于量化分析');
+            conversationId = await chatHistoryStore.getConversationId();
+        }
+        console.log('📊 AITradingDialog - 使用会话ID:', conversationId);
+
+        let quantAnalysisCompleted = false;
+        let quantAnalysisResult = '';
+
+        // 完成量化分析的处理函数
+        const finishQuantAnalysis = () => {
+            if (!quantAnalysisCompleted) {
+                quantAnalysisCompleted = true;
+
+                // 确保动画至少运行4.5秒
+                const minAnimationTime = 4500;
+                const elapsedTime = Date.now() - analysisStartTime;
+                const remainingTime = Math.max(0, minAnimationTime - elapsedTime);
+
+                setTimeout(() => {
+                    stopQuantAnalysis();
+
+                    // 显示分析完成提示
+                    console.log('✅ AITradingDialog - 量化分析完成，共接收数据:', quantAnalysisResult.length, '字符');
+
+                    // 量化分析完成后，获取股票计划数据
+                    loadQuantData(stockCode);
+                }, remainingTime);
+            }
+        };
+
+        // 调用真实的量化分析流式接口
+        const abortController = new AbortController();
+
+        authFetchEventSource(`${headUrl}/chat/analyzeStock?conversationId=${conversationId}&stock=${encodeURIComponent(stockCode)}`, {
+            method: 'GET',
+            signal: abortController.signal,
+            retryInterval: 0,
+            backoffMultiplier: 0,
+
+            onopen: async (response) => {
+                console.log('📊 AITradingDialog - quant analysis connection opened');
+            },
+
+            onmessage: (event) => {
+                try {
+                    const rawData = event.data;
+                    const data = processSSEData(rawData, "量化分析");
+
+                    if (data && data.content) {
+                        quantAnalysisResult += data.content;
+                        console.log('📈 AITradingDialog - receiving quant analysis data:', data.content.substring(0, 100) + '...');
+
+                        // 根据接收到的内容更新进度提示
+                        if (data.content.includes('技术指标') || data.content.includes('RSI') || data.content.includes('MACD')) {
+                            currentTip.value = '正在分析技术指标RSI、MACD、KDJ...';
+                        } else if (data.content.includes('基本面') || data.content.includes('财务') || data.content.includes('PE')) {
+                            currentTip.value = '正在评估基本面财务指标...';
+                        } else if (data.content.includes('风险') || data.content.includes('收益')) {
+                            currentTip.value = '正在计算风险收益比...';
+                        } else if (data.content.includes('策略') || data.content.includes('建议')) {
+                            currentTip.value = '正在生成最优交易策略...';
+                        }
+                    }
+                } catch (error) {
+                    console.error('❌ AITradingDialog - error processing SSE data:', error);
+                }
+            },
+
+            onerror: (error) => {
+                console.error('❌ AITradingDialog - quant analysis error:', error);
+                // 即使出错也要完成流程
+                finishQuantAnalysis();
+            },
+
+            onclose: () => {
+                console.log('✅ AITradingDialog - quant analysis completed');
+                finishQuantAnalysis();
+            }
+        }).catch((error) => {
+            console.error('❌ AITradingDialog - authFetchEventSource error:', error);
+            finishQuantAnalysis();
+        });
+
+    } catch (error) {
+        console.error('❌ AITradingDialog - performRealQuantAnalysis error:', error);
+        // 出错时也要完成流程，避免界面卡住
+        setTimeout(() => {
+            stopQuantAnalysis();
+            loadQuantData(stockCode);
+        }, 2000);
+    }
+};
+
+// 停止量化分析动画
+const stopQuantAnalysis = () => {
+    if (stepTimer) {
+        clearInterval(stepTimer);
+        stepTimer = null;
+    }
+    if (analysisTimer) {
+        clearTimeout(analysisTimer);
+        analysisTimer = null;
+    }
+    isQuantAnalyzing.value = false;
+    currentStep.value = 0;
+    progressPercent.value = 0;
+};
+
+// 加载量化数据
+const loadQuantData = async (stockCode) => {
+    try {
+        console.log('📊 AITradingDialog - loading quant data for:', stockCode);
+
+        const res = await getStockPlan(stockCode);
+        console.log('📊 AITradingDialog - getStockPlan response:', res);
+
+        if (res.data.success && res.data.data) {
+            if (res.data.data.factors) {
+                res.data.data.factors = JSON.parse(res.data.data.factors);
+            }
+            // 合并API数据和默认数据
+            plan.value = {
+                ...plan.value,
+                ...res.data.data
+            };
+            console.log('✅ AITradingDialog - plan updated:', plan.value);
+
+            // 保存量化分析的原始价格
+            originalQuantPrice.value = {
+                buy: plan.value.buyPrice ? parseFloat(plan.value.buyPrice) : null,
+                sell: plan.value.sellPrice ? parseFloat(plan.value.sellPrice) : null
+            };
+
+            // 设置基准价格（用于计算用户偏移）
+            const currentStockPrice = parseFloat(props.stock?.price || props.stock?.currentPrice || 0);
+            basePrices.value = {
+                buy: originalQuantPrice.value.buy || currentStockPrice,
+                sell: originalQuantPrice.value.sell || currentStockPrice
+            };
+
+            // 只在初次加载时设置价格，避免覆盖用户调整
+            if (!priceInitialized.value) {
+                // 根据当前交易方向设置初始价格
+                if (form.action === 'buy' && basePrices.value.buy) {
+                    form.limitPrice = basePrices.value.buy;
+                } else if (form.action === 'sell' && basePrices.value.sell) {
+                    form.limitPrice = basePrices.value.sell;
+                } else if (currentStockPrice > 0) {
+                    // 如果没有量化价格，使用当前价格
+                    form.limitPrice = currentStockPrice;
+                }
+                priceInitialized.value = true;
+                console.log('💰 AITradingDialog - price initialized:', form.limitPrice);
+            }
+        }
+    } catch (error) {
+        console.error('❌ AITradingDialog - getStockPlan error:', error);
+        // 即使API失败，也保持默认的策略信息
+
+        // 如果API失败且价格未初始化，使用股票当前价格
+        if (!priceInitialized.value && props.stock && props.stock.price) {
+            form.limitPrice = parseFloat(props.stock.price || props.stock.currentPrice);
+            priceInitialized.value = true;
+        }
+    }
+};
+
 watch(() => props.stock, (newStock) => {
     console.log('🔍 AITradingDialog - stock changed:', newStock);
-    
+
     if (newStock && newStock.code) {
-        // 初始化限价
+        // 重置价格状态
+        priceInitialized.value = false;
+        userAdjustedPrice.value = false;
+        originalQuantPrice.value = { buy: null, sell: null };
+        userPriceOffset.value = { buy: 0, sell: 0 };
+        basePrices.value = { buy: null, sell: null };
+
+        // 初始化限价（临时设置，最终以量化分析结果为准）
         const currentPrice = parseFloat(newStock.price || newStock.currentPrice || 0);
         if (currentPrice > 0) {
             form.limitPrice = currentPrice;
         }
-        
+
         // 先设置默认的量化策略信息
         plan.value = {
             buyPrice: null,
@@ -250,29 +519,9 @@ watch(() => props.stock, (newStock) => {
             ],
             riskLevel: "中风险"
         };
-        
-        getStockPlan(newStock.code).then((res) => {
-            console.log('📊 AITradingDialog - getStockPlan response:', res);
-            if (res.data.success && res.data.data) {
-                if(res.data.data.factors){
-                    res.data.data.factors = JSON.parse(res.data.data.factors);
-                }
-                // 合并API数据和默认数据
-                plan.value = {
-                    ...plan.value,
-                    ...res.data.data
-                };
-                console.log('✅ AITradingDialog - plan updated:', plan.value);
-                
-                // 如果有推荐买入价，使用推荐价格
-                if (plan.value && plan.value.buyPrice) {
-                    form.limitPrice = parseFloat(plan.value.buyPrice);
-                }
-            }
-        }).catch(error => {
-            console.error('❌ AITradingDialog - getStockPlan error:', error);
-            // 即使API失败，也保持默认的策略信息
-        });
+
+        // 不直接调用API，而是先开始量化分析动画
+        // 在动画结束后再调用API获取数据
     } else {
         console.warn('⚠️ AITradingDialog - invalid stock data:', newStock);
     }
@@ -283,11 +532,39 @@ const emit = defineEmits(['update:modelValue', 'ai-trading-confirmed']);
 
 // Store
 const userStore = useUserStore();
+const chatHistoryStore = useChatHistoryStore();
 
 // 响应式数据
 const loading = ref(false);
 const scrollContainer = ref(null);
 let timeCheckTimer = null;
+
+// 量化分析状态
+const isQuantAnalyzing = ref(false);
+const currentStep = ref(0);
+const progressPercent = ref(0);
+const currentTip = ref('');
+
+// 分析提示语
+const analysisTips = [
+    '正在获取实时市场数据...',
+    '分析技术指标RSI、MACD、KDJ...',
+    '评估基本面财务指标...',
+    '计算风险收益比...',
+    '生成最优交易策略...',
+    '策略验证完成，准备委托设置'
+];
+
+let analysisTimer = null;
+let stepTimer = null;
+let analysisStartTime = null; // 记录分析开始时间
+
+// 价格管理状态
+const priceInitialized = ref(false); // 标记价格是否已初始化
+const userAdjustedPrice = ref(false); // 标记用户是否手动调整过价格
+const originalQuantPrice = ref({ buy: null, sell: null }); // 保存量化分析的原始价格
+const userPriceOffset = ref({ buy: 0, sell: 0 }); // 保存用户的价格偏移偏好（相对于基准价格）
+const basePrices = ref({ buy: null, sell: null }); // 保存基准价格（用于计算偏移）
 
 // 检测移动端和微信浏览器
 const isMobile = computed(() => {
@@ -324,18 +601,77 @@ const form = reactive({
     quantValidityEndTime: null,
 });
 
-// 监听交易方向变化，更新限价
-watch(() => form.action, (newAction) => {
-    if (props.stock && props.stock.price) {
-        const currentPrice = parseFloat(props.stock.price || props.stock.currentPrice);
-        if (currentPrice > 0) {
-            if (newAction === 'buy') {
-                // 买入时，使用推荐买入价或当前价格
-                form.limitPrice = (plan.value && plan.value.buyPrice) ? parseFloat(plan.value.buyPrice) : currentPrice;
-            } else {
-                // 卖出时，使用推荐卖出价或当前价格
-                form.limitPrice = (plan.value && plan.value.sellPrice) ? parseFloat(plan.value.sellPrice) : currentPrice;
-            }
+// 监听交易方向变化，智能更新限价
+watch(() => form.action, (newAction, oldAction) => {
+    console.log('🔄 AITradingDialog - action changed:', oldAction, '->', newAction, 'userAdjusted:', userAdjustedPrice.value);
+
+    // 如果还没有初始化，跳过
+    if (!priceInitialized.value) {
+        return;
+    }
+
+    // 获取新方向的基准价格
+    const newBasePrice = basePrices.value[newAction];
+    if (!newBasePrice || newBasePrice <= 0) {
+        console.warn('⚠️ AITradingDialog - no base price for action:', newAction);
+        return;
+    }
+
+    let newPrice = newBasePrice;
+
+    // 如果用户已经调整过这个方向的价格，应用用户的偏好
+    if (userAdjustedPrice.value && userPriceOffset.value[newAction] !== 0) {
+        // 应用用户之前在这个方向上的价格偏好
+        newPrice = newBasePrice * (1 + userPriceOffset.value[newAction]);
+        console.log('💡 AITradingDialog - applying user price preference:', {
+            action: newAction,
+            basePrice: newBasePrice,
+            offset: (userPriceOffset.value[newAction] * 100).toFixed(2) + '%',
+            newPrice: newPrice.toFixed(2)
+        });
+    } else {
+        // 使用基准价格（量化分析推荐价格或股票当前价格）
+        console.log('💰 AITradingDialog - using base price:', {
+            action: newAction,
+            basePrice: newBasePrice
+        });
+    }
+
+    // 临时禁用价格监听，避免触发用户调整检测
+    const tempDisableWatch = () => {
+        priceInitialized.value = false;
+        form.limitPrice = parseFloat(newPrice.toFixed(2));
+        // 下一个tick重新启用监听
+        nextTick(() => {
+            priceInitialized.value = true;
+        });
+    };
+
+    tempDisableWatch();
+});
+
+// 监听价格变化，检测用户是否手动调整并记录偏好
+watch(() => form.limitPrice, (newPrice, oldPrice) => {
+    // 如果价格已经初始化，且价格发生变化，说明用户手动调整了
+    if (priceInitialized.value && oldPrice !== undefined && newPrice !== oldPrice) {
+        userAdjustedPrice.value = true;
+
+        // 计算并保存用户的价格偏移偏好
+        const currentAction = form.action;
+        const basePrice = basePrices.value[currentAction];
+
+        if (basePrice && basePrice > 0) {
+            // 计算相对偏移（百分比）
+            const offset = (newPrice - basePrice) / basePrice;
+            userPriceOffset.value[currentAction] = offset;
+
+            console.log('👤 AITradingDialog - user adjusted price:', {
+                action: currentAction,
+                from: oldPrice,
+                to: newPrice,
+                basePrice: basePrice,
+                offset: (offset * 100).toFixed(2) + '%'
+            });
         }
     }
 });
@@ -415,7 +751,7 @@ const getRiskLevelText = (level) => {
 const getRiskLevelColor = (level) => {
     const colorMap = {
         '低风险': 'success',
-        '中风险': 'warning', 
+        '中风险': 'warning',
         '高风险': 'danger',
         '保守型': 'success',
         '稳健型': 'primary',
@@ -509,7 +845,7 @@ const getActualValidityTime = () => {
     });
 };
 
-const getActualTime= ()=>{
+const getActualTime = () => {
     const today = new Date();
     const todayEnd = new Date(today);
     todayEnd.setHours(15, 0, 0, 0); // 当日15:00收盘
@@ -538,7 +874,7 @@ const getActualTime= ()=>{
         second: '2-digit',
         hour12: false,
     }).replace(/\//g, '-');
-}
+};
 
 // 获取有效期描述
 const getValidityDescription = () => {
@@ -603,7 +939,7 @@ const startTimeCheckTimer = () => {
     if (timeCheckTimer) {
         clearInterval(timeCheckTimer);
     }
-    
+
     // 每分钟检查一次时间
     timeCheckTimer = setInterval(() => {
         // 如果当前选择的是当日有效，但已经超过收盘时间，自动切换
@@ -661,7 +997,7 @@ const handleConfirm = async () => {
                     appendTo: 'body'
                 }
             );
-            
+
             // 用户确认切换，自动切换到量化有效期内
             form.timeInForceType = 'QUANT';
             ElMessage.success('已自动切换为量化有效期内，继续委托流程');
@@ -684,7 +1020,7 @@ const handleConfirm = async () => {
                 appendTo: 'body'
             }
         );
-  
+
     } catch {
         // 用户取消支付
         return;
@@ -714,15 +1050,28 @@ const handleConfirm = async () => {
             return;
         }
 
+        // 使用用户最终确认的委托价格
+        const finalPrice = form.limitPrice;
+
         exeuteTradePlan({
             code: props.stock.code,
             name: props.stock.name,
             action: form.action,
             quantity: form.quantity,
             orderType: form.orderType,
-            price: (plan.value && plan.value.buyPrice) ? plan.value.buyPrice : props.stock.price,
-            sellPrice: (plan.value && plan.value.sellPrice) ? plan.value.sellPrice : props.stock.price,
+            price: finalPrice, // 买入时的委托价格
+            sellPrice: finalPrice, // 卖出时的委托价格
             expireTime: getActualTime(),
+        });
+
+        console.log('📋 AITradingDialog - 委托执行参数:', {
+            stock: props.stock.name,
+            code: props.stock.code,
+            action: form.action,
+            quantity: form.quantity,
+            finalPrice: finalPrice,
+            userAdjusted: userAdjustedPrice.value,
+            priceOffset: userAdjustedPrice.value ? userPriceOffset.value[form.action] : 'none'
         });
 
         // 关闭对话框
@@ -799,7 +1148,7 @@ const fixWechatScroll = () => {
 // 监听对话框打开，初始化表单
 watch(() => props.modelValue, (newVal) => {
     console.log('🔍 AITradingDialog - modelValue changed:', newVal, 'stock:', props.stock);
-    
+
     if (newVal && props.stock) {
         console.log('✅ AITradingDialog - initializing with stock:', props.stock);
         initAITradingFromPreferences();
@@ -835,16 +1184,27 @@ watch(() => props.modelValue, (newVal) => {
             form.timeInForceType = 'DAY';
         }
 
+        // 启动量化分析流程
+        startQuantAnalysis();
+
         // 延迟应用微信浏览器滚动修复
         setTimeout(() => {
             fixWechatScroll();
-        }, 300);
+        }, 5000); // 等量化分析完成后再应用滚动修复
 
         // 启动时间检查定时器，每分钟检查一次是否超过收盘时间
         startTimeCheckTimer();
     } else if (!newVal) {
-        // 弹窗关闭时清理定时器
+        // 弹窗关闭时清理定时器和重置状态
         stopTimeCheckTimer();
+        stopQuantAnalysis();
+
+        // 重置价格管理状态，为下次打开做准备
+        priceInitialized.value = false;
+        userAdjustedPrice.value = false;
+        originalQuantPrice.value = { buy: null, sell: null };
+        userPriceOffset.value = { buy: 0, sell: 0 };
+        basePrices.value = { buy: null, sell: null };
     }
 });
 </script>
@@ -910,6 +1270,278 @@ watch(() => props.modelValue, (newVal) => {
 .debug-info p {
     margin: 4px 0;
     word-break: break-all;
+}
+
+/* 量化分析加载界面样式 */
+.quant-analyzing-container {
+    padding: 24px;
+    min-height: 500px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.quant-analyzing-content {
+    text-align: center;
+    max-width: 400px;
+    width: 100%;
+}
+
+.stock-info-mini {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 12px;
+    margin-bottom: 32px;
+    padding: 12px 20px;
+    background: #f8fafc;
+    border-radius: 12px;
+    border: 1px solid #e2e8f0;
+}
+
+.stock-info-mini h3 {
+    margin: 0;
+    font-size: 18px;
+    font-weight: 600;
+    color: #1e293b;
+}
+
+.stock-info-mini .stock-code {
+    background: #e2e8f0;
+    color: #64748b;
+    padding: 4px 8px;
+    border-radius: 6px;
+    font-size: 12px;
+    font-weight: 500;
+}
+
+.analyzing-animation {
+    margin-bottom: 32px;
+}
+
+.analyzing-icon {
+    position: relative;
+    display: inline-block;
+    margin-bottom: 16px;
+}
+
+.spinner {
+    width: 80px;
+    height: 80px;
+    border: 4px solid #e2e8f0;
+    border-top: 4px solid #3b82f6;
+    border-radius: 50%;
+    animation: spin 1s linear infinite;
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+}
+
+.analyzing-symbol {
+    font-size: 48px;
+    display: inline-block;
+    animation: pulse 2s ease-in-out infinite;
+    position: relative;
+    z-index: 2;
+    line-height: 80px;
+    width: 80px;
+    height: 80px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+@keyframes spin {
+    0% {
+        transform: translate(-50%, -50%) rotate(0deg);
+    }
+
+    100% {
+        transform: translate(-50%, -50%) rotate(360deg);
+    }
+}
+
+@keyframes pulse {
+
+    0%,
+    100% {
+        transform: scale(1);
+        opacity: 1;
+    }
+
+    50% {
+        transform: scale(1.1);
+        opacity: 0.8;
+    }
+}
+
+.analyzing-text h4 {
+    margin: 0 0 8px 0;
+    font-size: 20px;
+    font-weight: 600;
+    color: #1e293b;
+}
+
+.analyzing-desc {
+    margin: 0 0 8px 0;
+    font-size: 14px;
+    color: #64748b;
+    line-height: 1.5;
+}
+
+.real-analysis-hint {
+    margin: 0;
+    font-size: 13px;
+    color: #3b82f6;
+    font-weight: 500;
+    animation: blink 2s ease-in-out infinite;
+}
+
+@keyframes blink {
+
+    0%,
+    100% {
+        opacity: 1;
+    }
+
+    50% {
+        opacity: 0.6;
+    }
+}
+
+.analyzing-progress {
+    margin-bottom: 24px;
+}
+
+.progress-steps {
+    display: flex;
+    justify-content: space-between;
+    margin-bottom: 16px;
+    position: relative;
+}
+
+.progress-steps::before {
+    content: '';
+    position: absolute;
+    top: 20px;
+    left: 0;
+    right: 0;
+    height: 2px;
+    background: #e2e8f0;
+    z-index: 1;
+}
+
+.step {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 8px;
+    position: relative;
+    z-index: 2;
+}
+
+.step-icon {
+    width: 40px;
+    height: 40px;
+    background: #f8fafc;
+    border: 2px solid #e2e8f0;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 16px;
+    transition: all 0.3s ease;
+}
+
+.step.active .step-icon {
+    background: #dbeafe;
+    border-color: #3b82f6;
+    transform: scale(1.1);
+}
+
+.step.completed .step-icon {
+    background: #3b82f6;
+    border-color: #3b82f6;
+    color: white;
+}
+
+.step-text {
+    font-size: 12px;
+    color: #64748b;
+    font-weight: 500;
+    white-space: nowrap;
+}
+
+.step.active .step-text {
+    color: #3b82f6;
+    font-weight: 600;
+}
+
+.step.completed .step-text {
+    color: #3b82f6;
+}
+
+.progress-bar {
+    width: 100%;
+    height: 6px;
+    background: #e2e8f0;
+    border-radius: 3px;
+    overflow: hidden;
+}
+
+.progress-fill {
+    height: 100%;
+    background: linear-gradient(90deg, #3b82f6 0%, #1d4ed8 100%);
+    border-radius: 3px;
+    transition: width 0.5s ease;
+    position: relative;
+}
+
+.progress-fill::after {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: linear-gradient(90deg, transparent 0%, rgba(255, 255, 255, 0.3) 50%, transparent 100%);
+    animation: shimmer 1.5s infinite;
+}
+
+@keyframes shimmer {
+    0% {
+        transform: translateX(-100%);
+    }
+
+    100% {
+        transform: translateX(100%);
+    }
+}
+
+.analyzing-tips {
+    padding: 16px;
+    background: #f0f9ff;
+    border-radius: 12px;
+    border: 1px solid #bfdbfe;
+}
+
+.tip-item {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    justify-content: center;
+}
+
+.tip-icon {
+    font-size: 16px;
+    flex-shrink: 0;
+}
+
+.tip-text {
+    font-size: 14px;
+    color: #1e40af;
+    font-weight: 500;
 }
 
 /* 股票信息头部 */
@@ -1161,6 +1793,27 @@ watch(() => props.modelValue, (newVal) => {
 .logic-text {
     font-size: 13px;
     color: #3b82f6;
+    font-weight: 500;
+}
+
+.price-adjustment-info {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    margin-top: 4px;
+    padding: 4px 8px;
+    background: #fef3c7;
+    border-radius: 4px;
+    border-left: 3px solid #f59e0b;
+}
+
+.adjustment-icon {
+    font-size: 12px;
+}
+
+.adjustment-text {
+    font-size: 11px;
+    color: #92400e;
     font-weight: 500;
 }
 
@@ -1519,6 +2172,194 @@ watch(() => props.modelValue, (newVal) => {
     border-top: 1px solid #e5e7eb;
 }
 
+/* 量化分析加载界面移动端适配 */
+@media (max-width: 768px) {
+    .quant-analyzing-container {
+        padding: 16px;
+        min-height: 400px;
+    }
+
+    .quant-analyzing-content {
+        max-width: 100%;
+    }
+
+    .stock-info-mini {
+        margin-bottom: 24px;
+        padding: 10px 16px;
+        flex-direction: row;
+        gap: 8px;
+    }
+
+    .stock-info-mini h3 {
+        font-size: 16px;
+    }
+
+    .stock-info-mini .stock-code {
+        font-size: 11px;
+        padding: 3px 6px;
+    }
+
+    .analyzing-animation {
+        margin-bottom: 24px;
+    }
+
+    .spinner {
+        width: 60px;
+        height: 60px;
+        border-width: 3px;
+    }
+
+    .analyzing-symbol {
+        font-size: 36px;
+        width: 60px;
+        height: 60px;
+        line-height: 60px;
+    }
+
+    .analyzing-text h4 {
+        font-size: 18px;
+    }
+
+    .analyzing-desc {
+        font-size: 13px;
+        margin-bottom: 6px;
+    }
+
+    .real-analysis-hint {
+        font-size: 12px;
+    }
+
+    .analyzing-progress {
+        margin-bottom: 20px;
+    }
+
+    .progress-steps {
+        margin-bottom: 12px;
+    }
+
+    .step-icon {
+        width: 32px;
+        height: 32px;
+        font-size: 14px;
+    }
+
+    .progress-steps::before {
+        top: 16px;
+    }
+
+    .step-text {
+        font-size: 11px;
+    }
+
+    .progress-bar {
+        height: 4px;
+    }
+
+    .analyzing-tips {
+        padding: 12px;
+    }
+
+    .tip-text {
+        font-size: 13px;
+    }
+
+    .tip-icon {
+        font-size: 14px;
+    }
+}
+
+/* 小屏幕量化分析优化 */
+@media (max-width: 480px) {
+    .quant-analyzing-container {
+        padding: 12px;
+        min-height: 350px;
+    }
+
+    .stock-info-mini {
+        margin-bottom: 20px;
+        padding: 8px 12px;
+        flex-direction: row;
+        gap: 6px;
+    }
+
+    .stock-info-mini h3 {
+        font-size: 14px;
+    }
+
+    .stock-info-mini .stock-code {
+        font-size: 10px;
+        padding: 2px 4px;
+    }
+
+    .analyzing-animation {
+        margin-bottom: 20px;
+    }
+
+    .spinner {
+        width: 50px;
+        height: 50px;
+        border-width: 2px;
+    }
+
+    .analyzing-symbol {
+        font-size: 28px;
+        width: 50px;
+        height: 50px;
+        line-height: 50px;
+    }
+
+    .analyzing-text h4 {
+        font-size: 16px;
+    }
+
+    .analyzing-desc {
+        font-size: 12px;
+        margin-bottom: 4px;
+    }
+
+    .real-analysis-hint {
+        font-size: 11px;
+    }
+
+    .analyzing-progress {
+        margin-bottom: 16px;
+    }
+
+    .progress-steps {
+        margin-bottom: 10px;
+    }
+
+    .step-icon {
+        width: 28px;
+        height: 28px;
+        font-size: 12px;
+    }
+
+    .progress-steps::before {
+        top: 14px;
+    }
+
+    .step-text {
+        font-size: 10px;
+    }
+
+    .progress-bar {
+        height: 3px;
+    }
+
+    .analyzing-tips {
+        padding: 10px;
+    }
+
+    .tip-text {
+        font-size: 12px;
+    }
+
+    .tip-icon {
+        font-size: 13px;
+    }
+}
+
 /* 响应式设计 */
 @media (max-width: 768px) {
     .ai-trading-dialog {
@@ -1681,6 +2522,15 @@ watch(() => props.modelValue, (newVal) => {
 
     .logic-text {
         font-size: 12px;
+    }
+
+    .price-adjustment-info {
+        padding: 3px 6px;
+        margin-top: 3px;
+    }
+
+    .adjustment-text {
+        font-size: 10px;
     }
 
 

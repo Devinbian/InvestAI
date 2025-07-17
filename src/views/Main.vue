@@ -3179,7 +3179,7 @@ const getStockSelectListRequest = async () => {
                 price: item.latestPrice, // 当前价格
                 change: item.change || 0, // 涨跌额
                 changePercent: item.changePercent || 0, // 涨跌幅
-                changePercent: (item.rise || 0).concat('%'), // 涨跌幅
+                changePercent: (item.rise || '0').concat('%'), // 涨跌幅
                 targetPrice: item.targetPrice,
                 riskLevel: item.riskLevel,
                 industry: item.industry,

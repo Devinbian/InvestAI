@@ -21,11 +21,11 @@
                         <div class="detail-grid">
                             <div class="detail-item">
                                 <label>股票名称</label>
-                                <span>{{ record.name  }}</span>
+                                <span>{{ record.name }}</span>
                             </div>
                             <div class="detail-item">
                                 <label>股票代码</label>
-                                <span>{{ record.code  }}</span>
+                                <span>{{ record.code }}</span>
                             </div>
                             <div class="detail-item">
                                 <label>交易类型</label>
@@ -48,15 +48,19 @@
                         <div class="detail-grid">
                             <div class="detail-item">
                                 <label>{{ record.status === 'completed' ? '成交数量' : '委托数量' }}</label>
-                                <span>{{ record.status === 'completed' ? record.tradeQuantity : record.quantity }}股</span>
+                                <span>{{ record.status === 'completed' ? record.tradeQuantity : record.quantity
+                                }}股</span>
                             </div>
                             <div class="detail-item">
                                 <label>{{ record.status === 'completed' ? '成交价格' : '委托价格' }}</label>
-                                <span>¥{{ record.status === 'completed' ? record.tradePrice : record.price  }}</span>
+                                <span>¥{{ record.status === 'completed' ? parseFloat(record.tradePrice).toFixed(2) :
+                                    parseFloat(record.price).toFixed(2) }}</span>
                             </div>
                             <div class="detail-item">
                                 <label>{{ record.status === 'completed' ? '成交金额' : '交易金额' }}</label>
-                                <span class="amount">¥{{ record.status === 'completed' ? (record.tradePrice * record.tradeQuantity).toFixed(2) : (record.price * record.quantity).toFixed(2) }}</span>
+                                <span class="amount">¥{{ record.status === 'completed' ? (record.tradePrice *
+                                    record.tradeQuantity).toFixed(2) : (record.price * record.quantity).toFixed(2)
+                                }}</span>
                             </div>
                             <div v-if="record.fee !== undefined" class="detail-item">
                                 <label>手续费</label>
@@ -79,7 +83,7 @@
                                 <label>创建时间</label>
                                 <span>{{ formatDetailTime(record.createTime) }}</span>
                             </div>
-                            <div v-if="record.executedAt && record.status ==='completed'" class="detail-item">
+                            <div v-if="record.executedAt && record.status === 'completed'" class="detail-item">
                                 <label>成交时间</label>
                                 <span>{{ formatDetailTime(record.executedAt) }}</span>
                             </div>
@@ -111,9 +115,10 @@
                     </div>
 
                     <!-- 量化策略信息 (仅AI记录) -->
-                    <div v-if="isAIRecord && (record.strategy || record.factors || record.riskLevel)" class="detail-section">
+                    <div v-if="isAIRecord && (record.strategy || record.factors || record.riskLevel)"
+                        class="detail-section">
                         <h4 class="section-title">量化策略信息</h4>
-                        
+
                         <!-- 交易策略 -->
                         <div v-if="record.strategy" class="strategy-info">
                             <div class="strategy-header">
@@ -124,7 +129,7 @@
                                 {{ record.strategy }}
                             </div>
                         </div>
-                        
+
                         <!-- 量化因子 -->
                         <div v-if="record.factors && record.factors.length > 0" class="factors-info">
                             <div class="factors-header">
@@ -195,7 +200,7 @@
                 <div class="detail-grid">
                     <div class="detail-item">
                         <label>股票名称</label>
-                        <span>{{ record.name  }}</span>
+                        <span>{{ record.name }}</span>
                     </div>
                     <div class="detail-item">
                         <label>股票代码</label>
@@ -226,11 +231,13 @@
                     </div>
                     <div class="detail-item">
                         <label>{{ record.status === 'completed' ? '成交价格' : '委托价格' }}</label>
-                        <span>¥{{ record.status === 'completed' ? record.tradePrice : record.price  }}</span>
+                        <span>¥{{ record.status === 'completed' ? parseFloat(record.tradePrice).toFixed(2) :
+                            parseFloat(record.price).toFixed(2) }}</span>
                     </div>
                     <div class="detail-item">
                         <label>{{ record.status === 'completed' ? '成交金额' : '交易金额' }}</label>
-                        <span class="amount">¥{{ record.status === 'completed' ? (record.tradePrice * record.tradeQuantity).toFixed(2) : (record.price * record.quantity).toFixed(2) }}</span>
+                        <span class="amount">¥{{ record.status === 'completed' ? (record.tradePrice *
+                            record.tradeQuantity).toFixed(2) : (record.price * record.quantity).toFixed(2) }}</span>
                     </div>
                     <div v-if="record.fee !== undefined" class="detail-item">
                         <label>手续费</label>
@@ -253,7 +260,7 @@
                         <label>创建时间</label>
                         <span>{{ formatDetailTime(record.createTime) }}</span>
                     </div>
-                    <div v-if="record.executedAt && record.status ==='completed'" class="detail-item">
+                    <div v-if="record.executedAt && record.status === 'completed'" class="detail-item">
                         <label>成交时间</label>
                         <span>{{ formatDetailTime(record.executedAt) }}</span>
                     </div>
@@ -285,7 +292,7 @@
             <!-- 量化策略信息 (仅AI记录) -->
             <div v-if="isAIRecord && (record.strategy || record.factors || record.riskLevel)" class="detail-section">
                 <h4 class="section-title">量化策略信息</h4>
-                
+
                 <!-- 交易策略 -->
                 <div v-if="record.strategy" class="strategy-info">
                     <div class="strategy-header">
@@ -296,7 +303,7 @@
                         {{ record.strategy }}
                     </div>
                 </div>
-                
+
                 <!-- 量化因子 -->
                 <div v-if="record.factors && record.factors.length > 0" class="factors-info">
                     <div class="factors-header">
@@ -406,7 +413,7 @@ const dialogTitle = computed(() => {
     if (!props.record) return '交易详情';
     const typeText = isAIRecord.value ? 'AI委托' : '自助';
     const actionText = props.record.type === 'buy' ? '买入' : '卖出';
-    const stockName = props.record.name 
+    const stockName = props.record.name;
     return `${typeText}${actionText} - ${stockName}`;
 });
 

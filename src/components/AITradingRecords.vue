@@ -109,7 +109,7 @@
                             </div>
                             <div class="info-item">
                                 <span class="label">委托价格：</span>
-                                <span class="value">¥{{ record.price }}</span>
+                                <span class="value">¥{{ parseFloat(record.price).toFixed(2) }}</span>
                             </div>
                             <div class="info-item">
                                 <span class="label">交易金额：</span>
@@ -118,7 +118,7 @@
                             <div v-if="record.profit !== undefined" class="info-item">
                                 <span class="label">盈亏：</span>
                                 <span class="value" :class="{ 'profit': record.profit > 0, 'loss': record.profit < 0 }">
-                                    {{ record.profit > 0 ? '+' : '' }}¥{{ record.profit }}
+                                    {{ record.profit > 0 ? '+' : '' }}¥{{ parseFloat(record.profit).toFixed(2) }}
                                 </span>
                             </div>
                             <div v-if="record.status === 'pending' && record.expireTime" class="info-item">
@@ -152,13 +152,8 @@
                                     {{ formatTime(record.createdAt) }}
                                 </div>
                             </div>
-                            <el-button 
-                                v-if="record.status === 'pending'" 
-                                type="danger" 
-                                size="small" 
-                                plain
-                                @click.stop="handleCancelOrder(record)"
-                                class="cancel-order-btn">
+                            <el-button v-if="record.status === 'pending'" type="danger" size="small" plain
+                                @click.stop="handleCancelOrder(record)" class="cancel-order-btn">
                                 撤销委托
                             </el-button>
                         </div>
@@ -216,8 +211,8 @@
 </template>
 
 <script setup>
-import {aiTradeRecord, cancelStockOrder} from '@/api/api.js';
-import { ref, computed, watch ,onMounted, onUnmounted }  from 'vue';
+import { aiTradeRecord, cancelStockOrder, getStockPlan } from '@/api/api.js';
+import { ref, computed, watch, onMounted, onUnmounted } from 'vue';
 import { useUserStore } from '../store/user';
 import { ElButton, ElMessage, ElMessageBox } from 'element-plus';
 import { Search, More, CircleCheck, Clock, CircleClose, Warning } from '@element-plus/icons-vue';
@@ -277,7 +272,7 @@ watch(filterDateRange, (newVal) => {
 
 
 // 获取AI交易记录
-const allRecords=ref([]);
+const allRecords = ref([]);
 
 // 获取数据的方法
 const fetchData = async () => {
@@ -285,7 +280,7 @@ const fetchData = async () => {
     params.startDate = filterDateRange.value ? filterDateRange.value[0] : null;
     params.endDate = filterDateRange.value ? filterDateRange.value[1] : null;
     params.key = filterKeyword.value;
-    
+
     try {
         const res = await aiTradeRecord(params);
         if (res.data.success) {
@@ -296,38 +291,85 @@ const fetchData = async () => {
                 record.executedAt = record.tradeTime;
                 record.validityDate = record.expireTime;
                 record.fee = record.serviceFee || 0;
-                record.type==1?record.type='buy':record.type='sell';
-                if(record.status==1)record.status='pending';
-                else if(record.status==3)record.status='completed';
-                else if(record.status==4)record.status='cancelled';
+                record.type == 1 ? record.type = 'buy' : record.type = 'sell';
+                if (record.status == 1) record.status = 'pending';
+                else if (record.status == 3) record.status = 'completed';
+                else if (record.status == 4) record.status = 'cancelled';
                 // 确保有createdAt字段，如果没有则使用createTime
                 if (!record.createdAt && record.createTime) {
                     record.createdAt = record.createTime;
                 }
-                
-                // 确保策略信息和因子信息存在，如果没有则使用默认值
-                if (!record.strategy && record.name) {
-                    record.strategy = `基于${record.name}的技术分析和基本面分析的多因子量化策略，结合RSI、MACD等技术指标和财务指标进行综合评估`;
+
+                // 处理量化策略数据：如果API返回了字符串格式的factors，需要解析
+                if (record.factors && typeof record.factors === 'string') {
+                    try {
+                        record.factors = JSON.parse(record.factors);
+                    } catch (error) {
+                        console.warn('解析factors数据失败:', error);
+                        record.factors = [];
+                    }
                 }
-                
-                if (!record.factors || record.factors.length === 0) {
-                    record.factors = [
-                        { name: "RSI指标", value: "62.5", weight: "25%" },
-                        { name: "MACD信号", value: "看涨", weight: "20%" },
-                        { name: "成交量", value: "活跃", weight: "15%" },
-                        { name: "PE估值", value: "合理", weight: "25%" },
-                        { name: "ROE", value: "15.2%", weight: "15%" }
-                    ];
-                }
-                
-                if (!record.riskLevel) {
-                    record.riskLevel = "中风险";
+
+                // 如果没有量化策略数据，尝试从API获取（异步加载）
+                if (!record.strategy || !record.factors || record.factors.length === 0 || !record.riskLevel) {
+                    loadQuantStrategyForRecord(record);
                 }
             });
             console.log('处理后的AI交易记录:', allRecords.value);
         }
     } catch (error) {
         console.error('获取AI交易记录失败:', error);
+    }
+};
+
+// 为记录加载量化策略信息
+const loadQuantStrategyForRecord = async (record) => {
+    if (!record.code) {
+        console.warn('记录缺少股票代码，无法获取量化策略:', record);
+        return;
+    }
+
+    try {
+        console.log('📊 AITradingRecords - 为记录加载量化策略:', record.code);
+        const res = await getStockPlan(record.code);
+
+        if (res.data.success && res.data.data) {
+            const planData = res.data.data;
+
+            // 解析factors数据
+            if (planData.factors && typeof planData.factors === 'string') {
+                try {
+                    planData.factors = JSON.parse(planData.factors);
+                } catch (error) {
+                    console.warn('解析factors数据失败:', error);
+                    planData.factors = [];
+                }
+            }
+
+            // 更新记录的量化策略信息
+            if (planData.strategy && !record.strategy) {
+                record.strategy = planData.strategy;
+            }
+
+            if (planData.factors && planData.factors.length > 0 && (!record.factors || record.factors.length === 0)) {
+                record.factors = planData.factors;
+            }
+
+            if (planData.riskLevel && !record.riskLevel) {
+                record.riskLevel = planData.riskLevel;
+            }
+
+            console.log('✅ AITradingRecords - 量化策略加载成功:', {
+                code: record.code,
+                hasStrategy: !!record.strategy,
+                factorsCount: record.factors?.length || 0,
+                riskLevel: record.riskLevel
+            });
+        } else {
+            console.warn('⚠️ AITradingRecords - API返回数据为空:', record.code);
+        }
+    } catch (error) {
+        console.error('❌ AITradingRecords - 获取量化策略失败:', record.code, error);
     }
 };
 
@@ -338,7 +380,7 @@ const refreshData = async () => {
 
 onMounted(async () => {
     await fetchData();
-    
+
     // 启动时间更新定时器，每分钟更新一次
     timeUpdateInterval = setInterval(() => {
         currentTime.value = new Date();
@@ -454,17 +496,17 @@ const getStatusClass = (status) => {
 const formatTime = computed(() => {
     return (dateString) => {
         if (!dateString) return '';
-        
+
         // 触发响应式更新
         currentTime.value;
-        
+
         const date = new Date(dateString);
         const now = new Date();
-        
+
         // 设置时间到当天的开始，用于准确计算天数差
         const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
         const recordDate = new Date(date.getFullYear(), date.getMonth(), date.getDate());
-        
+
         const diffTime = today - recordDate;
         const diffDays = Math.floor(diffTime / (1000 * 60 * 60 * 24));
 
@@ -498,12 +540,12 @@ const formatTime = computed(() => {
 // 格式化有效期显示
 const formatValidityDate = (validityDate) => {
     if (!validityDate) return '长期有效';
-    
+
     const validity = new Date(validityDate);
     const now = new Date();
     const diffTime = validity - now;
     const diffHours = Math.floor(diffTime / (1000 * 60 * 60));
-    
+
     if (diffTime < 0) {
         return '已过期';
     } else if (diffHours < 1) {
@@ -520,12 +562,12 @@ const formatValidityDate = (validityDate) => {
 // 获取有效期状态样式类
 const getValidityStatusClass = (validityDate) => {
     if (!validityDate) return '';
-    
+
     const validity = new Date(validityDate);
     const now = new Date();
     const diffTime = validity - now;
     const diffHours = Math.floor(diffTime / (1000 * 60 * 60));
-    
+
     if (diffTime < 0) {
         return 'expired';
     } else if (diffHours <= 2) {
@@ -556,13 +598,13 @@ const handleRecordAction = async (command, record) => {
 // 撤单操作
 const cancelOrder = async (tradeId) => {
     console.log('开始撤销AI委托交易，ID:', tradeId, '类型:', typeof tradeId);
-    
+
     try {
         // 使用通用的股票订单撤销接口
         console.log('调用cancelStockOrder API...');
         const res = await cancelStockOrder({ stockOrderId: tradeId });
         console.log('cancelStockOrder API响应:', res);
-        
+
         if (res && res.data && res.data.success) {
             ElMessage.success('撤单成功');
             console.log('撤单成功，开始刷新数据...');
@@ -581,7 +623,7 @@ const cancelOrder = async (tradeId) => {
 // 处理撤销委托按钮点击
 const handleCancelOrder = async (record) => {
     console.log('点击撤销委托按钮，记录:', record);
-    
+
     try {
         await ElMessageBox.confirm(
             `确定要撤销这笔委托吗？`,
@@ -593,7 +635,7 @@ const handleCancelOrder = async (record) => {
                 dangerouslyUseHTMLString: false
             }
         );
-        
+
         console.log('用户确认撤销，开始执行撤销操作...');
         await cancelOrder(record.stockOrderId);
     } catch (error) {
@@ -1294,11 +1336,11 @@ defineExpose({
         padding: 2px 6px;
         height: 24px;
     }
-    
+
     .record-actions-footer {
         gap: 8px;
     }
-    
+
     .record-time {
         font-size: 0.65rem;
     }

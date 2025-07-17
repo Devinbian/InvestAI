@@ -80,7 +80,7 @@
                                 <!-- 持仓状态 -->
                                 <div v-if="showPositionStatus && stock.quantity" class="position-status"
                                     :class="getPositionProfitLoss(stock) >= 0 ? 'profit' : 'loss'">
-                                    <span class="status-label">盈亏：</span>
+                                    <span class="status-label">盈亏总额：</span>
                                     <span class="status-value">
                                         {{ getPositionProfitLoss(stock) >= 0 ? '+' : '-' }}¥{{
                                             Math.abs(getPositionProfitLoss(stock)).toFixed(2) }}

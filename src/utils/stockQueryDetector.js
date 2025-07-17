@@ -111,14 +111,27 @@ export async function detectStockQuery(message) {
     console.log('🔍 API完整响应:', response);
     console.log('🔍 API响应数据部分:', response?.data);
     
-    // axios响应格式：response.data = { success: true, code: "00000", message: "请求成功", data: true }
+    // axios响应格式：response.data = {"id":null,"code":"603007","name":"*ST花王","industry":"工程建设"}
     const apiData = response?.data;
-    if (apiData && apiData.success === true && apiData.data === true) {
+    if (apiData && apiData.success === true && apiData.data) {
       // API确认为个股查询
       console.log('✅ API确认为个股查询');
       
-      // 尝试提取股票信息
-      const stockInfo = extractStockInfoFromMessage(cleanMessage);
+      // 股票信息
+      const data = apiData.data;
+      const stockInfo = {
+        codes:[data.code],
+        names:[data.name]
+      }
+
+      console.log('详细信息:', {
+        isStockQuery: true,
+        confidence: 95, // API验证的高置信度
+        stockInfo,
+        queryType: 'api_validated',
+        reason: 'API验证确认为个股查询',
+        message: cleanMessage
+      });
       
       return {
         isStockQuery: true,
@@ -297,8 +310,10 @@ export function formatStockQueryResult(detection) {
  * @returns {Object} 提取的股票信息
  */
 export async function extractStockInfoFromContent(aiContent, userContent, detectionResult) {
-  let stockName = "未知股票";
-  let stockCode = "000000";
+  let stockName = "";
+  let stockCode = "";
+  // 是否提取成功
+  let extractFlag = false;
   
   console.log('🔍 开始提取股票信息:', {
     aiContentLength: aiContent?.length || 0,
@@ -311,7 +326,7 @@ export async function extractStockInfoFromContent(aiContent, userContent, detect
   });
   
   // 1. 优先从检测结果中获取
-  if (detectionResult?.stockInfo) {
+  if (detectionResult?.stockInfo && !extractFlag) {
     if (detectionResult.stockInfo.codes && detectionResult.stockInfo.codes.length > 0) {
       stockCode = detectionResult.stockInfo.codes[0].replace(/^(SH|SZ)/, '').replace(/\.(SH|SZ)$/, '');
       console.log('✅ 从检测结果获取股票代码:', stockCode);
@@ -320,15 +335,19 @@ export async function extractStockInfoFromContent(aiContent, userContent, detect
       stockName = detectionResult.stockInfo.names[0];
       console.log('✅ 从检测结果获取股票名称:', stockName);
     }
+    // 判断是否提取完成
+    extractFlag = stockCode && stockName;
   }
   
   // 2. 从AI回复中提取完整格式：股票名称(代码)
-  if (aiContent) {
+  if (aiContent && !extractFlag) {
     const fullStockMatch = aiContent.match(/([\u4e00-\u9fa5]{2,8})\s*[（(](\d{6})[)）]/);
     if (fullStockMatch) {
       stockName = fullStockMatch[1];
       stockCode = fullStockMatch[2];
       console.log('✅ 从AI回复提取完整格式:', { name: stockName, code: stockCode });
+      // 判断是否提取完成
+      extractFlag = stockCode && stockName;
       return { name: stockName, code: stockCode, source: 'ai_full_match' };
     }
     
@@ -341,6 +360,8 @@ export async function extractStockInfoFromContent(aiContent, userContent, detect
         stockName = titleMatch[1];
         stockCode = titleMatch[2];
         console.log('✅ 从AI回复标题提取:', { name: stockName, code: stockCode });
+        // 判断是否提取完成
+        extractFlag = stockCode && stockName;
         return { name: stockName, code: stockCode, source: 'ai_title_match' };
       }
     }
@@ -348,15 +369,17 @@ export async function extractStockInfoFromContent(aiContent, userContent, detect
   
   // 3. 从用户输入中提取完整格式
   const userFullMatch = userContent.match(/([\u4e00-\u9fa5]{2,8})\s*[（(](\d{6})[)）]/);
-  if (userFullMatch) {
+  if (userFullMatch && !extractFlag) {
     stockName = userFullMatch[1];
     stockCode = userFullMatch[2];
     console.log('✅ 从用户输入提取完整格式:', { name: stockName, code: stockCode });
+    // 判断是否提取完成
+    extractFlag = stockCode && stockName;
     return { name: stockName, code: stockCode, source: 'user_full_match' };
   }
   
   // 4. 分别提取名称和代码
-  if (stockName === "未知股票") {
+  if (stockName === "" && !extractFlag) {
     // 从用户输入中提取股票名称
     const userNameMatch = userContent.match(/^([\u4e00-\u9fa5]{2,8})/) || 
                          userContent.match(/([\u4e00-\u9fa5]{2,8})(?=[分析怎么样如何走势])/);
@@ -366,7 +389,7 @@ export async function extractStockInfoFromContent(aiContent, userContent, detect
     }
     
     // 从AI回复中提取股票名称
-    if (stockName === "未知股票" && aiContent) {
+    if (stockName === "" && aiContent) {
       const aiNameMatch = aiContent.match(/股票名称[：:]\s*([\u4e00-\u9fa5]{2,8})/) ||
                          aiContent.match(/^([\u4e00-\u9fa5]{2,8})\s+基本信息/) ||
                          aiContent.match(/([\u4e00-\u9fa5]{2,8})(?=\s*(?:股票|公司|集团|股份))/);
@@ -377,7 +400,7 @@ export async function extractStockInfoFromContent(aiContent, userContent, detect
     }
   }
   
-  if (stockCode === "000000") {
+  if (stockCode === "") {
     // 从AI回复中提取股票代码
     if (aiContent) {
       const aiCodeMatch = aiContent.match(/股票代码[：:]\s*(\d{6})/) ||
@@ -391,7 +414,7 @@ export async function extractStockInfoFromContent(aiContent, userContent, detect
     }
     
     // 从用户输入中提取股票代码
-    if (stockCode === "000000") {
+    if (stockCode === "") {
       const userCodeMatch = userContent.match(/(\d{6})/);
       if (userCodeMatch) {
         stockCode = userCodeMatch[1];
@@ -401,7 +424,7 @@ export async function extractStockInfoFromContent(aiContent, userContent, detect
   }
   
   // 5. 最终处理
-  if (stockName === "未知股票" && stockCode !== "000000") {
+  if (stockName === "" && stockCode !== "") {
     stockName = `股票${stockCode}`;
   }
   

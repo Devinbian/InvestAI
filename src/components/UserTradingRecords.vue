@@ -113,7 +113,13 @@
                                 <span class="label">交易金额：</span>
                                 <span class="value amount">¥{{ record.totalAmount.toFixed(2) }}</span>
                             </div>
-                            <div class="info-item">
+                            <div v-if="record.type === 2 && record.status === 3 && record.profit !== undefined" class="info-item">
+                                <span class="label">盈亏：</span>
+                                <span class="value" :class="{ 'profit': record.profit > 0, 'loss': record.profit < 0 }">
+                                    {{ record.profit > 0 ? '+' : '' }}¥{{ parseFloat(record.profit).toFixed(2) }}
+                            </span>
+                            </div>
+                            <div v-if="false" class="info-item">
                                 <span class="label">手续费：</span>
                                 <span class="value">¥{{ record.fee.toFixed(2) }}</span>
                             </div>
@@ -178,27 +184,25 @@
             </div>
         </div>
 
-        <!-- 统计信息 -->
+         <!-- 统计信息 -->
         <div v-if="filteredRecords.length > 0" class="records-stats">
             <div class="stat-item">
                 <div class="stat-label">总交易次数</div>
                 <div class="stat-value">{{ filteredRecords.length }}</div>
             </div>
             <div class="stat-item">
-                <div class="stat-label">买入次数</div>
-                <div class="stat-value">{{ filteredBuyCount }}</div>
+                <div class="stat-label">成功交易</div>
+                <div class="stat-value">{{ filteredCompletedCount }}</div>
             </div>
             <div class="stat-item">
-                <div class="stat-label">卖出次数</div>
-                <div class="stat-value">{{ filteredSellCount }}</div>
+                <div class="stat-label">待成交</div>
+                <div class="stat-value">{{ filteredPendingCount }}</div>
             </div>
             <div class="stat-item">
-                <div class="stat-label">总交易金额</div>
-                <div class="stat-value">¥{{ filteredTotalAmount.toFixed(2) }}</div>
-            </div>
-            <div class="stat-item">
-                <div class="stat-label">总手续费</div>
-                <div class="stat-value">¥{{ filteredTotalFee.toFixed(2) }}</div>
+                <div class="stat-label">总盈亏</div>
+                <div class="stat-value" :class="{ 'profit': filteredTotalProfit > 0, 'loss': filteredTotalProfit < 0 }">
+                    {{ filteredTotalProfit > 0 ? '+' : '' }}¥{{ filteredTotalProfit.toFixed(2) }}
+                </div>
             </div>
         </div>
 
@@ -311,6 +315,7 @@ const formatPortfolioStocks = (records) => {
             status: record.status,
             cancelledAt: record.status === 4 ? record.updateTime : '',
             executedAt: record.tradeTime,
+            profit: record.profit || 0,
             tradePrice: record.tradePrice,
             tradeQuantity: record.tradeQuantity,
             tradeAmount: (record.tradePrice || 0) * (record.tradeQuantity || 0).toFixed(2),
@@ -376,21 +381,20 @@ const paginatedRecords = computed(() => {
     return filteredRecords.value.slice(start, end);
 });
 
-// 统计数据
-const filteredBuyCount = computed(() =>
-    filteredRecords.value.filter(record => record.type === 1).length
+// 计算筛选后的统计数据
+const filteredCompletedCount = computed(() =>
+    filteredRecords.value.filter(record => record.status === 3).length
 );
 
-const filteredSellCount = computed(() =>
-    filteredRecords.value.filter(record => record.type === 2).length
+const filteredPendingCount = computed(() =>
+    filteredRecords.value.filter(record => record.status === 1).length
 );
 
-const filteredTotalAmount = computed(() => {
-    return filteredRecords.value.reduce((total, record) => total + record.totalAmount, 0);
-});
-
-const filteredTotalFee = computed(() => {
-    return filteredRecords.value.reduce((total, record) => total + record.fee, 0);
+// 只计算卖出的总收益
+const filteredTotalProfit = computed(() => {
+    return filteredRecords.value
+        .filter(record => record.status === 3 && record.profit !== undefined)
+        .reduce((total, record) => total + record.profit, 0);
 });
 
 // 重置筛选条件
@@ -476,6 +480,7 @@ const viewRecord = (record) => {
             executedAt: record.executedAt,
             tradePrice: record.tradePrice,
             tradeQuantity: record.tradeQuantity,
+            profit: record.profit,
     };
     selectedRecord.value = data;
     detailModalVisible.value = true;
@@ -746,6 +751,24 @@ defineExpose({
 
 .status-icon {
     font-size: 1rem;
+}
+
+.info-item .value.profit {
+    color: #dc2626;
+    font-weight: 600;
+}
+
+.info-item .value.loss {
+    color: #059669;
+    font-weight: 600;
+}
+
+.stat-value.profit {
+    color: #dc2626;
+}
+
+.stat-value.loss {
+    color: #059669;
 }
 
 .record-time {

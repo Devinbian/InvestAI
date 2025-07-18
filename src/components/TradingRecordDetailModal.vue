@@ -66,7 +66,7 @@
                                 <label>手续费</label>
                                 <span>¥{{ record.fee?.toFixed(2) }}</span>
                             </div>
-                            <div v-if="record.profit !== undefined" class="detail-item">
+                            <div v-if="record.type === 'sell' && record.status === 'completed' && record.profit !== undefined" class="detail-item">
                                 <label>盈亏</label>
                                 <span :class="{ 'profit': record.profit > 0, 'loss': record.profit < 0 }">
                                     {{ record.profit > 0 ? '+' : '' }}¥{{ record.profit?.toFixed(2) }}
@@ -243,7 +243,7 @@
                         <label>手续费</label>
                         <span>¥{{ record.fee?.toFixed(2) }}</span>
                     </div>
-                    <div v-if="record.profit !== undefined" class="detail-item">
+                    <div v-if="record.type === 'sell' && record.status === 'completed' && record.profit !== undefined" class="detail-item">
                         <label>盈亏</label>
                         <span :class="{ 'profit': record.profit > 0, 'loss': record.profit < 0 }">
                             {{ record.profit > 0 ? '+' : '' }}¥{{ record.profit?.toFixed(2) }}

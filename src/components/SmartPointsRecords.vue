@@ -257,14 +257,14 @@ const paginatedRecords = computed(() => {
 
 // 计算筛选后的总消费
 const filteredTotalConsume = computed(() => {
-    return filteredRecords.value
+    return allRecords.value
         .filter(record => record.typeDesc === 'consumption')
         .reduce((total, record) => total + Math.abs(record.amount), 0);
 });
 
 // 计算筛选后的总充值
 const filteredTotalRecharge = computed(() => {
-    return filteredRecords.value
+    return allRecords.value
         .filter(record => record.typeDesc === 'recharge')
         .reduce((total, record) => total + record.amount, 0);
 });

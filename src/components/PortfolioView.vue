@@ -24,7 +24,7 @@
                                 <path :d="userAssetInfo.totalProfitLoss >= 0 ? 'M7 14l5-5 5 5' : 'M7 10l5 5 5-5'"
                                     stroke="currentColor" stroke-width="2" />
                             </svg> -->
-                            {{ userAssetInfo.totalProfitLoss >= 0 ? '+' : '' }}¥{{ Math.abs(userAssetInfo.totalProfitLoss).toFixed(2) }}
+                            {{ userAssetInfo.totalProfitLoss >= 0 ? '+' : '-' }}¥{{ Math.abs(userAssetInfo.totalProfitLoss).toFixed(2) }}
                         </div>
                     </div>
                 </div>

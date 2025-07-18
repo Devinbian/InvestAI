@@ -115,7 +115,7 @@
                                 <span class="label">交易金额：</span>
                                 <span class="value amount">¥{{ (record.quantity * record.price).toFixed(2) }}</span>
                             </div>
-                            <div v-if="record.profit !== undefined" class="info-item">
+                            <div v-if="record.type === 'sell' && record.status === 'completed' && record.profit !== undefined" class="info-item">
                                 <span class="label">盈亏：</span>
                                 <span class="value" :class="{ 'profit': record.profit > 0, 'loss': record.profit < 0 }">
                                     {{ record.profit > 0 ? '+' : '' }}¥{{ parseFloat(record.profit).toFixed(2) }}
@@ -451,9 +451,10 @@ const filteredPendingCount = computed(() =>
     filteredRecords.value.filter(record => record.status === 'pending').length
 );
 
+// 只计算卖出的总收益
 const filteredTotalProfit = computed(() => {
     return filteredRecords.value
-        .filter(record => record.profit !== undefined)
+        .filter(record => record.status === 'completed' && record.profit !== undefined)
         .reduce((total, record) => total + record.profit, 0);
 });
 
@@ -796,12 +797,12 @@ defineExpose({
 }
 
 .info-item .value.profit {
-    color: #059669;
+    color: #dc2626;
     font-weight: 600;
 }
 
 .info-item .value.loss {
-    color: #dc2626;
+    color: #059669;
     font-weight: 600;
 }
 
@@ -922,11 +923,11 @@ defineExpose({
 }
 
 .stat-value.profit {
-    color: #059669;
+    color: #dc2626;
 }
 
 .stat-value.loss {
-    color: #dc2626;
+    color: #059669;
 }
 
 /* PC端按钮样式 */
@@ -1036,12 +1037,12 @@ defineExpose({
     }
 
     .record-card .info-item .value.profit {
-        color: #059669;
+        color: #dc2626;
         font-weight: 600;
     }
 
     .record-card .info-item .value.loss {
-        color: #dc2626;
+        color: #059669;
         font-weight: 600;
     }
 
@@ -1116,11 +1117,11 @@ defineExpose({
     }
 
     .stat-value.profit {
-        color: #059669;
+        color: #dc2626;
     }
 
     .stat-value.loss {
-        color: #dc2626;
+        color: #059669;
     }
 
 
@@ -1241,12 +1242,12 @@ defineExpose({
     }
 
     .record-card .info-item .value.profit {
-        color: #059669;
+        color: #dc2626;
         font-weight: 600;
     }
 
     .record-card .info-item .value.loss {
-        color: #dc2626;
+        color: #059669;
         font-weight: 600;
     }
 

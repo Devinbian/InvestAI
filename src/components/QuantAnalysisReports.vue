@@ -310,7 +310,7 @@
 </template>
 
 <script setup>
-import {analyzeRecord} from '@/api/api.js';
+import {analyzeRecord, deleteAnalyzeRecord} from '@/api/api.js';
 import { ref, computed, onMounted, watch } from 'vue';
 import { useUserStore } from '../store/user';
 import { ElMessage, ElMessageBox } from 'element-plus';
@@ -356,6 +356,12 @@ const selectedReports = ref([]);
 // 移动端日期范围
 const startDate = ref('');
 const endDate = ref('');
+
+// 删除量化分析报告
+const deleteAnalyzeRecordRequest = async (id) => {
+    const res = await deleteAnalyzeRecord({id: id});
+    return res && res.data && res.data.success;
+};
 
 // 监听移动端日期变化，同步到filterDateRange
 watch([startDate, endDate], ([start, end]) => {
@@ -582,24 +588,22 @@ const downloadReport = async (report) => {
     }
 };
 
-const deleteReport = async (report) => {
-    try {
-        await ElMessageBox.confirm(
-            `确定要删除报告"${report.title}"吗？删除后无法恢复。`,
-            '确认删除',
-            {
-                confirmButtonText: '确定删除',
-                cancelButtonText: '取消',
-                type: 'warning',
-                customClass: 'high-z-index-dialog',
-                appendTo: 'body',
-            }
-        );
-
-        userStore.deleteQuantAnalysisReport(report.id);
+const deleteReport = async (report) => { 
+    await ElMessageBox.confirm(
+        `确定要删除报告吗？删除后无法恢复。`,
+        '确认删除',
+        {
+            confirmButtonText: '确定删除',
+            cancelButtonText: '取消',
+            type: 'warning',
+            customClass: 'high-z-index-dialog',
+            appendTo: 'body',
+        }
+    );
+    const res = deleteAnalyzeRecordRequest(report.id);
+    if (res) {
+        reports.value = reports.value.filter(r => r.id !== report.id);
         ElMessage.success('报告已删除');
-    } catch {
-        // 用户取消删除
     }
 };
 

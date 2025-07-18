@@ -62,6 +62,7 @@ const api = {
 
   //record
   analyzeRecordApi:"/record/analyze",// 量化分析报告记录
+  deleteAnalyzeRecordApi:"/record/analyze/delete", // 删除量化分析报告记录
   aiTradeRecordApi:"/record/ai-trade", //ai交易
   cancelAiTradeApi:"/record/ai-trade/cancel", // AI交易撤销
 
@@ -209,3 +210,6 @@ export const getPointRecord = (params) => request.get(api.pointRecordApi, {
 export const validateStock = (params) => request.get(api.validateStockApi, {
   params
 });
+
+// 删除量化分析报告
+export const deleteAnalyzeRecord = (params) => request.post(api.deleteAnalyzeRecordApi, params);

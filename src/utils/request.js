@@ -115,6 +115,7 @@ export const authFetchEventSource = async (url, options = {}) => {
         // 处理 HTTP 错误响应
         if (response.status !== 200) {
           const errorData = await response.json().catch(() => ({}));
+          console.log("onopen error: ", errorData)
           handleSSEError(response.status, errorData);
           return;
         }
@@ -122,6 +123,7 @@ export const authFetchEventSource = async (url, options = {}) => {
         // 检查内容类型是否是事件流
         const contentType = response.headers.get("content-type");
         if (!contentType?.includes(EventStreamContentType)) {
+          console.log("onopen type error: ", contentType)
           throw new Error(
             `Expected event-stream content type, got: ${contentType}`,
           );
@@ -134,6 +136,7 @@ export const authFetchEventSource = async (url, options = {}) => {
       },
       onerror(err) {
         // 网络错误处理
+        console.log("onerror: ", err)
         err.message = handleNetworkError(err);
         options.onerror(err);
         throw err;

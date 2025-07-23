@@ -318,6 +318,9 @@ const performRealQuantAnalysis = async (stockCode) => {
     try {
         console.log('🚀 AITradingDialog - starting real quant analysis for:', stockCode);
 
+        // 调用真实的量化分析流式接口
+        const abortController = new AbortController();
+
         // 获取当前会话ID，如果没有则创建新会话
         let conversationId = chatHistoryStore.currentChatId;
         if (!conversationId) {
@@ -351,9 +354,6 @@ const performRealQuantAnalysis = async (stockCode) => {
             }
         };
 
-        // 调用真实的量化分析流式接口
-        const abortController = new AbortController();
-
         authFetchEventSource(`${headUrl}/chat/analyzeStock?conversationId=${conversationId}&stock=${encodeURIComponent(stockCode)}`, {
             method: 'GET',
             signal: abortController.signal,
@@ -382,11 +382,13 @@ const performRealQuantAnalysis = async (stockCode) => {
                 console.error('❌ AITradingDialog - quant analysis error:', error);
                 // 即使出错也要完成流程
                 finishQuantAnalysis();
+                abortController.abort();
             },
 
             onclose: () => {
                 console.log('✅ AITradingDialog - quant analysis completed');
                 finishQuantAnalysis();
+                abortController.abort();
             }
         }).catch((error) => {
             console.error('❌ AITradingDialog - authFetchEventSource error:', error);

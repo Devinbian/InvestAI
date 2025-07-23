@@ -2296,6 +2296,7 @@ const regenerateNormalMessage = async (messageIndex) => {
                         }
 
                         ElMessage.error('重新生成失败，连接中断');
+                        currentAbortController.abort()
                     },
                 }
             );
@@ -3682,6 +3683,7 @@ const continueAnalysis = async (stockInfo, isPaid = false) => {
                 lastMessage.isGenerating = false; // 完全完成后取消生成状态
                 lastMessage.hasStockInfo = true; // 显示股票操作按钮
                 chatHistory.value = [...chatHistory.value]; // 触发响应式更新
+                abortController.abort();
             },
             onerror: (err) => {
                 // 错误处理（网络错误、解析异常等）
@@ -3703,6 +3705,7 @@ const continueAnalysis = async (stockInfo, isPaid = false) => {
             lastMessage.isGenerating = false;
             chatHistory.value = [...chatHistory.value];
         }
+        abortController.abort();
     }
 };
 

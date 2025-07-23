@@ -1020,59 +1020,27 @@ const handleConfirm = async () => {
     try {
         loading.value = true;
 
-        // 扣除智点并记录交易
-        if (userStore.deductSmartPoints(1)) {
-            // 记录智点消费
-            userStore.addSmartPointsTransaction({
-                type: 'consumption',
-                amount: 1,
-                description: `AI委托交易 - ${props.stock.name}`,
-                serviceType: 'ai-trading',
-                stockInfo: {
-                    name: props.stock.name,
-                    code: props.stock.code,
-                },
-                balanceAfter: userStore.smartPointsBalance,
-            });
-            ElMessage.success('支付成功，正在设置AI委托交易...委托记录可在记录中心查看');
-        } else {
-            ElMessage.error('支付失败，智点余额不足');
-            return;
-        }
-
         // 使用用户最终确认的委托价格
         const finalPrice = form.limitPrice;
 
-        exeuteTradePlan({
+        const res = await exeuteTradePlan({
             code: props.stock.code,
             name: props.stock.name,
             action: form.action,
             quantity: form.quantity,
             orderType: form.orderType,
+            type: form.action === 'buy' ? 1 : 2, // 1: buy, 2: sell
             price: finalPrice, // 买入时的委托价格
             sellPrice: finalPrice, // 卖出时的委托价格
             expireTime: getActualTime(),
         });
 
-        console.log('📋 AITradingDialog - 委托执行参数:', {
-            stock: props.stock.name,
-            code: props.stock.code,
-            action: form.action,
-            quantity: form.quantity,
-            finalPrice: finalPrice,
-            userAdjusted: userAdjustedPrice.value,
-            priceOffset: userAdjustedPrice.value ? userPriceOffset.value[form.action] : 'none'
-        });
-
-        // 关闭对话框
-        stopTimeCheckTimer();
-        dialogVisible.value = false;
-
-        // // 发送事件给父组件，不再包含消息内容
-        // emit('ai-trading-confirmed', {
-        //     stock: props.stock,
-        //     tradingParams: tradingParams
-        // });
+        if(res && res.data && res.data.success) {
+            ElMessage.success('AI委托交易设置成功');
+            // 关闭对话框
+            stopTimeCheckTimer();
+            dialogVisible.value = false;
+        }
 
     } catch (error) {
         ElMessage.error('设置失败，请稍后重试');

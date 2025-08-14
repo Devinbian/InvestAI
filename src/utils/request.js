@@ -134,6 +134,15 @@ export const authFetchEventSource = async (url, options = {}) => {
           return options.onopen(response);
         }
       },
+      onmessage(message) {
+        if (options.onmessage) {
+          if (message.data === "__heartbeat__") {
+            console.log("__heartbeat__");
+            return;
+          }
+          options.onmessage(message);
+        }
+      },
       onerror(err) {
         // 网络错误处理
         console.log("onerror: ", err)

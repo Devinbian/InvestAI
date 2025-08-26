@@ -111,6 +111,7 @@ export const authFetchEventSource = async (url, options = {}) => {
         Authorization: token || "", // 添加认证 token
       },
       signal: options.signal,
+      openWhenHidden: true, // 页面隐藏时保持连接
       async onopen(response) {
         // 处理 HTTP 错误响应
         if (response.status !== 200) {

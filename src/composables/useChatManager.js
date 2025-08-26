@@ -70,7 +70,7 @@ export function useChatManager() {
               }
               clearStreamPauseTimer();
             }
-          }, 30000); // 30秒超时
+          }, 600000); // 30秒超时
         }
       }, STREAM_PAUSE_TIMEOUT);
     }

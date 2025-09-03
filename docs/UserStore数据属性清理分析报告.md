@@ -21,7 +21,7 @@
   - 本地操作（如撤单）通过API完成
 - **处理**: 已注释掉属性定义和相关localStorage操作
 
-### 3. userTradingRecords（用户自助交易记录）
+### 3. userTradingRecords（用户自主交易记录）
 - **状态**: ✅ **已清理**
 - **原因**:
   - 数据显示已完全迁移到API

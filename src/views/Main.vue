@@ -1054,9 +1054,9 @@ const handleTradeCompleted = (tradeData) => {
     console.log('交易完成:', tradeData);
     // 可以在这里添加交易完成后的逻辑，比如更新用户持仓
     if (tradeData && tradeData.type === 'buy') {
-        ElMessage.success(`成功买入 ${tradeData.quantity} 股 ${tradeData.stockName}，可在记录中心的用户自助交易记录中查看`);
+        ElMessage.success(`成功买入 ${tradeData.quantity} 股 ${tradeData.stockName}，可在记录中心的用户自主交易记录中查看`);
     } else if (tradeData && tradeData.type === 'sell') {
-        ElMessage.success(`成功卖出 ${tradeData.quantity} 股 ${tradeData.stockName}，可在记录中心的用户自助交易记录中查看`);
+        ElMessage.success(`成功卖出 ${tradeData.quantity} 股 ${tradeData.stockName}，可在记录中心的用户自主交易记录中查看`);
     }
 };
 

@@ -137,10 +137,6 @@ export const authFetchEventSource = async (url, options = {}) => {
       },
       onmessage(message) {
         if (options.onmessage) {
-          if (message.data === "__heartbeat__") {
-            console.log("__heartbeat__");
-            return;
-          }
           options.onmessage(message);
         }
       },

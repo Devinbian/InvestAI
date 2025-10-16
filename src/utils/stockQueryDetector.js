@@ -121,7 +121,10 @@ export async function detectStockQuery(message) {
       const data = apiData.data;
       const stockInfo = {
         codes:[data.code],
-        names:[data.name]
+        names:[data.name],
+        prices:[data.price],
+        changes:[data.change],
+        changePercents:[data.changePercent]
       }
 
       console.log('详细信息:', {
@@ -312,6 +315,9 @@ export function formatStockQueryResult(detection) {
 export async function extractStockInfoFromContent(aiContent, userContent, detectionResult) {
   let stockName = "";
   let stockCode = "";
+  let stockPrice = "";
+  let stockChange = "";
+  let stockChangePercent = "";
   // 是否提取成功
   let extractFlag = false;
   
@@ -335,6 +341,9 @@ export async function extractStockInfoFromContent(aiContent, userContent, detect
       stockName = detectionResult.stockInfo.names[0];
       console.log('✅ 从检测结果获取股票名称:', stockName);
     }
+    stockPrice = detectionResult.stockInfo.prices ? detectionResult.stockInfo.prices[0] : "";
+    stockChange = detectionResult.stockInfo.changes ? detectionResult.stockInfo.changes[0] : "";
+    stockChangePercent = detectionResult.stockInfo.changePercents ? detectionResult.stockInfo.changePercents[0] : "";
     // 判断是否提取完成
     extractFlag = stockCode && stockName;
   }
@@ -431,6 +440,9 @@ export async function extractStockInfoFromContent(aiContent, userContent, detect
   const result = { 
     name: stockName, 
     code: stockCode, 
+    price: stockPrice,
+    change: stockChange,
+    changePercent: stockChangePercent,
     source: 'intelligent_extraction' 
   };
   

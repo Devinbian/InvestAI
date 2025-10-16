@@ -351,9 +351,9 @@ export function useChatManager() {
                     const stockData = {
                       name: extractedInfo.name,
                       code: extractedInfo.code,
-                      price: "0.00",
-                      change: "0.00",
-                      changePercent: "0.00%",
+                      price: extractedInfo.price || "0.00",
+                      change: extractedInfo.change || "0.00",
+                      changePercent: (extractedInfo.changePercent || "0.00") + '%',
                       queryType: stockQueryDetection.queryType,
                       confidence: stockQueryDetection.confidence,
                       extractionSource: extractedInfo.source,
